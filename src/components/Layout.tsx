@@ -1,0 +1,160 @@
+import {useEffect, useState} from 'react';
+import {NavLink, useLocation} from 'react-router-dom';
+import {Menu, Search, ShoppingBag, X} from 'lucide-react';
+import {useCart} from '../lib/cart';
+import {cx} from '../lib/format';
+import {shopHref} from '../lib/shopContext';
+import {ShopLink} from './ShopLink';
+import CartDrawer from './CartDrawer';
+
+function Brand() {
+  return (
+    <ShopLink to="/" className="flex items-center gap-2.5 shrink-0">
+      <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-gold-500 font-display text-lg font-bold text-cream-50 shadow-sm">
+        T
+      </span>
+      <span className="leading-tight">
+        <span className="block font-display text-lg font-bold text-brand-800">Mini TikTok Shop</span>
+        <span className="block text-[11px] tracking-wide text-ink-soft">နမူနာ · Demo Shop</span>
+      </span>
+    </ShopLink>
+  );
+}
+
+const NAV = [
+  {to: '/', label: 'ပင်မ'},
+  {to: '/products', label: 'ပစ္စည်းများ'},
+  {to: '/orders', label: 'Order စစ်ရန်'},
+];
+
+export default function Layout({children}: {children: React.ReactNode}) {
+  const {count, openDrawer} = useCart();
+  const [open, setOpen] = useState(false);
+  const {pathname} = useLocation();
+
+  useEffect(() => {
+    setOpen(false);
+    window.scrollTo({top: 0, behavior: 'instant' as ScrollBehavior});
+  }, [pathname]);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-cream-50">
+      <header className="sticky top-0 z-40 border-b border-cream-200 bg-cream-50/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+          <Brand />
+          <nav className="hidden items-center gap-1 md:flex">
+            {NAV.map((n) => (
+              <NavLink
+                key={n.to}
+                to={shopHref(n.to)}
+                end={n.to === '/'}
+                className={({isActive}) =>
+                  cx(
+                    'rounded-full px-4 py-2 text-sm font-semibold transition',
+                    isActive ? 'bg-brand-700 text-cream-100' : 'text-ink hover:bg-cream-200',
+                  )
+                }>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={openDrawer}
+              aria-label="စျေးဝယ်ခြင်း"
+              className="relative grid h-11 w-11 place-items-center rounded-full text-brand-800 hover:bg-cream-200">
+              <ShoppingBag className="h-5 w-5" />
+              {count > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-600 px-1 text-[11px] font-bold text-white">
+                  {count}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setOpen((v) => !v)}
+              aria-label="menu"
+              className="grid h-11 w-11 place-items-center rounded-full text-brand-800 hover:bg-cream-200 md:hidden">
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        {open && (
+          <nav className="border-t border-cream-200 bg-cream-50 px-4 py-2 md:hidden">
+            {NAV.map((n) => (
+              <NavLink
+                key={n.to}
+                to={shopHref(n.to)}
+                end={n.to === '/'}
+                className={({isActive}) =>
+                  cx(
+                    'block rounded-xl px-4 py-3 text-sm font-semibold',
+                    isActive ? 'bg-brand-700 text-cream-100' : 'text-ink',
+                  )
+                }>
+                {n.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
+      </header>
+
+      <main className="flex-1">{children}</main>
+
+      <footer className="mt-16 border-t border-cream-200 bg-brand-900 text-cream-100">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-gold-400 font-display text-lg font-bold text-brand-900">
+                T
+              </span>
+              <span className="font-display text-lg font-bold">Mini TikTok Shop</span>
+            </div>
+            <p className="my mt-3 max-w-xs text-sm text-cream-200/80">
+              သရုပ်ပြ (demo) e-commerce စတိုး — ရှပ်အင်္ကျီ၊ ဂါဝန်၊ စကတ်၊ အနွေးထည် နမူနာများ။ ပစ္စည်း/ဈေးနှုန်း
+              အားလုံး နမူနာ data သာဖြစ်ပြီး အမှန်တကယ် ရောင်းချခြင်း မဟုတ်ပါ။
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gold-400">လင့်များ</h4>
+            <ul className="my mt-3 space-y-2 text-sm text-cream-200/80">
+              <li><ShopLink to="/products" className="hover:text-white">ပစ္စည်းအားလုံး</ShopLink></li>
+              <li><ShopLink to="/cart" className="hover:text-white">စျေးဝယ်ခြင်း</ShopLink></li>
+              <li><ShopLink to="/orders" className="hover:text-white">Order စစ်ဆေးရန်</ShopLink></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gold-400">မှာယူရလွယ်ကူသည်</h4>
+            <p className="my mt-3 text-sm text-cream-200/80">
+              ပစ္စည်းရွေး → စျေးဝယ်ခြင်းထည့် → အမည်/ဖုန်း/လိပ်စာဖြည့် → ငွေလွှဲ၍ နောက်ဆုံး ၅ လုံးဖြည့် → ပြီးပါပြီ။
+            </p>
+          </div>
+        </div>
+        <div className="border-t border-white/10 py-4 text-center text-xs text-cream-200/60">
+          © {new Date().getFullYear()} Mini TikTok Shop · နမူနာအတွက်သာ
+        </div>
+      </footer>
+
+      <CartDrawer />
+    </div>
+  );
+}
+
+export function SearchBox({defaultValue = '', onSubmit}: {defaultValue?: string; onSubmit: (q: string) => void}) {
+  const [v, setV] = useState(defaultValue);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(v.trim());
+      }}
+      className="flex items-center gap-2 rounded-full border border-cream-200 bg-white px-4 py-2 shadow-sm focus-within:border-brand-400">
+      <Search className="h-4 w-4 text-ink-soft" />
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        placeholder="ပစ္စည်း ရှာရန်…"
+        className="my w-full bg-transparent text-sm outline-none placeholder:text-ink-soft"
+      />
+    </form>
+  );
+}
