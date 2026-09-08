@@ -30,6 +30,7 @@ self-service payment-account CRUD, usage read, storage upload. `sellerShop.ts` n
 - React + Vite + TypeScript + Tailwind v4; Vercel (Root Directory must be `projects/personal/mini-tiktok-shop`)
 - **Dedicated Supabase project** `Mini Tiktok Shop`, ref `fsxdnmnycizjkgstokze`, `ap-southeast-1` — deliberately NOT the shared production project `kjjexuhhrwzujgocfzd`
 - Schema `supabase/migrations/0001_init_saas.sql`: `shops`, `products`, `orders`, `order_items`, `payment_accounts`, `shipping_zones`; RLS on all; `place_order()` (anon write, server-side repricing, atomic) and `lookup_order()` (anon buyer lookup) RPCs. `0002_harden_search_path.sql` pins `search_path` on `set_updated_at()`.
+- `0003_platform_plan_and_usage.sql` (**written, NOT applied — D7/D25**): `shops.plan`; `orders.is_test`/`is_duplicate`/generated `is_billable`; `shop_monthly_usage` view + `current_shop_usage()`/`usage_tier()` RPCs; `shop-logos`/`product-images` Storage buckets + owner-scoped policies. Plan/usage/payment-account/storage surface in `backend.ts` `adminApi`; plan wired into `sellerShop.ts`. See `supabase/MIGRATION-PLAN-0003.md`.
 - Data layer: `src/lib/shopContext.ts` (module-level slug) · `src/lib/backend.ts` (Supabase `api`/`adminApi`) · `src/lib/store.ts` (the switcher — storefront `api` is a reactive Proxy, `adminApi` is an unconditional re-export) · `src/lib/api.ts` (demo/localStorage) · `src/lib/database.types.ts` (generated)
 - Auth: real Supabase email/password (`src/lib/adminAuth.tsx`), onboarding at `/admin/onboarding`, `RequireAdmin` gates on session AND shop existence
 - Order statuses in `src/lib/orderStatus.ts`: `cod_pending`, `pending_payment`, `partial_checked`, `checked`, `shipped`, `completed`, `cancelled`. Payment methods: `cod` | `kpay` | `wave`.
@@ -39,19 +40,13 @@ self-service payment-account CRUD, usage read, storage upload. `sellerShop.ts` n
 
 - [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records.
 - [ ] **Owner** — set the Vercel env vars and Root Directory.
-- [~] Storage bucket + policy for shop logos and product images — **built in `0003`** (tenant-safe `shop-logos` / `product-images` buckets + owner-scoped policies; `adminApi.uploadShopLogo/uploadProductImage`). Images stay URL text on the row. Pending apply + frontend upload UI.
+- [ ] **Owner apply `0003`** to `fsxdnmnycizjkgstokze` (D7). Acceptance: migration applied; pilot shop set to Business (`update public.shops set plan='business' where slug='<pilot-slug>';` — D25 downgrade hazard); `database.types.ts` regenerated 1:1; `get_advisors(security)` clean bar the known anon `SECURITY DEFINER` findings.
+- [ ] **Frontend** — build the seller UI on the new `0003` backend: usage/tier panel (`adminApi.getUsage`), payment-account manager (`adminApi.list/create/update/deletePaymentAccount`), logo/product-image upload (`adminApi.uploadShopLogo/uploadProductImage` → save returned URL). Acceptance: a seller sets KBZPay/Wave numbers, uploads a logo, and sees their month's billable count + tier.
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
-- [~] `payment_accounts` self-serve — **backend built in `0003`** (`adminApi.list/create/update/deletePaymentAccount`, RLS-scoped). Pending frontend admin UI.
 - [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
 - [ ] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`). `lint` is `tsc --noEmit` only, so hook and a11y regressions are not caught automatically.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
-- [x] **Backend** — `shops.plan` column + `OWN_SHOP_COLUMNS`/`mapOwnShop()` wiring in
-  `sellerShop.ts` — **done in `0003`** (D25); plan gating is now per-tenant. `database.types.ts`
-  hand-authored delta pending 1:1 regenerate after apply.
-- [ ] **Owner apply `0003`** to `fsxdnmnycizjkgstokze` (D7), then set the pilot shop to Business
-  (`update public.shops set plan='business' where slug='<pilot-slug>';` — see D25 downgrade
-  hazard), regenerate `database.types.ts`, run `get_advisors(security)`.
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
   toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
 
@@ -99,5 +94,7 @@ self-service payment-account CRUD, usage read, storage upload. `sellerShop.ts` n
 - **Any schema change needs three things in sync:** a new `supabase/migrations/NNNN_*.sql`, applied via `mcp__Supabase__apply_migration` against `fsxdnmnycizjkgstokze`, and a regenerated `database.types.ts`.
 - `get_advisors(security)` is clean apart from the intentional anon `SECURITY DEFINER` findings on `place_order`/`lookup_order` — those two are the only anon write/read paths by design. The `rls_auto_enable` finding is a Supabase platform function, not ours.
 - **Network egress to `*.supabase.co` is blocked from this sandbox** — `mcp__Supabase__execute_sql` is the only channel that reaches it. `backend.ts` was validated at the SQL/RLS level instead: a throwaway auth user + shop + product were seeded, then the exact queries and RPCs were run under `set local role anon`/`authenticated` with `request.jwt.claims` to simulate real RLS. 12/12 passed, including `place_order`, `lookup_order` (success and anti-enumeration rejection), owner CRUD and a negative cross-tenant isolation check. Cleaned up by cascade delete.
+- **0003 validation (2026-09-08):** validated on live `fsxdnmnycizjkgstokze` via `execute_sql` wrapped in `BEGIN … ROLLBACK` (nothing persisted) — full DDL + seed 2 tenants + `set local role authenticated` with `request.jwt.claims` for RLS. Confirmed: tier boundaries, billable excludes cancelled/test/duplicate, cross-tenant view isolation (owner A sees 0 of shop B), `place_order`/`lookup_order` preserved, `storage.foldername(name)[1]` = shop_id. Gotchas: `\gset` is psql-only (rejected by `execute_sql` — inline the value instead); a multi-column `insert ... values` needs every row to match the column-list arity (a short row → "VALUES lists must all be the same length").
+- **Codex reviewer hit its usage limit** on #191 (`chatgpt-codex-connector[bot]` posted a limit notice, no findings) → no review round opened, no ledger needed. Deploy-preview bots (Vercel/Netlify) are pure noise on this repo.
 - **Audience-bias risk is still open:** the demo video drew 6 inbound inquiries (3 day-1, 3 day-2), but real sellers versus N8N Masterclass students have not been disaggregated.
 - Review coverage on the milestones: ECC `database-reviewer` (clean), `code-reviewer` (1 HIGH — arrival-date backdate, fixed), `react-reviewer` (2 HIGH — payment-confirm error handling and shipping a11y labels, fixed), and a Codex P1 (stale fee on slug change, fixed).
