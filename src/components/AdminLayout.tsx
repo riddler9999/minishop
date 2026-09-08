@@ -1,20 +1,35 @@
 import {useState} from 'react';
 import {NavLink, Outlet, Link} from 'react-router-dom';
-import {LayoutDashboard, Package, ShoppingCart, Truck, Store, LogOut, Menu, X} from 'lucide-react';
+import {LayoutDashboard, Package, ShoppingCart, Truck, Store, Settings, LogOut, Menu, X} from 'lucide-react';
 import {useAdminAuth} from '../lib/adminAuth';
+import {usePlan} from '../lib/plan';
+import {APP_INITIAL, APP_NAME, shopInitial} from '../lib/brand';
+import {PlanBadge} from './PlanGate';
 import {cx} from '../lib/format';
 
-const NAV = [
+interface NavEntry {
+  to: string;
+  end: boolean;
+  label: string;
+  icon: React.ComponentType<{className?: string}>;
+  /** Business-only nav items are hidden when the feature is off. */
+  requiresAdvancedShipping?: boolean;
+}
+
+const NAV: NavEntry[] = [
   {to: '/admin', end: true, label: 'ခြုံငုံ', icon: LayoutDashboard},
   {to: '/admin/products', end: false, label: 'ပစ္စည်းများ', icon: Package},
   {to: '/admin/orders', end: false, label: 'Order များ', icon: ShoppingCart},
-  {to: '/admin/shipping', end: false, label: 'ပို့ဆောင်ခ ဇုန်', icon: Truck},
+  {to: '/admin/shipping', end: false, label: 'ပို့ဆောင်ခ ဇုန်', icon: Truck, requiresAdvancedShipping: true},
+  {to: '/admin/settings', end: false, label: 'ဆိုင် ချိန်ညှိ', icon: Settings},
 ];
 
 function NavItems({onNavigate}: {onNavigate?: () => void}) {
+  const {features} = usePlan();
+  const items = NAV.filter((n) => !n.requiresAdvancedShipping || features.advancedShipping);
   return (
     <nav className="space-y-1">
-      {NAV.map((n) => {
+      {items.map((n) => {
         const Icon = n.icon;
         return (
           <NavLink
@@ -41,15 +56,25 @@ function NavItems({onNavigate}: {onNavigate?: () => void}) {
 
 function Sidebar({onNavigate}: {onNavigate?: () => void}) {
   const {signOut} = useAdminAuth();
+  const {shop} = usePlan();
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-2 py-1">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-lg font-bold text-white shadow-sm">
-          T
-        </span>
+        {shop?.logoUrl ? (
+          <img src={shop.logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-sm" />
+        ) : (
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-lg font-bold text-white shadow-sm">
+            {shopInitial(shop?.name)}
+          </span>
+        )}
         <span className="leading-tight">
-          <span className="block font-display text-base font-bold text-white">Admin Console</span>
-          <span className="block text-[11px] tracking-wide text-cream-200/70">Mini TikTok Shop</span>
+          <span className="flex items-center gap-1.5">
+            <span className="block max-w-[130px] truncate font-display text-base font-bold text-white">
+              {shop?.name ?? APP_NAME}
+            </span>
+            <PlanBadge />
+          </span>
+          <span className="block text-[11px] tracking-wide text-cream-200/70">Seller Console</span>
         </span>
       </div>
 
@@ -93,9 +118,9 @@ export default function AdminLayout() {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-cream-200 bg-ink px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-gold-500 font-display text-sm font-bold text-white">
-            T
+            {APP_INITIAL}
           </span>
-          <span className="font-display text-sm font-bold text-white">Admin Console</span>
+          <span className="font-display text-sm font-bold text-white">Seller Console</span>
         </div>
         <button
           onClick={() => setMobileOpen(true)}

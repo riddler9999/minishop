@@ -107,8 +107,10 @@ function escapeOrFilter(s: string): string {
 }
 
 // ---- shop (tenant) resolution -----------------------------------------------
-interface ShopInfo {
+export interface ShopInfo {
   id: string;
+  name: string;
+  logoUrl: string | null;
   defaultDeliveryFee: number;
 }
 
@@ -118,6 +120,18 @@ let cachedShop: {slug: string; info: ShopInfo} | null = null;
 // skip its 'checking' loading state (and the remount it causes) on a revisit.
 export function isShopCached(slug: string): boolean {
   return cachedShop?.slug === slug;
+}
+
+/**
+ * The currently-resolved shop's public branding, or null on the demo/root
+ * storefront. Read synchronously by the storefront <Layout> so a real tenant's
+ * chrome shows the SELLER's name/logo — not the product's demo brand. Populated
+ * as a side effect of resolveShop(), which every storefront page already awaits
+ * before its first render, so by the time the header paints for a real shop
+ * this is set; the demo shop leaves it null and falls back to APP_NAME.
+ */
+export function getCachedShopInfo(): ShopInfo | null {
+  return cachedShop && cachedShop.slug === getShopSlug() ? cachedShop.info : null;
 }
 
 // Exported so App.tsx's ShopRoute can reuse the SAME cached existence check the
@@ -131,13 +145,18 @@ export async function resolveShop(): Promise<ShopInfo> {
   const sb = requireSupabase();
   const {data, error} = await sb
     .from('shops')
-    .select('id, default_delivery_fee')
+    .select('id, name, logo_url, default_delivery_fee')
     .eq('slug', slug)
     .eq('is_active', true)
     .maybeSingle();
   if (error || !data) throw new Error('ဆိုင် ရှာမတွေ့ပါ။');
 
-  const info: ShopInfo = {id: data.id, defaultDeliveryFee: data.default_delivery_fee};
+  const info: ShopInfo = {
+    id: data.id,
+    name: data.name,
+    logoUrl: data.logo_url,
+    defaultDeliveryFee: data.default_delivery_fee,
+  };
   cachedShop = {slug, info};
   return info;
 }

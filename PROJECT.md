@@ -10,10 +10,16 @@ in-app WebView**. **Not a sale agent** — TikTok exposes no bot/messaging API.
 
 ## Status
 
-Blocked | Moe Htet | 2026-09-04
+In progress (commercial layer) | Moe Htet | 2026-09-08
 
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
 (checkout fee parity) are all built. Pilot is blocked on live owner verification.
+
+**Commercialization (branch `claude/mini-shop-commercialization-9ht29r`):** TikTok-specific
+wording generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own
+name/logo. Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding
+page (`/admin/settings`), and onboarding UX polish. typecheck + build green. NOT yet
+live-verified (Supabase egress blocked from sandbox).
 
 ## Stack
 
@@ -36,6 +42,12 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 - [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
 - [ ] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`). `lint` is `tsc --noEmit` only, so hook and a11y regressions are not caught automatically.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
+- [ ] **Backend** — add a `shops.plan` column (`text`, default `'starter'`, CHECK in
+  (`starter`,`business`)), then append `plan` to `OWN_SHOP_COLUMNS` + `mapOwnShop()` in
+  `src/lib/sellerShop.ts` and regenerate `database.types.ts`. This flips plan gating from the
+  deploy-wide `VITE_DEFAULT_PLAN` default to per-tenant (see D23).
+- [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
+  toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
 
 **Explicitly NOT in v1:** auto payment verification (Phase 2 moat), AI/chatbot features, custom domains, staff accounts, deep analytics, a native app, multi-courier APIs.
 
@@ -43,6 +55,18 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 
 ## Decisions
 
+- D23 (2026-09-08) — **Plan gating is a FRONTEND layer** (`src/lib/plan.tsx`), not a DB/RLS
+  change. Plan source is forward-compatible: `shop.plan` (once a `shops.plan` column exists) →
+  `VITE_DEFAULT_PLAN` env → hard default `'business'`. The `business` default means the
+  existing single-seller deploy keeps every feature (no regression); a real commercial rollout
+  sets per-shop plan (Backend). Plan is deliberately **read-only in the seller UI** — a seller
+  must not self-unlock Business. Gating never deletes a capability; it shows an upsell
+  (`components/PlanGate.tsx`). Business-only surfaces: promotions, per-township shipping zones,
+  last-5 payment verification, dashboard analytics, logo/branding, integration hooks.
+- D24 (2026-09-08) — Storefront chrome (`Layout`, `Home` hero) renders the **tenant's own
+  name/logo** from `getCachedShopInfo()` (resolveShop now also selects `name, logo_url`); the
+  root/demo shop falls back to the product brand (`src/lib/brand.ts`). Shop `slug` stays
+  **read-only** in Settings — changing it would break every shared `/s/:slug` link.
 - D19 (2026-09-03) — Storefront routing is **path-based `/s/:slug/...`, not slug-in-storage**. TikTok's WebView storage is ephemeral, so a buyer reloading any page would lose the shop. A reload of `/s/uthuya/checkout` still knows the shop. Root `/` stays the demo storefront.
 - D20 — `store.ts`'s storefront `api` is a reactive **Proxy**, replacing a `const` evaluated once at module load. The get-trap dispatches on the *current* slug, so `setShopSlug()` takes effect without a reload and SPA navigation between shops resolves correctly. **Hazard: never put `api.<method>` in a React dependency array** — the trap returns a fresh function each access and the effect would loop.
 - D21 — Shop-relative navigation via `shopHref()` + `<ShopLink>` / `useShopNavigate()`, not react-router relative links. `ProductCard` renders at three route depths, so a bare relative `to` would resolve differently per context; `shopHref()` is depth-independent and treats the path as opaque so query strings pass through.

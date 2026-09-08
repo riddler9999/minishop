@@ -4,18 +4,34 @@ import {Menu, Search, ShoppingBag, X} from 'lucide-react';
 import {useCart} from '../lib/cart';
 import {cx} from '../lib/format';
 import {shopHref} from '../lib/shopContext';
+import {getCachedShopInfo} from '../lib/store';
+import {APP_NAME, shopInitial} from '../lib/brand';
 import {ShopLink} from './ShopLink';
 import CartDrawer from './CartDrawer';
 
+function LogoTile({logoUrl, name, className}: {logoUrl: string | null; name?: string | null; className: string}) {
+  if (logoUrl) {
+    return <img src={logoUrl} alt="" className={cx(className, 'object-cover')} loading="lazy" />;
+  }
+  return (
+    <span className={cx(className, 'grid place-items-center bg-gradient-to-br from-brand-600 to-gold-500 font-display font-bold text-cream-50 shadow-sm')}>
+      {shopInitial(name)}
+    </span>
+  );
+}
+
 function Brand() {
+  // Real tenant → the seller's own shop name/logo; demo/root → the product brand.
+  const shop = getCachedShopInfo();
+  const name = shop?.name ?? APP_NAME;
   return (
     <ShopLink to="/" className="flex items-center gap-2.5 shrink-0">
-      <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-gold-500 font-display text-lg font-bold text-cream-50 shadow-sm">
-        T
-      </span>
+      <LogoTile logoUrl={shop?.logoUrl ?? null} name={shop?.name} className="h-10 w-10 rounded-xl text-lg" />
       <span className="leading-tight">
-        <span className="block font-display text-lg font-bold text-brand-800">Mini TikTok Shop</span>
-        <span className="block text-[11px] tracking-wide text-ink-soft">နမူနာ · Demo Shop</span>
+        <span className="block font-display text-lg font-bold text-brand-800">{name}</span>
+        <span className="block text-[11px] tracking-wide text-ink-soft">
+          {shop ? 'Online Shop' : 'နမူနာ · Demo Shop'}
+        </span>
       </span>
     </ShopLink>
   );
@@ -31,6 +47,8 @@ export default function Layout({children}: {children: React.ReactNode}) {
   const {count, openDrawer} = useCart();
   const [open, setOpen] = useState(false);
   const {pathname} = useLocation();
+  const shop = getCachedShopInfo();
+  const shopName = shop?.name ?? APP_NAME;
 
   useEffect(() => {
     setOpen(false);
@@ -104,14 +122,13 @@ export default function Layout({children}: {children: React.ReactNode}) {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-gold-400 font-display text-lg font-bold text-brand-900">
-                T
-              </span>
-              <span className="font-display text-lg font-bold">Mini TikTok Shop</span>
+              <LogoTile logoUrl={shop?.logoUrl ?? null} name={shop?.name} className="h-10 w-10 rounded-xl text-lg" />
+              <span className="font-display text-lg font-bold">{shopName}</span>
             </div>
             <p className="my mt-3 max-w-xs text-sm text-cream-200/80">
-              သရုပ်ပြ (demo) e-commerce စတိုး — ရှပ်အင်္ကျီ၊ ဂါဝန်၊ စကတ်၊ အနွေးထည် နမူနာများ။ ပစ္စည်း/ဈေးနှုန်း
-              အားလုံး နမူနာ data သာဖြစ်ပြီး အမှန်တကယ် ရောင်းချခြင်း မဟုတ်ပါ။
+              {shop
+                ? `${shopName} — online store။ ပစ္စည်းရွေး → စျေးဝယ်ခြင်းထည့် → မှာယူ၍ လွယ်ကူစွာ ဝယ်ယူနိုင်ပါသည်။`
+                : 'သရုပ်ပြ (demo) e-commerce စတိုး — ပစ္စည်း/ဈေးနှုန်း အားလုံး နမူနာ data သာဖြစ်ပြီး အမှန်တကယ် ရောင်းချခြင်း မဟုတ်ပါ။'}
             </p>
           </div>
           <div>
@@ -130,7 +147,8 @@ export default function Layout({children}: {children: React.ReactNode}) {
           </div>
         </div>
         <div className="border-t border-white/10 py-4 text-center text-xs text-cream-200/60">
-          © {new Date().getFullYear()} Mini TikTok Shop · နမူနာအတွက်သာ
+          © {new Date().getFullYear()} {shopName}
+          {shop ? '' : ' · နမူနာအတွက်သာ'}
         </div>
       </footer>
 

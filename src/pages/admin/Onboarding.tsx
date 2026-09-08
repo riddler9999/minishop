@@ -9,6 +9,7 @@ import {Navigate, useNavigate} from 'react-router-dom';
 import {ShieldAlert, Store} from 'lucide-react';
 import {useAdminAuth} from '../../lib/adminAuth';
 import {createOwnShop, getOwnShop} from '../../lib/sellerShop';
+import {APP_INITIAL} from '../../lib/brand';
 import {SLUG_RE} from '../../lib/slug';
 
 function slugify(name: string): string {
@@ -83,10 +84,10 @@ export default function Onboarding() {
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-2xl font-bold text-white shadow-lg">
-            T
+            {APP_INITIAL}
           </span>
           <h1 className="my mt-4 font-display text-2xl font-bold text-white">ဆိုင် စတင်ဖွင့်ရန်</h1>
-          <p className="my mt-1 text-sm text-cream-200/70">အချက်အလက် အနည်းငယ်ဖြင့် ဆိုင်ချိတ်ပါ</p>
+          <p className="my mt-1 text-sm text-cream-200/70">အဆင့် ၄ ဆင့်ဖြင့် မိနစ်ပိုင်းအတွင်း ဆိုင်ဖွင့်နိုင်သည်</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3 rounded-2xl bg-white p-6 shadow-xl">
@@ -118,6 +119,14 @@ export default function Onboarding() {
                 className="my w-full bg-transparent text-sm outline-none placeholder:text-ink-soft"
               />
             </div>
+            <span className="my mt-1 block text-xs text-ink-soft">
+              ဆိုင် link — {slug.trim() ? (
+                <span className="font-semibold text-brand-600">/s/{slug.trim()}</span>
+              ) : (
+                'ဖောက်သည်ကို မျှဝေမည့် အမြဲတမ်း လိပ်စာ'
+              )}
+              {' '}(နောက်ပြောင်း၍မရပါ)
+            </span>
           </label>
 
           <label className="block">
@@ -154,6 +163,10 @@ export default function Onboarding() {
             className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50">
             <Store className="h-4 w-4" /> {saving ? 'ဖန်တီးနေသည်…' : 'ဆိုင် ဖန်တီးရန်'}
           </button>
+
+          <p className="my pt-1 text-center text-xs text-ink-soft">
+            Logo၊ ငွေလွှဲအကောင့်၊ ပို့ဆောင်ခ ဇုန်များကို ဆိုင်ဖွင့်ပြီးမှ “ဆိုင် ချိန်ညှိ” တွင် ထည့်နိုင်သည်။
+          </p>
         </form>
       </div>
     </div>

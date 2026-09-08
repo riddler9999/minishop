@@ -1,11 +1,14 @@
 import {useEffect, useRef, useState} from 'react';
 import {ArrowRight, ChevronLeft, ChevronRight, Sparkles} from 'lucide-react';
-import {api, type Product} from '../lib/store';
+import {api, getCachedShopInfo, type Product} from '../lib/store';
 import ProductCard, {ProductCardSkeleton} from '../components/ProductCard';
 import {ks} from '../lib/format';
 import {ShopLink, useShopSlugParam} from '../components/ShopLink';
 
 function Hero() {
+  // Real tenant → the seller's own shop name + a neutral welcome; the "demo"
+  // framing is shown only on the product's root demo storefront.
+  const shop = getCachedShopInfo();
   return (
     <section className="relative overflow-hidden bg-brand-900">
       {/* Theme-native gradient hero (no external banner image). */}
@@ -16,12 +19,15 @@ function Hero() {
 
         <div className="fade-up relative z-10 mx-auto max-w-3xl px-6 text-center text-cream-50">
           <span className="inline-block rounded-full border border-cream-50/25 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-cream-50 backdrop-blur">
-            ✨ DEMO STORE — နမူနာ စတိုး
+            {shop ? '🛍️ Online Shop' : '✨ DEMO STORE — နမူနာ စတိုး'}
           </span>
-          <h1 className="mt-5 font-display text-4xl font-bold leading-tight sm:text-5xl">Demo Fashion Store</h1>
+          <h1 className="mt-5 font-display text-4xl font-bold leading-tight sm:text-5xl">
+            {shop?.name ?? 'Demo Fashion Store'}
+          </h1>
           <p className="my mx-auto mt-4 max-w-xl text-sm text-cream-100/85 sm:text-base">
-            ဤစတိုးသည် သရုပ်ပြ (demo) e-commerce စတိုးဖြစ်သည်။ ပစ္စည်း၊ ဈေးနှုန်း၊ ငွေပေးချေမှုအားလုံး နမူနာ
-            data များသာဖြစ်ပြီး အမှန်တကယ် အရောင်းအဝယ် မဟုတ်ပါ။
+            {shop
+              ? 'ပစ္စည်းများ ရွေးချယ်၍ လွယ်ကူစွာ မှာယူနိုင်ပါသည်။ KBZPay / WavePay / အိမ်အရောက်ငွေချေ (COD) ဖြင့် ဝယ်ယူနိုင်သည်။'
+              : 'ဤစတိုးသည် သရုပ်ပြ (demo) e-commerce စတိုးဖြစ်သည်။ ပစ္စည်း၊ ဈေးနှုန်း၊ ငွေပေးချေမှုအားလုံး နမူနာ data များသာဖြစ်ပြီး အမှန်တကယ် အရောင်းအဝယ် မဟုတ်ပါ။'}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <ShopLink
