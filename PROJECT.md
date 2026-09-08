@@ -10,10 +10,15 @@ in-app WebView**. **Not a sale agent** — TikTok exposes no bot/messaging API.
 
 ## Status
 
-Blocked | Moe Htet | 2026-09-04
+Blocked | Moe Htet | 2026-09-08
 
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
 (checkout fee parity) are all built. Pilot is blocked on live owner verification.
+
+**Platform backend (Phase 1.5) prepared** on branch `feat/platform-backend` — migration
+`0003_platform_plan_and_usage.sql` (shop plan, monthly billable-order usage + tiers, storage
+buckets/policies) + `backend.ts` self-service payment-account CRUD, usage read, storage upload.
+Validated at SQL/RLS level via rolled-back txns; **NOT yet applied to the live project (D7)**.
 
 ## Stack
 
@@ -29,10 +34,11 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 
 - [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records.
 - [ ] **Owner** — set the Vercel env vars and Root Directory.
-- [ ] Storage bucket + policy for shop logos and product images (images are URL text today).
+- [ ] **Owner apply `0003`** to `fsxdnmnycizjkgstokze` (D7 gate), then regenerate `database.types.ts` + run `get_advisors(security)`. Backend + hand-authored types delta already committed on `feat/platform-backend`.
+- [~] Storage bucket + policy for shop logos and product images — **built in `0003`** (tenant-safe `shop-logos` / `product-images` buckets + owner-scoped policies; `adminApi.uploadShopLogo/uploadProductImage`). Images stay URL text on the row. Pending apply + frontend upload UI.
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
-- [ ] `payment_accounts` self-serve admin so a seller sets their own KBZPay/Wave numbers.
+- [~] `payment_accounts` self-serve — **backend built in `0003`** (`adminApi.list/create/update/deletePaymentAccount`, RLS-scoped). Pending frontend admin UI.
 - [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
 - [ ] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`). `lint` is `tsc --noEmit` only, so hook and a11y regressions are not caught automatically.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
@@ -43,6 +49,12 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 
 ## Decisions
 
+- D23 (2026-09-08) — **Platform Phase 1.5** in `0003`, all **purely additive** (new columns with `NOT NULL DEFAULT`, new view/function/storage — no drops/renames/type changes), so `place_order()`, `lookup_order()`, existing RLS and `/s/:slug` are byte-for-byte preserved and no storefront API breaks.
+  - **Plan** = `shops.plan text check in ('starter','business') default 'starter'`. Platform-set, **read-only for sellers** by contract (`updateShopSettings` refuses `plan`). No server-side feature-gate yet — nothing is unlocked by the value, so no RLS write-lock added (Phase-2 gap, documented).
+  - **Billable order** = single source of truth generated column `orders.is_billable = (status <> 'cancelled' AND NOT is_test AND NOT is_duplicate)`; `is_test`/`is_duplicate` are admin flags defaulting false. Spec lists exactly three exclusions → a `cod_pending`/`pending_payment` order **counts**. To later mean "confirmed = checked|shipped|completed only", change **one expression**.
+  - **Usage** exposed tenant-safely via `shop_monthly_usage` view (`security_invoker = on` → caller RLS filters it; no `shop_id` filter can be forgotten) + `current_shop_usage()` RPC (security invoker, own shop only). Tiers `0-100/101-500/501-1500/1501-3000/3000+` via immutable `usage_tier(int)`.
+  - **Storage** = public-read `shop-logos` + `product-images` buckets; writes gated by policy to `(storage.foldername(name))[1] = own shop_id` (path `<shop_id>/…`). Logo/images stay **public-URL text** on the row — read path unchanged.
+  - **Validation** (rolled-back txns on live `fsxdnmnycizjkgstokze`, nothing persisted): DDL compiles; tier boundaries exact; billable excludes cancelled/test/duplicate; cross-tenant view isolation holds under authenticated RLS (owner A sees only own, 0 cross-tenant rows); `place_order`/`lookup_order` still run post-columns. `tsc --noEmit` + `vite build` clean.
 - D19 (2026-09-03) — Storefront routing is **path-based `/s/:slug/...`, not slug-in-storage**. TikTok's WebView storage is ephemeral, so a buyer reloading any page would lose the shop. A reload of `/s/uthuya/checkout` still knows the shop. Root `/` stays the demo storefront.
 - D20 — `store.ts`'s storefront `api` is a reactive **Proxy**, replacing a `const` evaluated once at module load. The get-trap dispatches on the *current* slug, so `setShopSlug()` takes effect without a reload and SPA navigation between shops resolves correctly. **Hazard: never put `api.<method>` in a React dependency array** — the trap returns a fresh function each access and the effect would loop.
 - D21 — Shop-relative navigation via `shopHref()` + `<ShopLink>` / `useShopNavigate()`, not react-router relative links. `ProductCard` renders at three route depths, so a bare relative `to` would resolve differently per context; `shopHref()` is depth-independent and treats the path as opaque so query strings pass through.

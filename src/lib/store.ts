@@ -94,4 +94,16 @@ export type {
   ProductPatch,
   TrackedOrder,
 } from './api';
-export type {ShippingZone, ShippingZoneInput, ShippingZonePatch} from './backend';
+export type {
+  ShippingZone,
+  ShippingZoneInput,
+  ShippingZonePatch,
+  ShopPlan,
+  UsageTier,
+  ShopUsage,
+  ShopSettings,
+  ShopSettingsPatch,
+  PaymentAccount,
+  PaymentAccountInput,
+  PaymentAccountPatch,
+} from './backend';

@@ -1,6 +1,12 @@
 // Auto-generated from the live schema via `mcp__Supabase__generate_typescript_types`
 // against project fsxdnmnycizjkgstokze (Mini Tiktok Shop). Regenerate after any
 // migration under supabase/migrations/ — do not hand-edit.
+//
+// NOTE: the additions for migration 0003 (shops.plan; orders.is_test /
+// is_duplicate / is_billable; the shop_monthly_usage view; the current_shop_usage
+// and usage_tier functions) are hand-authored here so the frontend compiles
+// before 0003 is applied. Once 0003 is applied to fsxdnmnycizjkgstokze,
+// regenerate this file 1:1 to replace this delta (MIGRATION-PLAN-0003.md §7).
 
 export type Json =
   | string
@@ -69,6 +75,9 @@ export type Database = {
           delivery_fee: number
           grand_total: number
           id: string
+          is_billable: boolean
+          is_duplicate: boolean
+          is_test: boolean
           item_total: number
           order_no: string
           payment_method: string
@@ -87,6 +96,8 @@ export type Database = {
           delivery_fee?: number
           grand_total?: number
           id?: string
+          is_duplicate?: boolean
+          is_test?: boolean
           item_total?: number
           order_no: string
           payment_method: string
@@ -105,6 +116,8 @@ export type Database = {
           delivery_fee?: number
           grand_total?: number
           id?: string
+          is_duplicate?: boolean
+          is_test?: boolean
           item_total?: number
           order_no?: string
           payment_method?: string
@@ -276,6 +289,7 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          plan: string
           slug: string
           updated_at: string
         }
@@ -288,6 +302,7 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          plan?: string
           slug: string
           updated_at?: string
         }
@@ -300,6 +315,7 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          plan?: string
           slug?: string
           updated_at?: string
         }
@@ -307,9 +323,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      shop_monthly_usage: {
+        Row: {
+          billable_orders: number | null
+          month: string | null
+          shop_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      current_shop_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       lookup_order: {
         Args: { p_order_no: string; p_phone: string; p_shop_slug: string }
         Returns: Json
@@ -327,6 +362,10 @@ export type Database = {
           p_township: string
         }
         Returns: Json
+      }
+      usage_tier: {
+        Args: { p_count: number }
+        Returns: string
       }
     }
     Enums: {
