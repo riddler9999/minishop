@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {useNavigate, useLocation, Link} from 'react-router-dom';
 import {Lock, Mail, ShieldAlert, Store, CheckCircle2} from 'lucide-react';
 import {useAdminAuth, isSupabaseConfigured} from '../../lib/adminAuth';
+import {APP_INITIAL, APP_NAME} from '../../lib/brand';
 import {cx} from '../../lib/format';
 
 type Mode = 'login' | 'signup';
@@ -64,10 +65,10 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-2xl font-bold text-white shadow-lg">
-            T
+            {APP_INITIAL}
           </span>
           <h1 className="my mt-4 font-display text-2xl font-bold text-white">Seller Console</h1>
-          <p className="my mt-1 text-sm text-cream-200/70">Mini TikTok Shop · ဆိုင်ရှင် အကောင့်</p>
+          <p className="my mt-1 text-sm text-cream-200/70">{APP_NAME} · ဆိုင်ရှင် အကောင့်</p>
         </div>
 
         <div className="mb-4 flex rounded-xl bg-white/10 p-1">

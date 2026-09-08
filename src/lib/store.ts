@@ -85,6 +85,11 @@ export const api: typeof liveApi = new Proxy({} as typeof liveApi, {
 
 export {adminApi};
 
+// Public shop branding for the current tenant (null on the demo storefront) —
+// resolved as a side effect of the storefront `api` calls above.
+export {getCachedShopInfo} from './backend';
+export type {ShopInfo} from './backend';
+
 export type {
   AdminOrder,
   MerchantAccount,

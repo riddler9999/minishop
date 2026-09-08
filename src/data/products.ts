@@ -194,8 +194,8 @@ export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
 });
 
 export const DEMO_MERCHANT_ACCOUNTS: MerchantAccount[] = [
-  {provider: 'kpay', label: 'KBZPay', accountName: 'Mini TikTok Shop (နမူနာ)', phone: '09-000-000-001', tail: '0001'},
-  {provider: 'wave', label: 'WavePay', accountName: 'Mini TikTok Shop (နမူနာ)', phone: '09-000-000-002', tail: '0002'},
+  {provider: 'kpay', label: 'KBZPay', accountName: 'Mini Shop (နမူနာ)', phone: '09-000-000-001', tail: '0001'},
+  {provider: 'wave', label: 'WavePay', accountName: 'Mini Shop (နမူနာ)', phone: '09-000-000-002', tail: '0002'},
 ];
 
 export function demoCategories(): string[] {

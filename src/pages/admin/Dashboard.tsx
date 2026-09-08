@@ -6,11 +6,12 @@ import {
   Banknote,
   Clock,
   AlertTriangle,
-  EyeOff,
   ArrowRight,
 } from 'lucide-react';
 import {adminApi, type AdminOrder, type Product} from '../../lib/store';
 import {ks} from '../../lib/format';
+import {usePlan} from '../../lib/plan';
+import {UpgradeCard} from '../../components/PlanGate';
 import {statusMeta, PAID_STATUSES, OPEN_STATUSES, type OrderStatus} from '../../lib/orderStatus';
 
 interface StatCard {
@@ -25,6 +26,7 @@ interface StatCard {
 const LOW_STOCK_THRESHOLD = 5;
 
 export default function Dashboard() {
+  const {shop, features} = usePlan();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">ခြုံငုံ အခြေအနေ</h1>
-        <p className="my mt-1 text-sm text-ink-soft">ဆိုင်၏ လက်ရှိ အနှစ်ချုပ် (demo · localStorage data)</p>
+        <p className="my mt-1 text-sm text-ink-soft">{shop?.name ?? 'ဆိုင်'} · လက်ရှိ အနှစ်ချုပ်</p>
       </div>
 
       {/* KPI cards */}
@@ -175,8 +177,14 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Low stock */}
+        {/* Low stock — Business-only analytics panel */}
         <section className="lg:col-span-2">
+          {!features.advancedDashboard ? (
+            <UpgradeCard title="Stock analytics">
+              Stock နည်းနေသော ပစ္စည်းများ၊ အသေးစိတ် အရောင်း အနှစ်ချုပ်များကို Business package တွင် ကြည့်ရှုနိုင်သည်။
+            </UpgradeCard>
+          ) : (
+          <>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-ink">Stock နည်းနေသည်</h2>
             <Link
@@ -221,13 +229,10 @@ export default function Dashboard() {
               </ul>
             )}
           </div>
+          </>
+          )}
         </section>
       </div>
-
-      <p className="my flex items-center gap-1.5 text-xs text-ink-soft/70">
-        <EyeOff className="h-3.5 w-3.5" />
-        Data အားလုံးသည် ဤ browser ၏ localStorage ထဲတွင်သာ သိမ်းထားသည် — demo အတွက်သာ။
-      </p>
     </div>
   );
 }

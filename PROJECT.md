@@ -10,15 +10,20 @@ in-app WebView**. **Not a sale agent** — TikTok exposes no bot/messaging API.
 
 ## Status
 
-Blocked | Moe Htet | 2026-09-08
+In progress (commercial layer) | Moe Htet | 2026-09-08
 
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
 (checkout fee parity) are all built. Pilot is blocked on live owner verification.
 
-**Platform backend (Phase 1.5) prepared** on branch `feat/platform-backend` — migration
-`0003_platform_plan_and_usage.sql` (shop plan, monthly billable-order usage + tiers, storage
-buckets/policies) + `backend.ts` self-service payment-account CRUD, usage read, storage upload.
-Validated at SQL/RLS level via rolled-back txns; **NOT yet applied to the live project (D7)**.
+**Commercialization (frontend, merged to main):** TikTok-specific wording generalized to
+channel-neutral "Mini Shop"; storefront shows the tenant's own name/logo. Frontend plan-gating
+layer (Starter vs Business), seller Settings/branding page (`/admin/settings`), onboarding polish.
+
+**Platform backend (Phase 1.5), this branch:** migration `0003_platform_plan_and_usage.sql`
+(shop plan, monthly billable-order usage + tiers, storage buckets/policies) + `backend.ts`
+self-service payment-account CRUD, usage read, storage upload. `sellerShop.ts` now selects
+`plan` → frontend gating is per-tenant. Validated at SQL/RLS level via rolled-back txns.
+**NOT yet applied to the live project (D7).**
 
 ## Stack
 
@@ -34,7 +39,6 @@ Validated at SQL/RLS level via rolled-back txns; **NOT yet applied to the live p
 
 - [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records.
 - [ ] **Owner** — set the Vercel env vars and Root Directory.
-- [ ] **Owner apply `0003`** to `fsxdnmnycizjkgstokze` (D7 gate), then regenerate `database.types.ts` + run `get_advisors(security)`. Backend + hand-authored types delta already committed on `feat/platform-backend`.
 - [~] Storage bucket + policy for shop logos and product images — **built in `0003`** (tenant-safe `shop-logos` / `product-images` buckets + owner-scoped policies; `adminApi.uploadShopLogo/uploadProductImage`). Images stay URL text on the row. Pending apply + frontend upload UI.
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
@@ -42,6 +46,14 @@ Validated at SQL/RLS level via rolled-back txns; **NOT yet applied to the live p
 - [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
 - [ ] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`). `lint` is `tsc --noEmit` only, so hook and a11y regressions are not caught automatically.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
+- [x] **Backend** — `shops.plan` column + `OWN_SHOP_COLUMNS`/`mapOwnShop()` wiring in
+  `sellerShop.ts` — **done in `0003`** (D25); plan gating is now per-tenant. `database.types.ts`
+  hand-authored delta pending 1:1 regenerate after apply.
+- [ ] **Owner apply `0003`** to `fsxdnmnycizjkgstokze` (D7), then set the pilot shop to Business
+  (`update public.shops set plan='business' where slug='<pilot-slug>';` — see D25 downgrade
+  hazard), regenerate `database.types.ts`, run `get_advisors(security)`.
+- [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
+  toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
 
 **Explicitly NOT in v1:** auto payment verification (Phase 2 moat), AI/chatbot features, custom domains, staff accounts, deep analytics, a native app, multi-courier APIs.
 
@@ -49,8 +61,21 @@ Validated at SQL/RLS level via rolled-back txns; **NOT yet applied to the live p
 
 ## Decisions
 
-- D23 (2026-09-08) — **Platform Phase 1.5** in `0003`, all **purely additive** (new columns with `NOT NULL DEFAULT`, new view/function/storage — no drops/renames/type changes), so `place_order()`, `lookup_order()`, existing RLS and `/s/:slug` are byte-for-byte preserved and no storefront API breaks.
-  - **Plan** = `shops.plan text check in ('starter','business') default 'starter'`. Platform-set, **read-only for sellers** by contract (`updateShopSettings` refuses `plan`). No server-side feature-gate yet — nothing is unlocked by the value, so no RLS write-lock added (Phase-2 gap, documented).
+- D23 (2026-09-08) — **Plan gating is a FRONTEND layer** (`src/lib/plan.tsx`), not a DB/RLS
+  change. Plan source is forward-compatible: `shop.plan` (once a `shops.plan` column exists) →
+  `VITE_DEFAULT_PLAN` env → hard default `'business'`. The `business` default means the
+  existing single-seller deploy keeps every feature (no regression); a real commercial rollout
+  sets per-shop plan (Backend). Plan is deliberately **read-only in the seller UI** — a seller
+  must not self-unlock Business. Gating never deletes a capability; it shows an upsell
+  (`components/PlanGate.tsx`). Business-only surfaces: promotions, per-township shipping zones,
+  last-5 payment verification, dashboard analytics, logo/branding, integration hooks.
+- D24 (2026-09-08) — Storefront chrome (`Layout`, `Home` hero) renders the **tenant's own
+  name/logo** from `getCachedShopInfo()` (resolveShop now also selects `name, logo_url`); the
+  root/demo shop falls back to the product brand (`src/lib/brand.ts`). Shop `slug` stays
+  **read-only** in Settings — changing it would break every shared `/s/:slug` link.
+- D25 (2026-09-08) — **Platform Phase 1.5 backend** in `0003`, all **purely additive** (new columns with `NOT NULL DEFAULT`, new view/function/storage — no drops/renames/type changes), so `place_order()`, `lookup_order()`, existing RLS and `/s/:slug` are byte-for-byte preserved and no storefront API breaks. Delivers the `shops.plan` column D23 was waiting for.
+  - **Plan** = `shops.plan text check in ('starter','business') default 'starter'`. `sellerShop.ts` (`OWN_SHOP_COLUMNS` + `mapOwnShop`) now selects it, so D23's `resolvePlan()` becomes **per-tenant** automatically. Platform-set, **read-only for sellers** (`updateShopSettings`/`updateOwnShop` refuse `plan`). No server-side feature-gate yet — gating stays the frontend layer (D23), so no RLS write-lock added (Phase-2 gap, documented).
+  - **⚠️ Downgrade hazard on apply:** the column default `'starter'` backfills every EXISTING shop to starter, and once `getOwnShop()` reads it that **overrides D23's `'business'` hard-default** → the existing pilot seller silently loses Business features. **Owner must, with the apply, run** `update public.shops set plan='business' where slug='<pilot-slug>';` for any already-paid/pilot shop. New signups correctly default to starter.
   - **Billable order** = single source of truth generated column `orders.is_billable = (status <> 'cancelled' AND NOT is_test AND NOT is_duplicate)`; `is_test`/`is_duplicate` are admin flags defaulting false. Spec lists exactly three exclusions → a `cod_pending`/`pending_payment` order **counts**. To later mean "confirmed = checked|shipped|completed only", change **one expression**.
   - **Usage** exposed tenant-safely via `shop_monthly_usage` view (`security_invoker = on` → caller RLS filters it; no `shop_id` filter can be forgotten) + `current_shop_usage()` RPC (security invoker, own shop only). Tiers `0-100/101-500/501-1500/1501-3000/3000+` via immutable `usage_tier(int)`.
   - **Storage** = public-read `shop-logos` + `product-images` buckets; writes gated by policy to `(storage.foldername(name))[1] = own shop_id` (path `<shop_id>/…`). Logo/images stay **public-URL text** on the row — read path unchanged.

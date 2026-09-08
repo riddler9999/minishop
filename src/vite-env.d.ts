@@ -5,6 +5,8 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_ANON_KEY?: string;
+  // Deploy-wide default plan (starter | business) until per-shop plans exist.
+  readonly VITE_DEFAULT_PLAN?: string;
 }
 
 interface ImportMeta {

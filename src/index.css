@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
-/* ---- Mini TikTok Shop design system -----------------------------------------
+/* ---- Mini Shop design system ------------------------------------------------
    A DIFFERENT theme from the original warm-maroon Uthuya store this demo was
-   cloned from: a TikTok-inspired palette — pink/magenta + porcelain + cyan
-   accent, geometric Space Grotesk display instead of a serif. Mobile-first.
+   cloned from: a bold pink/magenta + porcelain + cyan accent palette, geometric
+   Space Grotesk display instead of a serif. Mobile-first.
    NOTE: token *names* (brand/cream/gold/ink) are kept from the original so the
    components need no class rewrites — only the color *values* + fonts change,
    which is what flips the whole look. */
@@ -17,7 +17,7 @@
   --color-cream-100: #eef0f7;
   --color-cream-200: #dde1ee;
 
-  /* "brand" role → TikTok pink / magenta */
+  /* "brand" role → bold pink / magenta */
   --color-brand-50: #fff0f3;
   --color-brand-100: #ffe0e6;
   --color-brand-200: #ffc2cf;
@@ -29,7 +29,7 @@
   --color-brand-800: #8f0e31;
   --color-brand-900: #6b0f29;
 
-  /* "gold" accent role → TikTok cyan */
+  /* "gold" accent role → cyan */
   --color-gold-400: #7cf4ef;
   --color-gold-500: #25f4ee;
   --color-gold-600: #0bc9c3;

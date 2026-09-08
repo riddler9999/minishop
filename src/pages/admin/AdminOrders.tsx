@@ -2,7 +2,8 @@ import {useEffect, useMemo, useState} from 'react';
 import {Search, X, Trash2, Phone, MapPin, ShoppingCart} from 'lucide-react';
 import {adminApi, type AdminOrder} from '../../lib/store';
 import {ks, cx} from '../../lib/format';
-import {statusMeta, ADMIN_STATUS_OPTIONS, ORDER_STATUS, type OrderStatus} from '../../lib/orderStatus';
+import {usePlan} from '../../lib/plan';
+import {statusMeta, ADMIN_STATUS_OPTIONS, ORDER_STATUS} from '../../lib/orderStatus';
 
 // ---- Detail / edit drawer --------------------------------------------------
 function OrderDetail({
@@ -16,6 +17,7 @@ function OrderDetail({
   onChanged: (o: AdminOrder) => void;
   onDeleted: (id: string) => void;
 }) {
+  const {features} = usePlan();
   const [status, setStatus] = useState(order.status);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -110,8 +112,10 @@ function OrderDetail({
             </div>
           </section>
 
-          {/* Manual payment confirmation (online orders only) */}
-          {order.payment_method !== 'cod' && (
+          {/* Manual payment confirmation (online orders only) — Business feature.
+              Starter sellers still change status via the status grid below; the
+              last-5-digit verification helper is the gated Business workflow. */}
+          {order.payment_method !== 'cod' && features.paymentVerification && (
             <section>
               <h4 className="my mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">ငွေပေးချေမှု စစ်ဆေးရန်</h4>
               <div className="space-y-2 rounded-xl border border-cream-200 bg-cream-50 p-3 text-sm">

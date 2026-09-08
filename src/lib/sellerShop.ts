@@ -7,23 +7,88 @@
 // yet — useful once you already know one should exist, wrong for this check.
 
 import {requireSupabase} from './supabase';
+import type {TablesUpdate} from './database.types';
 
 export interface OwnShop {
   id: string;
   slug: string;
   name: string;
+  phone: string | null;
+  logoUrl: string | null;
+  defaultDeliveryFee: number;
+  // Per-tenant plan, from the `shops.plan` column added in migration 0003.
+  // Selected below → plan.tsx's resolvePlan() gates features per-tenant.
+  plan?: string | null;
 }
+
+type ShopRow = {
+  id: string;
+  slug: string;
+  name: string;
+  phone: string | null;
+  logo_url: string | null;
+  default_delivery_fee: number;
+  plan: string | null;
+};
+
+function mapOwnShop(r: ShopRow): OwnShop {
+  return {
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    phone: r.phone,
+    logoUrl: r.logo_url,
+    defaultDeliveryFee: r.default_delivery_fee,
+    plan: r.plan,
+  };
+}
+
+// Columns fetched for the seller's own shop. `plan` (migration 0003) makes the
+// frontend gating layer (plan.tsx) per-tenant.
+const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee, plan';
 
 /** Null means this user hasn't created a shop yet — not an error. */
 export async function getOwnShop(userId: string): Promise<OwnShop | null> {
   const sb = requireSupabase();
   const {data, error} = await sb
     .from('shops')
-    .select('id, slug, name')
+    .select(OWN_SHOP_COLUMNS)
     .eq('owner_id', userId)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return data;
+  return data ? mapOwnShop(data as ShopRow) : null;
+}
+
+export interface UpdateShopInput {
+  name?: string;
+  phone?: string | null;
+  logoUrl?: string | null;
+  defaultDeliveryFee?: number;
+}
+
+/**
+ * Update the seller's own shop branding/settings. RLS (`shops_owner_all`)
+ * confines the write to the row this user owns; the `owner_id` filter is a
+ * belt-and-suspenders match. Slug is intentionally NOT editable here — it is
+ * the permanent public `/s/:slug` address and changing it would break every
+ * link a seller has already shared.
+ */
+export async function updateOwnShop(userId: string, input: UpdateShopInput): Promise<OwnShop> {
+  const sb = requireSupabase();
+  const patch: TablesUpdate<'shops'> = {};
+  if (input.name !== undefined) patch.name = input.name.trim();
+  if (input.phone !== undefined) patch.phone = input.phone?.trim() || null;
+  if (input.logoUrl !== undefined) patch.logo_url = input.logoUrl?.trim() || null;
+  if (input.defaultDeliveryFee !== undefined) patch.default_delivery_fee = input.defaultDeliveryFee;
+
+  const {data, error} = await sb
+    .from('shops')
+    .update(patch)
+    .eq('owner_id', userId)
+    .select(OWN_SHOP_COLUMNS)
+    .maybeSingle();
+  if (error || !data) throw new Error(error?.message || 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။');
+  return mapOwnShop(data as ShopRow);
 }
 
 export interface CreateShopInput {
@@ -44,7 +109,7 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
       phone: input.phone.trim() || null,
       default_delivery_fee: input.defaultDeliveryFee,
     })
-    .select('id, slug, name')
+    .select(OWN_SHOP_COLUMNS)
     .single();
   if (error) {
     // 23505 = unique_violation (slug already taken).
@@ -58,5 +123,5 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
     }
     throw new Error(error.message);
   }
-  return data;
+  return mapOwnShop(data as ShopRow);
 }

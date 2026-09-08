@@ -2,6 +2,8 @@ import {useEffect, useMemo, useState} from 'react';
 import {Search, Pencil, Plus, X, Check, EyeOff, Eye} from 'lucide-react';
 import {adminApi, type Product, type ProductPatch, type ProductCreateInput} from '../../lib/store';
 import {ks, cx} from '../../lib/format';
+import {usePlan} from '../../lib/plan';
+import {UpgradeInline} from '../../components/PlanGate';
 
 // Today's date (YYYY-MM-DD) in the seller's timezone (Asia/Yangon, UTC+6:30) —
 // NOT UTC, so a product entered in the early Myanmar morning still dates today.
@@ -22,6 +24,7 @@ function ProductModal({
   onClose: () => void;
   onSaved: (p: Product) => void;
 }) {
+  const {features} = usePlan();
   const isEdit = mode === 'edit';
   const [name, setName] = useState(product?.name ?? '');
   const [itemCode, setItemCode] = useState(product?.itemCode ?? '');
@@ -143,15 +146,21 @@ function ProductModal({
             </label>
           </div>
 
-          <label className="flex items-center justify-between rounded-xl border border-cream-200 bg-cream-50 px-3 py-2.5">
-            <span className="my text-sm font-semibold text-ink">Promotion</span>
-            <input type="checkbox" checked={isPromotion} onChange={(e) => setIsPromotion(e.target.checked)} className="h-4 w-4 accent-brand-500" />
-          </label>
-          {isPromotion && (
-            <label className="block">
-              <span className={lbl}>Promo ဈေး (Ks)</span>
-              <input inputMode="numeric" value={promoPrice} onChange={(e) => setPromoPrice(e.target.value)} className={field} placeholder="ဥပမာ 17500" />
-            </label>
+          {features.promotions ? (
+            <>
+              <label className="flex items-center justify-between rounded-xl border border-cream-200 bg-cream-50 px-3 py-2.5">
+                <span className="my text-sm font-semibold text-ink">Promotion</span>
+                <input type="checkbox" checked={isPromotion} onChange={(e) => setIsPromotion(e.target.checked)} className="h-4 w-4 accent-brand-500" />
+              </label>
+              {isPromotion && (
+                <label className="block">
+                  <span className={lbl}>Promo ဈေး (Ks)</span>
+                  <input inputMode="numeric" value={promoPrice} onChange={(e) => setPromoPrice(e.target.value)} className={field} placeholder="ဥပမာ 17500" />
+                </label>
+              )}
+            </>
+          ) : (
+            <UpgradeInline label="Promotion ဈေးနှုန်း" />
           )}
 
           <label className="block">

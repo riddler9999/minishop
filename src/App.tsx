@@ -15,6 +15,7 @@ import OrderLookup from './pages/OrderLookup';
 import NotFound from './pages/NotFound';
 import {AdminAuthProvider, useAdminAuth} from './lib/adminAuth';
 import {getOwnShop} from './lib/sellerShop';
+import {PlanProvider} from './lib/plan';
 import AdminLayout from './components/AdminLayout';
 import AdminLogin from './pages/admin/Login';
 import Onboarding from './pages/admin/Onboarding';
@@ -22,6 +23,7 @@ import Dashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminShipping from './pages/admin/AdminShipping';
+import Settings from './pages/admin/Settings';
 
 // Route guard for the admin console: requires a real Supabase session AND an
 // onboarded shop (a `shops` row owned by that session's user). A session
@@ -58,6 +60,19 @@ function RequireAdmin({children}: {children: React.ReactNode}) {
     return <Navigate to="/admin/onboarding" replace />;
   }
   return <>{children}</>;
+}
+
+// Admin console shell — wraps the layout in PlanProvider so every admin page can
+// read the seller's plan + shop via usePlan(). RequireAdmin has already proven a
+// session AND an owned shop exist by the time this renders, so `user` is set.
+function AdminConsole() {
+  const {user} = useAdminAuth();
+  if (!user) return null;
+  return (
+    <PlanProvider userId={user.id}>
+      <AdminLayout />
+    </PlanProvider>
+  );
 }
 
 // Storefront branch — keeps the customer-facing chrome (header/footer/cart).
@@ -174,13 +189,14 @@ export default function App() {
           path="/admin"
           element={
             <RequireAdmin>
-              <AdminLayout />
+              <AdminConsole />
             </RequireAdmin>
           }>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="shipping" element={<AdminShipping />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* Multi-tenant storefront: /s/:slug/... (slug scopes the data layer). */}
