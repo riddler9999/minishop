@@ -10,31 +10,36 @@ in-app WebView**. **Not a sale agent** — TikTok exposes no bot/messaging API.
 
 ## Status
 
-In progress (commercial layer) | Moe Htet | 2026-09-08
+Blocked (owner live-verify) | Moe Htet | 2026-09-08
 
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
 (checkout fee parity) are all built. Pilot is blocked on live owner verification.
 
-**Commercialization (branch `claude/mini-shop-commercialization-9ht29r`):** TikTok-specific
-wording generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own
-name/logo. Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding
-page (`/admin/settings`), and onboarding UX polish. typecheck + build green. NOT yet
-live-verified (Supabase egress blocked from sandbox).
+**Commercialization — merged (PR #190 code, #192 index sync):** TikTok-specific wording
+generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
+Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding page
+(`/admin/settings`), and onboarding UX polish. typecheck + build green. NOT yet live-verified
+(Supabase egress blocked from sandbox) — see Open Tasks.
 
 ## Stack
 
 - React + Vite + TypeScript + Tailwind v4; Vercel (Root Directory must be `projects/personal/mini-tiktok-shop`)
 - **Dedicated Supabase project** `Mini Tiktok Shop`, ref `fsxdnmnycizjkgstokze`, `ap-southeast-1` — deliberately NOT the shared production project `kjjexuhhrwzujgocfzd`
 - Schema `supabase/migrations/0001_init_saas.sql`: `shops`, `products`, `orders`, `order_items`, `payment_accounts`, `shipping_zones`; RLS on all; `place_order()` (anon write, server-side repricing, atomic) and `lookup_order()` (anon buyer lookup) RPCs. `0002_harden_search_path.sql` pins `search_path` on `set_updated_at()`.
-- Data layer: `src/lib/shopContext.ts` (module-level slug) · `src/lib/backend.ts` (Supabase `api`/`adminApi`) · `src/lib/store.ts` (the switcher — storefront `api` is a reactive Proxy, `adminApi` is an unconditional re-export) · `src/lib/api.ts` (demo/localStorage) · `src/lib/database.types.ts` (generated)
-- Auth: real Supabase email/password (`src/lib/adminAuth.tsx`), onboarding at `/admin/onboarding`, `RequireAdmin` gates on session AND shop existence
+- Data layer: `src/lib/shopContext.ts` (module-level slug) · `src/lib/backend.ts` (Supabase `api`/`adminApi`; `resolveShop` also caches `name`/`logo_url` → `getCachedShopInfo()`) · `src/lib/store.ts` (the switcher — storefront `api` is a reactive Proxy, `adminApi` is an unconditional re-export, re-exports `getCachedShopInfo`) · `src/lib/api.ts` (demo/localStorage) · `src/lib/database.types.ts` (generated)
+- Commercial layer: `src/lib/brand.ts` (product-neutral `APP_NAME`/initial) · `src/lib/plan.tsx` (`Plan`, `PlanFeatures`, `PlanProvider`/`usePlan`, `resolvePlan`) · `src/components/PlanGate.tsx` (badge + upsell UI) · `src/pages/admin/Settings.tsx` (`/admin/settings`) · `src/lib/sellerShop.ts` (`getOwnShop`/`updateOwnShop`, extended shop shape)
+- Auth: real Supabase email/password (`src/lib/adminAuth.tsx`), onboarding at `/admin/onboarding`, `RequireAdmin` gates on session AND shop existence; admin console wrapped in `PlanProvider` (`AdminConsole` in `App.tsx`)
 - Order statuses in `src/lib/orderStatus.ts`: `cod_pending`, `pending_payment`, `partial_checked`, `checked`, `shipped`, `completed`, `cancelled`. Payment methods: `cod` | `kpay` | `wave`.
-- Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (anon key only — RLS enforces access)
+- Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (anon key only — RLS enforces access), `VITE_DEFAULT_PLAN` (`starter`|`business`, default `business` — deploy-wide plan default until `shops.plan` exists)
 
 ## Open Tasks
 
 - [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records.
 - [ ] **Owner** — set the Vercel env vars and Root Directory.
+- [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
+  and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
+  Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
+  logo field. Both plans keep name/phone/default-fee in Settings and a working storefront.
 - [ ] Storage bucket + policy for shop logos and product images (images are URL text today).
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
@@ -82,6 +87,15 @@ live-verified (Supabase egress blocked from sandbox).
 
 ## Notes
 
+- **Plan gating gotchas.** `plan.tsx` (not `.ts`) — it exports a JSX provider. `usePlan()` only
+  works inside `PlanProvider`, which wraps ONLY the admin console (`AdminConsole` in `App.tsx`);
+  Login/Onboarding are outside it, so they use `brand.ts` constants, not `usePlan`. Gating hides +
+  upsells, never deletes — downgrading a shop keeps its promo/zone data intact (reappears on
+  upgrade). Default `VITE_DEFAULT_PLAN=business` is chosen so the existing seller loses nothing.
+- **Storefront branding is render-order dependent.** `getCachedShopInfo()` is synchronous and reads
+  the `resolveShop()` cache; it works because `ShopRoute` awaits `resolveShop()` before mounting
+  `Storefront`→`Layout`. It is NOT reactive — a mid-session shop rename won't repaint the header
+  until navigation. Fine for the current flow.
 - **WebView constraints drive the whole design.** KBZPay/WavePay deep-links often fail in WebView → manual transfer + last-5 entry (⚠️ still needs a real-device test). localStorage/session is ephemeral → server-side order lookup via RPC. Camera/gallery pickers are flaky → text field only, no slip upload. "Open in external browser" needs manual taps → everything must work inside the WebView.
 - **Any schema change needs three things in sync:** a new `supabase/migrations/NNNN_*.sql`, applied via `mcp__Supabase__apply_migration` against `fsxdnmnycizjkgstokze`, and a regenerated `database.types.ts`.
 - `get_advisors(security)` is clean apart from the intentional anon `SECURITY DEFINER` findings on `place_order`/`lookup_order` — those two are the only anon write/read paths by design. The `rls_auto_enable` finding is a Supabase platform function, not ours.
