@@ -58,6 +58,85 @@ function mapShippingZone(row: {id: string; region: string; township: string; fee
   return {id: row.id, region: row.region, township: row.township, fee: row.fee};
 }
 
+// ---- platform: plan + monthly usage (migration 0003) ------------------------
+export type ShopPlan = 'starter' | 'business';
+export type UsageTier = '0-100' | '101-500' | '501-1500' | '1501-3000' | '3000+';
+
+// Current-month billable-order usage for the signed-in seller's own shop.
+// `billableOrders` counts confirmed orders EXCLUDING cancelled / test / duplicate.
+export interface ShopUsage {
+  shopId: string;
+  plan: ShopPlan;
+  month: string; // 'YYYY-MM'
+  billableOrders: number;
+  tier: UsageTier;
+}
+
+// Seller-editable shop settings (plan is platform-set → read-only here).
+export interface ShopSettings {
+  id: string;
+  slug: string;
+  name: string;
+  phone: string | null;
+  logoUrl: string | null;
+  defaultDeliveryFee: number;
+  plan: ShopPlan;
+  isActive: boolean;
+}
+export interface ShopSettingsPatch {
+  name?: string;
+  phone?: string | null;
+  logoUrl?: string | null;
+  defaultDeliveryFee?: number;
+}
+
+// ---- payment accounts (seller-managed KBZPay / WavePay) ---------------------
+export interface PaymentAccount {
+  id: string;
+  provider: 'kpay' | 'wave';
+  accountName: string;
+  phone: string;
+  isActive: boolean;
+}
+export interface PaymentAccountInput {
+  provider: 'kpay' | 'wave';
+  accountName: string;
+  phone: string;
+  isActive?: boolean;
+}
+export interface PaymentAccountPatch {
+  accountName?: string;
+  phone?: string;
+  isActive?: boolean;
+}
+
+function mapPaymentAccount(row: {
+  id: string;
+  provider: string;
+  account_name: string;
+  phone: string;
+  is_active: boolean;
+}): PaymentAccount {
+  return {
+    id: row.id,
+    provider: row.provider as 'kpay' | 'wave',
+    accountName: row.account_name,
+    phone: row.phone,
+    isActive: row.is_active,
+  };
+}
+
+// Supabase Storage buckets (see supabase/migrations/0003_platform_plan_and_usage.sql).
+// Tenant-safe by policy: the FIRST path segment must be the owner's shop_id.
+const SHOP_LOGOS_BUCKET = 'shop-logos';
+const PRODUCT_IMAGES_BUCKET = 'product-images';
+
+// Keep a filename's extension, strip anything policy/URL-unfriendly from the stem.
+function safeFileExt(filename: string): string {
+  const m = /\.([a-zA-Z0-9]{1,8})$/.exec(filename);
+  return m ? m[1].toLowerCase() : 'bin';
+}
+
 type ProductRow = {
   id: string;
   item_code: string | null;
@@ -563,6 +642,178 @@ export const adminApi = {
       .select('id')
       .maybeSingle();
     if (error || !data) throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။');
+    return {ok: true};
+  },
+
+  // ---- shop settings (seller reads plan + edits own logo/name/phone/fee) -----
+  async getShopSettings(): Promise<{shop: ShopSettings}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const {data, error} = await sb
+      .from('shops')
+      .select('id, slug, name, phone, logo_url, default_delivery_fee, plan, is_active')
+      .eq('id', shopId)
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'ဆိုင် ရှာမတွေ့ပါ။');
+    return {
+      shop: {
+        id: data.id,
+        slug: data.slug,
+        name: data.name,
+        phone: data.phone,
+        logoUrl: data.logo_url,
+        defaultDeliveryFee: data.default_delivery_fee,
+        plan: (data.plan as ShopPlan) ?? 'starter',
+        isActive: data.is_active,
+      },
+    };
+  },
+
+  // NOTE: `plan` is intentionally NOT patchable here — it is platform-set.
+  async updateShopSettings(patch: ShopSettingsPatch): Promise<{ok: true}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const dbPatch: TablesUpdate<'shops'> = {};
+    if (patch.name !== undefined) dbPatch.name = patch.name;
+    if (patch.phone !== undefined) dbPatch.phone = patch.phone;
+    if (patch.logoUrl !== undefined) dbPatch.logo_url = patch.logoUrl;
+    if (patch.defaultDeliveryFee !== undefined) dbPatch.default_delivery_fee = patch.defaultDeliveryFee;
+    const {data, error} = await sb.from('shops').update(dbPatch).eq('id', shopId).select('id').maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'ဆိုင် အချက်အလက် သိမ်း၍မရပါ။');
+    return {ok: true};
+  },
+
+  // ---- monthly usage (billable = confirmed, minus cancelled/test/duplicate) ---
+  async getUsage(): Promise<{usage: ShopUsage}> {
+    const sb = requireSupabase();
+    const {data, error} = await sb.rpc('current_shop_usage');
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('ဤအကောင့်တွင် ဆိုင် မရှိသေးပါ။');
+    const r = data as {
+      shop_id: string;
+      plan: string;
+      month: string;
+      billable_orders: number;
+      tier: string;
+    };
+    return {
+      usage: {
+        shopId: r.shop_id,
+        plan: (r.plan as ShopPlan) ?? 'starter',
+        month: r.month,
+        billableOrders: r.billable_orders,
+        tier: r.tier as UsageTier,
+      },
+    };
+  },
+
+  // ---- payment accounts (KBZPay / WavePay, owner self-service) ---------------
+  async listPaymentAccounts(): Promise<{accounts: PaymentAccount[]}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const {data, error} = await sb
+      .from('payment_accounts')
+      .select('id, provider, account_name, phone, is_active')
+      .eq('shop_id', shopId)
+      .order('provider', {ascending: true});
+    if (error) throw new Error(error.message);
+    return {accounts: (data ?? []).map(mapPaymentAccount)};
+  },
+
+  async createPaymentAccount(input: PaymentAccountInput): Promise<{account: PaymentAccount}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const row: TablesInsert<'payment_accounts'> = {
+      shop_id: shopId,
+      provider: input.provider,
+      account_name: input.accountName,
+      phone: input.phone,
+      is_active: input.isActive ?? true,
+    };
+    const {data, error} = await sb
+      .from('payment_accounts')
+      .insert(row)
+      .select('id, provider, account_name, phone, is_active')
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'ငွေပေးချေမှုအကောင့် ဖန်တီး၍မရပါ။');
+    return {account: mapPaymentAccount(data)};
+  },
+
+  async updatePaymentAccount(id: string, patch: PaymentAccountPatch): Promise<{account: PaymentAccount}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const dbPatch: TablesUpdate<'payment_accounts'> = {};
+    if (patch.accountName !== undefined) dbPatch.account_name = patch.accountName;
+    if (patch.phone !== undefined) dbPatch.phone = patch.phone;
+    if (patch.isActive !== undefined) dbPatch.is_active = patch.isActive;
+    const {data, error} = await sb
+      .from('payment_accounts')
+      .update(dbPatch)
+      .eq('id', id)
+      .eq('shop_id', shopId)
+      .select('id, provider, account_name, phone, is_active')
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'ငွေပေးချေမှုအကောင့် ရှာမတွေ့ပါ။');
+    return {account: mapPaymentAccount(data)};
+  },
+
+  async deletePaymentAccount(id: string): Promise<{ok: true}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const {data, error} = await sb
+      .from('payment_accounts')
+      .delete()
+      .eq('id', id)
+      .eq('shop_id', shopId)
+      .select('id')
+      .maybeSingle();
+    if (error || !data) throw new Error(error?.message || 'ငွေပေးချေမှုအကောင့် ရှာမတွေ့ပါ။');
+    return {ok: true};
+  },
+
+  // ---- storage: shop logo + product images (tenant-safe paths) ---------------
+  // Uploads to `<shop_id>/…` — the FIRST path segment is the shop_id the storage
+  // RLS policy checks against the owner. Returns the public URL to persist on the
+  // shop/product row (shops.logo_url / products.images[]). The seller must then
+  // call updateShopSettings/updateProduct to save it.
+  async uploadShopLogo(file: File): Promise<{url: string; path: string}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const path = `${shopId}/logo-${Date.now()}.${safeFileExt(file.name)}`;
+    const {error} = await sb.storage
+      .from(SHOP_LOGOS_BUCKET)
+      .upload(path, file, {upsert: true, contentType: file.type || undefined});
+    if (error) throw new Error(error.message);
+    const {data} = sb.storage.from(SHOP_LOGOS_BUCKET).getPublicUrl(path);
+    return {url: data.publicUrl, path};
+  },
+
+  async uploadProductImage(file: File, productId?: string): Promise<{url: string; path: string}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const folder = productId ?? 'unassigned';
+    const path = `${shopId}/${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeFileExt(file.name)}`;
+    const {error} = await sb.storage
+      .from(PRODUCT_IMAGES_BUCKET)
+      .upload(path, file, {upsert: true, contentType: file.type || undefined});
+    if (error) throw new Error(error.message);
+    const {data} = sb.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path);
+    return {url: data.publicUrl, path};
+  },
+
+  // Remove a previously-uploaded media object (e.g. replacing a logo). `bucket`
+  // must be one of the tenant media buckets; the path is owner-scoped by policy.
+  async deleteShopLogo(path: string): Promise<{ok: true}> {
+    const sb = requireSupabase();
+    const {error} = await sb.storage.from(SHOP_LOGOS_BUCKET).remove([path]);
+    if (error) throw new Error(error.message);
+    return {ok: true};
+  },
+
+  async deleteProductImage(path: string): Promise<{ok: true}> {
+    const sb = requireSupabase();
+    const {error} = await sb.storage.from(PRODUCT_IMAGES_BUCKET).remove([path]);
+    if (error) throw new Error(error.message);
     return {ok: true};
   },
 };

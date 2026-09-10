@@ -16,9 +16,8 @@ export interface OwnShop {
   phone: string | null;
   logoUrl: string | null;
   defaultDeliveryFee: number;
-  // Forward-compatible: populated once the backend adds a `shops.plan` column
-  // and it is added to the select below. Undefined today → plan.ts falls back
-  // to the deploy-wide default (see resolvePlan()).
+  // Per-tenant plan, from the `shops.plan` column added in migration 0003.
+  // Selected below → plan.tsx's resolvePlan() gates features per-tenant.
   plan?: string | null;
 }
 
@@ -29,6 +28,7 @@ type ShopRow = {
   phone: string | null;
   logo_url: string | null;
   default_delivery_fee: number;
+  plan: string | null;
 };
 
 function mapOwnShop(r: ShopRow): OwnShop {
@@ -39,13 +39,13 @@ function mapOwnShop(r: ShopRow): OwnShop {
     phone: r.phone,
     logoUrl: r.logo_url,
     defaultDeliveryFee: r.default_delivery_fee,
+    plan: r.plan,
   };
 }
 
-// Columns fetched for the seller's own shop. NOTE for the Backend agent: when a
-// `plan` column is added to `shops`, append it here and set `plan` in mapOwnShop
-// — the frontend gating layer (plan.ts) will then be per-tenant automatically.
-const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee';
+// Columns fetched for the seller's own shop. `plan` (migration 0003) makes the
+// frontend gating layer (plan.tsx) per-tenant.
+const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee, plan';
 
 /** Null means this user hasn't created a shop yet — not an error. */
 export async function getOwnShop(userId: string): Promise<OwnShop | null> {
