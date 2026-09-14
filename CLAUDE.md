@@ -10,6 +10,17 @@ in-app WebView (no native app, no bot/messaging API — this is **not** a sales 
 `PROJECT.md` for full product context, decision log (D1–D33), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
+## Session communication preference (standing, until this project is done)
+
+- Reply to the user in Burmese (မြန်မာဘာသာ) throughout the session. This is about the chat
+  reply itself, not code — it doesn't change the "UI copy is Burmese; code comments/identifiers
+  are English" rule below.
+- End every reply with one explicit line: if there is a next action the user themselves needs to
+  take, state it plainly in Burmese, give the exact prompt text to use verbatim, and say whether
+  it should be pasted into a **new session** or the **current chat**. If nothing is needed from
+  the user, say so instead of just omitting the line.
+- Applies to every session working on this repo until the project owner says the project is done.
+
 ## Commands
 
 - `npm run dev` — Vite dev server
