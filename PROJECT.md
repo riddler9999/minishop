@@ -10,23 +10,24 @@ in-app WebView**. **Not a sale agent** — TikTok exposes no bot/messaging API.
 
 ## Status
 
-Blocked (owner live-verify) | Moe Htet | 2026-09-14
+Live & owner-verified — pilot next | Moe Htet | 2026-09-14
 
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
-(checkout fee parity) are all built. Pilot is blocked on live owner verification.
+(checkout fee parity) are all built and **owner-verified on the live deployment** (D31) — the
+real browser/WebView click-through this sandbox could never do itself. Next up: the plan-gating
+live-verify and the first real-seller pilot.
 
 **Commercialization — merged (PR #190 code, #192 index sync):** TikTok-specific wording
 generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
 Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding page
-(`/admin/settings`), and onboarding UX polish. typecheck + build green. NOT yet live-verified
-(Supabase egress blocked from sandbox) — see Open Tasks.
+(`/admin/settings`), and onboarding UX polish. typecheck + build green, and now owner-verified
+live (D31).
 
-**Vercel deployment is now live** (D30): `minishop` project, production alias
+**Vercel deployment is live** (D30): `minishop` project, production alias
 `https://minishop-xi-brown.vercel.app`, building from `riddler9999/minishop` `main` with
 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` correctly configured — confirmed by grepping the
-shipped bundle for the real project ref. This closes the first of the two D28 blockers. The second
-(sandbox has no network path to `*.supabase.co` or, now confirmed, `*.vercel.app` either) still
-stands — real click-through still needs a real browser/device.
+shipped bundle for the real project ref. This closed the first of the two D28 blockers; the owner
+has now closed the second by doing the real click-through themselves (D31).
 
 ## Stack
 
@@ -41,9 +42,8 @@ stands — real click-through still needs a real browser/device.
 
 ## Open Tasks
 
-- [ ] **Owner live-verify A + B + C + C.1** on the live deployment (`https://minishop-xi-brown.vercel.app`): `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records. **Backend/RLS-level pass done (D28); Vercel deployment + env vars done (D30) — only the actual browser/WebView click-through is still outstanding**, and that needs a real device/browser (see D30 — this sandbox has no network path to `*.vercel.app` either, not just `*.supabase.co`).
-- [ ] **Owner** — once real-verified, disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Not blocking.
-- [ ] **Owner** — sign up for real through `/admin/onboarding` on the now-live deployment (creates a real, working GoTrue login — do not hand-seed `auth.users` for this, see D28) to get a real pilot shop for C/C.1.
+- [x] **Owner live-verify A + B + C + C.1** on the live deployment (`https://minishop-xi-brown.vercel.app`) — owner confirmed the real browser/WebView click-through works. See D31.
+- [ ] **Owner** — disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Not blocking.
 - [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
@@ -63,6 +63,14 @@ stands — real click-through still needs a real browser/device.
 
 ## Decisions
 
+- D31 (2026-09-14) — **Owner completed the real browser/WebView live-verify on the deployed
+  preview** (`https://minishop-xi-brown.vercel.app`), closing the second D28 blocker that this
+  sandbox structurally cannot close itself (no network path to `*.vercel.app`/`*.supabase.co`).
+  Owner reported the click-through as working ("I checked. It is OK.") after D30 got the
+  deployment live with the real Supabase env vars. This completes Milestones A/B/C/C.1 end to
+  end: routing, buyer storefront on the live backend, seller admin, and checkout fee parity — the
+  project is no longer blocked on live verification. Plan-gating live-verify (deploy once per
+  `VITE_DEFAULT_PLAN` value) and the real-seller pilot remain as the next Open Tasks.
 - D30 (2026-09-14) — **Vercel project is live; resolves D28 blocker 1, D28 blocker 2 still stands
   and now covers `*.vercel.app` too.** Owner re-authorized the Vercel↔GitHub App scope and set
   `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. `mcp__Vercel__create_git_project` on
