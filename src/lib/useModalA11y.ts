@@ -33,6 +33,12 @@ export function useModalA11y<T extends HTMLElement>(onClose: () => void) {
         return;
       }
       if (e.key !== 'Tab') return;
+      // A panel can stay mounted but be hidden by a responsive class (e.g.
+      // the mobile nav drawer's `lg:hidden` after the viewport widens past
+      // that breakpoint while it's still open). Trapping Tab for an invisible
+      // panel would swallow every Tab press without being able to focus
+      // anything inside it, freezing keyboard navigation — so stand down.
+      if (panel.offsetParent === null) return;
       const items = focusables();
       if (items.length === 0) return;
       const first = items[0];
