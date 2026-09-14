@@ -20,8 +20,9 @@ live-verify and the first real-seller pilot.
 **Commercialization — merged (PR #190 code, #192 index sync):** TikTok-specific wording
 generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
 Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding page
-(`/admin/settings`), and onboarding UX polish. typecheck + build green, and now owner-verified
-live (D31).
+(`/admin/settings`), and onboarding UX polish. typecheck + build green. D31 owner-verified the
+core storefront/admin flow (A/B/C/C.1) live, including the real onboarding/login this exercises —
+but **not** the plan-gating layer's own Starter-vs-Business behavior, which is still open below.
 
 **Vercel deployment is live** (D30): `minishop` project, production alias
 `https://minishop-xi-brown.vercel.app`, building from `riddler9999/minishop` `main` with
@@ -68,9 +69,13 @@ has now closed the second by doing the real click-through themselves (D31).
   sandbox structurally cannot close itself (no network path to `*.vercel.app`/`*.supabase.co`).
   Owner reported the click-through as working ("I checked. It is OK.") after D30 got the
   deployment live with the real Supabase env vars. This completes Milestones A/B/C/C.1 end to
-  end: routing, buyer storefront on the live backend, seller admin, and checkout fee parity — the
-  project is no longer blocked on live verification. Plan-gating live-verify (deploy once per
-  `VITE_DEFAULT_PLAN` value) and the real-seller pilot remain as the next Open Tasks.
+  end: routing, buyer storefront on the live backend, seller admin, and checkout fee parity —
+  and, as a necessary side effect of exercising C (seller admin), closes the specific gap D28
+  flagged as uncovered: a real GoTrue-issued login through `/admin/onboarding`, not a hand-seeded
+  one. **Scope, precisely:** this is A/B/C/C.1 only. It does **not** cover the commercialization
+  plan-gating layer's own Starter-vs-Business feature-hiding behavior — that needs its own
+  two-build verification (`VITE_DEFAULT_PLAN=starter` vs `=business`) and stays open below,
+  alongside the real-seller pilot.
 - D30 (2026-09-14) — **Vercel project is live; resolves D28 blocker 1, D28 blocker 2 still stands
   and now covers `*.vercel.app` too.** Owner re-authorized the Vercel↔GitHub App scope and set
   `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. `mcp__Vercel__create_git_project` on
