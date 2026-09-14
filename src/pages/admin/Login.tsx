@@ -100,7 +100,6 @@ export default function AdminLogin() {
               <input
                 type="email"
                 value={email}
-                autoFocus
                 autoComplete="email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"

@@ -142,20 +142,21 @@ export default function Checkout() {
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className={label}>အမည် <span className="text-brand-600">*</span></label>
-                <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="အမည်ရေးပါ" />
+                <label htmlFor="checkout-name" className={label}>အမည် <span className="text-brand-600">*</span></label>
+                <input id="checkout-name" className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="အမည်ရေးပါ" />
               </div>
               <div>
-                <label className={label}>ဖုန်းနံပါတ် <span className="text-brand-600">*</span></label>
-                <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09…" inputMode="tel" />
+                <label htmlFor="checkout-phone" className={label}>ဖုန်းနံပါတ် <span className="text-brand-600">*</span></label>
+                <input id="checkout-phone" className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09…" inputMode="tel" />
               </div>
               <div className="sm:col-span-2">
-                <label className={label}>လမ်းအမည် / အိမ်အမှတ် <span className="text-brand-600">*</span></label>
-                <input className={input} value={street} onChange={(e) => setStreet(e.target.value)} placeholder="ဥပမာ — မြသီတာလမ်း၊ အမှတ် ၁၂၃" />
+                <label htmlFor="checkout-street" className={label}>လမ်းအမည် / အိမ်အမှတ် <span className="text-brand-600">*</span></label>
+                <input id="checkout-street" className={input} value={street} onChange={(e) => setStreet(e.target.value)} placeholder="ဥပမာ — မြသီတာလမ်း၊ အမှတ် ၁၂၃" />
               </div>
               <div>
-                <label className={label}>တိုင်း / ပြည်နယ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-region" className={label}>တိုင်း / ပြည်နယ် <span className="text-brand-600">*</span></label>
                 <select
+                  id="checkout-region"
                   className={input}
                   value={region}
                   onChange={(e) => {
@@ -169,8 +170,9 @@ export default function Checkout() {
                 </select>
               </div>
               <div>
-                <label className={label}>မြို့နယ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-township" className={label}>မြို့နယ် <span className="text-brand-600">*</span></label>
                 <select
+                  id="checkout-township"
                   className={cx(input, !region && 'cursor-not-allowed opacity-60')}
                   value={township}
                   disabled={!region}
@@ -253,10 +255,11 @@ export default function Checkout() {
 
                 {/* Payment reference — last 5 digits of the transfer (WebView-safe; no slip upload). */}
                 <div className="mt-4">
-                  <label className={label}>
+                  <label htmlFor="checkout-reftail" className={label}>
                     ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံး <span className="text-brand-600">*</span>
                   </label>
                   <input
+                    id="checkout-reftail"
                     className={input}
                     value={refTail}
                     onChange={(e) => setRefTail(e.target.value.replace(/\D/g, '').slice(0, 5))}

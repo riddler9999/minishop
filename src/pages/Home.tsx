@@ -2,7 +2,6 @@ import {useEffect, useRef, useState} from 'react';
 import {ArrowRight, ChevronLeft, ChevronRight, Sparkles} from 'lucide-react';
 import {api, getCachedShopInfo, type Product} from '../lib/store';
 import ProductCard, {ProductCardSkeleton} from '../components/ProductCard';
-import {ks} from '../lib/format';
 import {ShopLink, useShopSlugParam} from '../components/ShopLink';
 
 function Hero() {

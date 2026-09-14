@@ -35,8 +35,13 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Overlay */}
-      <div
+      {/* Overlay — always mounted (only its classes toggle), so it must stay out of the tab
+          order and hidden from assistive tech while the drawer is closed. */}
+      <button
+        type="button"
+        aria-label="close"
+        aria-hidden={!drawerOpen}
+        tabIndex={drawerOpen ? 0 : -1}
         onClick={closeDrawer}
         className={`fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm transition-opacity duration-300 ${
           drawerOpen ? 'opacity-100' : 'pointer-events-none opacity-0'

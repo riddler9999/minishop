@@ -15,8 +15,12 @@ before making architectural changes; it is the project's memory, not just a READ
 - `npm run dev` — Vite dev server
 - `npm run build` — production build (`vite build`)
 - `npm run preview` — preview the production build
-- `npm run lint` — type-check only (`tsc --noEmit`); there is no ESLint configured, so hook
-  (`eslint-plugin-react-hooks`) and a11y (`jsx-a11y`) issues are **not** caught automatically
+- `npm run lint` — `tsc --noEmit` then ESLint (`eslint.config.js`, flat config): `@typescript-eslint`
+  recommended (non-type-checked; `no-explicit-any` downgraded to a warning — see the rule
+  comment), `eslint-plugin-react-hooks` restricted to just `rules-of-hooks` (error) +
+  `exhaustive-deps` (warn) — **not** the plugin's `configs.flat.recommended`, which also pulls in
+  ~12 React Compiler rules (`immutability`, `purity`, `refs`, `use-memo`, etc.) this repo hasn't
+  opted into — and `eslint-plugin-jsx-a11y` (recommended). `npm run lint:fix` applies auto-fixes.
 - No test suite exists in this repo.
 
 Deploys via Vercel (`vercel.json`: SPA rewrite to `index.html`, `dist` output). Root Directory

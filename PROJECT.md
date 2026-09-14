@@ -44,7 +44,7 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
 - [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
-- [ ] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`). `lint` is `tsc --noEmit` only, so hook and a11y regressions are not caught automatically.
+- [x] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`) — see D27.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
   toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
@@ -55,6 +55,24 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Decisions
 
+- D27 (2026-09-14) — **Added ESLint** (`eslint.config.js`, flat config) closing the `lint`-gap Open
+  Task. `eslint-plugin-react-hooks` is wired to just its two classic rules — `rules-of-hooks`
+  (error) + `exhaustive-deps` (warn) — via a manual `plugins`/`rules` block, deliberately **not**
+  `configs.flat.recommended`: that preset (v7+) also enables ~12 React Compiler correctness rules
+  (`immutability`, `purity`, `refs`, `use-memo`, `set-state-in-effect`, etc.) at `error`, which is a
+  much larger, undiscussed lint surface out of scope for a task about the hooks/a11y gap.
+  `eslint-plugin-jsx-a11y` uses `flatConfigs.recommended` as-is. `typescript-eslint`
+  (`configs.recommended`, non-type-checked — `tsc --noEmit` already covers type-checking) is
+  included as the parsing baseline flat config needs for TS/TSX; its `no-explicit-any` is
+  downgraded to warn rather than fixed en masse (pre-existing `catch (e: any)` blocks throughout —
+  out of this task's scope). Fixed for real: 4 backdrop `<div onClick>` overlays (`AdminLayout`,
+  `CartDrawer`, `OrderDetail`/`ProductModal` in `AdminOrders`/`AdminProducts`) converted to
+  `<button>` so they're keyboard-operable — `CartDrawer`'s stays mounted while closed, so it also
+  gets `aria-hidden`/`tabIndex={-1}` to stay out of the tab order until the drawer opens, unlike
+  the other three which are only mounted while their modal is open; `autoFocus` removed from the
+  Login/Onboarding first fields (`jsx-a11y/no-autofocus`); 6 `Checkout.tsx` form labels given
+  `htmlFor`/`id` pairs (`jsx-a11y/label-has-associated-control`); one genuinely unused import (`ks`
+  in `Home.tsx`) removed. `npm run lint` is `tsc --noEmit && eslint .`; `npm run lint:fix` added.
 - D26 (2026-09-14) — **Migrated out of the `MyProjects` monorepo into its own repo**
   (`riddler9999/minishop`), via `git subtree split` so full commit/decision history (D1–D25)
   survived the move. The old `projects/personal/mini-tiktok-shop/` folder in `MyProjects` is
