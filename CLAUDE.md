@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-tenant SaaS storefront for Myanmar TikTok sellers. A seller drops a `/s/<slug>` link in
 their TikTok bio; buyers order through a self-serve storefront that must work inside TikTok's
 in-app WebView (no native app, no bot/messaging API — this is **not** a sales agent). See
-`PROJECT.md` for full product context, decision log (D1–D26), open tasks, and status — read it
+`PROJECT.md` for full product context, decision log (D1–D33), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
 ## Commands
@@ -94,8 +94,8 @@ Three layers, and callers must know which to import from:
   `0003_platform_plan_and_usage.sql` (adds `shops.plan`, billable-usage view/RPC, storage buckets —
   purely additive, see `PROJECT.md` D25 for the downgrade hazard on apply), and
   `0004_product_promo_price_check.sql` (`CHECK` constraint: `promo_price < price` whenever
-  `is_promotion`, previously guarded client-side only — see `PROJECT.md` D32; **not yet applied**
-  to the live project, pending owner go-ahead per D7).
+  `is_promotion`, previously guarded client-side only — see `PROJECT.md` D32; applied to the live
+  project).
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state
