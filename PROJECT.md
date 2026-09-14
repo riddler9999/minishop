@@ -254,6 +254,15 @@ has now closed the second by doing the real click-through themselves (D31).
   separate Bash calls so a denial on the risky one doesn't cost you the safe one too). **Hazard for
   future sessions:** after any merge on this repo, diff the actual `main` head against what you
   expect before telling a reviewer, or this log, that something is fixed.
+  - **Recurred verbatim on PR #11 (same day, D33):** a second Codex review round's fix (`a9632cf`)
+    was pushed and its threads replied-to + resolved, but PR #11 had already been merged at the
+    prior commit (`b642f25`) moments earlier — the push landed on the branch after the merge, so
+    it never reached `main` despite the same "everything looks addressed" signals D29 warns about.
+    Caught by following this exact entry's own advice (`git fetch origin main` + diff against the
+    last local commit) immediately after re-checking PR state. Fixed the same way as #4: cherry-picked
+    the missed commit onto a fresh branch restarted from `main`, new PR (#12), never a force-push
+    over the merged history. **This is now a pattern, not a one-off — treat every merge on this
+    repo as "verify before trusting," permanently, not just when something feels off.**
 - D28 (2026-09-14) — **Attempted the Owner live-verify checklist; landed a backend/RLS-level pass,
   not the real browser/WebView one** — two structural blockers, both owner-only:
   1. **No Vercel deployment exists for this repo.** `mcp__Vercel__create_git_project` for
