@@ -21,8 +21,10 @@ live-verify and the first real-seller pilot.
 generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
 Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding page
 (`/admin/settings`), and onboarding UX polish. typecheck + build green. D31 owner-verified the
-core storefront/admin flow (A/B/C/C.1) live, including the real onboarding/login this exercises —
-but **not** the plan-gating layer's own Starter-vs-Business behavior, which is still open below.
+core storefront/admin flow (A/B/C/C.1) live. **Not** covered by D31: the plan-gating layer's own
+Starter-vs-Business behavior, and whether the account used for that verification actually came
+through a fresh `/admin/onboarding` GoTrue signup rather than a pre-existing one — both stay open
+below.
 
 **Vercel deployment is live** (D30): `minishop` project, production alias
 `https://minishop-xi-brown.vercel.app`, building from `riddler9999/minishop` `main` with
@@ -44,6 +46,7 @@ has now closed the second by doing the real click-through themselves (D31).
 ## Open Tasks
 
 - [x] **Owner live-verify A + B + C + C.1** on the live deployment (`https://minishop-xi-brown.vercel.app`) — owner confirmed the real browser/WebView click-through works. See D31.
+- [ ] **Owner** — confirm the account used to verify C (seller admin) came from a fresh `/admin/onboarding` GoTrue signup, not a pre-existing/hand-seeded one (D28's real-onboarding gap isn't provably closed by D31 alone — see D31's own caveat). If it wasn't, do that signup for real to actually close it.
 - [ ] **Owner** — disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Not blocking.
 - [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
@@ -69,13 +72,15 @@ has now closed the second by doing the real click-through themselves (D31).
   sandbox structurally cannot close itself (no network path to `*.vercel.app`/`*.supabase.co`).
   Owner reported the click-through as working ("I checked. It is OK.") after D30 got the
   deployment live with the real Supabase env vars. This completes Milestones A/B/C/C.1 end to
-  end: routing, buyer storefront on the live backend, seller admin, and checkout fee parity —
-  and, as a necessary side effect of exercising C (seller admin), closes the specific gap D28
-  flagged as uncovered: a real GoTrue-issued login through `/admin/onboarding`, not a hand-seeded
-  one. **Scope, precisely:** this is A/B/C/C.1 only. It does **not** cover the commercialization
-  plan-gating layer's own Starter-vs-Business feature-hiding behavior — that needs its own
-  two-build verification (`VITE_DEFAULT_PLAN=starter` vs `=business`) and stays open below,
-  alongside the real-seller pilot.
+  end: routing, buyer storefront on the live backend, seller admin, and checkout fee parity.
+  **Scope, precisely — two things this does NOT establish:** (1) it does not cover the
+  commercialization plan-gating layer's own Starter-vs-Business feature-hiding behavior, which
+  needs its own two-build verification (`VITE_DEFAULT_PLAN=starter` vs `=business`); (2) exercising
+  C (seller admin) only requires *some* logged-in account with a shop — it does not by itself prove
+  the account came from a fresh `/admin/onboarding` GoTrue signup rather than a pre-existing one,
+  so D28's specific "real onboarding, not hand-seeded" gap is not provably closed by this alone
+  (Codex correctly caught an earlier draft of this entry overclaiming that). Both points stay open
+  in Open Tasks, alongside the real-seller pilot.
 - D30 (2026-09-14) — **Vercel project is live; resolves D28 blocker 1, D28 blocker 2 still stands
   and now covers `*.vercel.app` too.** Owner re-authorized the Vercel↔GitHub App scope and set
   `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. `mcp__Vercel__create_git_project` on
