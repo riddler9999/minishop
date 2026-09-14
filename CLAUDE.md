@@ -67,9 +67,11 @@ Three layers, and callers must know which to import from:
   (`src/lib/slug.ts`), calls `setShopSlug()` **during render** (not in an effect — see the comment
   block above `ShopChecking` in `App.tsx` for why: descendant data-fetch effects must see the slug
   already set, and StrictMode's double-effect-invocation would otherwise clear a valid slug right
-  after mount), then confirms the shop actually exists via `resolveShop()` before mounting
-  `Storefront` (showing a checking state, then a 404 if missing). `RootStorefront` (catch-all
-  route) clears the slug for the root/demo storefront.
+  after mount), then — **only when the live Supabase backend is active** (`isLiveBackend()`) —
+  confirms the shop actually exists via `resolveShop()` before mounting `Storefront` (showing a
+  checking state, then a 404 if missing). Without Supabase configured, this existence check is
+  skipped entirely and the demo storefront mounts unconditionally for any well-formed slug.
+  `RootStorefront` (catch-all route) clears the slug for the root/demo storefront.
 - Storefront route components under `Storefront` in `App.tsx` are mounted at **relative** paths
   because the same component tree is reused at both `/*` (demo) and `/s/:slug/*` (real tenant);
   absolute paths would throw under nested mounting in react-router v7.
