@@ -21,6 +21,13 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 (`/admin/settings`), and onboarding UX polish. typecheck + build green. NOT yet live-verified
 (Supabase egress blocked from sandbox) — see Open Tasks.
 
+**Vercel deployment is now live** (D30): `minishop` project, production alias
+`https://minishop-xi-brown.vercel.app`, building from `riddler9999/minishop` `main` with
+`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` correctly configured — confirmed by grepping the
+shipped bundle for the real project ref. This closes the first of the two D28 blockers. The second
+(sandbox has no network path to `*.supabase.co` or, now confirmed, `*.vercel.app` either) still
+stands — real click-through still needs a real browser/device.
+
 ## Stack
 
 - React + Vite + TypeScript + Tailwind v4; Vercel (Root Directory = repo root — this is now a standalone repo, not a monorepo subfolder)
@@ -34,9 +41,9 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Open Tasks
 
-- [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records. **Backend/RLS-level pass done, see D28 — the browser/WebView click-through is still outstanding** and blocked on the two items below.
-- [ ] **Owner** — link the Vercel project to `riddler9999/minishop` (the Vercel↔GitHub App connection for this repo needs re-authorizing under the `moehtetofficial1-7270s-projects` scope — `create_git_project` failed 403 "Not authorized... re-authenticate to this scope") and set the Vercel env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — see D28 for the exact values) and Root Directory.
-- [ ] **Owner** — once the preview is live, sign up for real through `/admin/onboarding` (creates a real, working GoTrue login — do not hand-seed `auth.users` for this, see D28) to get a real pilot shop for C/C.1.
+- [ ] **Owner live-verify A + B + C + C.1** on the live deployment (`https://minishop-xi-brown.vercel.app`): `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records. **Backend/RLS-level pass done (D28); Vercel deployment + env vars done (D30) — only the actual browser/WebView click-through is still outstanding**, and that needs a real device/browser (see D30 — this sandbox has no network path to `*.vercel.app` either, not just `*.supabase.co`).
+- [ ] **Owner** — once real-verified, disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Not blocking.
+- [ ] **Owner** — sign up for real through `/admin/onboarding` on the now-live deployment (creates a real, working GoTrue login — do not hand-seed `auth.users` for this, see D28) to get a real pilot shop for C/C.1.
 - [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
@@ -56,6 +63,33 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Decisions
 
+- D30 (2026-09-14) — **Vercel project is live; resolves D28 blocker 1, D28 blocker 2 still stands
+  and now covers `*.vercel.app` too.** Owner re-authorized the Vercel↔GitHub App scope and set
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. `mcp__Vercel__create_git_project` on
+  `riddler9999/minishop` created a **new** project `minishop` (`prj_IfW2lxtF7XZUEmxEjTOuFhzAZHX2`)
+  rather than reusing the pre-existing `my-projects-msx4` project, even though `my-projects-msx4`'s
+  own `link.repo` metadata already said `minishop` — **that field reflects Vercel's dashboard repo
+  picker, not which project GitHub's App treats as the live deploy target**; `my-projects-msx4`'s
+  last build was still from the old `MyProjects` monorepo, so its "link" had never actually fired a
+  build against this repo. A second `create_git_project` call with an explicit
+  `projectName: "my-projects-msx4"` was **still** silently redirected to `minishop` — the tool
+  reuses whatever project the App integration already resolves for the repo, ignoring an explicit
+  name once one exists. **Hazard for future sessions:** don't trust a project's `link` field as
+  proof it's the active deploy target; if `create_git_project` reports "Created" instead of
+  "Reused" for a repo you believed was already linked, that's the signal the old project's link was
+  stale, not a bug to route around. Per owner instruction, env vars were set on `minishop` (the
+  project the tooling actually resolves to) rather than force-migrating that resolution back to
+  `my-projects-msx4`. Verified live: production alias `https://minishop-xi-brown.vercel.app`
+  builds successfully from `main` @ `cbc5d65`; the shipped JS bundle contains the real Supabase
+  project ref `fsxdnmnycizjkgstokze` (absent from the first, env-var-less build, confirming the
+  env vars are actually taking effect at build time) — checked via `mcp__Vercel__web_fetch_vercel_url`
+  since this sandbox cannot `curl` `*.vercel.app` directly either (403 at the egress proxy, same
+  class of restriction as the existing `*.supabase.co` block). That network restriction means the
+  actual client-rendered behavior (login form, `/s/<bogus-slug>` 404, live storefront, order
+  placement) still cannot be verified from this sandbox — only static HTML/JS delivery was
+  confirmed. `my-projects-msx4` is now an orphaned duplicate still linked to this repo; left alone
+  (not blocking) but flagged in Open Tasks since every future push will trigger a build on both
+  projects until the owner disconnects it.
 - D29 (2026-09-14) — **A PR merge can land one push behind its own review thread — verify `main`
   after, don't trust "resolved" as proof.** Admin modal a11y (#3) got a second Codex-found fix
   (mobile nav drawer's Tab-trap freezing keyboard nav once `lg:hidden` made the panel invisible;
