@@ -102,7 +102,7 @@ function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-cream-200 px-5 py-4">
           <h3 className="font-display text-base font-bold text-ink">

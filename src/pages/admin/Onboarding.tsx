@@ -95,7 +95,6 @@ export default function Onboarding() {
             <span className="my mb-1.5 block text-sm font-semibold text-ink">ဆိုင်နာမည်</span>
             <input
               value={name}
-              autoFocus
               onChange={(e) => {
                 setName(e.target.value);
                 if (!slugTouched) setSlug(slugify(e.target.value));

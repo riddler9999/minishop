@@ -45,6 +45,10 @@ export default function Products() {
         if (myReq === reqIdRef.current) setLoading(false);
       }
     },
+    // `slug` isn't read in the body — `api.products()` resolves against whichever shop is
+    // active via the store proxy — but it must stay a dep so a tenant switch still forces a
+    // refetch (the effect below only reruns when this callback's identity changes).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [category, q, slug],
   );
 

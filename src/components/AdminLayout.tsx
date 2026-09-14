@@ -133,7 +133,7 @@ export default function AdminLayout() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-ink p-4">
             <div className="mb-2 flex justify-end">
               <button
