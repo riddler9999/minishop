@@ -37,10 +37,18 @@ export function useModalA11y<T extends HTMLElement>(onClose: () => void) {
       if (items.length === 0) return;
       const first = items[0];
       const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
+      const active = document.activeElement;
+      // The previously focused control can drop out of the tabbable set
+      // mid-interaction (e.g. a Save/Delete button disabling itself while a
+      // request is in flight), which browsers resolve by moving focus to
+      // <body> — outside the panel, so Tab would otherwise escape the trap.
+      if (!active || !panel.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && active === first) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && active === last) {
         e.preventDefault();
         first.focus();
       }
