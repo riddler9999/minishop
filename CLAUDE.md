@@ -26,9 +26,11 @@ must be the repo root (this is a standalone repo, not a monorepo subfolder).
 
 Copy `.env.example` to `.env.local`. Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
 (public anon key — **never** the `service_role` key) plus `VITE_DEFAULT_PLAN` (`starter` |
-`business`, default `business`). Without Supabase env vars configured, the app runs entirely on
-the zero-backend localStorage demo (`src/lib/api.ts`) — this is intentional so local/preview
-builds never break for lack of secrets.
+`business`, default `business`). Without Supabase env vars configured, the root/storefront
+experience falls back entirely to the zero-backend localStorage demo (`src/lib/api.ts`) — this is
+intentional so local/preview builds never break for lack of secrets. The **admin console does
+not** have an offline fallback: it requires real Supabase auth (`adminAuth.tsx`), and
+`/admin/login` explicitly reports that login/signup cannot work when Supabase isn't configured.
 
 ## Architecture
 
@@ -43,14 +45,17 @@ Three layers, and callers must know which to import from:
   can switch with a minimal import change.
 - `src/lib/store.ts` — **the switch storefront pages must import from** (`import {api} from
   '../lib/store'`), never `api.ts` or `backend.ts` directly. Its exported `api` is a reactive
-  `Proxy`: each property access re-evaluates `isLiveBackend()` (Supabase configured AND a shop
-  slug is currently set) and dispatches to `backend.ts` or `api.ts` accordingly, at **call time**,
-  not at module load. `adminApi` is re-exported unconditionally from `backend.ts` — the admin
-  console never uses the demo layer, since `RequireAdmin` already proves a real session + shop
-  exist before any admin page renders.
-  - **Hazard:** never put `api.<method>` in a React dependency array — the Proxy's `get` trap
-    returns a fresh function on every access, which would loop the effect. Call the method
-    directly inside the effect/handler body instead.
+  `Proxy` whose `get` trap re-evaluates `isLiveBackend()` (Supabase configured AND a shop slug is
+  currently set) on every **property access** (e.g. `api.products`) and returns a closure bound to
+  whichever backend was active at that access — not at module load, so `setShopSlug()` from
+  `/s/<slug>` routing takes effect on the next access without a reload. `adminApi` is re-exported
+  unconditionally from `backend.ts` — the admin console never uses the demo layer, since
+  `RequireAdmin` already proves a real session + shop exist before any admin page renders.
+  - **Hazard:** never put `api.<method>` in a React dependency array, and never save/destructure a
+    method off `api` for later use (e.g. `const fn = api.products`) — dispatch happens at the
+    property-access moment, not at call time, so a cached reference keeps calling whichever
+    backend was active when it was read, even after the shop slug changes. Access `api.<method>`
+    fresh at each call site instead.
 
 ### Shop slug = the multi-tenancy key
 
