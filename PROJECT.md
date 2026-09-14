@@ -68,37 +68,62 @@ has now closed the second by doing the real click-through themselves (D31).
   outside `backend.ts` itself). **Not started; this is the next task.** Corrected plan (an earlier
   draft of this plan wrongly proposed a new `src/lib/storage.ts` duplicating this — a 2026-09-14
   Codex review on PR #11 caught it before it was built; do not recreate these methods):
+  **The one invariant that governs all of this** (three Codex review rounds on PR #11/#12 each
+  found a different violation of it before this was consolidated — see D33): Storage and the
+  `products`/`shops` row are two separate systems with **no shared transaction**, so correctness
+  depends entirely on ordering, not on any individual step:
+  - Upload new files **before** the DB write, and hold what you uploaded *this attempt* in a
+    local list (`newlyUploadedPaths`).
+  - Build the **complete final URL list** (existing URLs the seller kept + newly uploaded URLs,
+    minus any the seller removed) and pass that complete list **into** the
+    `createProduct`/`updateProduct`/`updateShopSettings` call — never append to it *after* that
+    call, or the write persists the old list.
+  - If a new upload fails (including a later file in a multi-file batch, after an earlier one in
+    the same batch already succeeded): delete everything in `newlyUploadedPaths` so far, surface
+    the error, stop. Nothing else has been touched yet, so there's nothing else to undo.
+  - If the DB write itself fails: same compensation — delete everything in `newlyUploadedPaths`.
+    Still nothing else to undo, because of the next rule.
+  - **Never delete an old/replaced Storage object (the previous logo, an image the seller marked
+    for removal) until *after* the DB write that stops referencing it has succeeded.** Deleting
+    first and writing second can leave a persisted URL pointing at nothing if the write then
+    fails; deferring the delete means a failed or cancelled save leaves the old object as
+    harmless, still-referenced, unchanged data — exactly the state it was already in.
+  - Cancelling the modal without saving therefore only ever needs to clean up
+    `newlyUploadedPaths` (if the seller picked new files this session) — no *existing* object is
+    ever deleted except in the post-success step above, so cancel can't strand a live reference.
   1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview.
-     Settings saves as one explicit action already (no per-field autosave), so upload-on-select is
-     fine here: call `adminApi.uploadShopLogo(file)`, hold `{url, path}` in local state, show the
-     preview, and only call `updateShopSettings({logoUrl: url})` when the seller hits Save. Call
-     `deleteShopLogo(oldPath)` when replacing — derive `oldPath` from the currently-saved
-     `logoUrl` (see point 4 below), since only the URL is persisted on the row.
+     On select: `adminApi.uploadShopLogo(file)`, hold `{url, path}` in local state (do not call
+     `updateShopSettings` yet). On Save: call `updateShopSettings({logoUrl: newUrl})`; only once
+     that succeeds, delete the *previous* logo — derive its path from the previously-saved
+     `logoUrl` per point 4 below. On failure (of the settings update or any other field in the
+     same save) or on navigating away without saving: delete the newly uploaded object via its
+     held `path`, per the invariant above.
   2. `src/pages/admin/AdminProducts.tsx`'s `ProductModal` — swap the `images` textarea
-     (URL-per-line) for a multi-file picker. **Do not upload on file selection.** `ProductModal`
-     only persists `images` inside `save()` (`AdminProducts.tsx:52`), and its Cancel button
-     (`onClose`) closes with no cleanup — uploading immediately would orphan storage objects on
-     cancel or on a failed `createProduct`/`updateProduct`. Instead: stage picked files as
-     in-memory `File` objects + local preview URLs (`URL.createObjectURL`) in modal state; upload
-     each only inside `save()`, right before calling `createProduct`/`updateProduct`; if that call
-     throws, call `deleteProductImage(path)` on every image just uploaded in this save attempt
-     before surfacing the error (compensating rollback — there's no transaction spanning Storage +
-     the `products` row). Only append the returned URLs to `images[]` once the DB write succeeds.
-  3. Deleting a **previously-saved** image (one that survived a prior save, now shown from
-     `product.images[]`/`shop.logoUrl` on reopen) has no stored `path` to call
-     `deleteProductImage`/`deleteShopLogo` with — `products.images` and `shops.logo_url` persist
-     only the public URL (confirmed: `images text[]` in `0001_init_saas.sql`, no path column).
-     Supabase Storage public URLs are deterministic —
+     (URL-per-line) for a multi-file picker. Stage picks as in-memory `File` objects + local
+     preview URLs (`URL.createObjectURL`); do not touch Storage until `save()`
+     (`AdminProducts.tsx:52`). Inside `save()`: upload every staged file (tracking
+     `newlyUploadedPaths` as you go; abort and compensate per the invariant if any upload in the
+     batch fails), build the final `images[]` from kept URLs + new URLs, pass that into
+     `createProduct`/`updateProduct`, and only once that call succeeds delete the Storage objects
+     for any images the seller marked removed this session (paths derived per point 4). If the
+     create/update call itself fails, compensate `newlyUploadedPaths` and leave the removed-image
+     objects alone (they're still correctly referenced by the row, which was never rewritten).
+  3. Reserve a moment to re-read this against the invariant once written — three review rounds
+     catching four variants of the same ordering mistake is the signal to check the *rule*, not
+     just the latest symptom, before calling this plan done.
+  4. Deleting a **previously-saved** image/logo has no stored `path` on hand — `products.images`
+     and `shops.logo_url` persist only the public URL (confirmed: `images text[]` in
+     `0001_init_saas.sql`, no path column). Supabase Storage public URLs are deterministic —
      `{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>` — so derive `path` by stripping
      everything up through `<bucket>/` from the URL rather than adding a schema column for this.
-  4. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
+  5. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
      ~2–5MB cap) — the backend methods don't validate this themselves today.
-  5. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
+  6. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
      custom camera capture — gallery/camera pickers are already known-flaky in-app.
-  6. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
+  7. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
      on a Supabase Storage error — network, size/type reject, or RLS path mismatch all surface this
      way).
-  7. No `database.types.ts` change needed — buckets/policies and the backend methods are already
+  8. No `database.types.ts` change needed — buckets/policies and the backend methods are already
      in place; this task is UI wiring only.
   **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
   a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
@@ -128,9 +153,9 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
-- D33 (2026-09-14) — **Two Codex review rounds on PR #11 caught four doc defects in the Task B
-  (storage upload UI) handoff plan before anything was built — all fixed, no app code touched
-  (this is a docs-only PR; the defects were in the *plan*, not in shipped code).**
+- D33 (2026-09-14) — **Three Codex review rounds across PR #11/#12 caught eight doc defects in
+  the Task B (storage upload UI) handoff plan before anything was built — all fixed, no app code
+  touched (this is a docs-only PR; the defects were in the *plan*, not in shipped code).**
   1. **The draft plan proposed a new `src/lib/storage.ts` duplicating existing code.**
      `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
      already exist in `src/lib/backend.ts:774-818` — tenant-scoped path construction, upload,
@@ -157,13 +182,30 @@ has now closed the second by doing the real click-through themselves (D31).
      freshly-reopened modal has URLs, not paths. Corrected to derive `path` from the deterministic
      Supabase Storage public-URL shape (`{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>`)
      rather than adding a path column.
+  5. **A third round then found four more variants of the same underlying ordering mistake** in
+     points 3-4's fix, one per remaining edge case: (a) the Settings logo path had the identical
+     orphan-on-failure issue as point 3, just not yet corrected there — uploading on select and
+     only deferring the *DB write* isn't enough if the seller navigates away or another field's
+     validation fails first; (b) a multi-file batch's rollback only covered the DB call throwing,
+     not an earlier upload in the same batch succeeding while a later one in the batch failed;
+     (c) the plan said to append new URLs to `images[]` *after* the DB write succeeded, which is
+     backwards — the write itself has to receive the complete final list as its payload, or it
+     persists the stale one; (d) removing a previously-saved image by calling `deleteProductImage`
+     immediately (right after point 4's fix made that call possible) still deletes the object
+     before the row write that stops referencing it is confirmed to succeed, so a cancel or a
+     failed save leaves the row pointing at a now-deleted object. **Rather than patch a fifth
+     variant individually, the whole plan was rewritten around one explicit invariant** (Open
+     Tasks, above): upload before the write, pass the complete final list into the write, delete
+     newly-uploaded objects on any failure, and never delete an old/removed object until *after*
+     the write that stops referencing it succeeds. All four (a)-(d) are instances of that one rule.
   **Lesson for future handoffs:** before drafting a plan for the next session, (a) grep the
   codebase for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB
   schema (D25/0003) alone — the schema being in place says nothing about whether the client
-  methods on top of it were already written; (b) trace a UI plan through its actual failure paths
-  (cancel, validation reject, save error) before writing "call X on select/on delete" as if the
-  happy path were the only path; a docs-only PR is not lower-risk to review carelessly — a wrong
-  plan costs the next session exactly as much as wrong code would.
+  methods on top of it were already written; (b) don't trace a UI plan's failure paths one
+  symptom at a time (three rounds, one fix each, is what happens when you do) — state the general
+  ordering/consistency invariant a two-system write implies (here: Storage + a DB row, no shared
+  transaction) *once*, up front, and derive every step from it; a docs-only PR is not lower-risk
+  to review carelessly — a wrong plan costs the next session exactly as much as wrong code would.
 - D32 (2026-09-14) — **Wrote, validated, and — with owner go-ahead — applied
   `0004_product_promo_price_check.sql` to the live project.** Adds `constraint
   products_promo_price_lt_price check (not is_promotion or (promo_price is not null and
