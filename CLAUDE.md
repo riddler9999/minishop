@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-tenant SaaS storefront for Myanmar TikTok sellers. A seller drops a `/s/<slug>` link in
 their TikTok bio; buyers order through a self-serve storefront that must work inside TikTok's
 in-app WebView (no native app, no bot/messaging API — this is **not** a sales agent). See
-`PROJECT.md` for full product context, decision log (D1–D32), open tasks, and status — read it
+`PROJECT.md` for full product context, decision log (D1–D33), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
 ## Commands

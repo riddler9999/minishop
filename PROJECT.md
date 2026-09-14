@@ -18,11 +18,10 @@ real browser/WebView click-through this sandbox could never do itself. Next up: 
 live-verify and the first real-seller pilot.
 
 **Latest (D32):** the promo-price DB CHECK constraint is written, validated, merged (PR #10), and
-**applied to the live Supabase project** with owner go-ahead. A docs-only follow-up recording that
-apply is PR #11 — **open, clean, unmerged as of this session's end**; a future session (or the
-owner) should merge it first thing, then re-verify `main` per the standing D29 hazard before
-trusting the docs as current. See **Next Session** at the bottom of Open Tasks for what to pick up
-after that.
+**applied to the live Supabase project** with owner go-ahead. PR #11 is the docs-only follow-up
+that records that apply in this file — if `git log main` doesn't show it yet, merge it first, then
+re-verify `main` per the standing D29 hazard before trusting the rest of this file as current. See
+**Next Session** at the bottom of Open Tasks for what to pick up after that.
 
 **Commercialization — merged (PR #190 code, #192 index sync):** TikTok-specific wording
 generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
@@ -59,22 +58,33 @@ has now closed the second by doing the real click-through themselves (D31).
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
   logo field. Both plans keep name/phone/default-fee in Settings and a working storefront.
-- [ ] **Task B — Storage upload UI** for shop logos and product images (images are URL text
-  today; the buckets/policies already exist per D25/0003 — `shop-logos` + `product-images`,
-  public-read, writes gated to `<shop_id>/…` path). **Not started; this is the next task.** Draft
-  plan (from this session, not yet built):
-  1. `src/lib/storage.ts` (new) — `uploadShopLogo(file)` / `uploadProductImage(file)` helpers
-     wrapping `supabase.storage.from(...).upload(<shop_id>/<uuid>-<filename>, file)`, returning
-     the public URL. Client-side file type/size validation (jpg/png/webp, ~2–5MB cap).
-  2. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview +
-     upload button (stays Business-plan-gated per D23).
-  3. `src/pages/admin/AdminProducts.tsx` — swap the `images` textarea (URL-per-line) for a
-     multi-file picker with upload progress.
-  4. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`,
-     no custom camera capture — gallery/camera pickers are already known-flaky in-app.
-  5. Burmese error messages + retry on upload failure (network, size/type reject, RLS path
-     mismatch).
-  6. No `database.types.ts` change needed — buckets/policies are already-existing schema.
+- [ ] **Task B — Storage upload UI** for shop logos and product images (images are URL text in
+  the seller UI today). **The backend half of this already exists and must be reused, not
+  rebuilt:** `adminApi.uploadShopLogo(file)`, `uploadProductImage(file, productId?)`,
+  `deleteShopLogo(path)`, `deleteProductImage(path)` in `src/lib/backend.ts:774-818` already
+  resolve the signed-in seller's own `shop_id`, build the tenant-scoped `<shop_id>/…` path
+  (matching the D25/0003 storage policy), upload to the `shop-logos`/`product-images` buckets, and
+  return `{url, path}` — but **nothing in the UI calls them yet** (confirmed by grep: 0 references
+  outside `backend.ts` itself). **Not started; this is the next task.** Corrected plan (an earlier
+  draft of this plan wrongly proposed a new `src/lib/storage.ts` duplicating this — a 2026-09-14
+  Codex review on PR #11 caught it before it was built; do not recreate these methods):
+  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview;
+     on select, call `adminApi.uploadShopLogo(file)`, then `updateShopSettings({logoUrl: url})`
+     (stays Business-plan-gated per D23). Call `deleteShopLogo(oldPath)` when replacing, if the old
+     path is still known.
+  2. `src/pages/admin/AdminProducts.tsx` — swap the `images` textarea (URL-per-line) for a
+     multi-file picker; on select, call `adminApi.uploadProductImage(file, productId)` per file
+     and append the returned URLs to the product's `images[]`. Call `deleteProductImage(path)` when
+     a seller removes an image.
+  3. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
+     ~2–5MB cap) — the backend methods don't validate this themselves today.
+  4. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
+     custom camera capture — gallery/camera pickers are already known-flaky in-app.
+  5. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
+     on a Supabase Storage error — network, size/type reject, or RLS path mismatch all surface this
+     way).
+  6. No `database.types.ts` change needed — buckets/policies and the backend methods are already
+     in place; this task is UI wiring only.
   **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
   a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
   limit, given KBZPay/WavePay-adjacent bandwidth concerns in-app.
@@ -103,6 +113,25 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D33 (2026-09-14) — **A Codex review on PR #11 caught two doc defects in the Task B (storage
+  upload UI) handoff plan before anything was built — both fixed, no code touched.**
+  1. **The draft plan proposed a new `src/lib/storage.ts` duplicating existing code.**
+     `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
+     already exist in `src/lib/backend.ts:774-818` — tenant-scoped path construction, upload,
+     and public-URL return are already correct and already wired to the D25/0003 storage
+     policy. They have zero callers today (grepped: only defined, never referenced from any
+     page), so the actual gap is UI wiring only, not a backend. Writing a second implementation
+     would have duplicated security-sensitive path logic and created two competing upload APIs.
+     Open Tasks' Task B entry is corrected to call the existing methods.
+  2. **The handoff recorded PR #11's live GitHub state ("open, clean, unmerged") as if durable.**
+     That statement is true only until #11 merges, at which point committing it to `main` makes
+     it self-invalidating — a future reader would see "unmerged" in a file that only reaches them
+     because the PR merged. Reworded to a durable, checkable instruction instead ("if `git log
+     main` doesn't show it, merge it") rather than a point-in-time claim.
+  **Lesson for future handoffs:** before drafting a plan for the next session, grep the codebase
+  for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB schema
+  (D25/0003) alone — the schema being in place says nothing about whether the client methods on
+  top of it were already written.
 - D32 (2026-09-14) — **Wrote, validated, and — with owner go-ahead — applied
   `0004_product_promo_price_check.sql` to the live project.** Adds `constraint
   products_promo_price_lt_price check (not is_promotion or (promo_price is not null and
