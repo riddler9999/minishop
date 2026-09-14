@@ -61,7 +61,7 @@ export default function Dashboard() {
         value: ks(revenue),
         sub: `${orders.length} order စုစုပေါင်း`,
         icon: Banknote,
-        tone: 'bg-emerald-100 text-emerald-700',
+        tone: 'bg-ink text-gold-400',
       },
       {
         key: 'open',
@@ -69,7 +69,7 @@ export default function Dashboard() {
         value: String(openOrders.length),
         sub: 'ငွေစစ် / ပို့ရန် ကျန်',
         icon: Clock,
-        tone: 'bg-amber-100 text-amber-700',
+        tone: 'bg-gold-100 text-gold-700',
       },
       {
         key: 'products',
@@ -85,7 +85,7 @@ export default function Dashboard() {
         value: String(outOfStock.length),
         sub: 'stock ပြန်ဖြည့်ရန်',
         icon: AlertTriangle,
-        tone: 'bg-red-100 text-red-600',
+        tone: outOfStock.length > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600',
       },
     ];
   }, [products, orders]);
@@ -100,9 +100,17 @@ export default function Dashboard() {
     [products],
   );
 
+  const today = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Yangon',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date());
+
   return (
     <div className="space-y-6">
       <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gold-600">{today}</p>
         <h1 className="font-display text-2xl font-bold text-ink">ခြုံငုံ အခြေအနေ</h1>
         <p className="my mt-1 text-sm text-ink-soft">{shop?.name ?? 'ဆိုင်'} · လက်ရှိ အနှစ်ချုပ်</p>
       </div>
@@ -116,13 +124,17 @@ export default function Dashboard() {
           : stats.map((s) => {
               const Icon = s.icon;
               return (
-                <div key={s.key} className="rounded-2xl border border-cream-200 bg-white p-4">
-                  <div className={`grid h-10 w-10 place-items-center rounded-xl ${s.tone}`}>
+                <div
+                  key={s.key}
+                  className="card-lift rounded-2xl border border-cream-200 bg-white p-4 lg:p-5">
+                  <div className={`grid h-11 w-11 place-items-center rounded-xl ${s.tone}`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <p className="my mt-3 text-2xl font-bold text-ink">{s.value}</p>
-                  <p className="my text-xs font-semibold text-ink-soft">{s.label}</p>
-                  {s.sub && <p className="my mt-0.5 text-[11px] text-ink-soft/80">{s.sub}</p>}
+                  <p className="my mt-4 font-display text-2xl font-bold text-ink lg:text-[28px]">{s.value}</p>
+                  <p className="my mt-1 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+                    {s.label}
+                  </p>
+                  {s.sub && <p className="my mt-1 text-[11px] text-ink-soft/70">{s.sub}</p>}
                 </div>
               );
             })}
@@ -156,7 +168,9 @@ export default function Dashboard() {
                 {recentOrders.map((o) => {
                   const st = statusMeta(o.status);
                   return (
-                    <li key={o.order_id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <li
+                      key={o.order_id}
+                      className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-cream-50">
                       <div className="min-w-0">
                         <p className="font-display text-sm font-bold text-brand-700">{o.order_id}</p>
                         <p className="my truncate text-xs text-ink-soft">
@@ -207,11 +221,11 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y divide-cream-200">
                 {lowStock.map((p) => (
-                  <li key={p.id} className="flex items-center gap-3 px-4 py-3">
+                  <li key={p.id} className="flex items-center gap-3 px-4 py-3 transition hover:bg-cream-50">
                     <img
                       src={p.image || ''}
                       alt=""
-                      className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      className="h-10 w-10 shrink-0 rounded-lg border border-cream-200 object-cover"
                       loading="lazy"
                     />
                     <div className="min-w-0 flex-1">

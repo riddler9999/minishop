@@ -32,9 +32,15 @@
   --color-brand-900: #0c0a06;
 
   /* "gold" accent role → muted warm gold (badges, highlights, logo gradient) */
+  --color-gold-50: #fbf7ee;
+  --color-gold-100: #f6ecd6;
+  --color-gold-200: #eeddb8;
+  --color-gold-300: #e4cd9a;
   --color-gold-400: #e3c581;
   --color-gold-500: #cea355;
   --color-gold-600: #a67f38;
+  --color-gold-700: #7d5f29;
+  --color-gold-800: #57421c;
 
   --color-ink: #201b12;
   --color-ink-soft: #6b6455;
