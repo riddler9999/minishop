@@ -23,7 +23,7 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Stack
 
-- React + Vite + TypeScript + Tailwind v4; Vercel (Root Directory must be `projects/personal/mini-tiktok-shop`)
+- React + Vite + TypeScript + Tailwind v4; Vercel (Root Directory = repo root — this is now a standalone repo, not a monorepo subfolder)
 - **Dedicated Supabase project** `Mini Tiktok Shop`, ref `fsxdnmnycizjkgstokze`, `ap-southeast-1` — deliberately NOT the shared production project `kjjexuhhrwzujgocfzd`
 - Schema `supabase/migrations/0001_init_saas.sql`: `shops`, `products`, `orders`, `order_items`, `payment_accounts`, `shipping_zones`; RLS on all; `place_order()` (anon write, server-side repricing, atomic) and `lookup_order()` (anon buyer lookup) RPCs. `0002_harden_search_path.sql` pins `search_path` on `set_updated_at()`.
 - Data layer: `src/lib/shopContext.ts` (module-level slug) · `src/lib/backend.ts` (Supabase `api`/`adminApi`; `resolveShop` also caches `name`/`logo_url` → `getCachedShopInfo()`) · `src/lib/store.ts` (the switcher — storefront `api` is a reactive Proxy, `adminApi` is an unconditional re-export, re-exports `getCachedShopInfo`) · `src/lib/api.ts` (demo/localStorage) · `src/lib/database.types.ts` (generated)
@@ -55,6 +55,12 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Decisions
 
+- D26 (2026-09-14) — **Migrated out of the `MyProjects` monorepo into its own repo**
+  (`riddler9999/minishop`), via `git subtree split` so full commit/decision history (D1–D25)
+  survived the move. The old `projects/personal/mini-tiktok-shop/` folder in `MyProjects` is
+  removed; `MyProjects/INDEX.md` now points here instead of carrying a stale duplicate. Nothing
+  else changed: same Supabase project (`fsxdnmnycizjkgstokze`), same schema, same code — only the
+  git remote. Vercel Root Directory is now the repo root (see Stack), not a monorepo subpath.
 - D23 (2026-09-08) — **Plan gating is a FRONTEND layer** (`src/lib/plan.tsx`), not a DB/RLS
   change. Plan source is forward-compatible: `shop.plan` (once a `shops.plan` column exists) →
   `VITE_DEFAULT_PLAN` env → hard default `'business'`. The `business` default means the
