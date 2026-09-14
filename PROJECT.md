@@ -57,7 +57,11 @@ has now closed the second by doing the real click-through themselves (D31).
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
 - [x] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`/mobile nav drawer. Shared `src/lib/useModalA11y.ts` hook. PRs #3 (initial + 2 Codex-found focus-trap fixes), #4 (one of those fixes had been dropped by a merge race on #3 — reapplied against `main`).
 - [x] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`) — see D27.
-- [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
+- [ ] **Owner** — apply `0004_product_promo_price_check.sql` (DB CHECK for `promo_price < price`
+  when `is_promotion`) to the live project (`fsxdnmnycizjkgstokze`) via
+  `mcp__Supabase__apply_migration`, then regenerate `database.types.ts` (no-op for types since no
+  column changed, but keep the sync habit). Migration is written and validated (see D32); not yet
+  applied per D7 (no owner go-ahead given yet this session).
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
   toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
 
@@ -67,6 +71,32 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D32 (2026-09-14) — **Wrote and validated `0004_product_promo_price_check.sql`, did NOT apply
+  it.** Adds `constraint products_promo_price_lt_price check (not is_promotion or (promo_price is
+  not null and promo_price < price))` — closes the "guarded client-side only" gap noted in Open
+  Tasks (`AdminProducts.tsx`'s `save()` already enforces the same rule, so this only rejects
+  writes that bypass the admin form: buggy client code, manual SQL, a future admin tool).
+  **Pre-apply data check:** live `products` table on `fsxdnmnycizjkgstokze` currently has **0
+  rows** (pre-pilot), so there is nothing to violate the new constraint. **Validation** (rolled
+  back `BEGIN…ROLLBACK` on the live project, nothing persisted — same pattern as D25/D28):
+  added the constraint, then confirmed inside one throwaway shop (+ throwaway `auth.users` row for
+  the `owner_id` FK) that (1) `promo_price = price` with `is_promotion=true` is rejected, (2)
+  `promo_price null` with `is_promotion=true` is rejected, (3) a valid promo row (`promo_price <
+  price`) inserts fine, (4) a non-promotion row with `promo_price >= price` is unaffected (the
+  constraint only binds when `is_promotion`). Post-rollback check confirmed 0 leftover rows and
+  the constraint absent from the live schema. `tsc --noEmit`, `eslint .`, and `vite build` all
+  pass on the branch (lint: 0 errors, only the pre-existing `no-explicit-any` warnings D27 already
+  scoped out; build: same pre-existing >500kB chunk-size warning, unrelated to this change — no
+  app code was touched, this is a migration-file-only change). **Still needed before this is
+  done:** owner go-ahead to run `mcp__Supabase__apply_migration` against the live project (D7 —
+  never apply without it).
+  - **Side-finding, out of this task's scope:** `mcp__Supabase__list_migrations` shows two applied
+    migrations on the live project with no matching local file —
+    `fix_storage_policy_path` (20260913231045) and `optimize_rls_and_fk_index` (20260913231442),
+    both applied same-day as D25's `0003`. Repo `supabase/migrations/` only has 0001–0003 (now
+    0004). This is repo/remote drift pre-dating this session — flagged here per the D29 hazard
+    ("verify actual state, don't trust what should be true") rather than fixed, since it's outside
+    the promo-price-check task.
 - D31 (2026-09-14) — **Owner completed the real browser/WebView live-verify on the deployed
   preview** (`https://minishop-xi-brown.vercel.app`), closing the second D28 blocker that this
   sandbox structurally cannot close itself (no network path to `*.vercel.app`/`*.supabase.co`).
