@@ -17,6 +17,13 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 real browser/WebView click-through this sandbox could never do itself. Next up: the plan-gating
 live-verify and the first real-seller pilot.
 
+**Latest (D32):** the promo-price DB CHECK constraint is written, validated, merged (PR #10), and
+**applied to the live Supabase project** with owner go-ahead. A docs-only follow-up recording that
+apply is PR #11 — **open, clean, unmerged as of this session's end**; a future session (or the
+owner) should merge it first thing, then re-verify `main` per the standing D29 hazard before
+trusting the docs as current. See **Next Session** at the bottom of Open Tasks for what to pick up
+after that.
+
 **Commercialization — merged (PR #190 code, #192 index sync):** TikTok-specific wording
 generalized to channel-neutral "Mini Shop"; storefront now shows the tenant's own name/logo.
 Added a frontend plan-gating layer (Starter vs Business), a seller Settings/branding page
@@ -52,7 +59,25 @@ has now closed the second by doing the real click-through themselves (D31).
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
   logo field. Both plans keep name/phone/default-fee in Settings and a working storefront.
-- [ ] Storage bucket + policy for shop logos and product images (images are URL text today).
+- [ ] **Task B — Storage upload UI** for shop logos and product images (images are URL text
+  today; the buckets/policies already exist per D25/0003 — `shop-logos` + `product-images`,
+  public-read, writes gated to `<shop_id>/…` path). **Not started; this is the next task.** Draft
+  plan (from this session, not yet built):
+  1. `src/lib/storage.ts` (new) — `uploadShopLogo(file)` / `uploadProductImage(file)` helpers
+     wrapping `supabase.storage.from(...).upload(<shop_id>/<uuid>-<filename>, file)`, returning
+     the public URL. Client-side file type/size validation (jpg/png/webp, ~2–5MB cap).
+  2. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview +
+     upload button (stays Business-plan-gated per D23).
+  3. `src/pages/admin/AdminProducts.tsx` — swap the `images` textarea (URL-per-line) for a
+     multi-file picker with upload progress.
+  4. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`,
+     no custom camera capture — gallery/camera pickers are already known-flaky in-app.
+  5. Burmese error messages + retry on upload failure (network, size/type reject, RLS path
+     mismatch).
+  6. No `database.types.ts` change needed — buckets/policies are already-existing schema.
+  **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
+  a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
+  limit, given KBZPay/WavePay-adjacent bandwidth concerns in-app.
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
 - [x] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`/mobile nav drawer. Shared `src/lib/useModalA11y.ts` hook. PRs #3 (initial + 2 Codex-found focus-trap fixes), #4 (one of those fixes had been dropped by a merge race on #3 — reapplied against `main`).
@@ -62,6 +87,15 @@ has now closed the second by doing the real click-through themselves (D31).
   go-ahead. See D32.
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
   toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
+
+**Next Session — start here:**
+1. Check whether PR #11 (docs-only, records D32's production apply) is merged; if not, merge it
+   and re-verify `main` per D29 before trusting this file as current.
+2. Get the two pending owner decisions for **Task B** (above) answered, then implement per the
+   drafted plan.
+3. Everything else in this list is owner-blocked (live-verify, pilot, Vercel cleanup) — not
+   something a Claude Code session can push forward alone; confirm with the owner before spending
+   time on those instead.
 
 **Explicitly NOT in v1:** auto payment verification (Phase 2 moat), AI/chatbot features, custom domains, staff accounts, deep analytics, a native app, multi-courier APIs.
 
