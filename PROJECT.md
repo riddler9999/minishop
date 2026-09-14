@@ -34,8 +34,9 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Open Tasks
 
-- [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records.
-- [ ] **Owner** — set the Vercel env vars and Root Directory.
+- [ ] **Owner live-verify A + B + C + C.1** on a deployed preview with env vars set: `/s/<real-slug>` renders live products; place a KBZPay/Wave order with the last-5; track via phone + order number; a bogus slug 404s; seller admin can create/edit/hide a product, add a shipping zone, and confirm an online order's payment by last-5 match; the fee shown at checkout matches the seller's zone fee and what the order records. **Backend/RLS-level pass done, see D28 — the browser/WebView click-through is still outstanding** and blocked on the two items below.
+- [ ] **Owner** — link the Vercel project to `riddler9999/minishop` (the Vercel↔GitHub App connection for this repo needs re-authorizing under the `moehtetofficial1-7270s-projects` scope — `create_git_project` failed 403 "Not authorized... re-authenticate to this scope") and set the Vercel env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — see D28 for the exact values) and Root Directory.
+- [ ] **Owner** — once the preview is live, sign up for real through `/admin/onboarding` (creates a real, working GoTrue login — do not hand-seed `auth.users` for this, see D28) to get a real pilot shop for C/C.1.
 - [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
@@ -43,7 +44,7 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 - [ ] Storage bucket + policy for shop logos and product images (images are URL text today).
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
-- [ ] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`.
+- [x] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`/mobile nav drawer. Shared `src/lib/useModalA11y.ts` hook. PRs #3 (initial + 2 Codex-found focus-trap fixes), #4 (one of those fixes had been dropped by a merge race on #3 — reapplied against `main`).
 - [x] Add ESLint (`eslint-plugin-react-hooks` + `jsx-a11y`) — see D27.
 - [ ] DB CHECK for `promo_price < price` when `is_promotion` — guarded client-side only today.
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
@@ -55,6 +56,42 @@ Added a frontend plan-gating layer (Starter vs Business), a seller Settings/bran
 
 ## Decisions
 
+- D28 (2026-09-14) — **Attempted the Owner live-verify checklist; landed a backend/RLS-level pass,
+  not the real browser/WebView one** — two structural blockers, both owner-only:
+  1. **No Vercel deployment exists for this repo.** `mcp__Vercel__create_git_project` for
+     `riddler9999/minishop` failed with a 403: `Not authorized... Trying to access resource under
+     scope "moehtetofficial1-7270s-projects". You must re-authenticate to this scope`. The
+     Vercel↔GitHub App connection needs the owner to re-grant it access to this repo (Vercel
+     dashboard → the team → Git integration), or link the project manually there. Supabase project
+     URL/anon key for the env vars: `https://fsxdnmnycizjkgstokze.supabase.co` /
+     `sb_publishable_d1LmDRttEcgumJ6CNbTyZw_e0H-Vll5` (or the legacy `anon` JWT, same project —
+     `get_publishable_keys` returns both).
+  2. **This sandbox cannot reach `*.supabase.co` at all** (`curl` → `CONNECT tunnel failed, 403`
+     at the proxy) — confirms the constraint already noted below under Notes. So even with a
+     Vercel deployment live, a Claude Code session in *this* environment still can't browser-drive
+     it: the client-side Supabase calls would fail identically to a direct `curl`. The real
+     click-through (ideally in the actual TikTok in-app WebView, per the existing WebView-test Open
+     Task) has to happen on a device with real network access — this isn't a today-only gap.
+
+  What **was** validated, live against `fsxdnmnycizjkgstokze`, via `execute_sql` wrapped in a single
+  `BEGIN … ROLLBACK` (two throwaway tenants + products + a shipping zone + a payment account,
+  confirmed 0 rows left behind after) — 16/16 checks passed:
+  storefront reads only `active` products (hidden ones excluded); a bogus slug resolves to 0 shops;
+  `place_order()` re-prices server-side and picks the matching `shipping_zones` fee (C.1: zone match
+  → zone fee; no match → shop `default_delivery_fee`); a hidden product and a bogus slug are both
+  rejected by `place_order()` itself; `lookup_order()` succeeds on the exact `(slug, order_no,
+  phone)` and rejects a mismatched phone (anti-enumeration holds); anon has no direct table read on
+  `orders` and cannot write `products` directly (RPC is the only anon write path, confirming the
+  design note at the top of `0001_init_saas.sql`); an authenticated owner can create/hide a product,
+  add a shipping zone, and flip an order to `checked` matching the buyer's typed last-5
+  (`payment_ref_tail`); and cross-tenant isolation holds both ways (shop A's owner can neither write
+  shop B's product nor confirm shop B's orders).
+  **Not covered by this pass, and still needed:** actual pixel/UI rendering, the real
+  onboarding→login flow (GoTrue-issued session, not a hand-seeded one — deliberately did **not**
+  fabricate a working `auth.users`/`auth.identities` row for a *persistent* pilot account; that
+  technique is fine inside a rolled-back transaction for RLS simulation, matching the D25/0003
+  precedent, but creating one for real should go through the app's own signup so it's a normal
+  GoTrue-managed account), KBZPay/WavePay deep-link behaviour, and anything WebView-specific.
 - D27 (2026-09-14) — **Added ESLint** (`eslint.config.js`, flat config) closing the `lint`-gap Open
   Task. `eslint-plugin-react-hooks` is wired to just its two classic rules — `rules-of-hooks`
   (error) + `exhaustive-deps` (warn) — via a manual `plugins`/`rules` block, deliberately **not**
