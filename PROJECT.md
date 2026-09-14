@@ -68,22 +68,62 @@ has now closed the second by doing the real click-through themselves (D31).
   outside `backend.ts` itself). **Not started; this is the next task.** Corrected plan (an earlier
   draft of this plan wrongly proposed a new `src/lib/storage.ts` duplicating this — a 2026-09-14
   Codex review on PR #11 caught it before it was built; do not recreate these methods):
-  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview;
-     on select, call `adminApi.uploadShopLogo(file)`, then `updateShopSettings({logoUrl: url})`
-     (stays Business-plan-gated per D23). Call `deleteShopLogo(oldPath)` when replacing, if the old
-     path is still known.
-  2. `src/pages/admin/AdminProducts.tsx` — swap the `images` textarea (URL-per-line) for a
-     multi-file picker; on select, call `adminApi.uploadProductImage(file, productId)` per file
-     and append the returned URLs to the product's `images[]`. Call `deleteProductImage(path)` when
-     a seller removes an image.
-  3. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
+  **The one invariant that governs all of this** (three Codex review rounds on PR #11/#12 each
+  found a different violation of it before this was consolidated — see D33): Storage and the
+  `products`/`shops` row are two separate systems with **no shared transaction**, so correctness
+  depends entirely on ordering, not on any individual step:
+  - Upload new files **before** the DB write, and hold what you uploaded *this attempt* in a
+    local list (`newlyUploadedPaths`).
+  - Build the **complete final URL list** (existing URLs the seller kept + newly uploaded URLs,
+    minus any the seller removed) and pass that complete list **into** the
+    `createProduct`/`updateProduct`/`updateShopSettings` call — never append to it *after* that
+    call, or the write persists the old list.
+  - If a new upload fails (including a later file in a multi-file batch, after an earlier one in
+    the same batch already succeeded): delete everything in `newlyUploadedPaths` so far, surface
+    the error, stop. Nothing else has been touched yet, so there's nothing else to undo.
+  - If the DB write itself fails: same compensation — delete everything in `newlyUploadedPaths`.
+    Still nothing else to undo, because of the next rule.
+  - **Never delete an old/replaced Storage object (the previous logo, an image the seller marked
+    for removal) until *after* the DB write that stops referencing it has succeeded.** Deleting
+    first and writing second can leave a persisted URL pointing at nothing if the write then
+    fails; deferring the delete means a failed or cancelled save leaves the old object as
+    harmless, still-referenced, unchanged data — exactly the state it was already in.
+  - Cancelling the modal without saving therefore only ever needs to clean up
+    `newlyUploadedPaths` (if the seller picked new files this session) — no *existing* object is
+    ever deleted except in the post-success step above, so cancel can't strand a live reference.
+  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview.
+     On select: `adminApi.uploadShopLogo(file)`, hold `{url, path}` in local state (do not call
+     `updateShopSettings` yet). On Save: call `updateShopSettings({logoUrl: newUrl})`; only once
+     that succeeds, delete the *previous* logo — derive its path from the previously-saved
+     `logoUrl` per point 4 below. On failure (of the settings update or any other field in the
+     same save) or on navigating away without saving: delete the newly uploaded object via its
+     held `path`, per the invariant above.
+  2. `src/pages/admin/AdminProducts.tsx`'s `ProductModal` — swap the `images` textarea
+     (URL-per-line) for a multi-file picker. Stage picks as in-memory `File` objects + local
+     preview URLs (`URL.createObjectURL`); do not touch Storage until `save()`
+     (`AdminProducts.tsx:52`). Inside `save()`: upload every staged file (tracking
+     `newlyUploadedPaths` as you go; abort and compensate per the invariant if any upload in the
+     batch fails), build the final `images[]` from kept URLs + new URLs, pass that into
+     `createProduct`/`updateProduct`, and only once that call succeeds delete the Storage objects
+     for any images the seller marked removed this session (paths derived per point 4). If the
+     create/update call itself fails, compensate `newlyUploadedPaths` and leave the removed-image
+     objects alone (they're still correctly referenced by the row, which was never rewritten).
+  3. Reserve a moment to re-read this against the invariant once written — three review rounds
+     catching four variants of the same ordering mistake is the signal to check the *rule*, not
+     just the latest symptom, before calling this plan done.
+  4. Deleting a **previously-saved** image/logo has no stored `path` on hand — `products.images`
+     and `shops.logo_url` persist only the public URL (confirmed: `images text[]` in
+     `0001_init_saas.sql`, no path column). Supabase Storage public URLs are deterministic —
+     `{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>` — so derive `path` by stripping
+     everything up through `<bucket>/` from the URL rather than adding a schema column for this.
+  5. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
      ~2–5MB cap) — the backend methods don't validate this themselves today.
-  4. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
+  6. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
      custom camera capture — gallery/camera pickers are already known-flaky in-app.
-  5. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
+  7. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
      on a Supabase Storage error — network, size/type reject, or RLS path mismatch all surface this
      way).
-  6. No `database.types.ts` change needed — buckets/policies and the backend methods are already
+  8. No `database.types.ts` change needed — buckets/policies and the backend methods are already
      in place; this task is UI wiring only.
   **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
   a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
@@ -113,8 +153,9 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
-- D33 (2026-09-14) — **A Codex review on PR #11 caught two doc defects in the Task B (storage
-  upload UI) handoff plan before anything was built — both fixed, no code touched.**
+- D33 (2026-09-14) — **Three Codex review rounds across PR #11/#12 caught eight doc defects in
+  the Task B (storage upload UI) handoff plan before anything was built — all fixed, no app code
+  touched (this is a docs-only PR; the defects were in the *plan*, not in shipped code).**
   1. **The draft plan proposed a new `src/lib/storage.ts` duplicating existing code.**
      `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
      already exist in `src/lib/backend.ts:774-818` — tenant-scoped path construction, upload,
@@ -128,10 +169,43 @@ has now closed the second by doing the real click-through themselves (D31).
      it self-invalidating — a future reader would see "unmerged" in a file that only reaches them
      because the PR merged. Reworded to a durable, checkable instruction instead ("if `git log
      main` doesn't show it, merge it") rather than a point-in-time claim.
-  **Lesson for future handoffs:** before drafting a plan for the next session, grep the codebase
-  for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB schema
-  (D25/0003) alone — the schema being in place says nothing about whether the client methods on
-  top of it were already written.
+  3. **The plan's "upload on file select" step would orphan Storage objects.**
+     `ProductModal` (`AdminProducts.tsx`) only persists `images` inside `save()`; Cancel
+     (`onClose`) closes with no cleanup, and a rejected `createProduct`/`updateProduct` call
+     leaves whatever was already uploaded. Corrected to: stage picked files as in-memory `File` +
+     local preview URLs, upload only inside `save()` immediately before the create/update call,
+     and on that call failing, compensate by calling `deleteProductImage` on everything just
+     uploaded in that attempt before surfacing the error.
+  4. **The plan's "call `deleteProductImage(path)`/`deleteShopLogo(path)` to remove an image"
+     step has no `path` to call it with**, for any image that survived a prior save: `products`
+     and `shops` persist only the public URL (`images text[]` / `logo_url`, no path column), so a
+     freshly-reopened modal has URLs, not paths. Corrected to derive `path` from the deterministic
+     Supabase Storage public-URL shape (`{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>`)
+     rather than adding a path column.
+  5. **A third round then found four more variants of the same underlying ordering mistake** in
+     points 3-4's fix, one per remaining edge case: (a) the Settings logo path had the identical
+     orphan-on-failure issue as point 3, just not yet corrected there — uploading on select and
+     only deferring the *DB write* isn't enough if the seller navigates away or another field's
+     validation fails first; (b) a multi-file batch's rollback only covered the DB call throwing,
+     not an earlier upload in the same batch succeeding while a later one in the batch failed;
+     (c) the plan said to append new URLs to `images[]` *after* the DB write succeeded, which is
+     backwards — the write itself has to receive the complete final list as its payload, or it
+     persists the stale one; (d) removing a previously-saved image by calling `deleteProductImage`
+     immediately (right after point 4's fix made that call possible) still deletes the object
+     before the row write that stops referencing it is confirmed to succeed, so a cancel or a
+     failed save leaves the row pointing at a now-deleted object. **Rather than patch a fifth
+     variant individually, the whole plan was rewritten around one explicit invariant** (Open
+     Tasks, above): upload before the write, pass the complete final list into the write, delete
+     newly-uploaded objects on any failure, and never delete an old/removed object until *after*
+     the write that stops referencing it succeeds. All four (a)-(d) are instances of that one rule.
+  **Lesson for future handoffs:** before drafting a plan for the next session, (a) grep the
+  codebase for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB
+  schema (D25/0003) alone — the schema being in place says nothing about whether the client
+  methods on top of it were already written; (b) don't trace a UI plan's failure paths one
+  symptom at a time (three rounds, one fix each, is what happens when you do) — state the general
+  ordering/consistency invariant a two-system write implies (here: Storage + a DB row, no shared
+  transaction) *once*, up front, and derive every step from it; a docs-only PR is not lower-risk
+  to review carelessly — a wrong plan costs the next session exactly as much as wrong code would.
 - D32 (2026-09-14) — **Wrote, validated, and — with owner go-ahead — applied
   `0004_product_promo_price_check.sql` to the live project.** Adds `constraint
   products_promo_price_lt_price check (not is_promotion or (promo_price is not null and
@@ -222,6 +296,15 @@ has now closed the second by doing the real click-through themselves (D31).
   separate Bash calls so a denial on the risky one doesn't cost you the safe one too). **Hazard for
   future sessions:** after any merge on this repo, diff the actual `main` head against what you
   expect before telling a reviewer, or this log, that something is fixed.
+  - **Recurred verbatim on PR #11 (same day, D33):** a second Codex review round's fix (`a9632cf`)
+    was pushed and its threads replied-to + resolved, but PR #11 had already been merged at the
+    prior commit (`b642f25`) moments earlier — the push landed on the branch after the merge, so
+    it never reached `main` despite the same "everything looks addressed" signals D29 warns about.
+    Caught by following this exact entry's own advice (`git fetch origin main` + diff against the
+    last local commit) immediately after re-checking PR state. Fixed the same way as #4: cherry-picked
+    the missed commit onto a fresh branch restarted from `main`, new PR (#12), never a force-push
+    over the merged history. **This is now a pattern, not a one-off — treat every merge on this
+    repo as "verify before trusting," permanently, not just when something feels off.**
 - D28 (2026-09-14) — **Attempted the Owner live-verify checklist; landed a backend/RLS-level pass,
   not the real browser/WebView one** — two structural blockers, both owner-only:
   1. **No Vercel deployment exists for this repo.** `mcp__Vercel__create_git_project` for
@@ -330,6 +413,6 @@ has now closed the second by doing the real click-through themselves (D31).
 - `get_advisors(security)` is clean apart from the intentional anon `SECURITY DEFINER` findings on `place_order`/`lookup_order` — those two are the only anon write/read paths by design. The `rls_auto_enable` finding is a Supabase platform function, not ours.
 - **Network egress to `*.supabase.co` is blocked from this sandbox** — `mcp__Supabase__execute_sql` is the only channel that reaches it. `backend.ts` was validated at the SQL/RLS level instead: a throwaway auth user + shop + product were seeded, then the exact queries and RPCs were run under `set local role anon`/`authenticated` with `request.jwt.claims` to simulate real RLS. 12/12 passed, including `place_order`, `lookup_order` (success and anti-enumeration rejection), owner CRUD and a negative cross-tenant isolation check. Cleaned up by cascade delete.
 - **0003 validation (2026-09-08):** validated on live `fsxdnmnycizjkgstokze` via `execute_sql` wrapped in `BEGIN … ROLLBACK` (nothing persisted) — full DDL + seed 2 tenants + `set local role authenticated` with `request.jwt.claims` for RLS. Confirmed: tier boundaries, billable excludes cancelled/test/duplicate, cross-tenant view isolation (owner A sees 0 of shop B), `place_order`/`lookup_order` preserved, `storage.foldername(name)[1]` = shop_id. Gotchas: `\gset` is psql-only (rejected by `execute_sql` — inline the value instead); a multi-column `insert ... values` needs every row to match the column-list arity (a short row → "VALUES lists must all be the same length").
-- **Codex reviewer hit its usage limit** on #191 (`chatgpt-codex-connector[bot]` posted a limit notice, no findings) → no review round opened, no ledger needed. Deploy-preview bots (Vercel/Netlify) are pure noise on this repo.
+- **Codex reviewer hit its usage limit** on #191 (`chatgpt-codex-connector[bot]` posted a limit notice, no findings) → no review round opened, no ledger needed. Deploy-preview bots (Vercel/Netlify) are pure noise on this repo. **Hit the limit again on #12** (2026-09-14), this time after three real review rounds (D33) — so a future session shouldn't expect a fourth round to arrive on that PR, and shouldn't read the silence as "nothing left to find."
 - **Audience-bias risk is still open:** the demo video drew 6 inbound inquiries (3 day-1, 3 day-2), but real sellers versus N8N Masterclass students have not been disaggregated.
 - Review coverage on the milestones: ECC `database-reviewer` (clean), `code-reviewer` (1 HIGH — arrival-date backdate, fixed), `react-reviewer` (2 HIGH — payment-confirm error handling and shipping a11y labels, fixed), and a Codex P1 (stale fee on slug change, fixed).
