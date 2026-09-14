@@ -6,6 +6,7 @@ import {usePlan} from '../lib/plan';
 import {APP_INITIAL, APP_NAME, shopInitial} from '../lib/brand';
 import {PlanBadge} from './PlanGate';
 import {cx} from '../lib/format';
+import {useModalA11y} from '../lib/useModalA11y';
 
 interface NavEntry {
   to: string;
@@ -104,6 +105,32 @@ function Sidebar({onNavigate}: {onNavigate?: () => void}) {
   );
 }
 
+function MobileDrawer({onClose}: {onClose: () => void}) {
+  const panelRef = useModalA11y<HTMLDivElement>(onClose);
+  return (
+    <div className="fixed inset-0 z-50 lg:hidden">
+      <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="မီနူး"
+        tabIndex={-1}
+        className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-ink p-4 outline-none">
+        <div className="mb-2 flex justify-end">
+          <button
+            onClick={onClose}
+            aria-label="close"
+            className="grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <Sidebar onNavigate={onClose} />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -131,22 +158,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] bg-ink p-4">
-            <div className="mb-2 flex justify-end">
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="close"
-                className="grid h-10 w-10 place-items-center rounded-lg text-white hover:bg-white/10">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
-          </div>
-        </div>
-      )}
+      {mobileOpen && <MobileDrawer onClose={() => setMobileOpen(false)} />}
 
       <main className="lg:pl-64">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:py-8">
