@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {NavLink, useLocation} from 'react-router-dom';
-import {Menu, Search, ShoppingBag, X} from 'lucide-react';
+import {ClipboardList, Home as HomeIcon, LayoutGrid, Search, ShoppingBag} from 'lucide-react';
 import {useCart} from '../lib/cart';
 import {cx} from '../lib/format';
 import {shopHref} from '../lib/shopContext';
@@ -43,20 +43,28 @@ const NAV = [
   {to: '/orders', label: 'Order စစ်ရန်'},
 ];
 
+// Mobile tab bar (reference-style bottom nav): mirrors NAV plus a dedicated
+// cart tab, since the in-app WebView leaves no room for a desktop-style top
+// nav on small screens.
+const BOTTOM_NAV = [
+  {to: '/', label: 'ပင်မ', icon: HomeIcon, end: true},
+  {to: '/products', label: 'ပစ္စည်း', icon: LayoutGrid, end: false},
+  {to: '/cart', label: 'ခြင်း', icon: ShoppingBag, end: false},
+  {to: '/orders', label: 'Order', icon: ClipboardList, end: false},
+];
+
 export default function Layout({children}: {children: React.ReactNode}) {
   const {count, openDrawer} = useCart();
-  const [open, setOpen] = useState(false);
   const {pathname} = useLocation();
   const shop = getCachedShopInfo();
   const shopName = shop?.name ?? APP_NAME;
 
   useEffect(() => {
-    setOpen(false);
     window.scrollTo({top: 0, behavior: 'instant' as ScrollBehavior});
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-cream-50">
+    <div className="flex min-h-screen flex-col bg-cream-50 pb-16 md:pb-0">
       <header className="sticky top-0 z-40 border-b border-cream-200 bg-cream-50/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <Brand />
@@ -83,37 +91,13 @@ export default function Layout({children}: {children: React.ReactNode}) {
               className="relative grid h-11 w-11 place-items-center rounded-full text-brand-800 hover:bg-cream-200">
               <ShoppingBag className="h-5 w-5" />
               {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-600 px-1 text-[11px] font-bold text-white">
+                <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-700 px-1 text-[11px] font-bold text-cream-50">
                   {count}
                 </span>
               )}
             </button>
-            <button
-              onClick={() => setOpen((v) => !v)}
-              aria-label="menu"
-              className="grid h-11 w-11 place-items-center rounded-full text-brand-800 hover:bg-cream-200 md:hidden">
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
-        {open && (
-          <nav className="border-t border-cream-200 bg-cream-50 px-4 py-2 md:hidden">
-            {NAV.map((n) => (
-              <NavLink
-                key={n.to}
-                to={shopHref(n.to)}
-                end={n.to === '/'}
-                className={({isActive}) =>
-                  cx(
-                    'block rounded-xl px-4 py-3 text-sm font-semibold',
-                    isActive ? 'bg-brand-700 text-cream-100' : 'text-ink',
-                  )
-                }>
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
-        )}
       </header>
 
       <main className="flex-1">{children}</main>
@@ -153,6 +137,37 @@ export default function Layout({children}: {children: React.ReactNode}) {
       </footer>
 
       <CartDrawer />
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t border-cream-200 bg-cream-50/95 backdrop-blur md:hidden"
+        style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+        {BOTTOM_NAV.map((n) => {
+          const Icon = n.icon;
+          const isCart = n.to === '/cart';
+          return (
+            <NavLink
+              key={n.to}
+              to={shopHref(n.to)}
+              end={n.end}
+              className={({isActive}) =>
+                cx(
+                  'relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-semibold',
+                  isActive ? 'text-brand-800' : 'text-ink-soft',
+                )
+              }>
+              <span className="relative">
+                <Icon className="h-5 w-5" />
+                {isCart && count > 0 && (
+                  <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand-700 px-1 text-[9px] font-bold text-cream-50">
+                    {count}
+                  </span>
+                )}
+              </span>
+              {n.label}
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 }

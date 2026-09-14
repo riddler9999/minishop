@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {ArrowRight, ChevronLeft, ChevronRight, Sparkles} from 'lucide-react';
+import {ArrowRight, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles} from 'lucide-react';
 import {api, getCachedShopInfo, type Product} from '../lib/store';
 import ProductCard, {ProductCardSkeleton} from '../components/ProductCard';
 import {ShopLink, useShopSlugParam} from '../components/ShopLink';
@@ -43,6 +43,35 @@ function Hero() {
         </div>
         {/* Blend the bottom edge into the page background. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-cream-50 to-transparent" />
+      </div>
+    </section>
+  );
+}
+
+// Reference-style circular category quick-links, shown between the hero and
+// the product sections.
+function CategoryStrip({categories}: {categories: string[]}) {
+  if (!categories.length) return null;
+  return (
+    <section className="mx-auto max-w-6xl px-4 pt-8">
+      <div className="no-scrollbar flex gap-5 overflow-x-auto pb-1">
+        {categories.slice(0, 7).map((c) => (
+          <ShopLink
+            key={c}
+            to={`/products?category=${encodeURIComponent(c)}`}
+            className="group flex shrink-0 flex-col items-center gap-2 text-center">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-cream-100 font-display text-lg font-bold text-brand-800 ring-1 ring-cream-200 transition group-hover:ring-brand-400">
+              {c.trim().charAt(0).toUpperCase()}
+            </span>
+            <span className="my w-16 truncate text-xs font-medium text-ink">{c}</span>
+          </ShopLink>
+        ))}
+        <ShopLink to="/products" className="group flex shrink-0 flex-col items-center gap-2 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-800 text-cream-50 transition group-hover:bg-brand-700">
+            <MoreHorizontal className="h-6 w-6" />
+          </span>
+          <span className="my w-16 truncate text-xs font-medium text-ink">အားလုံး</span>
+        </ShopLink>
       </div>
     </section>
   );
@@ -100,6 +129,7 @@ function FeaturedCarousel({products}: {products: Product[]}) {
 export default function Home() {
   const [latest, setLatest] = useState<Product[] | null>(null);
   const [featured, setFeatured] = useState<Product[]>([]);
+  const [categoryNames, setCategoryNames] = useState<string[]>([]);
   const [cats, setCats] = useState<{category: string; products: Product[]}[]>([]);
   const [err, setErr] = useState('');
   const slug = useShopSlugParam();
@@ -131,6 +161,7 @@ export default function Home() {
     (async () => {
       try {
         const {categories} = await api.categories();
+        if (alive) setCategoryNames(categories);
         const groups = await Promise.all(
           categories.map(async (c) => ({
             category: c,
@@ -150,6 +181,7 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <CategoryStrip categories={categoryNames} />
       <FeaturedCarousel products={featured} />
 
       <section className="mx-auto max-w-6xl px-4 py-8">

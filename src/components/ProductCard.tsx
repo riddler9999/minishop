@@ -1,4 +1,4 @@
-import {ImageOff, ShoppingBag} from 'lucide-react';
+import {ImageOff, Plus} from 'lucide-react';
 import type {Product} from '../lib/store';
 import {useCart} from '../lib/cart';
 import {ks} from '../lib/format';
@@ -33,7 +33,7 @@ export default function ProductCard({product}: {product: Product}) {
           </div>
         )}
         {hasPromo && off > 0 && (
-          <span className="absolute left-2 top-2 rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white">
+          <span className="absolute left-2 top-2 rounded-full bg-brand-700 px-2.5 py-1 text-[11px] font-bold text-cream-50">
             -{off}%
           </span>
         )}
@@ -42,6 +42,18 @@ export default function ProductCard({product}: {product: Product}) {
             ကုန်သွားပြီ
           </span>
         )}
+        {/* Reference-style floating quick-add button, overlaid on the image. */}
+        <button
+          type="button"
+          disabled={!product.inStock}
+          onClick={(e) => {
+            e.preventDefault();
+            add(product);
+          }}
+          aria-label="ဈေးခြင်းထဲ ထည့်မည်"
+          className="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-brand-800 text-cream-50 shadow-md transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-cream-200 disabled:text-ink-soft">
+          <Plus className="h-4 w-4" />
+        </button>
       </ShopLink>
 
       <div className="flex flex-1 flex-col p-3">
@@ -50,25 +62,16 @@ export default function ProductCard({product}: {product: Product}) {
           {product.name}
         </ShopLink>
         <div className="mt-1.5 flex items-center gap-2">
-          <span className="font-display text-base font-bold text-brand-700">{ks(price)}</span>
+          <span className="font-display text-base font-bold text-ink">{ks(price)}</span>
           {hasPromo && <span className="text-xs text-ink-soft line-through">{ks(product.price)}</span>}
         </div>
 
-        {/* Shopify-style dual action */}
-        <div className="mt-3 flex flex-col gap-2">
-          <button
-            disabled={!product.inStock}
-            onClick={() => add(product)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-700 px-3 py-2 text-xs font-bold text-brand-700 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:border-cream-200 disabled:text-ink-soft">
-            <ShoppingBag className="h-3.5 w-3.5" /> ဈေးခြင်းထဲ ထည့်မည်
-          </button>
-          <button
-            disabled={!product.inStock}
-            onClick={buyNow}
-            className="rounded-full bg-brand-700 px-3 py-2 text-xs font-bold text-cream-100 transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-cream-200 disabled:text-ink-soft">
-            ယခု ဝယ်မည်
-          </button>
-        </div>
+        <button
+          disabled={!product.inStock}
+          onClick={buyNow}
+          className="mt-3 rounded-full bg-brand-800 px-3 py-2 text-xs font-bold text-cream-50 transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-cream-200 disabled:text-ink-soft">
+          ယခု ဝယ်မည်
+        </button>
       </div>
     </div>
   );
@@ -82,8 +85,7 @@ export function ProductCardSkeleton() {
         <div className="h-3 w-1/2 animate-pulse rounded bg-cream-100" />
         <div className="h-4 w-3/4 animate-pulse rounded bg-cream-100" />
         <div className="h-5 w-1/3 animate-pulse rounded bg-cream-100" />
-        <div className="h-8 w-full animate-pulse rounded-full bg-cream-100" />
-        <div className="h-8 w-full animate-pulse rounded-full bg-cream-100" />
+        <div className="mt-1 h-8 w-full animate-pulse rounded-full bg-cream-100" />
       </div>
     </div>
   );

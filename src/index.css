@@ -1,41 +1,43 @@
 @import 'tailwindcss';
 
 /* ---- Mini Shop design system ------------------------------------------------
-   A DIFFERENT theme from the original warm-maroon Uthuya store this demo was
-   cloned from: a bold pink/magenta + porcelain + cyan accent palette, geometric
-   Space Grotesk display instead of a serif. Mobile-first.
-   NOTE: token *names* (brand/cream/gold/ink) are kept from the original so the
-   components need no class rewrites — only the color *values* + fonts change,
-   which is what flips the whole look. */
+   Premium minimalist boutique theme (matches the MiniShop MM / TUN reference
+   layouts this app is styled after): warm porcelain background, a near-black
+   "brand" scale for text/CTAs (mirrors the black pill buttons + nav in the
+   reference UI), and a muted gold "accent" role for badges/highlights.
+   Mobile-first — this storefront runs inside TikTok's in-app WebView.
+   NOTE: token *names* (brand/cream/gold/ink) are kept stable across re-themes
+   so components need no class rewrites — only the color *values* + fonts
+   change, which is what flips the whole look. */
 @theme {
   --font-myanmar: 'Padauk', 'Noto Sans Myanmar', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Padauk', system-ui, sans-serif;
   --font-sans: 'Inter', 'Padauk', system-ui, sans-serif;
 
-  /* "cream" role → cool porcelain (slate-tinted whites) */
-  --color-cream-50: #f6f7fb;
-  --color-cream-100: #eef0f7;
-  --color-cream-200: #dde1ee;
+  /* "cream" role → warm porcelain */
+  --color-cream-50: #faf8f4;
+  --color-cream-100: #f2eee5;
+  --color-cream-200: #e5ded0;
 
-  /* "brand" role → bold pink / magenta */
-  --color-brand-50: #fff0f3;
-  --color-brand-100: #ffe0e6;
-  --color-brand-200: #ffc2cf;
-  --color-brand-300: #ff93a8;
-  --color-brand-400: #ff5c7d;
-  --color-brand-500: #fe2c55;
-  --color-brand-600: #e01347;
-  --color-brand-700: #b80e3a;
-  --color-brand-800: #8f0e31;
-  --color-brand-900: #6b0f29;
+  /* "brand" role → near-black ink (CTA buttons, active nav, headings) */
+  --color-brand-50: #f5f4f1;
+  --color-brand-100: #e8e5de;
+  --color-brand-200: #cdc7ba;
+  --color-brand-300: #a89f8c;
+  --color-brand-400: #786e5a;
+  --color-brand-500: #4c4534;
+  --color-brand-600: #322c1f;
+  --color-brand-700: #201b12;
+  --color-brand-800: #16120c;
+  --color-brand-900: #0c0a06;
 
-  /* "gold" accent role → cyan */
-  --color-gold-400: #7cf4ef;
-  --color-gold-500: #25f4ee;
-  --color-gold-600: #0bc9c3;
+  /* "gold" accent role → muted warm gold (badges, highlights, logo gradient) */
+  --color-gold-400: #e3c581;
+  --color-gold-500: #cea355;
+  --color-gold-600: #a67f38;
 
-  --color-ink: #1c2033;
-  --color-ink-soft: #5b6178;
+  --color-ink: #201b12;
+  --color-ink-soft: #6b6455;
 }
 
 :root {
@@ -80,7 +82,7 @@ body {
 }
 .card-lift:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 40px -20px rgba(44, 40, 114, 0.45);
+  box-shadow: 0 18px 40px -20px rgba(32, 27, 18, 0.35);
 }
 
 @keyframes fade-up {
