@@ -4,6 +4,7 @@ import {adminApi, type Product, type ProductPatch, type ProductCreateInput} from
 import {ks, cx} from '../../lib/format';
 import {usePlan} from '../../lib/plan';
 import {UpgradeInline} from '../../components/PlanGate';
+import {useModalA11y} from '../../lib/useModalA11y';
 
 // Today's date (YYYY-MM-DD) in the seller's timezone (Asia/Yangon, UTC+6:30) —
 // NOT UTC, so a product entered in the early Myanmar morning still dates today.
@@ -100,12 +101,20 @@ function ProductModal({
   const field = 'w-full rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-brand-400';
   const lbl = 'my mb-1 block text-xs font-semibold text-ink-soft';
 
+  const panelRef = useModalA11y<HTMLDivElement>(onClose);
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-modal-title"
+        tabIndex={-1}
+        className="relative flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-xl outline-none sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-cream-200 px-5 py-4">
-          <h3 className="font-display text-base font-bold text-ink">
+          <h3 id="product-modal-title" className="font-display text-base font-bold text-ink">
             {isEdit ? 'ပစ္စည်း ပြင်ဆင်ရန်' : 'ပစ္စည်းအသစ် ထည့်ရန်'}
           </h3>
           <button onClick={onClose} aria-label="close" className="grid h-8 w-8 place-items-center rounded-lg text-ink-soft hover:bg-cream-100">

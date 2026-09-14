@@ -4,6 +4,7 @@ import {adminApi, type AdminOrder} from '../../lib/store';
 import {ks, cx} from '../../lib/format';
 import {usePlan} from '../../lib/plan';
 import {statusMeta, ADMIN_STATUS_OPTIONS, ORDER_STATUS} from '../../lib/orderStatus';
+import {useModalA11y} from '../../lib/useModalA11y';
 
 // ---- Detail / edit drawer --------------------------------------------------
 function OrderDetail({
@@ -51,13 +52,21 @@ function OrderDetail({
     }
   };
 
+  const panelRef = useModalA11y<HTMLDivElement>(onClose);
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button type="button" aria-label="close" className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-md flex-col bg-white shadow-xl">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="order-detail-title"
+        tabIndex={-1}
+        className="relative flex h-full w-full max-w-md flex-col bg-white shadow-xl outline-none">
         <div className="flex items-center justify-between border-b border-cream-200 px-5 py-4">
           <div>
-            <p className="font-display text-lg font-bold text-brand-700">{order.order_id}</p>
+            <p id="order-detail-title" className="font-display text-lg font-bold text-brand-700">{order.order_id}</p>
             <p className="my text-xs text-ink-soft">{new Date(order.created_at).toLocaleString('en-GB')}</p>
           </div>
           <button onClick={onClose} aria-label="close" className="grid h-9 w-9 place-items-center rounded-lg text-ink-soft hover:bg-cream-100">
