@@ -10,8 +10,10 @@ see `docs/SKILLS-AND-PLUGINS.md`-style reasoning inline below for what was left 
 
 - **Source:** https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 - **Commit:** `7f69fed6a2717900085f1bc3b263721f8ba025e2` (2026-09-10)
-- **License:** MIT · **Modification:** none — copied verbatim from
-  `.claude/skills/ui-ux-pro-max/`.
+- **License:** MIT · **Modification:** the 11 `${CLAUDE_PLUGIN_ROOT}/.claude/skills/ui-ux-pro-max/scripts/search.py`
+  invocations in `SKILL.md` were rewritten to the repo-relative
+  `.claude/skills/ui-ux-pro-max/scripts/search.py` (plus one sentence of surrounding prose) —
+  everything else, including `scripts/`, `data/`, and `references/`, copied verbatim.
 
 The upstream repo ships this as one plugin bundling seven skills
 (`ui-ux-pro-max`, `design`, `design-system`, `brand`, `banner-design`, `slides`,
@@ -20,19 +22,19 @@ searchable design-intelligence database (styles, palettes, font pairings, UX gui
 charts, per-stack implementation notes) the other six lean on; the rest are adjacent
 content-generation skills (slide decks, banner ads) this storefront doesn't need.
 
-**Caveat:** the skill's own `SKILL.md` invokes its search script as
-`${CLAUDE_PLUGIN_ROOT}/.claude/skills/ui-ux-pro-max/scripts/search.py` — that env var is only
-set when the skill is loaded through the Claude Code plugin marketplace mechanism, not when
-vendored as a plain repo skill (which is what this is, and deliberately: `.claude/settings.json`
-declares no plugin marketplaces, since editing that file's plugin/permission surface is a
-self-modification this session's tooling refuses to do unattended — a human running
+**Why the path was rewritten:** `${CLAUDE_PLUGIN_ROOT}` is only set when a skill is loaded
+through the Claude Code plugin marketplace mechanism, not when vendored as a plain repo skill
+(which is what this is, and deliberately — `.claude/settings.json` declares no plugin
+marketplaces, since editing that file's plugin/permission surface is a self-modification this
+session's tooling refuses to do unattended; a human running
 `/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` then
-`/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` gets that resolved automatically instead).
-As a vendored skill, invoke the script by its real repo-relative path:
-
-```bash
-python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <domain>
-```
+`/plugin install ui-ux-pro-max@ui-ux-pro-max-skill` gets the real plugin instead, with
+`${CLAUDE_PLUGIN_ROOT}` resolved automatically — in which case revert this file to upstream's
+form, or just let the installed plugin take over). Left unfixed, every documented invocation
+in this file would fail: the unset variable expands to an empty string, and the resulting path
+doesn't exist. Upstream's own `scripts/tests/test_skill_script_paths.py` (vendored unmodified,
+inert here — nothing in this repo runs it) asserts the *original* `${CLAUDE_PLUGIN_ROOT}` form,
+so don't use it to "fix" this file back if you're vendoring rather than plugin-installing.
 
 ## B · From `vercel-labs/agent-skills` (3)
 
@@ -57,7 +59,16 @@ WebView storefront, not a native app), and `writing-guidelines` (not a UI/UX ski
 
 - **Source:** https://github.com/bencium/bencium-claude-code-design-skill
 - **Commit:** `8b152ec07240cf671340b96cea6bb3442f697205` (2026-08-30)
-- **License:** MIT (Copyright © 2026 bencium.io) · **Modification:** none — copied verbatim.
+- **License:** MIT (Copyright © 2026 bencium.io) · **Modification:** `design-audit/SKILL.md`
+  and `ui-typography/SKILL.md` each pointed their "Reference files" at a `references/`
+  subdirectory (`references/design-principles.md`, `references/audit-template.md`,
+  `references/css-templates.md`, `references/html-entities.md`) that doesn't exist upstream
+  either — both ship those files flat, as siblings of `SKILL.md`. Paths corrected to the flat
+  form (no directory move). Separately, `ui-typography/SKILL.md`'s own "preferred" JSX example
+  (the fix for the *previous* example's escape-sequence bug) contained the literal
+  six-character string `\u2019` instead of an actual U+2019 character — a copy-paste bug identical to the
+  broken example one paragraph above it — corrected to the real curly apostrophe. Everything
+  else copied verbatim.
 
 `bencium-controlled-ux-designer`, `design-audit`, `ui-typography` (upstream's plugin/folder
 name is `typography`; its `SKILL.md` frontmatter names it `ui-typography` — vendored under
@@ -83,7 +94,18 @@ skills).
   `.claude/skills/<name>/SKILL.md` discovery expects) and the shared reference file's folder
   renamed `shared/` → `accesslint-shared/` to avoid colliding with a generic name at this
   level; every `../shared/methodology.md` link in the five `SKILL.md` files was updated to
-  `../accesslint-shared/methodology.md` to match. No other content changed.
+  `../accesslint-shared/methodology.md` to match. Two further corrections, both real bugs in
+  the vendored context rather than style choices: (1) every `accesslint:accessibility-*`
+  cross-reference (skill names, the `allowed-tools` line, and a config-target example)
+  rewritten to the plain `accessibility-*` name — the `accesslint:` prefix only resolves when
+  the real plugin registers that namespace, which it doesn't here; left as-is, `accessibility-audit`
+  couldn't dispatch to its own automated/manual tiers. (2) `accessibility-diff/SKILL.md`'s
+  branch-mode script did `git checkout - && git stash pop 2>/dev/null` unconditionally, which
+  pops whatever is on top of the stash stack even when this invocation created no stash of its
+  own (a clean tree, or `--branch` mode when nothing was uncommitted) — silently discarding a
+  user's unrelated pre-existing stash. Same latent bug existed in stash mode's unconditional
+  `git stash pop`. Both fixed with a `STASHED` flag set only when this invocation's own
+  `git stash push` ran, gating the pop. No other content changed.
 
 `accessibility-audit`, `accessibility-inspect`, `accessibility-scan`, `accessibility-fix`,
 `accessibility-diff`, plus `accesslint-shared/methodology.md` (WCAG-EM conformance

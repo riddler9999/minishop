@@ -33,8 +33,8 @@ correct HTML entities, proper CSS. Do not ask permission. Do not explain. Just p
 **AUDIT:** When reviewing existing code or design, identify violations and provide before/after fixes.
 
 **Reference files** (read when generating CSS or looking up entities):
-- `references/css-templates.md` — Full CSS baseline template, responsive patterns, OpenType features
-- `references/html-entities.md` — Complete entity table with all characters and codes
+- `css-templates.md` — Full CSS baseline template, responsive patterns, OpenType features
+- `html-entities.md` — Complete entity table with all characters and codes
 
 ---
 
@@ -68,7 +68,7 @@ between tags is treated as string literals by the transpiler, not as JavaScript 
 
 1. **Actual UTF-8 characters (preferred):** Paste the real character directly into the source file.
    ```jsx
-   <p>Don\u2019t do this</p>  {/* This is the actual curly apostrophe character U+2019 */}
+   <p>Don’t do this</p>  {/* This is the actual curly apostrophe character U+2019 */}
    ```
 
 2. **JSX expression with string literal:** Wrap in curly braces so the JS engine interprets the escape.

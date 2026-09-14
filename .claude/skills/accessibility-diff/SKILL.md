@@ -22,19 +22,23 @@ PORT=$(npx -y @accesslint/chrome@latest ensure | node -e 'process.stdin.on("data
 Stash mode (default; uncommitted changes). Tell the user first: _"Running in diff mode — stashing your changes to capture a baseline, then restoring. Your working tree will be fully restored."_ If `git stash push` fails, warn and exit.
 
 ```bash
-git stash push -u -m "accesslint-diff-baseline"
+STASHED=0
+git diff --quiet && git diff --cached --quiet || { git stash push -u -m "accesslint-diff-baseline" && STASHED=1; }
 npx -y @accesslint/cli@latest scan <target> --port "$PORT" --snapshot accesslint-diff --snapshot-dir /tmp --update-snapshot
-git stash pop && sleep 2
+[ "$STASHED" = 1 ] && git stash pop
+sleep 2
 npx -y @accesslint/cli@latest scan <target> --port "$PORT" --snapshot accesslint-diff --snapshot-dir /tmp --format json
 ```
 
 Branch mode (`--branch <name>`). Tell the user first: _"Diffing against `<name>` — checking out that branch to capture a baseline, then restoring. Your working tree will be fully restored."_ Branch switching triggers a rebuild but not a browser reload, so the CLI opens a fresh tab each run to read the current build. Use `--wait-for "<selector>"` to hold the audit until the rebuild is ready; without it, warn that a slow build may give a stale baseline.
 
 ```bash
-git diff --quiet && git diff --cached --quiet || git stash push -u -m "accesslint-diff-branch"
+STASHED=0
+git diff --quiet && git diff --cached --quiet || { git stash push -u -m "accesslint-diff-branch" && STASHED=1; }
 git checkout <branch>
 npx -y @accesslint/cli@latest scan <target> --port "$PORT" --snapshot accesslint-diff --snapshot-dir /tmp --update-snapshot [--wait-for "<selector>"]
-git checkout - && git stash pop 2>/dev/null
+git checkout -
+[ "$STASHED" = 1 ] && git stash pop
 npx -y @accesslint/cli@latest scan <target> --port "$PORT" --snapshot accesslint-diff --snapshot-dir /tmp --format json [--wait-for "<selector>"]
 ```
 
@@ -55,7 +59,7 @@ Fixed
 
 For each new violation: where (selector verbatim, plus `file:line (symbol)` if `source` is present; don't fabricate), evidence, and fix (mechanical change or `NEEDS HUMAN`).
 
-Don't edit. For fixes, apply the mechanical ones and re-run `accesslint:accessibility-diff` to verify; for bulk work hand off to `accesslint:accessibility-fix`.
+Don't edit. For fixes, apply the mechanical ones and re-run `accessibility-diff` to verify; for bulk work hand off to `accessibility-fix`.
 
 ## 3. Tear down
 
@@ -70,4 +74,4 @@ npx -y @accesslint/chrome@latest stop --all  # skip if ensure reported "managed"
 - A target name resolves the same in both runs only if `accesslint.config.json` is unchanged across the stash or checkout. If your changes touch the config, pass an explicit URL.
 - Stash mode: `sleep 2` covers most HMR cases; if the baseline looks identical to current, add `--wait-for "<selector>"`.
 - Branch mode: no HMR; the CLI opens a fresh tab each run, and `--wait-for` is the rebuild gate.
-- Large DOM changes between runs cause selector drift; re-run `accesslint:accessibility-scan` for the full picture.
+- Large DOM changes between runs cause selector drift; re-run `accessibility-scan` for the full picture.

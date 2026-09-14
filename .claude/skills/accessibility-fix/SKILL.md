@@ -5,7 +5,7 @@ argument-hint: "[target|url|report]"
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, Skill, Task, mcp__plugin_accesslint_accesslint__audit_html, mcp__plugin_accesslint_accesslint__audit_live, mcp__plugin_accesslint_accesslint__explain_rule, mcp__plugin_accesslint_accesslint__list_rules
 ---
 
-This skill remediates accessibility violations: baseline, edit, verify. It only fixes. To find what's wrong, use `accesslint:accessibility-scan` (one page, automated), `accesslint:accessibility-inspect` (one page, manual), or `accesslint:accessibility-audit` (whole site, WCAG-EM); to check for regressions, use `accesslint:accessibility-diff`. The engine runs here are internal to the loop — a baseline before and a check after — not a report.
+This skill remediates accessibility violations: baseline, edit, verify. It only fixes. To find what's wrong, use `accessibility-scan` (one page, automated), `accessibility-inspect` (one page, manual), or `accessibility-audit` (whole site, WCAG-EM); to check for regressions, use `accessibility-diff`. The engine runs here are internal to the loop — a baseline before and a check after — not a report.
 
 Shared conventions (grounding, never invent content): [`../accesslint-shared/methodology.md`](../accesslint-shared/methodology.md).
 
@@ -34,7 +34,7 @@ For an authenticated session, have the user start a headed debuggable Chrome (`n
    - Use the `Fixability:` and `Fix:` fields: apply `mechanical` fixes as given; leave a `TODO` with the rule ID for `contextual` or `visual`. Don't invent content (alt text, labels, link text).
    - Group edits to the same file into one operation.
    - Confirm scope before editing files outside the obvious target, or before more than about 10 mechanical fixes.
-3. Verify. Re-run the same audit and compare to the baseline: every targeted violation gone, no new ones. For a precise new/fixed/pre-existing comparison on a URL, use `accesslint:accessibility-diff` rather than checking by eye.
+3. Verify. Re-run the same audit and compare to the baseline: every targeted violation gone, no new ones. For a precise new/fixed/pre-existing comparison on a URL, use `accessibility-diff` rather than checking by eye.
 
 `Source:` lines come from React DevTools fibers and appear only in live-DOM audits against React dev builds. Static audits won't have them; fall back to selectors. When unsure about a rule, use `explain_rule({ id })`.
 

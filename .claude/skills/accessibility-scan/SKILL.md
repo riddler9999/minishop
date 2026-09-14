@@ -1,6 +1,6 @@
 ---
 name: accessibility-scan
-description: "One page, automated tier — run the web accessibility (a11y) rule engine against a live page and locate every violation it can detect mechanically. Pass a URL, a config target name (e.g. `accesslint:accessibility-scan dev`), or nothing to use the default target from `accesslint.config.json`. Ensures a debuggable Chrome, runs the @accesslint/core engine over CDP, and returns a worklist of live-DOM WCAG 2.2 violations, each grounded to its DOM selector and source `file:line`. Locates; doesn't edit. Use it for 'is this page accessible', 'check a11y on this URL', 'find contrast and alt-text issues', or to verify a UI change. For hands-on keyboard and screen-reader checks use `accessibility-inspect`; for a whole site or product use `accessibility-audit`; to diff against uncommitted changes or a branch use `accessibility-diff`."
+description: "One page, automated tier — run the web accessibility (a11y) rule engine against a live page and locate every violation it can detect mechanically. Pass a URL, a config target name (e.g. `accessibility-scan dev`), or nothing to use the default target from `accesslint.config.json`. Ensures a debuggable Chrome, runs the @accesslint/core engine over CDP, and returns a worklist of live-DOM WCAG 2.2 violations, each grounded to its DOM selector and source `file:line`. Locates; doesn't edit. Use it for 'is this page accessible', 'check a11y on this URL', 'find contrast and alt-text issues', or to verify a UI change. For hands-on keyboard and screen-reader checks use `accessibility-inspect`; for a whole site or product use `accessibility-audit`; to diff against uncommitted changes or a branch use `accessibility-diff`."
 argument-hint: "[target|url]"
 allowed-tools: Bash, Read, Glob, Grep, Skill, Task
 ---
@@ -28,7 +28,7 @@ Counts by impact, then one entry per violation:
 - evidence: contrast ratio, missing attribute, empty name.
 - fix: mechanical change, or `NEEDS HUMAN`.
 
-Don't edit. For fixes, apply the mechanical ones and re-run to verify; for bulk work hand off to `accesslint:accessibility-fix`.
+Don't edit. For fixes, apply the mechanical ones and re-run to verify; for bulk work hand off to `accessibility-fix`.
 
 ## 3. Tear down
 
