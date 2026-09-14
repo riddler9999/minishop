@@ -94,8 +94,8 @@ Three layers, and callers must know which to import from:
   `0003_platform_plan_and_usage.sql` (adds `shops.plan`, billable-usage view/RPC, storage buckets —
   purely additive, see `PROJECT.md` D25 for the downgrade hazard on apply), and
   `0004_product_promo_price_check.sql` (`CHECK` constraint: `promo_price < price` whenever
-  `is_promotion`, previously guarded client-side only — see `PROJECT.md` D32; **not yet applied**
-  to the live project, pending owner go-ahead per D7).
+  `is_promotion`, previously guarded client-side only — see `PROJECT.md` D32; applied to the live
+  project).
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state
