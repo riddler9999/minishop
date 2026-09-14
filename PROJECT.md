@@ -68,22 +68,37 @@ has now closed the second by doing the real click-through themselves (D31).
   outside `backend.ts` itself). **Not started; this is the next task.** Corrected plan (an earlier
   draft of this plan wrongly proposed a new `src/lib/storage.ts` duplicating this — a 2026-09-14
   Codex review on PR #11 caught it before it was built; do not recreate these methods):
-  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview;
-     on select, call `adminApi.uploadShopLogo(file)`, then `updateShopSettings({logoUrl: url})`
-     (stays Business-plan-gated per D23). Call `deleteShopLogo(oldPath)` when replacing, if the old
-     path is still known.
-  2. `src/pages/admin/AdminProducts.tsx` — swap the `images` textarea (URL-per-line) for a
-     multi-file picker; on select, call `adminApi.uploadProductImage(file, productId)` per file
-     and append the returned URLs to the product's `images[]`. Call `deleteProductImage(path)` when
-     a seller removes an image.
-  3. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
+  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview.
+     Settings saves as one explicit action already (no per-field autosave), so upload-on-select is
+     fine here: call `adminApi.uploadShopLogo(file)`, hold `{url, path}` in local state, show the
+     preview, and only call `updateShopSettings({logoUrl: url})` when the seller hits Save. Call
+     `deleteShopLogo(oldPath)` when replacing — derive `oldPath` from the currently-saved
+     `logoUrl` (see point 4 below), since only the URL is persisted on the row.
+  2. `src/pages/admin/AdminProducts.tsx`'s `ProductModal` — swap the `images` textarea
+     (URL-per-line) for a multi-file picker. **Do not upload on file selection.** `ProductModal`
+     only persists `images` inside `save()` (`AdminProducts.tsx:52`), and its Cancel button
+     (`onClose`) closes with no cleanup — uploading immediately would orphan storage objects on
+     cancel or on a failed `createProduct`/`updateProduct`. Instead: stage picked files as
+     in-memory `File` objects + local preview URLs (`URL.createObjectURL`) in modal state; upload
+     each only inside `save()`, right before calling `createProduct`/`updateProduct`; if that call
+     throws, call `deleteProductImage(path)` on every image just uploaded in this save attempt
+     before surfacing the error (compensating rollback — there's no transaction spanning Storage +
+     the `products` row). Only append the returned URLs to `images[]` once the DB write succeeds.
+  3. Deleting a **previously-saved** image (one that survived a prior save, now shown from
+     `product.images[]`/`shop.logoUrl` on reopen) has no stored `path` to call
+     `deleteProductImage`/`deleteShopLogo` with — `products.images` and `shops.logo_url` persist
+     only the public URL (confirmed: `images text[]` in `0001_init_saas.sql`, no path column).
+     Supabase Storage public URLs are deterministic —
+     `{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>` — so derive `path` by stripping
+     everything up through `<bucket>/` from the URL rather than adding a schema column for this.
+  4. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
      ~2–5MB cap) — the backend methods don't validate this themselves today.
-  4. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
+  5. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
      custom camera capture — gallery/camera pickers are already known-flaky in-app.
-  5. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
+  6. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
      on a Supabase Storage error — network, size/type reject, or RLS path mismatch all surface this
      way).
-  6. No `database.types.ts` change needed — buckets/policies and the backend methods are already
+  7. No `database.types.ts` change needed — buckets/policies and the backend methods are already
      in place; this task is UI wiring only.
   **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
   a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
@@ -113,8 +128,9 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
-- D33 (2026-09-14) — **A Codex review on PR #11 caught two doc defects in the Task B (storage
-  upload UI) handoff plan before anything was built — both fixed, no code touched.**
+- D33 (2026-09-14) — **Two Codex review rounds on PR #11 caught four doc defects in the Task B
+  (storage upload UI) handoff plan before anything was built — all fixed, no app code touched
+  (this is a docs-only PR; the defects were in the *plan*, not in shipped code).**
   1. **The draft plan proposed a new `src/lib/storage.ts` duplicating existing code.**
      `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
      already exist in `src/lib/backend.ts:774-818` — tenant-scoped path construction, upload,
@@ -128,10 +144,26 @@ has now closed the second by doing the real click-through themselves (D31).
      it self-invalidating — a future reader would see "unmerged" in a file that only reaches them
      because the PR merged. Reworded to a durable, checkable instruction instead ("if `git log
      main` doesn't show it, merge it") rather than a point-in-time claim.
-  **Lesson for future handoffs:** before drafting a plan for the next session, grep the codebase
-  for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB schema
-  (D25/0003) alone — the schema being in place says nothing about whether the client methods on
-  top of it were already written.
+  3. **The plan's "upload on file select" step would orphan Storage objects.**
+     `ProductModal` (`AdminProducts.tsx`) only persists `images` inside `save()`; Cancel
+     (`onClose`) closes with no cleanup, and a rejected `createProduct`/`updateProduct` call
+     leaves whatever was already uploaded. Corrected to: stage picked files as in-memory `File` +
+     local preview URLs, upload only inside `save()` immediately before the create/update call,
+     and on that call failing, compensate by calling `deleteProductImage` on everything just
+     uploaded in that attempt before surfacing the error.
+  4. **The plan's "call `deleteProductImage(path)`/`deleteShopLogo(path)` to remove an image"
+     step has no `path` to call it with**, for any image that survived a prior save: `products`
+     and `shops` persist only the public URL (`images text[]` / `logo_url`, no path column), so a
+     freshly-reopened modal has URLs, not paths. Corrected to derive `path` from the deterministic
+     Supabase Storage public-URL shape (`{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>`)
+     rather than adding a path column.
+  **Lesson for future handoffs:** before drafting a plan for the next session, (a) grep the
+  codebase for what already exists (`adminApi`, `backend.ts`) rather than reasoning from the DB
+  schema (D25/0003) alone — the schema being in place says nothing about whether the client
+  methods on top of it were already written; (b) trace a UI plan through its actual failure paths
+  (cancel, validation reject, save error) before writing "call X on select/on delete" as if the
+  happy path were the only path; a docs-only PR is not lower-risk to review carelessly — a wrong
+  plan costs the next session exactly as much as wrong code would.
 - D32 (2026-09-14) — **Wrote, validated, and — with owner go-ahead — applied
   `0004_product_promo_price_check.sql` to the live project.** Adds `constraint
   products_promo_price_lt_price check (not is_promotion or (promo_price is not null and
