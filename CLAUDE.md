@@ -104,10 +104,9 @@ Three layers, and callers must know which to import from:
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches
   amount + last-5 in the admin console. There is no slip upload (`uploadSlip()` is a deliberate
   no-op — in-app WebView file pickers are unreliable).
-- **Any schema change needs three things kept in sync:** a new
-  `supabase/migrations/NNNN_*.sql` file, applying it (via `mcp__Supabase__apply_migration` against
-  the project — **never apply to production without the owner's explicit go-ahead**), and
-  regenerating `src/lib/database.types.ts`.
+- **Schema changes: never apply a migration to production without the owner's explicit
+  go-ahead.** For the full procedure (migration file, applying it, regenerating types), see
+  `.claude/skills/supabase-migration/SKILL.md`.
 - The dedicated Supabase project for this app is intentionally separate from any other/shared
   project — see `PROJECT.md` Stack section for the project ref. Only the anon key belongs in
   frontend code; RLS is the actual enforcement boundary, not the frontend.
