@@ -1,49 +1,41 @@
 @import 'tailwindcss';
 
 /* ---- Mini Shop design system ------------------------------------------------
-   Premium minimalist boutique theme (matches the MiniShop MM / TUN reference
-   layouts this app is styled after): warm porcelain background, a near-black
-   "brand" scale for text/CTAs (mirrors the black pill buttons + nav in the
-   reference UI), and a muted gold "accent" role for badges/highlights.
-   Mobile-first — this storefront runs inside TikTok's in-app WebView.
-   NOTE: token *names* (brand/cream/gold/ink) are kept stable across re-themes
-   so components need no class rewrites — only the color *values* + fonts
-   change, which is what flips the whole look. */
+   Warm ivory + deep espresso + jewellery-gold. Token names stay stable because
+   admin and storefront components already depend on brand/cream/gold/ink roles.
+   The buyer storefront adds a restrained editorial layer on top of these roles. */
 @theme {
   --font-myanmar: 'Padauk', 'Noto Sans Myanmar', system-ui, sans-serif;
-  --font-display: 'Space Grotesk', 'Padauk', system-ui, sans-serif;
+  --font-display: Georgia, 'Times New Roman', 'Padauk', serif;
   --font-sans: 'Inter', 'Padauk', system-ui, sans-serif;
 
-  /* "cream" role → warm porcelain */
-  --color-cream-50: #faf8f4;
-  --color-cream-100: #f2eee5;
-  --color-cream-200: #e5ded0;
+  --color-cream-50: #fffdf9;
+  --color-cream-100: #f6efe5;
+  --color-cream-200: #e8dccb;
 
-  /* "brand" role → near-black ink (CTA buttons, active nav, headings) */
-  --color-brand-50: #f5f4f1;
-  --color-brand-100: #e8e5de;
-  --color-brand-200: #cdc7ba;
-  --color-brand-300: #a89f8c;
-  --color-brand-400: #786e5a;
-  --color-brand-500: #4c4534;
-  --color-brand-600: #322c1f;
-  --color-brand-700: #201b12;
-  --color-brand-800: #16120c;
-  --color-brand-900: #0c0a06;
+  --color-brand-50: #f8f3eb;
+  --color-brand-100: #ede1d0;
+  --color-brand-200: #dcc5a2;
+  --color-brand-300: #c9a56d;
+  --color-brand-400: #ad7e3e;
+  --color-brand-500: #8f6026;
+  --color-brand-600: #70471c;
+  --color-brand-700: #513117;
+  --color-brand-800: #342014;
+  --color-brand-900: #1d120b;
 
-  /* "gold" accent role → muted warm gold (badges, highlights, logo gradient) */
-  --color-gold-50: #fbf7ee;
-  --color-gold-100: #f6ecd6;
-  --color-gold-200: #eeddb8;
-  --color-gold-300: #e4cd9a;
-  --color-gold-400: #e3c581;
-  --color-gold-500: #cea355;
-  --color-gold-600: #a67f38;
-  --color-gold-700: #7d5f29;
-  --color-gold-800: #57421c;
+  --color-gold-50: #fffaf0;
+  --color-gold-100: #f8edcf;
+  --color-gold-200: #efd99f;
+  --color-gold-300: #e2bf6a;
+  --color-gold-400: #d3a34a;
+  --color-gold-500: #b98428;
+  --color-gold-600: #96651f;
+  --color-gold-700: #744b1b;
+  --color-gold-800: #503314;
 
-  --color-ink: #201b12;
-  --color-ink-soft: #6b6455;
+  --color-ink: #2a2018;
+  --color-ink-soft: #766b60;
 }
 
 :root {
@@ -52,43 +44,71 @@
 
 html {
   scroll-behavior: smooth;
+  background: #fffdf9;
 }
 
 body {
   margin: 0;
-  background: var(--color-cream-50);
+  background: #fffdf9;
   color: var(--color-ink);
-  font-family: var(--font-myanmar);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Burmese text renders taller — give it breathing room. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 .my {
+  font-family: var(--font-myanmar);
   line-height: 1.7;
 }
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
-/* Hide scrollbars on horizontal carousels while keeping scroll. */
+.jewel-cta {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #d2a248 0%, #b67a22 100%);
+  color: white;
+  box-shadow: 0 10px 28px rgba(115, 72, 19, 0.18);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.jewel-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 14px 34px rgba(115, 72, 19, 0.24);
+}
+
+.jewel-cta:focus-visible {
+  outline: 2px solid #b98428;
+  outline-offset: 3px;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-/* Subtle card lift used across product cards. */
 .card-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
+
 .card-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 40px -20px rgba(32, 27, 18, 0.35);
+  transform: translateY(-3px);
+  border-color: #d8c29e;
+  box-shadow: 0 18px 38px -22px rgba(70, 45, 20, 0.32);
 }
 
 @keyframes fade-up {
@@ -101,6 +121,28 @@ body {
     transform: translateY(0);
   }
 }
+
 .fade-up {
   animation: fade-up 0.5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .fade-up {
+    animation: none;
+  }
+
+  .card-lift,
+  .jewel-cta,
+  .card-lift img {
+    transition: none !important;
+  }
+
+  .card-lift:hover,
+  .jewel-cta:hover {
+    transform: none;
+  }
 }
