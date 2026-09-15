@@ -17,12 +17,18 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 real browser/WebView click-through this sandbox could never do itself. Plan gating (Starter vs
 Business) is now also verified — automated this time, not owner-verified, see D42.
 
-**⚠️ Fresh-signup email confirmation is currently broken for real sellers** until the owner
-completes one dashboard step (D43, Open Tasks) — the confirmation link was found (via a real
-owner signup attempt, not a hypothesis) to fail with `otp_expired` due to email-client link
-prefetching, a known Supabase failure mode. The frontend fix (6-digit code entry, replacing the
-link as the primary path) is shipped; it does nothing until the "Confirm signup" email template
-is edited to actually include the code. **This blocks the pilot** until closed.
+**⚠️ Fresh-signup email confirmation is currently broken for real sellers, and the fix is bigger
+than D43 alone closes** — see D44 (Open Tasks). D43's `otp_expired` diagnosis (email prefetching)
+was correct, and its 6-digit-code frontend fix is shipped, but attempting to apply the "Confirm
+signup" template edit that fix depends on surfaced a deeper, pre-existing gap: **this project has
+never configured a custom SMTP provider**, so Supabase Auth is still on its default/shared mailer
+— which locks email template editing entirely (confirmed via an owner screenshot: Supabase's
+dashboard literally disables the template body with "Set up custom SMTP to edit templates"), and
+which Supabase's own docs say outright is **not for production use** regardless (best-effort, no
+SLA, a rate limit of only a few emails/hour). **This blocks the pilot** — no real seller can
+reliably receive a signup confirmation email at all — until an owner configures custom SMTP
+(D44 recommends Resend). The one test account used to find this (`irouee@gmail.com`) was
+confirmed directly via SQL so testing isn't blocked on this in the meantime — see D44.
 
 **Latest:** Task B (storage upload UI for shop logos + product images) is implemented — PNG/WebP
 upload only, no manual URL entry, PNG auto-converted to WebP client-side (owner decisions + build,
@@ -119,20 +125,32 @@ has now closed the second by doing the real click-through themselves (D31).
   back, same failure the fix was meant to close. Dashboard-only; no migration/code artifact needed.
   **Lower priority now that D43 ships an OTP-code confirmation path that doesn't depend on the
   link at all** — still worth doing for the small share of sellers who click the link successfully.
-- [ ] **Owner — dashboard-only, unblocks D43** — edit the **Confirm signup** email template
-  (Supabase Dashboard → Authentication → Email Templates) to include `{{ .Token }}` (the 6-digit
-  code the app's new confirm screen expects). The frontend side of this is shipped (D43) but is
-  useless until the email actually contains a code to type. See D43 for the exact template text
-  and the reasoning (email link prefetching was silently burning confirmation tokens before real
-  sellers could click them — this was actually happening in production, not theoretical).
+- [ ] **Owner — dashboard-only, unblocks D43, superseded in scope by D44** — edit the **Confirm
+  signup** email template (Supabase Dashboard → Authentication → Email Templates) to include
+  `{{ .Token }}` (the 6-digit code the app's new confirm screen expects). The frontend side of
+  this is shipped (D43) but is useless until the email actually contains a code to type. **Cannot
+  be done until D44 (below) is done first** — Supabase disables template editing entirely without
+  custom SMTP configured. See D43 for the exact template text.
+- [ ] **Owner — blocks the pilot, no code/migration artifact — configure custom SMTP** (D44).
+  This project has never had one configured; Supabase Auth is still on the default/shared mailer,
+  which (a) disables email template editing outright (blocking the task above) and (b) per
+  Supabase's own docs is not for production use regardless — best-effort only, no SLA, a rate
+  limit of only a few emails/hour. **No real seller can reliably receive any auth email
+  (confirmation, password reset) until this is done.** Recommended: Resend (free tier, no card
+  required, simplest Supabase integration) — sign up at resend.com, create an API key, then in
+  Supabase Dashboard → Authentication → Emails → SMTP Settings enter host `smtp.resend.com`, port
+  `465`, username `resend`, password = the API key, sender email `onboarding@resend.dev` (Resend's
+  shared test domain — fine to start with; a verified custom domain improves deliverability
+  later). See D44 for the full reasoning and alternatives (Brevo, SendGrid, Postmark, AWS SES).
 
 **Next Session — start here:**
-1. Confirm the owner has edited the "Confirm signup" email template to include `{{ .Token }}`
-   (open task above, D43) — until then, new signups still can't confirm their email at all, since
-   the old link-only path is exactly what was failing.
-2. Confirm the owner has added the production redirect URL to Supabase's allow-list (open task
+1. Confirm the owner has configured custom SMTP (D44, Open Tasks above) — this unblocks
+   everything else in this list; without it, no auth email works reliably for any real seller.
+2. Confirm the owner has then edited the "Confirm signup" email template to include `{{ .Token }}`
+   (D43, Open Tasks above) — only possible once (1) is done.
+3. Confirm the owner has added the production redirect URL to Supabase's allow-list (open task
    above, D36) — secondary now that D43 doesn't depend on it, but still worth closing.
-3. Everything else in this list is owner-blocked (live-verify, pilot) — not something a Claude
+4. Everything else in this list is owner-blocked (live-verify, pilot) — not something a Claude
    Code session can push forward alone; confirm with the owner before spending time on those
    instead.
 
@@ -142,6 +160,39 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D44 (2026-09-15) — **Found, mid-D43-rollout, that this project has never configured custom
+  SMTP** — a deeper, pre-existing gap than D43's `otp_expired` fix addresses. Trying to apply
+  D43's own recommended email-template edit ("Confirm signup" → add `{{ .Token }}`), the owner
+  hit a locked template editor; a screenshot of the Supabase dashboard confirmed why: a banner
+  reading "Set up custom SMTP to edit templates — Emails will be sent using the default templates"
+  with the Subject/Body fields disabled. Checked Supabase's own docs
+  (`mcp__Supabase__search_docs`) for what the default/built-in mailer actually is: **explicitly
+  not for production** — "best-effort... intended for exploring and getting started, testing with
+  the project's own team, toy projects or demos, not mission-critical" — no SLA on delivery or
+  uptime, and a rate limit of only a few emails/hour (`auth.rate_limits.email.inbuilt_smtp_per_hour`,
+  a handful by default). **Consequence: this was never just a template-content bug — no real
+  seller could have reliably completed signup via email at all**, on any confirmation flow
+  (link-based, the original design, or D43's code-based fix), because the mailer sending it was
+  never suitable for real users to begin with. D43's diagnosis (email prefetching) and fix (a
+  6-digit code) are still correct and necessary — they just aren't *sufficient* on their own,
+  since GoTrue can't send the email carrying that code reliably without a real SMTP provider
+  behind it.
+  **Recommended fix, given to the owner, not yet actioned:** configure Resend as custom SMTP
+  (`smtp.resend.com:465`, username `resend`, password = a Resend API key, sender
+  `onboarding@resend.dev` to start) — chosen over Brevo/SendGrid/Postmark/AWS SES for the
+  simplest Supabase-specific setup path and a free tier (3,000/month, 100/day, no card) that
+  comfortably covers pilot-stage volume. Once SMTP is live, Supabase unlocks template editing and
+  D43's owner task (add `{{ .Token }}` to "Confirm signup") becomes doable.
+  **Unblocked the one test account this was found on, not the underlying gap:** `irouee@gmail.com`
+  (the same account from D43) was confirmed directly via `email_confirmed_at = now()` over SQL, so
+  manual testing of the admin console isn't blocked while SMTP setup is pending — this does
+  **not** substitute for the real fix, since it bypasses email delivery entirely rather than
+  fixing it; no future real seller gets this treatment, only this one diagnostic account.
+  **Correction to D43's own scope claim:** D43 said its frontend change would let sellers confirm
+  "once the owner edits the template." That was incomplete — the template edit itself was already
+  blocked by this gap, so D43 alone could never have closed the loop no matter how quickly the
+  template got edited. Recorded here rather than editing D43's entry, per this file's own
+  convention (D33) of layering corrections forward instead of rewriting history.
 - D43 (2026-09-15) — **Replaced the clickable email-confirmation link with an in-app 6-digit
   code as the primary signup-confirmation path — a real production failure, not a hypothetical
   one.** The owner hit `otp_expired` ("Email link is invalid or has expired") clicking the
