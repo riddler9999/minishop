@@ -90,6 +90,11 @@ export {adminApi};
 export {getCachedShopInfo} from './backend';
 export type {ShopInfo} from './backend';
 
+// Storage bucket names — re-exported so admin UI code can derive a previously
+// uploaded object's path from its persisted public URL (src/lib/imageUpload.ts)
+// without hardcoding the bucket name a second time.
+export {SHOP_LOGOS_BUCKET, PRODUCT_IMAGES_BUCKET} from './backend';
+
 export type {
   AdminOrder,
   MerchantAccount,
