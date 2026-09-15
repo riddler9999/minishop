@@ -15,8 +15,14 @@ Live & owner-verified — pilot next | Moe Htet | 2026-09-14
 Milestones A (routing), B (buyer storefront on the live backend), C (seller admin) and C.1
 (checkout fee parity) are all built and **owner-verified on the live deployment** (D31) — the
 real browser/WebView click-through this sandbox could never do itself. Plan gating (Starter vs
-Business) is now also verified — automated this time, not owner-verified, see D42. Next up: the
-first real-seller pilot.
+Business) is now also verified — automated this time, not owner-verified, see D42.
+
+**⚠️ Fresh-signup email confirmation is currently broken for real sellers** until the owner
+completes one dashboard step (D43, Open Tasks) — the confirmation link was found (via a real
+owner signup attempt, not a hypothesis) to fail with `otp_expired` due to email-client link
+prefetching, a known Supabase failure mode. The frontend fix (6-digit code entry, replacing the
+link as the primary path) is shipped; it does nothing until the "Confirm signup" email template
+is edited to actually include the code. **This blocks the pilot** until closed.
 
 **Latest:** Task B (storage upload UI for shop logos + product images) is implemented — PNG/WebP
 upload only, no manual URL entry, PNG auto-converted to WebP client-side (owner decisions + build,
@@ -111,12 +117,21 @@ has now closed the second by doing the real click-through themselves (D31).
   (`emailRedirectTo: window.location.origin + '/admin/onboarding'`) only takes effect if GoTrue's
   allow-list contains that URL — otherwise the confirmation link is rejected or silently falls
   back, same failure the fix was meant to close. Dashboard-only; no migration/code artifact needed.
+  **Lower priority now that D43 ships an OTP-code confirmation path that doesn't depend on the
+  link at all** — still worth doing for the small share of sellers who click the link successfully.
+- [ ] **Owner — dashboard-only, unblocks D43** — edit the **Confirm signup** email template
+  (Supabase Dashboard → Authentication → Email Templates) to include `{{ .Token }}` (the 6-digit
+  code the app's new confirm screen expects). The frontend side of this is shipped (D43) but is
+  useless until the email actually contains a code to type. See D43 for the exact template text
+  and the reasoning (email link prefetching was silently burning confirmation tokens before real
+  sellers could click them — this was actually happening in production, not theoretical).
 
 **Next Session — start here:**
-1. Check whether PR #11 (docs-only, records D32's production apply) is merged; if not, merge it
-   and re-verify `main` per D29 before trusting this file as current.
+1. Confirm the owner has edited the "Confirm signup" email template to include `{{ .Token }}`
+   (open task above, D43) — until then, new signups still can't confirm their email at all, since
+   the old link-only path is exactly what was failing.
 2. Confirm the owner has added the production redirect URL to Supabase's allow-list (open task
-   above, D36) — without it the fresh-signup email confirmation link still won't land correctly.
+   above, D36) — secondary now that D43 doesn't depend on it, but still worth closing.
 3. Everything else in this list is owner-blocked (live-verify, pilot) — not something a Claude
    Code session can push forward alone; confirm with the owner before spending time on those
    instead.
@@ -127,6 +142,58 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D43 (2026-09-15) — **Replaced the clickable email-confirmation link with an in-app 6-digit
+  code as the primary signup-confirmation path — a real production failure, not a hypothetical
+  one.** The owner hit `otp_expired` ("Email link is invalid or has expired") clicking the
+  confirmation link for a genuine fresh signup (`irouee@gmail.com`), on the very first click,
+  within minutes of the email being sent. Checked the row directly
+  (`auth.users.confirmation_sent_at` unchanged across both reported failures — only one email was
+  ever sent, so this wasn't the user re-signing-up and clicking a stale link) and confirmed via
+  Supabase's own troubleshooting docs
+  (`mcp__Supabase__search_docs`, "OTP Verification Failures: 'token has expired' or 'otp_expired'
+  errors") that the standard cause is **email prefetching**: email clients and corporate/consumer
+  security scanners routinely auto-visit links in incoming mail to scan them for phishing, which
+  silently consumes a GoTrue confirmation token (single-use by design) before the real recipient
+  ever clicks — surfacing to the user as an instantly "expired" link even though nothing about
+  timing or their own action was wrong. This is Supabase's own documented failure mode for this
+  exact error, with their own documented fix: include `{{ .Token }}` (a 6-digit OTP) in the email
+  template instead of relying solely on `{{ .ConfirmationURL }}`, and verify it client-side via
+  `supabase.auth.verifyOtp({email, token, type: 'signup'})` — a typed code isn't a URL, so nothing
+  can prefetch it.
+  **Frontend changes (shipped this PR):**
+  - `src/lib/adminAuth.tsx` — added `verifyEmailOtp(email, token)` (calls `verifyOtp({..., type:
+    'signup'})`) and `resendSignupCode(email)` (calls `auth.resend({type: 'signup', email})`) to
+    `AdminAuthValue`. `mapAuthError()` extended with Burmese messages for `otp_expired`/invalid-code
+    responses. `signUp()` keeps passing `emailRedirectTo` (D36) — the link isn't removed from the
+    flow, only demoted from being the *only* path, so a seller who clicks a link that happens to
+    survive prefetching still lands correctly.
+  - `src/pages/admin/Login.tsx` — added a third `mode: 'confirm'` alongside `login`/`signup`. After
+    `signUp()` reports `needsEmailConfirmation`, the form switches to a code-entry screen (6-digit
+    input, `inputMode="numeric"`, `autoComplete="one-time-code"` for mobile keyboard/autofill
+    support) instead of bouncing back to the login tab with a "check your email" notice. Submitting
+    calls `verifyEmailOtp` and navigates to `/admin` (→ onboarding) on success, exactly like a normal
+    login. A "ကုဒ်အသစ် ပို့ရန်" (resend code) button calls `resendSignupCode`. The login/signup tab
+    bar is hidden during this step (it isn't one of the two tabs).
+  - `tsc --noEmit`, `eslint .` (0 errors, only the pre-existing `no-explicit-any` warnings scoped
+    out by D27), and `vite build` all pass.
+  **Owner action still required, dashboard-only, blocking (see Open Tasks) — this PR alone does
+  NOT fix the reported bug yet:** the default "Confirm signup" email template
+  (`mailer_templates_confirmation_content`, confirmed via `search_docs`) contains only
+  `{{ .ConfirmationURL }}` — no project has `{{ .Token }}` in it until an owner adds it. Go to
+  **Supabase Dashboard → Authentication → Email Templates → Confirm signup** and add the code
+  somewhere visible, e.g.:
+  ```html
+  <h2>Confirm your email address</h2>
+  <p>Enter this code in the app to finish signing up:</p>
+  <p style="font-size:28px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
+  <p>Or follow this link: <a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
+  ```
+  Keeping the link as a fallback is fine (harmless for sellers whose email doesn't prefetch) —
+  the app now accepts either path to a confirmed session, whichever survives.
+  **Not done this round:** the actual "irouee@gmail.com" test account's confirmation was **not**
+  bypassed via SQL — the user chose the code-flow fix over an immediate SQL-confirm unblock, so
+  that account stays genuinely unconfirmed until the owner edits the template and it (or a fresh
+  signup) goes through the new code path for real.
 - D42 (2026-09-15) — **Plan-gating live-verify, done by this session — automated, not by the
   owner.** Every prior sandbox this project used (D28, D30) could not reach `*.supabase.co` or
   `*.vercel.app` at all (`curl` → 403 at the egress proxy), which is why this specific Open Task
