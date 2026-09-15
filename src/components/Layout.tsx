@@ -21,7 +21,7 @@ function Brand() {
       <span className="max-w-[180px] truncate font-display text-[20px] font-normal uppercase leading-none tracking-[0.2em] text-[#3a2618] sm:max-w-[260px] sm:text-[24px]">
         {name}
       </span>
-      <span className="mt-1 hidden text-[8px] font-semibold uppercase tracking-[0.34em] text-[#a46d20] xs:block sm:text-[9px]">
+      <span className="mt-1 hidden text-[8px] font-semibold uppercase tracking-[0.34em] text-[#a46d20] sm:block sm:text-[9px]">
         Fine Jewelry
       </span>
     </ShopLink>
