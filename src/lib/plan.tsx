@@ -5,9 +5,11 @@
 // and remains the real security boundary.
 //
 // PLAN SOURCE (forward-compatible):
-//   1. `shop.plan` — once the backend adds a `shops.plan` column and it flows
-//      through getOwnShop() (see sellerShop.ts). Not a DB column yet.
-//   2. `VITE_DEFAULT_PLAN` env — deploy-wide default until (1) exists.
+//   1. `shop.plan` — the `shops.plan` column (migration 0003), selected by
+//      getOwnShop() (see sellerShop.ts). Defaults to 'starter' for every shop
+//      at the DB level, so this wins for every real shop today.
+//   2. `VITE_DEFAULT_PLAN` env — only reached when `shop.plan` is null/absent
+//      (a shop fetched before 0003 shipped, or no shop context at all).
 //   3. Hard default `'business'` — so an existing single-seller deploy keeps
 //      every feature it has today (no regression on upgrade).
 //
