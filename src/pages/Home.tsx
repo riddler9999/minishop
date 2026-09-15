@@ -1,143 +1,106 @@
 import {useEffect, useState} from 'react';
-import {ArrowRight, MoreHorizontal} from 'lucide-react';
+import {
+  ArrowRight,
+  Gem,
+  Headphones,
+  Heart,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Users,
+} from 'lucide-react';
 import {api, getCachedShopInfo, type Product} from '../lib/store';
 import ProductCard, {ProductCardSkeleton} from '../components/ProductCard';
 import {ShopLink, useShopSlugParam} from '../components/ShopLink';
+import heroImage from '../data/jewelry/hero';
+import floralRing from '../data/jewelry/floralRing';
+import bangle from '../data/jewelry/bangle';
+import diamondRing from '../data/jewelry/diamondRing';
+import finalCta from '../data/jewelry/finalCta';
 
-function Hero({product}: {product?: Product}) {
+const collections = [
+  {label: 'Traditional Gold', image: floralRing},
+  {label: 'Diamond Jewellery', image: diamondRing},
+  {label: 'Wedding Collection', image: heroImage},
+  {label: 'Bangles & Bracelets', image: bangle},
+  {label: 'Earrings', image: finalCta},
+];
+
+const topTrust = [
+  {title: 'Authentic Quality', sub: 'Trusted Purity', icon: Gem},
+  {title: 'Timeless Designs', sub: 'Modern & Traditional', icon: Sparkles},
+  {title: 'Family Trusted', sub: 'For Generations', icon: Heart},
+  {title: 'Personal Consultation', sub: 'Always Here for You', icon: Headphones},
+];
+
+const trustReasons = [
+  {title: 'Certified Quality', sub: 'Carefully Selected', icon: Gem},
+  {title: 'Transparent Process', sub: 'Clear & Honest', icon: ShieldCheck},
+  {title: 'Personal Guidance', sub: 'Thoughtful Support', icon: Users},
+  {title: 'Lasting Value', sub: 'Made to Be Treasured', icon: Star},
+];
+
+function Hero() {
   const shop = getCachedShopInfo();
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
-      <div className="relative min-h-[330px] overflow-hidden rounded-[28px] bg-neutral-900 sm:min-h-[420px] lg:min-h-[500px]">
-        {product?.image ? (
-          <img
-            src={product.image}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#ebe4db] via-[#d9d1c7] to-[#a99b8b]" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/72 to-white/5 sm:from-white/92 sm:via-white/55 sm:to-transparent" />
+    <section className="relative overflow-hidden bg-[#24170d]">
+      <div className="relative min-h-[520px] sm:min-h-[610px] lg:min-h-[670px]">
+        <img
+          src={heroImage}
+          alt="Fine jewellery collection"
+          className="absolute inset-0 h-full w-full object-cover object-[63%_center] sm:object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1b1009]/95 via-[#27170d]/65 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5" />
 
-        <div className="fade-up relative z-10 flex min-h-[330px] max-w-xl flex-col justify-center px-7 py-10 sm:min-h-[420px] sm:px-12 lg:min-h-[500px] lg:px-16">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-black/55">
-            {shop ? 'ရွေးချယ်ထားသော ပစ္စည်းများ' : 'Mini Shop Demo'}
-          </p>
-          <h1 className="font-display text-[40px] font-semibold leading-[0.98] tracking-[-0.04em] text-black sm:text-6xl lg:text-7xl">
-            {shop?.name ?? 'နေ့တိုင်း ပိုကောင်းတဲ့ ရွေးချယ်မှု'}
-          </h1>
-          <p className="my mt-5 max-w-md text-sm leading-7 text-black/65 sm:text-base">
-            {shop
-              ? 'လိုချင်တဲ့ပစ္စည်းကို ရွေးပါ၊ စျေးခြင်းထဲထည့်ပါ၊ ပြီးရင် အလွယ်တကူ မှာယူနိုင်ပါတယ်။'
-              : 'လှပပြီး အသုံးဝင်တဲ့ နေ့စဉ်သုံးပစ္စည်းတွေကို တစ်နေရာတည်းမှာ လွယ်လွယ်ကူကူ ရွေးချယ်ဝယ်ယူပါ။'}
-          </p>
-          <div className="mt-7">
+        <div className="relative z-10 mx-auto flex min-h-[520px] max-w-7xl items-center px-5 py-16 sm:min-h-[610px] sm:px-8 lg:min-h-[670px] lg:px-10">
+          <div className="max-w-[620px] text-white">
+            <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#e7c178] sm:text-xs">
+              {shop?.name ?? 'Fine Jewellery'} · Fine Jewellery
+            </p>
+            <h1 className="font-display text-[43px] font-normal uppercase leading-[0.98] tracking-[-0.025em] sm:text-6xl lg:text-[72px]">
+              Timeless Beauty
+              <br />
+              For Your
+              <br />
+              Special Moments
+            </h1>
+            <div className="mt-7 h-px w-16 bg-[#d8a84c]" />
+            <p className="mt-5 max-w-sm text-xs font-medium uppercase leading-6 tracking-[0.22em] text-white/78 sm:text-sm">
+              Fine jewellery crafted for generations
+            </p>
             <ShopLink
               to="/products"
-              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800">
-              ပစ္စည်းများ ကြည့်မယ် <ArrowRight className="h-4 w-4" />
+              className="jewel-cta mt-8 inline-flex min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold">
+              Explore Our Collections <ArrowRight className="h-4 w-4" />
             </ShopLink>
           </div>
         </div>
 
-        <div className="absolute bottom-5 right-6 z-10 hidden items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-xs font-medium text-black backdrop-blur sm:flex">
-          01 <span className="text-black/35">/</span> 03
+        <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2" aria-hidden="true">
+          <span className="h-2 w-2 rounded-full bg-white" />
+          <span className="h-2 w-2 rounded-full bg-white/35" />
+          <span className="h-2 w-2 rounded-full bg-white/35" />
         </div>
       </div>
     </section>
   );
 }
 
-function CategoryStrip({categories, groups}: {categories: string[]; groups: {category: string; products: Product[]}[]}) {
-  if (!categories.length) return null;
-
-  const imageFor = (category: string) => groups.find((g) => g.category === category)?.products[0]?.image ?? null;
-
+function TrustStrip() {
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-5 sm:pt-7">
-      <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2 sm:gap-6">
-        {categories.slice(0, 7).map((category) => {
-          const image = imageFor(category);
-          return (
-            <ShopLink
-              key={category}
-              to={`/products?category=${encodeURIComponent(category)}`}
-              className="group flex w-[72px] shrink-0 flex-col items-center gap-2 text-center sm:w-[88px]">
-              <span className="relative grid h-[68px] w-[68px] overflow-hidden rounded-full bg-[#f4f4f2] ring-1 ring-black/[0.05] transition group-hover:ring-black/20 sm:h-20 sm:w-20">
-                {image ? (
-                  <img src={image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                ) : (
-                  <span className="grid h-full w-full place-items-center font-display text-xl font-semibold text-black/70">
-                    {category.trim().charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </span>
-              <span className="my w-full truncate text-[11px] font-medium text-black/75 sm:text-xs">{category}</span>
-            </ShopLink>
-          );
-        })}
-
-        <ShopLink to="/products" className="group flex w-[72px] shrink-0 flex-col items-center gap-2 text-center sm:w-[88px]">
-          <span className="grid h-[68px] w-[68px] place-items-center rounded-full bg-[#f4f4f2] text-black/55 ring-1 ring-black/[0.05] transition group-hover:bg-black group-hover:text-white sm:h-20 sm:w-20">
-            <MoreHorizontal className="h-6 w-6" />
-          </span>
-          <span className="my w-full truncate text-[11px] font-medium text-black/75 sm:text-xs">အားလုံး</span>
-        </ShopLink>
-      </div>
-    </section>
-  );
-}
-
-function SectionHeader({title, to}: {title: string; to?: string}) {
-  return (
-    <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-      <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-black sm:text-3xl">{title}</h2>
-      {to && (
-        <ShopLink to={to} className="inline-flex min-h-11 items-center gap-1.5 px-1 text-xs font-medium text-black/65 transition hover:text-black sm:text-sm">
-          အားလုံး <ArrowRight className="h-4 w-4" />
-        </ShopLink>
-      )}
-    </div>
-  );
-}
-
-function NewDrop({products, loading}: {products: Product[]; loading: boolean}) {
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
-      <SectionHeader title="အသစ်ရောက်" to="/products" />
-      <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4">
-        {loading
-          ? Array.from({length: 4}).map((_, i) => (
-              <div key={i} className="w-[72%] max-w-[280px] shrink-0 snap-start sm:w-[240px]">
-                <ProductCardSkeleton compact />
-              </div>
-            ))
-          : products.map((product) => (
-              <div key={product.id} className="w-[72%] max-w-[280px] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
-                <ProductCard product={product} variant="compact" />
-              </div>
-            ))}
-      </div>
-    </section>
-  );
-}
-
-function Trending({products}: {products: Product[]}) {
-  if (!products.length) return null;
-  const items = products.slice(0, 3);
-
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
-      <SectionHeader title="လူကြိုက်များ" to="/products" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <div className="col-span-2 min-h-[360px] sm:col-span-1 sm:row-span-2 sm:min-h-[540px]">
-          <ProductCard product={items[0]} variant="feature" className="h-full" />
-        </div>
-        {items.slice(1).map((product) => (
-          <div key={product.id} className="min-h-[220px] sm:min-h-[260px]">
-            <ProductCard product={product} variant="feature" className="h-full" />
+    <section className="border-b border-[#d9c8ab]/55 bg-[#fffdf9]">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 px-4 py-7 sm:px-8 lg:grid-cols-4 lg:py-8">
+        {topTrust.map(({title, sub, icon: Icon}, index) => (
+          <div
+            key={title}
+            className={`flex min-h-[118px] flex-col items-center justify-center px-3 text-center ${
+              index % 2 === 0 ? 'border-r border-[#d9c8ab]/55 lg:border-r' : 'lg:border-r'
+            } ${index === topTrust.length - 1 ? 'lg:border-r-0' : ''}`}>
+            <Icon className="mb-3 h-8 w-8 text-[#b98428]" strokeWidth={1.6} />
+            <p className="text-sm font-semibold text-[#23180f]">{title}</p>
+            <p className="mt-1 text-xs text-[#766b60]">{sub}</p>
           </div>
         ))}
       </div>
@@ -145,84 +108,182 @@ function Trending({products}: {products: Product[]}) {
   );
 }
 
+function Collections() {
+  return (
+    <section className="bg-[#fffdf9] px-4 py-12 sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-7 flex items-center justify-between gap-4 sm:mb-9">
+          <div className="flex items-center gap-4">
+            <h2 className="font-display text-3xl font-normal text-[#21160e] sm:text-4xl">Our Collections</h2>
+            <span className="hidden h-px w-20 bg-[#c58e33] sm:block" />
+          </div>
+          <ShopLink to="/products" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#9b6b20]">
+            View All <ArrowRight className="h-4 w-4" />
+          </ShopLink>
+        </div>
+
+        <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-5 sm:gap-4 sm:overflow-visible">
+          {collections.map((item) => (
+            <ShopLink key={item.label} to="/products" className="group w-[44%] min-w-[150px] shrink-0 snap-start sm:w-auto sm:min-w-0">
+              <div className="aspect-square overflow-hidden rounded-xl bg-[#f1e8dc]">
+                <img
+                  src={item.image}
+                  alt={item.label}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+                />
+              </div>
+              <div className="px-1 pt-3 text-center">
+                <p className="text-sm font-medium text-[#2c2118]">{item.label}</p>
+                <span className="mx-auto mt-2 block h-px w-8 bg-[#c58e33]" />
+              </div>
+            </ShopLink>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CraftedStory() {
+  return (
+    <section className="bg-[#fffdf9] px-4 pb-12 sm:px-8 sm:pb-16">
+      <div className="mx-auto grid max-w-7xl overflow-hidden rounded-2xl border border-[#eadfce] bg-[#f7f0e5] lg:grid-cols-[0.9fr_1.4fr]">
+        <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-12">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#a87325]">Our Craft</p>
+          <h2 className="font-display text-4xl font-normal leading-[1.05] text-[#20160f] sm:text-5xl">
+            Crafted
+            <br />
+            with Meaning
+          </h2>
+          <div className="mt-5 h-px w-12 bg-[#bf862d]" />
+          <p className="mt-5 max-w-md text-sm leading-6 text-[#71665b] sm:text-base">
+            Every piece is chosen to celebrate love, tradition and the moments you will remember for years to come.
+          </p>
+          <ShopLink to="/products" className="jewel-cta mt-7 inline-flex w-fit min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold">
+            Shop the Story <ArrowRight className="h-4 w-4" />
+          </ShopLink>
+        </div>
+        <div className="relative min-h-[330px] lg:min-h-[450px]">
+          <img src={bangle} alt="Handcrafted gold jewellery" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f7f0e5]/55 via-transparent to-transparent lg:block" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WhyTrust() {
+  return (
+    <section className="bg-[#fffdf9] px-4 pb-14 sm:px-8 sm:pb-18">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-center justify-center gap-5">
+          <span className="hidden h-px w-24 bg-[#c99a52] sm:block" />
+          <h2 className="text-center font-display text-3xl font-normal text-[#21160e] sm:text-4xl">Why Customers Trust Us</h2>
+          <span className="hidden h-px w-24 bg-[#c99a52] sm:block" />
+        </div>
+        <div className="grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:gap-y-0">
+          {trustReasons.map(({title, sub, icon: Icon}, index) => (
+            <div
+              key={title}
+              className={`flex flex-col items-center px-4 text-center ${index < trustReasons.length - 1 ? 'lg:border-r lg:border-[#d9c8ab]/60' : ''}`}>
+              <span className="mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#f4eadc]">
+                <Icon className="h-8 w-8 text-[#5f4220]" strokeWidth={1.6} />
+              </span>
+              <p className="text-sm font-semibold text-[#261b12]">{title}</p>
+              <p className="mt-1 text-xs text-[#766b60]">{sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShopCollection({products, loading, error}: {products: Product[]; loading: boolean; error: string}) {
+  return (
+    <section className="bg-[#f8f2e9] px-4 py-14 sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9c6c26]">Shop Online</p>
+            <h2 className="font-display text-3xl font-normal text-[#21160e] sm:text-4xl">Shop the Collection</h2>
+          </div>
+          <ShopLink to="/products" className="hidden min-h-11 items-center gap-2 text-sm font-semibold text-[#8d6223] sm:inline-flex">
+            View All <ArrowRight className="h-4 w-4" />
+          </ShopLink>
+        </div>
+
+        {error && <div className="mb-6 rounded-xl border border-[#d9c8ab] bg-white p-4 text-sm text-[#6f5c45]">{error}</div>}
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+          {loading
+            ? Array.from({length: 8}).map((_, index) => <ProductCardSkeleton key={index} compact />)
+            : products.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} variant="compact" />)}
+        </div>
+
+        {!loading && !error && products.length === 0 && (
+          <div className="rounded-xl border border-[#d9c8ab] bg-white px-6 py-12 text-center text-sm text-[#766b60]">
+            This shop has not added products yet.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function FinalCta() {
+  return (
+    <section className="relative min-h-[430px] overflow-hidden bg-[#1e130a] sm:min-h-[500px]">
+      <img src={finalCta} alt="Fine jewellery styling" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-[65%_center]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#160d07]/95 via-[#1c1009]/70 to-transparent" />
+      <div className="relative z-10 mx-auto flex min-h-[430px] max-w-7xl items-center px-5 py-14 sm:min-h-[500px] sm:px-8 lg:px-10">
+        <div className="max-w-[520px] text-white">
+          <h2 className="font-display text-4xl font-normal leading-[1.06] sm:text-5xl">Make Every Moment More Special</h2>
+          <div className="mt-5 h-px w-14 bg-[#d4a64e]" />
+          <p className="mt-5 max-w-md text-sm leading-6 text-white/75 sm:text-base">
+            Discover jewellery selected for celebrations, milestones and everything worth remembering.
+          </p>
+          <ShopLink to="/products" className="jewel-cta mt-7 inline-flex min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold">
+            Shop the Collection <ArrowRight className="h-4 w-4" />
+          </ShopLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
-  const [latest, setLatest] = useState<Product[] | null>(null);
-  const [featured, setFeatured] = useState<Product[]>([]);
-  const [categoryNames, setCategoryNames] = useState<string[]>([]);
-  const [groups, setGroups] = useState<{category: string; products: Product[]}[]>([]);
-  const [err, setErr] = useState('');
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [error, setError] = useState('');
   const slug = useShopSlugParam();
 
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
-        const [{products}, feat] = await Promise.all([
-          api.products({scope: 'active', limit: 12}),
-          api.products({scope: 'active', featured: true, limit: 8}),
-        ]);
-        if (!alive) return;
-        setLatest(products);
-        setFeatured(feat.products.length ? feat.products : products.slice(0, 6));
+        const {products: nextProducts} = await api.products({scope: 'active', limit: 12});
+        if (alive) setProducts(nextProducts);
       } catch (e: any) {
-        if (alive) setErr(e.message || 'ပစ္စည်းများ ဆွဲယူ၍မရပါ');
+        if (alive) setError(e.message || 'We could not load products right now.');
       }
     })();
+
     return () => {
       alive = false;
     };
   }, [slug]);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const {categories} = await api.categories();
-        if (alive) setCategoryNames(categories);
-        const result = await Promise.all(
-          categories.slice(0, 7).map(async (category) => ({
-            category,
-            products: (await api.products({scope: 'active', category, limit: 1})).products,
-          })),
-        );
-        if (alive) setGroups(result);
-      } catch {
-        /* Category shortcuts are non-critical. */
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [slug]);
-
-  const heroProduct = featured[0] ?? latest?.[0];
-  const forYou = latest ?? [];
 
   return (
-    <div className="bg-white pb-4">
-      <Hero product={heroProduct} />
-      <CategoryStrip categories={categoryNames} groups={groups} />
-
-      {err && (
-        <div className="mx-auto mt-6 max-w-7xl px-4">
-          <div className="rounded-2xl border border-black/10 bg-neutral-50 p-4 text-sm text-black/70">{err}</div>
-        </div>
-      )}
-
-      <NewDrop products={(latest ?? []).slice(0, 8)} loading={latest === null && !err} />
-      <Trending products={featured} />
-
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
-        <SectionHeader title="သင့်အတွက်" to="/products" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-          {latest === null && !err
-            ? Array.from({length: 8}).map((_, i) => <ProductCardSkeleton key={i} compact />)
-            : forYou.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} variant="compact" />)}
-        </div>
-        {latest !== null && latest.length === 0 && !err && (
-          <p className="my py-12 text-center text-sm text-black/50">ယခုအချိန်တွင် ပစ္စည်းမရှိသေးပါ။</p>
-        )}
-      </section>
+    <div className="bg-[#fffdf9]">
+      <Hero />
+      <TrustStrip />
+      <Collections />
+      <CraftedStory />
+      <WhyTrust />
+      <ShopCollection products={products ?? []} loading={products === null && !error} error={error} />
+      <FinalCta />
     </div>
   );
 }
