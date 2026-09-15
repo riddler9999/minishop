@@ -1,124 +1,143 @@
-import {useEffect, useRef, useState} from 'react';
-import {ArrowRight, ChevronLeft, ChevronRight, MoreHorizontal, Sparkles} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {ArrowRight, MoreHorizontal} from 'lucide-react';
 import {api, getCachedShopInfo, type Product} from '../lib/store';
 import ProductCard, {ProductCardSkeleton} from '../components/ProductCard';
 import {ShopLink, useShopSlugParam} from '../components/ShopLink';
 
-function Hero() {
-  // Real tenant → the seller's own shop name + a neutral welcome; the "demo"
-  // framing is shown only on the product's root demo storefront.
+function Hero({product}: {product?: Product}) {
   const shop = getCachedShopInfo();
-  return (
-    <section className="relative overflow-hidden bg-brand-900">
-      {/* Theme-native gradient hero (no external banner image). */}
-      <div className="relative flex h-[60vw] max-h-[560px] min-h-[280px] w-full items-center justify-center bg-gradient-to-br from-brand-900 via-brand-700 to-gold-600">
-        {/* Decorative aurora blobs */}
-        <div className="pointer-events-none absolute -left-16 -top-16 h-72 w-72 rounded-full bg-gold-400/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-brand-400/30 blur-3xl" />
 
-        <div className="fade-up relative z-10 mx-auto max-w-3xl px-6 text-center text-cream-50">
-          <span className="inline-block rounded-full border border-cream-50/25 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-cream-50 backdrop-blur">
-            {shop ? '🛍️ Online Shop' : '✨ DEMO STORE — နမူနာ စတိုး'}
-          </span>
-          <h1 className="mt-5 font-display text-4xl font-bold leading-tight sm:text-5xl">
-            {shop?.name ?? 'Demo Fashion Store'}
-          </h1>
-          <p className="my mx-auto mt-4 max-w-xl text-sm text-cream-100/85 sm:text-base">
-            {shop
-              ? 'ပစ္စည်းများ ရွေးချယ်၍ လွယ်ကူစွာ မှာယူနိုင်ပါသည်။ KBZPay / WavePay / အိမ်အရောက်ငွေချေ (COD) ဖြင့် ဝယ်ယူနိုင်သည်။'
-              : 'ဤစတိုးသည် သရုပ်ပြ (demo) e-commerce စတိုးဖြစ်သည်။ ပစ္စည်း၊ ဈေးနှုန်း၊ ငွေပေးချေမှုအားလုံး နမူနာ data များသာဖြစ်ပြီး အမှန်တကယ် အရောင်းအဝယ် မဟုတ်ပါ။'}
+  return (
+    <section className="mx-auto max-w-7xl px-4 pt-4 sm:pt-6">
+      <div className="relative min-h-[330px] overflow-hidden rounded-[28px] bg-neutral-900 sm:min-h-[420px] lg:min-h-[500px]">
+        {product?.image ? (
+          <img
+            src={product.image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#ebe4db] via-[#d9d1c7] to-[#a99b8b]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/72 to-white/5 sm:from-white/92 sm:via-white/55 sm:to-transparent" />
+
+        <div className="fade-up relative z-10 flex min-h-[330px] max-w-xl flex-col justify-center px-7 py-10 sm:min-h-[420px] sm:px-12 lg:min-h-[500px] lg:px-16">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-black/55">
+            {shop ? 'ရွေးချယ်ထားသော ပစ္စည်းများ' : 'Mini Shop Demo'}
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <h1 className="font-display text-[40px] font-semibold leading-[0.98] tracking-[-0.04em] text-black sm:text-6xl lg:text-7xl">
+            {shop?.name ?? 'နေ့တိုင်း ပိုကောင်းတဲ့ ရွေးချယ်မှု'}
+          </h1>
+          <p className="my mt-5 max-w-md text-sm leading-7 text-black/65 sm:text-base">
+            {shop
+              ? 'လိုချင်တဲ့ပစ္စည်းကို ရွေးပါ၊ စျေးခြင်းထဲထည့်ပါ၊ ပြီးရင် အလွယ်တကူ မှာယူနိုင်ပါတယ်။'
+              : 'လှပပြီး အသုံးဝင်တဲ့ နေ့စဉ်သုံးပစ္စည်းတွေကို တစ်နေရာတည်းမှာ လွယ်လွယ်ကူကူ ရွေးချယ်ဝယ်ယူပါ။'}
+          </p>
+          <div className="mt-7">
             <ShopLink
               to="/products"
-              className="inline-flex items-center gap-2 rounded-full bg-cream-50 px-7 py-3 font-bold text-brand-800 shadow-lg transition hover:bg-white">
-              ပစ္စည်းများ ကြည့်ရန် <ArrowRight className="h-4 w-4" />
-            </ShopLink>
-            <ShopLink
-              to="/orders"
-              className="inline-flex items-center gap-2 rounded-full border border-cream-50/40 px-7 py-3 font-semibold text-cream-50 transition hover:bg-white/10">
-              Order စစ်ရန်
+              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800">
+              ပစ္စည်းများ ကြည့်မယ် <ArrowRight className="h-4 w-4" />
             </ShopLink>
           </div>
         </div>
-        {/* Blend the bottom edge into the page background. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-cream-50 to-transparent" />
+
+        <div className="absolute bottom-5 right-6 z-10 hidden items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-xs font-medium text-black backdrop-blur sm:flex">
+          01 <span className="text-black/35">/</span> 03
+        </div>
       </div>
     </section>
   );
 }
 
-// Reference-style circular category quick-links, shown between the hero and
-// the product sections.
-function CategoryStrip({categories}: {categories: string[]}) {
+function CategoryStrip({categories, groups}: {categories: string[]; groups: {category: string; products: Product[]}[]}) {
   if (!categories.length) return null;
+
+  const imageFor = (category: string) => groups.find((g) => g.category === category)?.products[0]?.image ?? null;
+
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-8">
-      <div className="no-scrollbar flex gap-5 overflow-x-auto pb-1">
-        {categories.slice(0, 7).map((c) => (
-          <ShopLink
-            key={c}
-            to={`/products?category=${encodeURIComponent(c)}`}
-            className="group flex shrink-0 flex-col items-center gap-2 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-cream-100 font-display text-lg font-bold text-brand-800 ring-1 ring-cream-200 transition group-hover:ring-brand-400">
-              {c.trim().charAt(0).toUpperCase()}
-            </span>
-            <span className="my w-16 truncate text-xs font-medium text-ink">{c}</span>
-          </ShopLink>
-        ))}
-        <ShopLink to="/products" className="group flex shrink-0 flex-col items-center gap-2 text-center">
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-800 text-cream-50 transition group-hover:bg-brand-700">
+    <section className="mx-auto max-w-7xl px-4 pt-5 sm:pt-7">
+      <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2 sm:gap-6">
+        {categories.slice(0, 7).map((category) => {
+          const image = imageFor(category);
+          return (
+            <ShopLink
+              key={category}
+              to={`/products?category=${encodeURIComponent(category)}`}
+              className="group flex w-[72px] shrink-0 flex-col items-center gap-2 text-center sm:w-[88px]">
+              <span className="relative grid h-[68px] w-[68px] overflow-hidden rounded-full bg-[#f4f4f2] ring-1 ring-black/[0.05] transition group-hover:ring-black/20 sm:h-20 sm:w-20">
+                {image ? (
+                  <img src={image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                ) : (
+                  <span className="grid h-full w-full place-items-center font-display text-xl font-semibold text-black/70">
+                    {category.trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              <span className="my w-full truncate text-[11px] font-medium text-black/75 sm:text-xs">{category}</span>
+            </ShopLink>
+          );
+        })}
+
+        <ShopLink to="/products" className="group flex w-[72px] shrink-0 flex-col items-center gap-2 text-center sm:w-[88px]">
+          <span className="grid h-[68px] w-[68px] place-items-center rounded-full bg-[#f4f4f2] text-black/55 ring-1 ring-black/[0.05] transition group-hover:bg-black group-hover:text-white sm:h-20 sm:w-20">
             <MoreHorizontal className="h-6 w-6" />
           </span>
-          <span className="my w-16 truncate text-xs font-medium text-ink">အားလုံး</span>
+          <span className="my w-full truncate text-[11px] font-medium text-black/75 sm:text-xs">အားလုံး</span>
         </ShopLink>
       </div>
     </section>
   );
 }
 
-function SectionHeader({title, sub, to}: {title: string; sub?: string; to?: string}) {
+function SectionHeader({title, to}: {title: string; to?: string}) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-3">
-      <div>
-        <h2 className="font-display text-2xl font-bold text-brand-800">{title}</h2>
-        {sub && <p className="my mt-1 text-sm text-ink-soft">{sub}</p>}
-      </div>
+    <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+      <h2 className="font-display text-2xl font-semibold tracking-[-0.03em] text-black sm:text-3xl">{title}</h2>
       {to && (
-        <ShopLink to={to} className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-brand-700 hover:text-brand-900">
-          အားလုံးကြည့် <ArrowRight className="h-4 w-4" />
+        <ShopLink to={to} className="inline-flex min-h-11 items-center gap-1.5 px-1 text-xs font-medium text-black/65 transition hover:text-black sm:text-sm">
+          အားလုံး <ArrowRight className="h-4 w-4" />
         </ShopLink>
       )}
     </div>
   );
 }
 
-function FeaturedCarousel({products}: {products: Product[]}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const scroll = (dir: number) => ref.current?.scrollBy({left: dir * 260, behavior: 'smooth'});
-  if (!products.length) return null;
+function NewDrop({products, loading}: {products: Product[]; loading: boolean}) {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-5 flex items-end justify-between gap-3">
-        <div>
-          <h2 className="inline-flex items-center gap-2 font-display text-2xl font-bold text-brand-800">
-            <Sparkles className="h-5 w-5 text-gold-500" /> အထူးရွေးချယ်ထားသော
-          </h2>
-          <p className="my mt-1 text-sm text-ink-soft">ဖက်ရှင်အသစ်များ</p>
-        </div>
-        <div className="hidden gap-2 sm:flex">
-          <button onClick={() => scroll(-1)} className="grid h-9 w-9 place-items-center rounded-full border border-cream-200 bg-white text-brand-700 hover:bg-cream-100">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button onClick={() => scroll(1)} className="grid h-9 w-9 place-items-center rounded-full border border-cream-200 bg-white text-brand-700 hover:bg-cream-100">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+    <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+      <SectionHeader title="အသစ်ရောက်" to="/products" />
+      <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4">
+        {loading
+          ? Array.from({length: 4}).map((_, i) => (
+              <div key={i} className="w-[72%] max-w-[280px] shrink-0 snap-start sm:w-[240px]">
+                <ProductCardSkeleton compact />
+              </div>
+            ))
+          : products.map((product) => (
+              <div key={product.id} className="w-[72%] max-w-[280px] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
+                <ProductCard product={product} variant="compact" />
+              </div>
+            ))}
       </div>
-      <div ref={ref} className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
-        {products.map((p) => (
-          <div key={p.id} className="w-[46%] shrink-0 snap-start sm:w-[240px]">
-            <ProductCard product={p} />
+    </section>
+  );
+}
+
+function Trending({products}: {products: Product[]}) {
+  if (!products.length) return null;
+  const items = products.slice(0, 3);
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
+      <SectionHeader title="လူကြိုက်များ" to="/products" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="col-span-2 min-h-[360px] sm:col-span-1 sm:row-span-2 sm:min-h-[540px]">
+          <ProductCard product={items[0]} variant="feature" className="h-full" />
+        </div>
+        {items.slice(1).map((product) => (
+          <div key={product.id} className="min-h-[220px] sm:min-h-[260px]">
+            <ProductCard product={product} variant="feature" className="h-full" />
           </div>
         ))}
       </div>
@@ -130,7 +149,7 @@ export default function Home() {
   const [latest, setLatest] = useState<Product[] | null>(null);
   const [featured, setFeatured] = useState<Product[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
-  const [cats, setCats] = useState<{category: string; products: Product[]}[]>([]);
+  const [groups, setGroups] = useState<{category: string; products: Product[]}[]>([]);
   const [err, setErr] = useState('');
   const slug = useShopSlugParam();
 
@@ -139,13 +158,12 @@ export default function Home() {
     (async () => {
       try {
         const [{products}, feat] = await Promise.all([
-          api.products({scope: 'active', limit: 10}),
-          api.products({scope: 'active', featured: true, limit: 12}),
+          api.products({scope: 'active', limit: 12}),
+          api.products({scope: 'active', featured: true, limit: 8}),
         ]);
         if (!alive) return;
         setLatest(products);
-        // Fall back to newest active items when nothing is flagged as promotion.
-        setFeatured(feat.products.length ? feat.products : products.slice(0, 8));
+        setFeatured(feat.products.length ? feat.products : products.slice(0, 6));
       } catch (e: any) {
         if (alive) setErr(e.message || 'ပစ္စည်းများ ဆွဲယူ၍မရပါ');
       }
@@ -155,22 +173,21 @@ export default function Home() {
     };
   }, [slug]);
 
-  // Per-category sections.
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const {categories} = await api.categories();
         if (alive) setCategoryNames(categories);
-        const groups = await Promise.all(
-          categories.map(async (c) => ({
-            category: c,
-            products: (await api.products({scope: 'active', category: c, limit: 4})).products,
+        const result = await Promise.all(
+          categories.slice(0, 7).map(async (category) => ({
+            category,
+            products: (await api.products({scope: 'active', category, limit: 1})).products,
           })),
         );
-        if (alive) setCats(groups.filter((g) => g.products.length));
+        if (alive) setGroups(result);
       } catch {
-        /* ignore */
+        /* Category shortcuts are non-critical. */
       }
     })();
     return () => {
@@ -178,45 +195,34 @@ export default function Home() {
     };
   }, [slug]);
 
-  return (
-    <>
-      <Hero />
-      <CategoryStrip categories={categoryNames} />
-      <FeaturedCarousel products={featured} />
+  const heroProduct = featured[0] ?? latest?.[0];
+  const forYou = latest ?? [];
 
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <SectionHeader title="နောက်ဆုံးရောက်ရှိ ပစ္စည်းများ" sub="အသစ်ဝင်ရောက်လာသော ပစ္စည်းများ" to="/products" />
-        {err && (
-          <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-700">{err}</div>
-        )}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {latest === null
-            ? Array.from({length: 6}).map((_, i) => <ProductCardSkeleton key={i} />)
-            : latest.map((p) => <ProductCard key={p.id} product={p} />)}
+  return (
+    <div className="bg-white pb-4">
+      <Hero product={heroProduct} />
+      <CategoryStrip categories={categoryNames} groups={groups} />
+
+      {err && (
+        <div className="mx-auto mt-6 max-w-7xl px-4">
+          <div className="rounded-2xl border border-black/10 bg-neutral-50 p-4 text-sm text-black/70">{err}</div>
+        </div>
+      )}
+
+      <NewDrop products={(latest ?? []).slice(0, 8)} loading={latest === null && !err} />
+      <Trending products={featured} />
+
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+        <SectionHeader title="သင့်အတွက်" to="/products" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          {latest === null && !err
+            ? Array.from({length: 8}).map((_, i) => <ProductCardSkeleton key={i} compact />)
+            : forYou.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} variant="compact" />)}
         </div>
         {latest !== null && latest.length === 0 && !err && (
-          <p className="my py-8 text-center text-ink-soft">ယခုအချိန်တွင် ပစ္စည်းမရှိသေးပါ။</p>
+          <p className="my py-12 text-center text-sm text-black/50">ယခုအချိန်တွင် ပစ္စည်းမရှိသေးပါ။</p>
         )}
-        <div className="mt-8 text-center">
-          <ShopLink
-            to="/products"
-            className="inline-flex items-center gap-2 rounded-full border border-brand-700 px-6 py-3 font-semibold text-brand-700 transition hover:bg-brand-700 hover:text-cream-100">
-            ပစ္စည်းများ အားလုံးကြည့်ရန် <ArrowRight className="h-4 w-4" />
-          </ShopLink>
-        </div>
       </section>
-
-      {/* Sections by category */}
-      {cats.map((c) => (
-        <section key={c.category} className="mx-auto max-w-6xl px-4 py-8">
-          <SectionHeader title={c.category} to={`/products?category=${encodeURIComponent(c.category)}`} />
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {c.products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      ))}
-    </>
+    </div>
   );
 }
