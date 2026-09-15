@@ -24,6 +24,17 @@ on whatever origin the app is running on, not a hardcoded localhost (D36) — st
 to add that URL to Supabase's redirect allow-list (Open Tasks). The orphaned `my-projects-msx4`
 Vercel project link is confirmed deleted (D34), closing the last D30 loose end.
 
+**Also shipped, same day, previously undocumented here (backfilled 2026-09-15 — see D37-D41):**
+storefront and admin dashboard were retheme'd from the pink/cyan TikTok palette to a near-black +
+porcelain + muted-gold "premium boutique" look (D39/D40), which incidentally fixed a real bug —
+`PlanGate.tsx`'s Business-upsell badge/card referenced `gold-100/200/300/700/800` Tailwind tokens
+that were never defined, so the upsell UI had been rendering with no gold styling at all (D40).
+This matters for the still-open **plan-gating live-verify** task below: re-run it against current
+`main`, not against what the UI looked like before D40. A design-system doc + three theme specs
+were also added under `design/` (reference only, no code) (D37), several UI/UX and accessibility
+skills were vendored into `.claude/skills/` (D37), and the Supabase migration checklist moved out
+of always-loaded `CLAUDE.md` into an on-demand skill (D38).
+
 **Previously (D32):** the promo-price DB CHECK constraint is written, validated, merged (PR #10), and
 **applied to the live Supabase project** with owner go-ahead. PR #11 is the docs-only follow-up
 that records that apply in this file — if `git log main` doesn't show it yet, merge it first, then
@@ -65,6 +76,8 @@ has now closed the second by doing the real click-through themselves (D31).
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
   logo field. Both plans keep name/phone/default-fee in Settings and a working storefront.
+  **Note (D40):** the Business-upsell UI's gold styling was silently broken (missing Tailwind
+  tokens) until 2026-09-14 — verify against current `main`, not against any earlier screenshot.
 - [x] **Task B — Storage upload UI** for shop logos and product images. Implemented using ONLY
   the existing `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
   (`src/lib/backend.ts`) — no new storage layer, no `database.types.ts` change. Manual image-URL
@@ -104,6 +117,55 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D41 (backfilled 2026-09-15, commit dated 2026-09-14 20:08) — **Recorded the standing session
+  communication preference in `CLAUDE.md`.** Every session working this repo replies to the user
+  in Burmese and ends its reply with an explicit next-action line (verbatim prompt text + whether
+  it's a new session or the current chat) until the project owner says the project is done. This
+  entry itself exists because that preference had been added to `CLAUDE.md` without a matching
+  `PROJECT.md` record — the five entries below (D37-D40) were found the same way: `git log
+  09999f5..cd702c3` (the range since D33/PR #11 merged) turned up five substantive commits with no
+  corresponding decision-log entry. **Process note:** this file's own D29 hazard ("verify actual
+  repo state, don't trust what should be true") applies to *itself*, not just to PR-merge state —
+  a future session should diff `git log` against this file's own narrative before trusting either.
+- D40 (backfilled 2026-09-15, commit dated 2026-09-14 19:33) — **Restyled the admin dashboard to
+  match the storefront's D39 retheme, and fixed a real styling bug in the process.** The seller
+  Overview page's revenue KPI card got a dark ink+gold "hero" treatment, other stat chips moved off
+  default Tailwind hues onto the brand/gold tokens, and list rows gained hover feedback. While doing
+  this, `src/index.css`'s gold color scale was found incomplete — `PlanGate.tsx`'s Business-upsell
+  badge, upgrade card, and inline-lock components reference `bg-gold-100`/`border-gold-300`/
+  `text-gold-700`, but only `gold-400/500/600` were ever defined as theme tokens. Those classes had
+  been silently no-ops, so **the Business-plan upsell UI had been rendering with no gold styling at
+  all** — undetected because nothing in the build/lint pipeline catches an undefined Tailwind
+  utility class. Filled out `50/100/200/300/700/800` to close the gap. **Relevant to the still-open
+  "Owner live-verify plan gating" task (Open Tasks):** that verification should be re-run against
+  current `main`, not against pre-D40 styling, since the visual symptom it would have caught is now
+  fixed independently of the gating logic itself (which was never wrong — only its CSS was).
+- D39 (backfilled 2026-09-15, commit dated 2026-09-14 18:40) — **Retheme'd the storefront to a
+  "premium minimalist boutique" look**, replacing the pink/cyan TikTok-derived palette with a
+  near-black CTA + warm porcelain + muted-gold system (`src/index.css` brand/gold/cream/ink tokens).
+  `Layout.tsx` gained a mobile bottom tab bar, replacing the header hamburger (now redundant at that
+  width); `Home.tsx` gained a circular category quick-link strip; `ProductCard.tsx` gained a
+  floating quick-add button paired with a single full-width buy-now action, replacing the old
+  stacked add/buy pair. Purely visual/UI — no data-layer, routing, or plan-gating logic touched.
+- D38 (backfilled 2026-09-15, commit dated 2026-09-14 18:27) — **Moved the Supabase migration
+  procedure out of always-loaded `CLAUDE.md` into an on-demand skill**
+  (`.claude/skills/supabase-migration/SKILL.md`) — the three-step migration checklist (file, apply,
+  regenerate types) only matters mid schema-change, so it no longer costs context on every session.
+  The safety-critical rule itself ("never apply to production without the owner's go-ahead", D7)
+  stays in `CLAUDE.md` since that constraint applies regardless of whether a migration is in
+  progress. `CLAUDE.md`'s own "Schema changes" bullet (Supabase backend section, above) already
+  points here.
+- D37 (backfilled 2026-09-15, commits dated 2026-09-14 17:20-17:23) — **Added design-system
+  groundwork, reference-only, no app code touched.** `design/design.md` documents the
+  storefront/admin visual language as it stood at the time (grounded in `src/index.css` and the
+  real screen inventory), and `design/themes/{minimal,bold,classic-shop}.md` record three proposed
+  store themes from a reference mockup as specs to build against later — D39/D40 above are the
+  "minimal" direction actually implemented next, same day. Separately, several UI/UX and
+  accessibility skills (design-audit, accessibility-scan/audit/fix/diff/inspect, ui-typography,
+  ui-ux-pro-max, vercel-composition-patterns, vercel-react-best-practices/view-transitions,
+  bencium-controlled-ux-designer) were vendored into `.claude/skills/` — see
+  `.claude/skills/THIRD-PARTY-SKILLS.md` for provenance; these are editor/session tooling, not
+  application code, and ship no runtime behavior of their own.
 - D36 (2026-09-14) — **Fixed the fresh-signup email confirmation redirect.** `adminAuth.tsx`'s
   `signUp()` called `sb.auth.signUp({email, password})` with no `options.emailRedirectTo`, so
   Supabase fell back to the project's dashboard-configured Site URL for the confirmation link —
