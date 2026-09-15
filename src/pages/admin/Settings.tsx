@@ -4,12 +4,14 @@
 // is confined by RLS to the seller's own row. The public `/s/:slug` address is
 // intentionally read-only here — changing it would break every shared link.
 
-import {useMemo, useState} from 'react';
-import {Store, Save, Link2, Copy, Check, Image as ImageIcon} from 'lucide-react';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {Store, Save, Link2, Copy, Check, Image as ImageIcon, Upload, X, Loader2} from 'lucide-react';
 import type {User} from '@supabase/supabase-js';
 import {useAdminAuth} from '../../lib/adminAuth';
 import {usePlan, PLAN_LABEL} from '../../lib/plan';
 import {updateOwnShop, type OwnShop} from '../../lib/sellerShop';
+import {adminApi, SHOP_LOGOS_BUCKET} from '../../lib/store';
+import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '../../lib/imageUpload';
 import {PlanBadge, UpgradeCard} from '../../components/PlanGate';
 import {cx} from '../../lib/format';
 
@@ -40,10 +42,29 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
   const [phone, setPhone] = useState(shop.phone ?? '');
   const [fee, setFee] = useState(String(shop.defaultDeliveryFee));
   const [logoUrl, setLogoUrl] = useState(shop.logoUrl ?? '');
+  // Path of a logo uploaded THIS session that hasn't been saved into
+  // shops.logo_url yet — kept so it can be cleaned up if the seller replaces
+  // it again, fails to save, or navigates away before saving (see PROJECT.md
+  // Task B invariant: upload before the write, never leave an orphan).
+  const [pendingLogoPath, setPendingLogoPath] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoErr, setLogoErr] = useState('');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Delete any not-yet-saved upload if the seller navigates away without
+  // saving — a ref keeps the cleanup effect from needing pendingLogoPath in
+  // its dependency array (it must only run once, on unmount).
+  const pendingLogoPathRef = useRef(pendingLogoPath);
+  pendingLogoPathRef.current = pendingLogoPath;
+  useEffect(
+    () => () => {
+      if (pendingLogoPathRef.current) void adminApi.deleteShopLogo(pendingLogoPathRef.current);
+    },
+    [],
+  );
 
   // The public storefront URL for this shop (channel-neutral — a seller pastes
   // it into any bio/message/QR, TikTok included).
@@ -56,6 +77,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
     setErr('');
     setOk(false);
     setSaving(true);
+    const previousLogoUrl = shop.logoUrl;
     try {
       await updateOwnShop(user.id, {
         name,
@@ -64,13 +86,59 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         // Only write branding fields the plan actually exposes.
         ...(features.branding ? {logoUrl} : {}),
       });
+      // Only after the DB write succeeds is it safe to drop the old object —
+      // deleting first risks a persisted URL pointing at nothing if the write
+      // above had failed instead.
+      if (features.branding && previousLogoUrl && previousLogoUrl !== logoUrl) {
+        const oldPath = deriveStoragePath(previousLogoUrl, SHOP_LOGOS_BUCKET);
+        if (oldPath) await adminApi.deleteShopLogo(oldPath).catch(() => {});
+      }
+      setPendingLogoPath(null);
       setOk(true);
       refresh();
     } catch (e: any) {
+      // The write failed — undo only what this attempt uploaded. Nothing else
+      // was touched, so there's nothing else to compensate.
+      if (pendingLogoPath) {
+        await adminApi.deleteShopLogo(pendingLogoPath).catch(() => {});
+        setPendingLogoPath(null);
+        setLogoUrl(shop.logoUrl ?? '');
+      }
       setErr(e.message || 'သိမ်း၍မရပါ။');
     } finally {
       setSaving(false);
     }
+  };
+
+  const onLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) return setLogoErr(validationError);
+    setLogoErr('');
+    setUploadingLogo(true);
+    try {
+      const prepared = await prepareImageForUpload(file);
+      const {url, path} = await adminApi.uploadShopLogo(prepared);
+      // Replacing an earlier pick from this same session — that upload was
+      // never saved anywhere, so it's safe to delete immediately.
+      if (pendingLogoPath) await adminApi.deleteShopLogo(pendingLogoPath).catch(() => {});
+      setPendingLogoPath(path);
+      setLogoUrl(url);
+    } catch (e: any) {
+      setLogoErr(e.message || 'ပုံ တင်၍မရပါ။');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    if (pendingLogoPath) {
+      await adminApi.deleteShopLogo(pendingLogoPath).catch(() => {});
+      setPendingLogoPath(null);
+    }
+    setLogoUrl('');
   };
 
   const copyUrl = async () => {
@@ -132,20 +200,44 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
 
         {/* Branding — Business only */}
         {features.branding ? (
-          <label className="block">
+          <div className="block">
             <span className={lbl}>
               <span className="inline-flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4 text-gold-600" /> Logo URL
+                <ImageIcon className="h-4 w-4 text-gold-600" /> ဆိုင် Logo
               </span>
             </span>
-            <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className={field} placeholder="https://…/logo.png" />
-            <span className="my mt-1 block text-xs text-ink-soft">
-              http / https ပုံ URL ဖြည့်ပါ — storefront နှင့် console တွင် ပေါ်ပါမည်။
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <div className="relative">
+                  <img src={logoUrl} alt="logo preview" className="h-14 w-14 rounded-xl border border-cream-200 object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    aria-label="logo ဖယ်ရှားရန်"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white shadow">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-cream-300 bg-cream-50 text-ink-soft">
+                  <ImageIcon className="h-5 w-5" />
+                </div>
+              )}
+              <label
+                className={cx(
+                  'my inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-cream-200 px-3.5 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100',
+                  uploadingLogo && 'pointer-events-none opacity-60',
+                )}>
+                {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploadingLogo ? 'တင်နေသည်…' : logoUrl ? 'ပြောင်းရန်' : 'ပုံတင်ရန်'}
+                <input type="file" accept="image/png,image/webp" className="hidden" onChange={onLogoFileChange} disabled={uploadingLogo} />
+              </label>
+            </div>
+            <span className="my mt-1.5 block text-xs text-ink-soft">
+              PNG သို့မဟုတ် WebP ပုံဖိုင်သာ တင်နိုင်သည် (JPG/JPEG လက်မခံပါ) — storefront နှင့် console တွင် ပေါ်ပါမည်။
             </span>
-            {/^https?:\/\//.test(logoUrl.trim()) && (
-              <img src={logoUrl.trim()} alt="logo preview" className="mt-2 h-14 w-14 rounded-xl border border-cream-200 object-cover" />
-            )}
-          </label>
+            {logoErr && <p className="my mt-1 text-sm text-brand-600">{logoErr}</p>}
+          </div>
         ) : (
           <UpgradeCard title="Logo နှင့် branding">
             ဆိုင် logo နှင့် အပို branding customization သည် Business package feature ဖြစ်သည်။

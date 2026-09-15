@@ -17,7 +17,14 @@ Milestones A (routing), B (buyer storefront on the live backend), C (seller admi
 real browser/WebView click-through this sandbox could never do itself. Next up: the plan-gating
 live-verify and the first real-seller pilot.
 
-**Latest (D32):** the promo-price DB CHECK constraint is written, validated, merged (PR #10), and
+**Latest:** Task B (storage upload UI for shop logos + product images) is implemented — PNG/WebP
+upload only, no manual URL entry, PNG auto-converted to WebP client-side (owner decisions + build,
+D34/D35). The fresh-signup email confirmation redirect is fixed to return to `/admin/onboarding`
+on whatever origin the app is running on, not a hardcoded localhost (D36) — still needs the owner
+to add that URL to Supabase's redirect allow-list (Open Tasks). The orphaned `my-projects-msx4`
+Vercel project link is confirmed deleted (D34), closing the last D30 loose end.
+
+**Previously (D32):** the promo-price DB CHECK constraint is written, validated, merged (PR #10), and
 **applied to the live Supabase project** with owner go-ahead. PR #11 is the docs-only follow-up
 that records that apply in this file — if `git log main` doesn't show it yet, merge it first, then
 re-verify `main` per the standing D29 hazard before trusting the rest of this file as current. See
@@ -53,81 +60,19 @@ has now closed the second by doing the real click-through themselves (D31).
 
 - [x] **Owner live-verify A + B + C + C.1** on the live deployment (`https://minishop-xi-brown.vercel.app`) — owner confirmed the real browser/WebView click-through works. See D31.
 - [ ] **Owner** — confirm the account used to verify C (seller admin) came from a fresh signup (signup tab on `/admin/login` creates the GoTrue account — `Onboarding.tsx` only creates the shop for an already-authenticated session, it can't sign up), not a pre-existing/hand-seeded one (D28's real-onboarding gap isn't provably closed by D31 alone — see D31's own caveat). If it wasn't, do that signup for real to actually close it.
-- [ ] **Owner** — disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Not blocking.
+- [x] **Owner** — disconnect/delete the orphaned `my-projects-msx4` Vercel project's link to this repo (D30) so pushes don't trigger duplicate deployments. Owner confirmed the link is deleted. See D34.
 - [ ] **Owner live-verify plan gating** on a preview: deploy once with `VITE_DEFAULT_PLAN=starter`
   and once with `=business`. Starter must HIDE (Business must SHOW): shipping-zone nav, product
   Promotion controls, order last-5 payment-verify section, dashboard analytics panel, Settings
   logo field. Both plans keep name/phone/default-fee in Settings and a working storefront.
-- [ ] **Task B — Storage upload UI** for shop logos and product images (images are URL text in
-  the seller UI today). **The backend half of this already exists and must be reused, not
-  rebuilt:** `adminApi.uploadShopLogo(file)`, `uploadProductImage(file, productId?)`,
-  `deleteShopLogo(path)`, `deleteProductImage(path)` in `src/lib/backend.ts:774-818` already
-  resolve the signed-in seller's own `shop_id`, build the tenant-scoped `<shop_id>/…` path
-  (matching the D25/0003 storage policy), upload to the `shop-logos`/`product-images` buckets, and
-  return `{url, path}` — but **nothing in the UI calls them yet** (confirmed by grep: 0 references
-  outside `backend.ts` itself). **Not started; this is the next task.** Corrected plan (an earlier
-  draft of this plan wrongly proposed a new `src/lib/storage.ts` duplicating this — a 2026-09-14
-  Codex review on PR #11 caught it before it was built; do not recreate these methods):
-  **The one invariant that governs all of this** (three Codex review rounds on PR #11/#12 each
-  found a different violation of it before this was consolidated — see D33): Storage and the
-  `products`/`shops` row are two separate systems with **no shared transaction**, so correctness
-  depends entirely on ordering, not on any individual step:
-  - Upload new files **before** the DB write, and hold what you uploaded *this attempt* in a
-    local list (`newlyUploadedPaths`).
-  - Build the **complete final URL list** (existing URLs the seller kept + newly uploaded URLs,
-    minus any the seller removed) and pass that complete list **into** the
-    `createProduct`/`updateProduct`/`updateShopSettings` call — never append to it *after* that
-    call, or the write persists the old list.
-  - If a new upload fails (including a later file in a multi-file batch, after an earlier one in
-    the same batch already succeeded): delete everything in `newlyUploadedPaths` so far, surface
-    the error, stop. Nothing else has been touched yet, so there's nothing else to undo.
-  - If the DB write itself fails: same compensation — delete everything in `newlyUploadedPaths`.
-    Still nothing else to undo, because of the next rule.
-  - **Never delete an old/replaced Storage object (the previous logo, an image the seller marked
-    for removal) until *after* the DB write that stops referencing it has succeeded.** Deleting
-    first and writing second can leave a persisted URL pointing at nothing if the write then
-    fails; deferring the delete means a failed or cancelled save leaves the old object as
-    harmless, still-referenced, unchanged data — exactly the state it was already in.
-  - Cancelling the modal without saving therefore only ever needs to clean up
-    `newlyUploadedPaths` (if the seller picked new files this session) — no *existing* object is
-    ever deleted except in the post-success step above, so cancel can't strand a live reference.
-  1. `src/pages/admin/Settings.tsx` — swap the logo URL text input for a file picker + preview.
-     On select: `adminApi.uploadShopLogo(file)`, hold `{url, path}` in local state (do not call
-     `updateShopSettings` yet). On Save: call `updateShopSettings({logoUrl: newUrl})`; only once
-     that succeeds, delete the *previous* logo — derive its path from the previously-saved
-     `logoUrl` per point 4 below. On failure (of the settings update or any other field in the
-     same save) or on navigating away without saving: delete the newly uploaded object via its
-     held `path`, per the invariant above.
-  2. `src/pages/admin/AdminProducts.tsx`'s `ProductModal` — swap the `images` textarea
-     (URL-per-line) for a multi-file picker. Stage picks as in-memory `File` objects + local
-     preview URLs (`URL.createObjectURL`); do not touch Storage until `save()`
-     (`AdminProducts.tsx:52`). Inside `save()`: upload every staged file (tracking
-     `newlyUploadedPaths` as you go; abort and compensate per the invariant if any upload in the
-     batch fails), build the final `images[]` from kept URLs + new URLs, pass that into
-     `createProduct`/`updateProduct`, and only once that call succeeds delete the Storage objects
-     for any images the seller marked removed this session (paths derived per point 4). If the
-     create/update call itself fails, compensate `newlyUploadedPaths` and leave the removed-image
-     objects alone (they're still correctly referenced by the row, which was never rewritten).
-  3. Reserve a moment to re-read this against the invariant once written — three review rounds
-     catching four variants of the same ordering mistake is the signal to check the *rule*, not
-     just the latest symptom, before calling this plan done.
-  4. Deleting a **previously-saved** image/logo has no stored `path` on hand — `products.images`
-     and `shops.logo_url` persist only the public URL (confirmed: `images text[]` in
-     `0001_init_saas.sql`, no path column). Supabase Storage public URLs are deterministic —
-     `{SUPABASE_URL}/storage/v1/object/public/<bucket>/<path>` — so derive `path` by stripping
-     everything up through `<bucket>/` from the URL rather than adding a schema column for this.
-  5. Client-side file type/size validation before calling the existing upload methods (jpg/png/webp,
-     ~2–5MB cap) — the backend methods don't validate this themselves today.
-  6. Per the WebView constraints (Notes, below): plain `<input type="file" accept="image/*">`, no
-     custom camera capture — gallery/camera pickers are already known-flaky in-app.
-  7. Burmese error messages + retry on upload failure (the existing methods throw `Error(message)`
-     on a Supabase Storage error — network, size/type reject, or RLS path mismatch all surface this
-     way).
-  8. No `database.types.ts` change needed — buckets/policies and the backend methods are already
-     in place; this task is UI wiring only.
-  **Pending owner decisions before starting (both open):** (a) keep the URL manual-entry field as
-  a fallback alongside upload, or remove it entirely once upload works? (b) exact file size/format
-  limit, given KBZPay/WavePay-adjacent bandwidth concerns in-app.
+- [x] **Task B — Storage upload UI** for shop logos and product images. Implemented using ONLY
+  the existing `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
+  (`src/lib/backend.ts`) — no new storage layer, no `database.types.ts` change. Manual image-URL
+  entry is removed entirely (owner decision, D34); PNG/WebP are the only accepted formats (JPG/JPEG
+  rejected client-side), and PNG is converted to WebP client-side before upload (owner decision,
+  D34). Full design (the upload-before-write / complete-list-into-write / delete-new-on-failure /
+  never-delete-old-before-write-succeeds invariant, and the two call sites' wiring) is in D35; the
+  owner decisions that unblocked it are in D34.
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
 - [x] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`/mobile nav drawer. Shared `src/lib/useModalA11y.ts` hook. PRs #3 (initial + 2 Codex-found focus-trap fixes), #4 (one of those fixes had been dropped by a merge race on #3 — reapplied against `main`).
@@ -137,15 +82,21 @@ has now closed the second by doing the real click-through themselves (D31).
   go-ahead. See D32.
 - [ ] **Backend** (later) — plan changes are an owner/billing action; no seller-facing plan
   toggle. A minimal admin/owner path to set a shop's plan is out of frontend scope.
+- [ ] **Owner** — add the production origin's `/admin/onboarding` URL (e.g.
+  `https://minishop-xi-brown.vercel.app/admin/onboarding`, plus any future custom domain) to
+  Supabase **Auth → URL Configuration → Redirect URLs** allow-list. The code fix in D36
+  (`emailRedirectTo: window.location.origin + '/admin/onboarding'`) only takes effect if GoTrue's
+  allow-list contains that URL — otherwise the confirmation link is rejected or silently falls
+  back, same failure the fix was meant to close. Dashboard-only; no migration/code artifact needed.
 
 **Next Session — start here:**
 1. Check whether PR #11 (docs-only, records D32's production apply) is merged; if not, merge it
    and re-verify `main` per D29 before trusting this file as current.
-2. Get the two pending owner decisions for **Task B** (above) answered, then implement per the
-   drafted plan.
-3. Everything else in this list is owner-blocked (live-verify, pilot, Vercel cleanup) — not
-   something a Claude Code session can push forward alone; confirm with the owner before spending
-   time on those instead.
+2. Confirm the owner has added the production redirect URL to Supabase's allow-list (open task
+   above, D36) — without it the fresh-signup email confirmation link still won't land correctly.
+3. Everything else in this list is owner-blocked (live-verify, pilot) — not something a Claude
+   Code session can push forward alone; confirm with the owner before spending time on those
+   instead.
 
 **Explicitly NOT in v1:** auto payment verification (Phase 2 moat), AI/chatbot features, custom domains, staff accounts, deep analytics, a native app, multi-courier APIs.
 
@@ -153,6 +104,78 @@ has now closed the second by doing the real click-through themselves (D31).
 
 ## Decisions
 
+- D36 (2026-09-14) — **Fixed the fresh-signup email confirmation redirect.** `adminAuth.tsx`'s
+  `signUp()` called `sb.auth.signUp({email, password})` with no `options.emailRedirectTo`, so
+  Supabase fell back to the project's dashboard-configured Site URL for the confirmation link —
+  `localhost` in a project whose Site URL had never been updated for production, matching the
+  reported symptom (production signup confirmations returning to localhost instead of the live
+  app). Fixed by passing `options: {emailRedirectTo: `${window.location.origin}/admin/onboarding`}`,
+  so the link always points at whatever origin the app is actually running on (the production
+  domain in prod, `localhost` in local dev) and lands a freshly-confirmed seller straight on
+  `/admin/onboarding` to create their shop. **Owner follow-up still required, dashboard-only:**
+  Supabase's GoTrue only honors an `emailRedirectTo` that is already present in the project's
+  **Auth → URL Configuration → Redirect URLs** allow-list — add the production origin's
+  `/admin/onboarding` URL (and any future custom domain) there, or the confirmation link is
+  rejected/falls back regardless of this code fix. Tracked in Open Tasks; not something this
+  session can do itself (no dashboard access, and changing Auth config is an owner action per the
+  same caution D7 applies to schema changes).
+- D35 (2026-09-14) — **Implemented Task B (storage upload UI)**, using ONLY the existing
+  `adminApi.uploadShopLogo`/`uploadProductImage`/`deleteShopLogo`/`deleteProductImage`
+  (`src/lib/backend.ts`) — no new storage layer, no `database.types.ts` change — following the
+  ordering invariant D33 consolidated (Storage and the `products`/`shops` row are two systems with
+  no shared transaction: upload before the write, pass the complete final URL list into the write,
+  delete newly-uploaded objects on any failure, never delete an old/removed object until after the
+  write that stops referencing it succeeds).
+  - New `src/lib/imageUpload.ts` — pure browser-side helpers, no Supabase calls of its own (so this
+    is not a second storage layer): `validateImageFile` (PNG/WebP only, JPG/JPEG rejected, ~5MB
+    cap, Burmese error text), `prepareImageForUpload` (canvas-based PNG→WebP conversion; WebP
+    passes through unconverted), and `deriveStoragePath(url, bucket)` (recovers a previously
+    uploaded object's Storage path from its persisted public URL — `products.images` and
+    `shops.logo_url` store only the URL, confirmed still no path column in `0001_init_saas.sql`).
+  - `src/lib/backend.ts`'s `SHOP_LOGOS_BUCKET`/`PRODUCT_IMAGES_BUCKET` (previously private) are now
+    exported and re-exported from `src/lib/store.ts`, so `deriveStoragePath` callers never hardcode
+    a bucket name a second time.
+  - `src/pages/admin/Settings.tsx` — the logo URL text input is replaced with a file picker +
+    preview. Upload happens on file select (`adminApi.uploadShopLogo`), held as `{url, path}` in
+    state without calling `updateOwnShop` yet. Save writes the new URL first; only once that
+    succeeds does it delete the previous logo object (path via `deriveStoragePath`). A failed save,
+    or unmounting (navigating away) before saving, deletes the just-uploaded object instead — an
+    unmount cleanup effect (ref-backed, runs once) covers the navigate-away case. Picking a second
+    file before saving deletes the first pick's now-orphaned upload immediately (it was never saved
+    anywhere, so it's safe to drop right away). A small remove (✕) control replaces what clearing
+    the old text field used to do.
+  - `src/pages/admin/AdminProducts.tsx`'s `ProductModal` — the URL-per-line textarea is replaced
+    with a thumbnail grid (existing kept images + newly-picked local files, previewed via
+    `URL.createObjectURL`, revoked on unmount/removal) plus an add-file control. Uploads happen
+    only inside `save()`, immediately before the create/update call: every staged file is uploaded
+    and tracked in a local list; if any file in the batch fails, everything uploaded so far in that
+    attempt is deleted and the save aborts before the row write. The row write receives the
+    complete final `images[]` (kept URLs + newly uploaded URLs) as its payload. Only after that
+    write succeeds are seller-removed images deleted from Storage (path derived the same way); if
+    the write itself fails, only this attempt's new uploads are rolled back — removed-image objects
+    are left alone since the row was never rewritten.
+  - Validated by hand-tracing every branch of the invariant (upload-before-write,
+    complete-list-into-write, delete-new-on-any-failure, never-delete-old-before-write-succeeds)
+    against both call sites, given D33's record of three prior review rounds each catching a
+    different variant of exactly this ordering mistake. `tsc --noEmit`, `eslint .`, and `vite
+    build` all pass.
+- D34 (2026-09-14) — **Owner decisions closing Task B's two open questions (D33/Open Tasks) and
+  confirming Vercel cleanup (D30's open item).**
+  1. Manual image URL entry is removed entirely — no fallback text input; upload is the only path
+     for both the shop logo (Settings) and product images (`ProductModal`).
+  2. Accepted image formats are restricted to PNG and WebP; JPG/JPEG is rejected client-side before
+     any upload attempt. PNG is converted to WebP client-side (canvas) before calling the existing
+     `adminApi.uploadShopLogo`/`uploadProductImage`; WebP is uploaded unchanged — reduces payload
+     size for sellers uploading over TikTok in-app WebView connections and keeps stored objects in
+     one uniform format.
+  3. The orphaned `my-projects-msx4` Vercel project's link to this repo has been deleted by the
+     owner directly in the Vercel dashboard — closes the D30 duplicate-deployment concern. This
+     session made no Vercel API/MCP call to verify it independently; the owner's report is taken as
+     authoritative for their own dashboard action, consistent with D28/D30's finding that this
+     sandbox has no reliable way to inspect Vercel project-linking state itself.
+  **Not specified by the owner:** the exact upload size cap. D35's implementation defaults to 5MB
+  pre-conversion, inside the 2–5MB range this doc had already flagged for WebView bandwidth —
+  revisit if the owner wants a different number.
 - D33 (2026-09-14) — **Three Codex review rounds across PR #11/#12 caught eight doc defects in
   the Task B (storage upload UI) handoff plan before anything was built — all fixed, no app code
   touched (this is a docs-only PR; the defects were in the *plan*, not in shipped code).**

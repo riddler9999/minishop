@@ -61,7 +61,16 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
   const signUp = async (email: string, password: string): Promise<AuthResult> => {
     const sb = getSupabase();
     if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {data, error} = await sb.auth.signUp({email: email.trim(), password});
+    // Without emailRedirectTo, Supabase falls back to the project's dashboard
+    // Site URL (localhost in dev) for the confirmation link — wrong for a
+    // signup that happened on the production domain. Pointing at the current
+    // origin means the confirmation link always returns to wherever the app
+    // is actually running, landing a fresh seller straight on onboarding.
+    const {data, error} = await sb.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {emailRedirectTo: `${window.location.origin}/admin/onboarding`},
+    });
     if (error) return {error: mapAuthError(error.message)};
     // Session is null when the project requires email confirmation before login.
     return {error: null, needsEmailConfirmation: !data.session};

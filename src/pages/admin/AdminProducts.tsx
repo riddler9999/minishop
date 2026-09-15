@@ -1,6 +1,7 @@
-import {useEffect, useMemo, useState} from 'react';
-import {Search, Pencil, Plus, X, Check, EyeOff, Eye} from 'lucide-react';
-import {adminApi, type Product, type ProductPatch, type ProductCreateInput} from '../../lib/store';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {Search, Pencil, Plus, X, Check, EyeOff, Eye, Upload} from 'lucide-react';
+import {adminApi, PRODUCT_IMAGES_BUCKET, type Product, type ProductPatch, type ProductCreateInput} from '../../lib/store';
+import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '../../lib/imageUpload';
 import {ks, cx} from '../../lib/format';
 import {usePlan} from '../../lib/plan';
 import {UpgradeInline} from '../../components/PlanGate';
@@ -36,7 +37,14 @@ function ProductModal({
   const [isPromotion, setIsPromotion] = useState(product?.isPromotion ?? false);
   const [promoPrice, setPromoPrice] = useState(product?.promoPrice != null ? String(product.promoPrice) : '');
   const [stock, setStock] = useState(product ? String(product.stock) : '0');
-  const [images, setImages] = useState((product?.images ?? []).join('\n'));
+  // Images the seller kept from a prior save (URLs only — no Storage path on
+  // hand, see PROJECT.md Task B point 4) versus ones removed this session
+  // (deleted from Storage only after a successful write stops referencing
+  // them) versus newly-picked local files (uploaded only inside save()).
+  const [existingImages, setExistingImages] = useState<string[]>(product?.images ?? []);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [newFiles, setNewFiles] = useState<{file: File; previewUrl: string}[]>([]);
+  const [imageErr, setImageErr] = useState('');
   const [description, setDescription] = useState(product?.description ?? '');
   // Default a NEW product's arrival date to today so it sorts newest-first.
   // In edit mode, preserve the product's existing value (blank if it was null) —
@@ -49,6 +57,48 @@ function ProductModal({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
+  // Cancel (onClose) never uploads anything, so the only cleanup a staged
+  // pick needs is its local object-URL preview — a ref keeps this a
+  // once-on-unmount effect rather than re-running on every pick.
+  const newFilesRef = useRef(newFiles);
+  newFilesRef.current = newFiles;
+  useEffect(
+    () => () => {
+      newFilesRef.current.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+    },
+    [],
+  );
+
+  const onFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // allow re-selecting the same file later
+    if (files.length === 0) return;
+    setImageErr('');
+    const accepted: {file: File; previewUrl: string}[] = [];
+    for (const file of files) {
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        setImageErr(validationError);
+        continue;
+      }
+      accepted.push({file, previewUrl: URL.createObjectURL(file)});
+    }
+    if (accepted.length) setNewFiles((prev) => [...prev, ...accepted]);
+  };
+
+  const removeExistingImage = (url: string) => {
+    setExistingImages((prev) => prev.filter((u) => u !== url));
+    setRemovedImages((prev) => [...prev, url]);
+  };
+
+  const removeNewFile = (previewUrl: string) => {
+    setNewFiles((prev) => {
+      const found = prev.find((f) => f.previewUrl === previewUrl);
+      if (found) URL.revokeObjectURL(found.previewUrl);
+      return prev.filter((f) => f.previewUrl !== previewUrl);
+    });
+  };
+
   const save = async () => {
     const priceN = Number(price);
     const stockN = Number(stock);
@@ -60,14 +110,31 @@ function ProductModal({
       if (promoN == null || !Number.isFinite(promoN) || promoN < 0) return setErr('Promo ဈေး ဖြည့်ပါ။');
       if (promoN >= priceN) return setErr('Promo ဈေးသည် ပုံမှန်ဈေးထက် နည်းရမည်။');
     }
-    // Image URLs, one per line; drop blanks and anything that isn't http(s).
-    const imageList = images
-      .split('\n')
-      .map((s) => s.trim())
-      .filter((s) => /^https?:\/\//.test(s));
     const arrival = arrivalDate ? new Date(arrivalDate).toISOString() : null;
     setErr('');
     setSaving(true);
+
+    // Upload every staged file BEFORE writing the row, tracking what THIS
+    // attempt uploaded — if a later file in the batch fails, undo only that
+    // (nothing else has been touched yet). See PROJECT.md Task B invariant.
+    const newlyUploaded: {url: string; path: string}[] = [];
+    try {
+      for (const {file} of newFiles) {
+        const prepared = await prepareImageForUpload(file);
+        const {url, path} = await adminApi.uploadProductImage(prepared, product?.id);
+        newlyUploaded.push({url, path});
+      }
+    } catch (e: any) {
+      await Promise.all(newlyUploaded.map(({path}) => adminApi.deleteProductImage(path).catch(() => {})));
+      setErr(e.message || 'ပုံ တင်၍မရပါ။');
+      setSaving(false);
+      return;
+    }
+
+    // The write must receive the COMPLETE final list — appending after a
+    // successful write would persist the stale one instead.
+    const imageList = [...existingImages, ...newlyUploaded.map((u) => u.url)];
+
     try {
       const common = {
         name: name.trim(),
@@ -83,16 +150,31 @@ function ProductModal({
         description: description.trim(),
         arrivalDate: arrival,
       };
+      let saved: Product;
       if (isEdit && product) {
         const patch: ProductPatch = {...common, itemCode: itemCode.trim()};
         const {product: updated} = await adminApi.updateProduct(product.id, patch);
-        onSaved(updated);
+        saved = updated;
       } else {
         const input: ProductCreateInput = {...common, itemCode: itemCode.trim() || undefined};
         const {product: created} = await adminApi.createProduct(input);
-        onSaved(created);
+        saved = created;
       }
+      // Only after the write succeeds is it safe to delete images the seller
+      // removed this session — deleting first risks stranding a live
+      // reference if the write above had failed instead.
+      await Promise.all(
+        removedImages.map((url) => {
+          const path = deriveStoragePath(url, PRODUCT_IMAGES_BUCKET);
+          return path ? adminApi.deleteProductImage(path).catch(() => {}) : Promise.resolve();
+        }),
+      );
+      onSaved(saved);
     } catch (e: any) {
+      // The row write failed — undo only this attempt's uploads. The
+      // removed-image objects are untouched: the row was never rewritten, so
+      // they're still correctly referenced.
+      await Promise.all(newlyUploaded.map(({path}) => adminApi.deleteProductImage(path).catch(() => {})));
       setErr(e.message || 'သိမ်း၍ မရပါ။');
       setSaving(false);
     }
@@ -172,17 +254,41 @@ function ProductModal({
             <UpgradeInline label="Promotion ဈေးနှုန်း" />
           )}
 
-          <label className="block">
-            <span className={lbl}>ပုံ URL များ (တစ်ကြောင်းလျှင် တစ်ခု)</span>
-            <textarea
-              value={images}
-              onChange={(e) => setImages(e.target.value)}
-              rows={3}
-              className={cx(field, 'resize-y')}
-              placeholder="https://…/photo1.jpg&#10;https://…/photo2.jpg"
-            />
-            <span className="my mt-1 block text-[11px] text-ink-soft">http / https URL များသာ သိမ်းပါမည် — အခြားစာကြောင်းများ ချန်ထားမည်။</span>
-          </label>
+          <div className="block">
+            <span className={lbl}>ပုံများ</span>
+            <div className="flex flex-wrap gap-2">
+              {existingImages.map((url) => (
+                <div key={url} className="relative">
+                  <img src={url} alt="" className="h-16 w-16 rounded-lg border border-cream-200 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(url)}
+                    aria-label="ပုံ ဖယ်ရှားရန်"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white shadow">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {newFiles.map(({previewUrl}) => (
+                <div key={previewUrl} className="relative">
+                  <img src={previewUrl} alt="" className="h-16 w-16 rounded-lg border border-cream-200 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeNewFile(previewUrl)}
+                    aria-label="ပုံ ဖယ်ရှားရန်"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white shadow">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-lg border border-dashed border-cream-300 bg-cream-50 text-ink-soft hover:bg-cream-100">
+                <Upload className="h-5 w-5" />
+                <input type="file" accept="image/png,image/webp" multiple className="hidden" onChange={onFilesSelected} />
+              </label>
+            </div>
+            <span className="my mt-1.5 block text-[11px] text-ink-soft">PNG သို့မဟုတ် WebP ပုံဖိုင်သာ တင်နိုင်သည် (JPG/JPEG လက်မခံပါ)။</span>
+            {imageErr && <p className="my mt-1 text-sm text-brand-600">{imageErr}</p>}
+          </div>
 
           <label className="block">
             <span className={lbl}>ဖော်ပြချက်</span>
