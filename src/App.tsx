@@ -3,6 +3,7 @@ import {Navigate, Route, Routes, useLocation, useParams} from 'react-router-dom'
 import {setShopSlug} from './lib/shopContext';
 import {isValidSlug} from './lib/slug';
 import {isLiveBackend} from './lib/store';
+import {isSupabaseConfigured} from './lib/supabase';
 import {resolveShop, isShopCached} from './lib/backend';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -118,6 +119,17 @@ function ShopChecking() {
   );
 }
 
+function ShopUnavailable() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-cream-50 px-6 text-center">
+      <div>
+        <h1 className="font-display text-2xl font-bold text-ink">ဆိုင်စနစ် ခေတ္တအသုံးပြု၍မရပါ</h1>
+        <p className="my mt-2 text-sm text-ink-soft">ခဏအကြာ ပြန်စမ်းပါ။ ဆိုင်ရှင်ထံ ဆက်သွယ်နိုင်ပါသည်။</p>
+      </div>
+    </div>
+  );
+}
+
 // Multi-tenant storefront entry: `/s/:slug/*`. The slug (the WebView-safe source
 // of truth — survives reloads, unlike storage) scopes the Supabase-backed data
 // layer (src/lib/store.ts) to this shop.
@@ -135,14 +147,15 @@ function ShopRoute() {
   setShopSlug(valid ? slug : null);
 
   const [shopState, setShopState] = useState<'checking' | 'ok' | 'missing'>(() =>
-    valid && isLiveBackend() && !isShopCached(slug!) ? 'checking' : 'ok',
+    valid && isSupabaseConfigured && !isShopCached(slug!) ? 'checking' : 'ok',
   );
 
   useEffect(() => {
     // No lookup needed: bad format, demo/unconfigured, or already-cached shop —
     // skipping the 'checking' flip on a cache hit avoids a needless Storefront
     // remount/flicker when a buyer revisits a shop this session.
-    if (!valid || !isLiveBackend() || isShopCached(slug!)) {
+    if (!valid || !isSupabaseConfigured) return;
+    if (isShopCached(slug!)) {
       setShopState('ok');
       return;
     }
@@ -157,8 +170,7 @@ function ShopRoute() {
   }, [slug, valid]);
 
   // Bad slug format → bare 404 (no shop chrome — not even confirmed shop-shaped).
-  if (!valid) return <NotFound />;
-  if (shopState === 'checking') return <ShopChecking />;
+  if (!valid) return <NotFound />;\n  if (!isSupabaseConfigured) return <ShopUnavailable />;\n  if (shopState === 'checking') return <ShopChecking />;
   // Confirmed-missing shop → 404 with app chrome (Layout fetches nothing per-shop).
   if (shopState === 'missing') {
     return (
