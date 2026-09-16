@@ -170,7 +170,9 @@ function ShopRoute() {
   }, [slug, valid]);
 
   // Bad slug format → bare 404 (no shop chrome — not even confirmed shop-shaped).
-  if (!valid) return <NotFound />;\n  if (!isSupabaseConfigured) return <ShopUnavailable />;\n  if (shopState === 'checking') return <ShopChecking />;
+  if (!valid) return <NotFound />;
+  if (!isSupabaseConfigured) return <ShopUnavailable />;
+  if (shopState === 'checking') return <ShopChecking />;
   // Confirmed-missing shop → 404 with app chrome (Layout fetches nothing per-shop).
   if (shopState === 'missing') {
     return (
