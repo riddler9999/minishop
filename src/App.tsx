@@ -2,7 +2,6 @@ import {useEffect, useState} from 'react';
 import {Navigate, Route, Routes, useLocation, useParams} from 'react-router-dom';
 import {setShopSlug} from './lib/shopContext';
 import {isValidSlug} from './lib/slug';
-import {isLiveBackend} from './lib/store';
 import {isSupabaseConfigured} from './lib/supabase';
 import {resolveShop, isShopCached} from './lib/backend';
 import Layout from './components/Layout';
