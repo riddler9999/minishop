@@ -21,7 +21,11 @@
 // seller with no storefront slug set would silently fall back to the
 // localStorage demo admin API instead of their real shop data.)
 //
-// Tenant routes must never fall back to demo data. The root route is the only\n// intentional demo surface; a configured slug without Supabase is a deployment\n// error and fails closed below.\n\nimport {isSupabaseConfigured} from './supabase';
+// Tenant routes must never fall back to demo data. The root route is the only
+// intentional demo surface; a configured slug without Supabase is a deployment
+// error and fails closed below.
+
+import {isSupabaseConfigured} from './supabase';
 import {getShopSlug} from './shopContext';
 import {api as demoApi} from './api';
 import {api as liveApi, adminApi} from './backend';
