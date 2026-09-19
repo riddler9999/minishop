@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
-import {Search, X, Trash2, Phone, MapPin, ShoppingCart} from 'lucide-react';
+import {Search, X, Phone, MapPin, ShoppingCart} from 'lucide-react';
 import {adminApi, type AdminOrder} from '../../lib/store';
 import {ks, cx} from '../../lib/format';
 import {usePlan} from '../../lib/plan';
@@ -10,13 +10,11 @@ import {useModalA11y} from '../../lib/useModalA11y';
 function OrderDetail({
   order,
   onClose,
-  onChanged,
-  onDeleted,
+  onChanged
 }: {
   order: AdminOrder;
   onClose: () => void;
   onChanged: (o: AdminOrder) => void;
-  onDeleted: (id: string) => void;
 }) {
   const {features} = usePlan();
   const [status, setStatus] = useState(order.status);
@@ -35,19 +33,6 @@ function OrderDetail({
       setStatus(prev); // roll back the optimistic change on failure
       setErr(e.message || 'အခြေအနေ ပြောင်း၍မရပါ။');
     } finally {
-      setBusy(false);
-    }
-  };
-
-  const remove = async () => {
-    if (!confirm(`${order.order_id} ကို ဖျက်မည်။ သေချာပါသလား?`)) return;
-    setBusy(true);
-    setErr('');
-    try {
-      await adminApi.deleteOrder(order.order_id);
-      onDeleted(order.order_id);
-    } catch (e: any) {
-      setErr(e.message || 'ဖျက်၍မရပါ။');
       setBusy(false);
     }
   };
@@ -194,15 +179,11 @@ function OrderDetail({
           </section>
         </div>
 
-        <div className="border-t border-cream-200 p-4">
-          {err && <p className="my mb-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-600">{err}</p>}
-          <button
-            onClick={remove}
-            disabled={busy}
-            className="my flex w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50">
-            <Trash2 className="h-4 w-4" /> Order ဖျက်ရန်
-          </button>
-        </div>
+        {err && (
+          <div className="border-t border-cream-200 p-4">
+            <p className="my rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-600">{err}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -259,10 +240,6 @@ export default function AdminOrders() {
     setSelected(updated);
   };
 
-  const onDeleted = (id: string) => {
-    setOrders((prev) => prev.filter((o) => o.order_id !== id));
-    setSelected(null);
-  };
 
   return (
     <div className="space-y-5">
@@ -347,7 +324,7 @@ export default function AdminOrders() {
       </div>
 
       {selected && (
-        <OrderDetail order={selected} onClose={() => setSelected(null)} onChanged={onChanged} onDeleted={onDeleted} />
+        <OrderDetail order={selected} onClose={() => setSelected(null)} onChanged={onChanged} />
       )}
     </div>
   );

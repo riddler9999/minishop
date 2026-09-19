@@ -10,8 +10,7 @@
 //      at the DB level, so this wins for every real shop today.
 //   2. `VITE_DEFAULT_PLAN` env — only reached when `shop.plan` is null/absent
 //      (a shop fetched before 0003 shipped, or no shop context at all).
-//   3. Hard default `'business'` — so an existing single-seller deploy keeps
-//      every feature it has today (no regression on upgrade).
+//   3. Hard default `'starter'` — missing or malformed configuration must never\n//      unlock paid features.
 //
 // Plan is deliberately NOT settable from the seller UI: a seller must not be
 // able to unlock Business by clicking a toggle. Changing a live shop's plan is
@@ -21,8 +20,10 @@
 import {createContext, useContext, useEffect, useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {getOwnShop, type OwnShop} from './sellerShop';
+import {normalizePlan, resolvePlanValue, type Plan} from './planRules';
 
-export type Plan = 'starter' | 'business';
+export {normalizePlan};
+export type {Plan};
 
 export interface PlanFeatures {
   /** Promotion pricing on products + the storefront "featured" carousel. */
@@ -67,16 +68,10 @@ export const PLAN_LABEL: Record<Plan, string> = {
   business: 'Business',
 };
 
-/** Normalize an arbitrary plan string (DB or env) to a known tier. */
-export function normalizePlan(raw?: string | null): Plan {
-  return String(raw ?? '').trim().toLowerCase() === 'starter' ? 'starter' : 'business';
-}
-
-/** Resolve the effective plan: shop column → env default → 'business'. */
+/** Resolve the effective plan: shop column → env default → fail-closed starter. */
 export function resolvePlan(shop?: Pick<OwnShop, 'plan'> | null): Plan {
-  const fromShop = shop?.plan;
   const fromEnv = import.meta.env.VITE_DEFAULT_PLAN as string | undefined;
-  return normalizePlan(fromShop ?? fromEnv ?? 'business');
+  return resolvePlanValue(shop?.plan, fromEnv);
 }
 
 // ---- React context ----------------------------------------------------------

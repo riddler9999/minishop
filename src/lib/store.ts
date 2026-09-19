@@ -21,10 +21,9 @@
 // seller with no storefront slug set would silently fall back to the
 // localStorage demo admin API instead of their real shop data.)
 //
-// NOTE: buyer pages don't import from this module yet — they still read
-// lib/api.ts directly. Switching them here (Milestone B, tracked in
-// tasks/TASKS.md) is what puts the reactive `api` below on the live backend for
-// real shop traffic. Routing + the reactive gate (Milestone A) are already in.
+// Tenant routes must never fall back to demo data. The root route is the only
+// intentional demo surface; a configured slug without Supabase is a deployment
+// error and fails closed below.
 
 import {isSupabaseConfigured} from './supabase';
 import {getShopSlug} from './shopContext';
@@ -40,10 +39,12 @@ export function isLiveBackend(): boolean {
 }
 
 function resolveStorefrontApi(): typeof liveApi {
-  // Narrow cast: demo `api` matches live `api` except ordersByPhone's optional
-  // 2nd arg — a deliberate, documented divergence (see backend.ts header). The
-  // Proxy below only forwards calls, so the runtime shapes are compatible.
-  return isLiveBackend() ? liveApi : (demoApi as unknown as typeof liveApi);
+  const slug = getShopSlug();
+  if (slug != null && !isSupabaseConfigured) {
+    throw new Error('ဆိုင်စနစ် ခေတ္တအသုံးပြု၍မရပါ။ နောက်မှ ပြန်စမ်းပါ။');
+  }
+  // The slug-less root route remains the intentional local demo.
+  return slug != null ? liveApi : (demoApi as unknown as typeof liveApi);
 }
 
 /**
