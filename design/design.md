@@ -2,7 +2,7 @@
 
 Source of truth for the visual language across the buyer storefront (`/s/<slug>`) and the
 seller admin console (`/admin`). Grounded in the current implementation
-(`src/index.css`, `src/lib/brand.ts`, `src/components/`) plus the reference mockup that
+(`src/index.css`, `src/shared/lib/brand.ts`, `src/features/*/components/` + `src/shared/ui/`) plus the reference mockup that
 prompted this doc (`docs/design/` is not used — this repo keeps design docs at `design/`,
 parallel to `PROJECT.md`).
 
@@ -12,7 +12,7 @@ Read `CLAUDE.md` and `PROJECT.md` first if you haven't — this file assumes tha
 > **Status note:** the reference mockup shows some screens and admin nav items that do not
 > exist in the codebase yet (marked **Proposed** below). This doc records the target design
 > language for all of them, but treat the "Proposed" items as backlog, not shipped behavior —
-> check `src/pages/` and `src/components/AdminLayout.tsx` before assuming a screen exists.
+> check `src/features/*/pages/` and `src/features/admin/components/AdminLayout.tsx` before assuming a screen exists.
 
 ---
 
@@ -27,7 +27,7 @@ Read `CLAUDE.md` and `PROJECT.md` first if you haven't — this file assumes tha
    Mockups and design docs may use English placeholders for speed, but nothing English ships
    to a real screen. See `orderStatus.ts` for the canonical status labels — don't invent new
    English ones.
-3. **Product-neutral chrome, tenant-specific storefront.** `src/lib/brand.ts` names the SaaS
+3. **Product-neutral chrome, tenant-specific storefront.** `src/shared/lib/brand.ts` names the SaaS
    product itself (fallback logo/name for the demo shop and admin chrome); a real tenant's
    storefront shows the seller's own shop name/logo via `resolveShop()`, not these constants.
    Never hardcode "Mini Shop" branding inside a tenant-facing storefront component.
@@ -76,13 +76,13 @@ carousels). Reuse these utility classes before adding new ones.
 
 | Screen | Component | Status |
 |---|---|---|
-| Home | `src/pages/Home.tsx` | Shipped |
-| Product listing | `src/pages/Products.tsx` | Shipped |
-| Product detail | `src/pages/ProductDetail.tsx` | Shipped |
-| Cart (drawer) | `src/components/CartDrawer.tsx`, `src/pages/Cart.tsx` | Shipped |
-| Checkout | `src/pages/Checkout.tsx` | Shipped |
-| Order success | `src/pages/OrderSuccess.tsx` | Shipped |
-| Order lookup (order no. + phone) | `src/pages/OrderLookup.tsx` | Shipped |
+| Home | `src/features/catalog/pages/Home.tsx` | Shipped |
+| Product listing | `src/features/catalog/pages/Products.tsx` | Shipped |
+| Product detail | `src/features/catalog/pages/ProductDetail.tsx` | Shipped |
+| Cart (drawer) | `src/features/cart/components/CartDrawer.tsx`, `src/features/cart/pages/Cart.tsx` | Shipped |
+| Checkout | `src/features/checkout/pages/Checkout.tsx` | Shipped |
+| Order success | `src/features/checkout/pages/OrderSuccess.tsx` | Shipped |
+| Order lookup (order no. + phone) | `src/features/orders/pages/OrderLookup.tsx` | Shipped |
 | Explore / video feed | — | **Proposed.** Buyers are anonymous with no session (§ "Security model" in `CLAUDE.md`) — a persistent "For You" feed needs either a stateless per-visit ranking or a rethink of that constraint. Needs a decision entry in `PROJECT.md` before building. |
 | "My Orders" (list view) | — | **Proposed, and in tension with the security model.** `lookup_order()` requires `(shop_slug, order_no, phone)` together *by design*, specifically to stop buyer order-history enumeration (`CLAUDE.md`). A "My Orders" list implies a persistent identity the anonymous-buyer model doesn't have today. Do not build this as a simple list without re-reading that constraint and getting an explicit decision — it's the kind of change that needs a `PROJECT.md` entry (would be D34+), not a silent addition. |
 
@@ -90,16 +90,16 @@ carousels). Reuse these utility classes before adding new ones.
 
 | Screen | Component | Status |
 |---|---|---|
-| Overview / dashboard | `src/pages/admin/Dashboard.tsx` | Shipped |
-| Products | `src/pages/admin/AdminProducts.tsx` | Shipped |
-| Orders (list + detail, payment verification) | `src/pages/admin/AdminOrders.tsx` | Shipped |
-| Shipping zones | `src/pages/admin/AdminShipping.tsx` | Shipped (Business plan / advanced-shipping gated) |
-| Settings | `src/pages/admin/Settings.tsx` | Shipped |
-| Login / Onboarding | `src/pages/admin/Login.tsx`, `Onboarding.tsx` | Shipped |
+| Overview / dashboard | `src/features/admin/pages/Dashboard.tsx` | Shipped |
+| Products | `src/features/catalog/pages/AdminProducts.tsx` | Shipped |
+| Orders (list + detail, payment verification) | `src/features/orders/pages/AdminOrders.tsx` | Shipped |
+| Shipping zones | `src/features/shipping/pages/AdminShipping.tsx` | Shipped (Business plan / advanced-shipping gated) |
+| Settings | `src/features/shop/pages/Settings.tsx` | Shipped |
+| Login / Onboarding | `src/features/auth/pages/Login.tsx`, `Onboarding.tsx` | Shipped |
 | Customers (dedicated list) | — | **Proposed.** Not in `AdminLayout`'s nav today. |
 | Marketing | — | **Proposed.** Not in `AdminLayout`'s nav today. |
 
-Current admin nav (`src/components/AdminLayout.tsx`, Burmese labels): ခြုံငုံ (Overview) ·
+Current admin nav (`src/features/admin/components/AdminLayout.tsx`, Burmese labels): ခြုံငုံ (Overview) ·
 ပစ္စည်းများ (Products) · Order များ (Orders) · ပို့ဆောင်ခ ဇုန် (Shipping, gated) · ဆိုင်
 ချိန်ညှိ (Settings). Any new nav item follows this list's pattern — Burmese label, one
 `lucide-react` icon, `requiresAdvancedShipping`-style flag if plan-gated.
@@ -131,11 +131,11 @@ only records the target visual language.
 
 ## 5. Component patterns to reuse
 
-- `ProductCard` (`src/components/ProductCard.tsx`) — the only place that should render a
+- `ProductCard` (`src/features/catalog/components/ProductCard.tsx`) — the only place that should render a
   product tile; don't hand-roll another one. Navigates via `<ShopLink>`, never a bare
   react-router `Link` (`CLAUDE.md` "Shop slug" section explains why relative links break here).
 - `CartDrawer` — slide-over cart, not a route change; keep cart mutations optimistic against
-  `src/lib/cart.tsx`.
+  `src/features/cart/state.tsx`.
 - `AdminLayout` — the only admin chrome; nav array at the top of the file is the single
   source of truth for admin nav items and their icons.
 - `PlanGate` — wrap any Business-only admin feature in this rather than branching on

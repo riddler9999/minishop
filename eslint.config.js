@@ -26,6 +26,62 @@ export default tseslint.config(
       globals: globals.browser,
     },
   },
+
+  // ---- Architecture boundaries ----------------------------------------------
+  // The layering below is the structure, not a convention: import direction is
+  // enforced here so a refactor can't silently re-create the god-module the
+  // feature split removed. Layer order (leaf first):
+  //
+  //   domain/  <-  core/ , shared/  <-  features/*  <-  data/  <-  app/
+  //
+  // `domain/` is pure (types + rules, no React, no I/O). `core/` and `shared/`
+  // know nothing about features. A feature owns its own data access; only
+  // `data/liveApi.ts` may compose across features, and pages reach the backend
+  // through `data/dataSource.ts` alone.
+  {
+    files: ['src/domain/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {patterns: [{
+        group: ['@/core/*', '@/data/*', '@/features/*', '@/shared/*', '@/app/*', 'react', 'react-dom', 'react-router-dom', '@supabase/*'],
+        message: 'domain/ is the leaf layer: pure types and rules only — no I/O, no React, no other layer.',
+      }]}],
+    },
+  },
+  {
+    files: ['src/core/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {patterns: [{
+        group: ['@/features/*', '@/data/*', '@/app/*'],
+        message: 'core/ and shared/ are feature-agnostic: they may only import domain/ (and each other).',
+      }]}],
+    },
+  },
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {patterns: [
+        {
+          group: ['@/features/*/api', '@/features/*/api/*'],
+          message: "A feature owns its own data access. Reach another feature's backend through @/data/dataSource instead.",
+        },
+        {
+          group: ['@/data/liveApi', '@/data/demo/*', '@/app/*'],
+          message: 'Import the backend through @/data/dataSource — it decides live vs demo per access (see CLAUDE.md).',
+        },
+      ]}],
+    },
+  },
+  {
+    // The one place allowed to see every feature's data module at once.
+    files: ['src/data/dataSource.ts', 'src/app/**/*.{ts,tsx}', 'src/features/**/*.{ts,tsx}', 'src/core/**/*.{ts,tsx}', 'src/shared/**/*.{ts,tsx}'],
+    ignores: ['src/data/liveApi.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {patterns: [{
+        group: ['@/features/*/api', '@/features/*/api/*'],
+        message: 'Only src/data/liveApi.ts composes feature data modules.',
+      }]}],
+    },
+  },
   {
     files: ['vite.config.ts'],
     languageOptions: {

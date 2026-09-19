@@ -30,7 +30,14 @@ reliably receive a signup confirmation email at all — until an owner configure
 (D44 recommends Resend). The one test account used to find this (`irouee@gmail.com`) was
 confirmed directly via SQL so testing isn't blocked on this in the meantime — see D44.
 
-**Latest:** Task B (storage upload UI for shop logos + product images) is implemented — PNG/WebP
+**Latest (2026-09-19) — `src/` restructured to a feature-first architecture with enforced
+layering (D46).** 48 files moved; `backend.ts` (822 LOC, the god module) split into per-feature
+data modules; domain types extracted out of the demo layer; ESLint now fails the build on an
+import that crosses a layer the wrong way. Behavior-preserving: `npm run check` green and the
+production bundle is within 0.02% of the pre-refactor build. Also backfilled: PR #24 (CI + test
+suite) and PR #25 (production hardening, migrations 0005-0007 applied live) — see D45.
+
+**Previously:** Task B (storage upload UI for shop logos + product images) is implemented — PNG/WebP
 upload only, no manual URL entry, PNG auto-converted to WebP client-side (owner decisions + build,
 D34/D35). The fresh-signup email confirmation redirect is fixed to return to `/admin/onboarding`
 on whatever origin the app is running on, not a hardcoded localhost (D36) — still needs the owner
@@ -108,6 +115,13 @@ has now closed the second by doing the real click-through themselves (D31).
   D34). Full design (the upload-before-write / complete-list-into-write / delete-new-on-failure /
   never-delete-old-before-write-succeeds invariant, and the two call sites' wiring) is in D35; the
   owner decisions that unblocked it are in D34.
+- [ ] **Frontend — map the 16 DB error codes from `0007` to Burmese copy.** `place_order()` and
+  the plan/billing triggers raise `rate_limit_exceeded`, `duplicate_order_limit`, `invalid_cart`,
+  `business_plan_required`, `plan_is_platform_managed` and 11 more; nothing in `src/` catches them,
+  and `Checkout.tsx` renders `e.message` directly — so a buyer in TikTok's WebView can be shown a
+  raw English Postgres error. `features/checkout/api.ts` already holds a partial mapper (5 older
+  codes) to extend. Found during the D46 restructure; deliberately left out of it (behavior change).
+
 - [ ] Real-device WebView test matrix in the TikTok in-app browser: checkout, last-5 entry, order lookup, payment-app deep-link behaviour.
 - [ ] Pilot with 1 real seller (tests the DM-deflection assumption).
 - [x] Admin modal/drawer a11y — `role="dialog"`, `aria-modal`, focus trap, Escape-to-close on `ProductModal`/`OrderDetail`/mobile nav drawer. Shared `src/lib/useModalA11y.ts` hook. PRs #3 (initial + 2 Codex-found focus-trap fixes), #4 (one of those fixes had been dropped by a merge race on #3 — reapplied against `main`).
@@ -159,6 +173,46 @@ has now closed the second by doing the real click-through themselves (D31).
 **Phase 2, once paying sellers exist:** auto payment verify (KBZPay/Wave notification forwarder → webhook → match), analytics, staff seats, custom domains, pricing from real willingness-to-pay data.
 
 ## Decisions
+
+- D46 (2026-09-19) — **`src/` restructured: feature-first, with the layering enforced by lint.**
+  The old layout had `src/lib/` as a 19-file dumping ground (infrastructure, domain types, React
+  providers and utilities side by side), an 822-LOC `backend.ts` holding every query for both
+  audiences, and — the actual defect — a **dependency inversion**: the production Supabase layer
+  imported its domain types (`Product`, `AdminOrder`, `ProductPatch`, …) from `lib/api.ts`, the
+  *localStorage demo backend*. The demo was the type authority for production, which is also why
+  it could never be dropped from the production bundle.
+  **New shape:** `domain/` (pure types + rules, leaf of the import graph) ← `core/` (Supabase
+  client, storage) and `shared/` (cross-feature UI/util) ← `features/*` (tenancy, catalog, cart,
+  checkout, orders, shipping, billing, shop, auth, admin — each owning its own `api/`,
+  `components/`, `pages/`) ← `data/` (the demo-vs-live switch + the one module that composes
+  across features) ← `app/` (composition root: `App.tsx` + `routes/`).
+  **Enforcement, not convention:** `eslint.config.js` encodes the arrows with
+  `no-restricted-imports`, so `domain/` importing React, a feature importing another feature's
+  `api/`, or a page importing `liveApi` directly all fail `npm run lint`. The CLAUDE.md hazard
+  "never import `backend.ts` directly" is now structurally impossible rather than a written rule.
+  `@/*` was repointed from the repo root (it was unused) to `src/*` and is now the canonical
+  import prefix — no deep relative paths.
+  **Scope discipline:** behavior-preserving by construction — no runtime logic was rewritten, only
+  moved and re-wired. Verification: `tsc --noEmit` clean, ESLint 0 errors (13 pre-existing `any`
+  warnings unchanged), 7/7 tests pass, and the production bundle went 706,305 -> 706,439 bytes
+  (+0.019%, the cost of the composition spreads). `git` recorded the moves as renames, so
+  `git log --follow` still works on every file.
+  **Deliberately NOT included** (owner chose "structure only"): mapping the 16 DB error codes from
+  `0007` to Burmese copy, dropping the demo layer from the production bundle, and test/CI
+  hardening. All three remain open below.
+
+- D45 (2026-09-19, backfilled) — **PR #24 and #25 recorded.** PR #24 added the repo's first CI
+  workflow (`.github/workflows/ci.yml`: lint -> test -> build on every PR and on `main`), the first
+  test suite (`tests/`, native `node --test`, no framework) and `npm run check`. PR #25 ("production
+  hardening") added migrations `0005_fix_storage_policy_path`, `0006_optimize_rls_and_fk_index` and
+  `0007_production_hardening` — **all applied to the live project on 2026-09-16** — plus
+  fail-closed plan resolution (`planRules.ts`: unknown/missing plan now resolves to `starter`, not
+  `business`), fail-closed tenant routing (a `/s/<slug>` route with Supabase unconfigured now shows
+  "service unavailable" instead of silently serving demo data), and CSP/HSTS/frame-ancestors
+  response headers in `vercel.json`. Consequence worth flagging: `0007` moved plan gating from
+  frontend-only to **DB-enforced**, and raises 16 typed exceptions that no frontend code maps to
+  Burmese copy yet — a buyer who trips the rate limit currently sees the raw string
+  `rate_limit_exceeded`. Tracked as an open task below.
 
 - D44 (2026-09-15) — **Found, mid-D43-rollout, that this project has never configured custom
   SMTP** — a deeper, pre-existing gap than D43's `otp_expired` fix addresses. Trying to apply
