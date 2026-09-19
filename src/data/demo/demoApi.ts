@@ -1,7 +1,7 @@
 // ---- DEMO API (no backend) -------------------------------------------------
 // The original Uthuya store proxied a Supabase DB through an Express server.
 // This DEMO clone has NO server: every call is answered client-side from the
-// in-memory demo catalog (src/data/products.ts). Orders are simulated and
+// in-memory demo catalog (./fixtures.ts). Orders are simulated and
 // persisted to localStorage so the "Order စစ်ရန်" (lookup) page still works.
 // This lets the store deploy as a pure static site with zero secrets.
 
@@ -142,7 +142,7 @@ export const api = {
 
   // Demo storefront computes fees from the static locations table (Checkout
   // branches on isLiveBackend), so this is unused — present only for type
-  // compatibility with the live `api` (see lib/store.ts Proxy).
+  // compatibility with the live `api` (see @/data/dataSource.ts's Proxy).
   async shippingConfig(): Promise<{zones: {region: string; township: string; fee: number}[]; defaultFee: number}> {
     return {zones: [], defaultFee: 0};
   },
@@ -232,8 +232,8 @@ export const api = {
 // override layer; order edits write to the per-phone order store. Everything is
 // localStorage-backed, so it's per-browser demo state — there is no real server
 // here. (The admin console's login gate is real Supabase Auth — see
-// src/lib/adminAuth.tsx — but these pages still read/write the demo store; see
-// tasks/TASKS.md "Switch pages to store.ts".)
+// @/features/auth/adminAuth.tsx — and the admin console never reaches this
+// module: @/data/dataSource.ts re-exports the LIVE adminApi unconditionally.)
 export const adminApi = {
   // --- Products ---
   async listProducts(): Promise<{products: Product[]}> {

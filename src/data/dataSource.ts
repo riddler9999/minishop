@@ -1,22 +1,24 @@
 // ---- Data-layer switch -------------------------------------------------
 // Single import point for STOREFRONT pages: `import {api} from '@/data/dataSource'`
-// instead of importing api.ts directly. The storefront `api` (below) is a
-// reactive Proxy that resolves per call: the Supabase-backed layer (backend.ts)
-// once BOTH the client is configured AND a shop slug is set — the slug comes
-// from `/s/<slug>` routing calling setShopSlug() (App.tsx `ShopRoute` +
-// shopContext.ts) — otherwise the zero-backend demo (api.ts). So configuring
-// Supabase alone can't switch a slug-less surface (e.g. the root `/` demo) onto
-// a backend that would throw for lack of shop context.
+// — never @/data/liveApi or @/data/demo/* directly (lint-enforced). The
+// storefront `api` (below) is a reactive Proxy that resolves per call: the
+// Supabase-backed layer (@/data/liveApi.ts, composed from each feature's api/
+// module) once BOTH the client is configured AND a shop slug is set — the slug
+// comes from `/s/<slug>` routing calling setShopSlug()
+// (@/app/routes/ShopRoute.tsx + @/features/tenancy/shopContext.ts) — otherwise
+// the zero-backend demo (@/data/demo/demoApi.ts). So configuring Supabase alone
+// can't switch a slug-less surface (e.g. the root `/` demo) onto a backend that
+// would throw for lack of shop context.
 //
-// `adminApi` is NOT gated here — it's re-exported straight from backend.ts.
+// `adminApi` is NOT gated here — it's re-exported straight from liveApi.ts.
 // The admin console is a poor fit for the storefront's shop-slug gate: by the
-// time any admin page renders, App.tsx's `RequireAdmin` has already proven a
-// real Supabase session AND an owned shop exist (see adminAuth.tsx /
-// sellerShop.ts) — a storefront slug has nothing to do with that, and an
-// admin session can exist with no slug ever set. So there is nothing left to
-// gate: `RequireAdmin` passing already implies Supabase is configured and
-// usable, making backend.ts's `adminApi` unconditionally correct for admin
-// pages. (Previously this file picked `adminApi` off the same
+// time any admin page renders, @/app/routes/RequireAdmin.tsx has already proven
+// a real Supabase session AND an owned shop exist (see
+// @/features/auth/adminAuth.tsx / @/features/shop/sellerShop.ts) — a storefront
+// slug has nothing to do with that, and an admin session can exist with no slug
+// ever set. So there is nothing left to gate: `RequireAdmin` passing already
+// implies Supabase is configured and usable, making the live `adminApi`
+// unconditionally correct for admin pages. (Previously this file picked `adminApi` off the same
 // `useLiveBackend` flag as the storefront `api` — wrong, since a signed-in
 // seller with no storefront slug set would silently fall back to the
 // localStorage demo admin API instead of their real shop data.)

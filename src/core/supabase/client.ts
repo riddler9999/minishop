@@ -1,7 +1,7 @@
 // ---- Supabase client (SaaS backend) ----------------------------------------
-// The app is migrating from the client-side demo (src/lib/api.ts, localStorage)
-// to a real multi-tenant backend on Supabase. This module exposes a single
-// browser client built from public env vars.
+// The real multi-tenant backend. The client-side demo (@/data/demo/, backed by
+// localStorage) survives only for the slug-less root route. This module exposes
+// a single browser client built from public env vars.
 //
 // Config comes from Vite env vars (see .env.example). Only the PUBLIC anon key
 // belongs here — it is safe in the browser because Row Level Security (see

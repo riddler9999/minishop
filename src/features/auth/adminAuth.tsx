@@ -1,7 +1,7 @@
 // ---- SELLER ADMIN AUTH (Supabase Auth) -------------------------------------
 // Real authentication for the seller console: Supabase email/password. The
 // session itself is persisted by the Supabase client (persistSession: true —
-// see src/lib/supabase.ts); this context only mirrors that session into React
+// see @/core/supabase/client.ts); this context only mirrors it into React
 // state via onAuthStateChange so components can react to login/logout.
 //
 // RLS (supabase/migrations/0001_init_saas.sql) is what actually protects a

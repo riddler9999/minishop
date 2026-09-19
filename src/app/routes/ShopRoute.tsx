@@ -43,7 +43,7 @@ function ShopUnavailable() {
 
 // Multi-tenant storefront entry: `/s/:slug/*`. The slug (the WebView-safe source
 // of truth — survives reloads, unlike storage) scopes the Supabase-backed data
-// layer (src/lib/store.ts) to this shop.
+// layer (@/data/dataSource.ts) to this shop.
 //
 // Beyond Milestone A's format check, this confirms the shop actually EXISTS
 // (active row in the DB) before mounting the storefront, so a well-formed slug

@@ -1,14 +1,15 @@
-// ---- Shop context for the Supabase-backed data layer (src/lib/backend.ts) --
+// ---- Shop context for the Supabase-backed data layer ------------------------
 // Every table in supabase/migrations/0001_init_saas.sql is scoped by shop_id,
-// and RLS lets `anon` read many shops' active rows at once — so the storefront
-// functions in backend.ts need to know WHICH shop's slug to query. There is no
-// routing yet to supply that (see tasks/TASKS.md "buyer storefront" phase,
-// `/s/<slug>`), so this holds it as a settable module value in the meantime.
+// and RLS lets `anon` read many shops' active rows at once — so each feature's
+// data module needs to know WHICH shop's slug to query. `/s/<slug>` routing
+// supplies it: @/app/routes/ShopRoute.tsx calls setShopSlug() during render,
+// and this module holds it as a settable module value (not React state, not
+// storage — TikTok's in-app WebView storage is ephemeral).
 //
 // Deliberately NOT defaulted from an env var: leaving it unset means
-// src/lib/store.ts keeps the zero-backend demo (src/lib/api.ts) active even
-// once Supabase env vars are configured, so configuring Supabase alone can't
-// break local/preview deploys before routing exists to call setShopSlug().
+// @/data/dataSource.ts keeps the zero-backend demo (@/data/demo/demoApi.ts)
+// active on the slug-less root route even once Supabase env vars are
+// configured, so configuring Supabase alone can't change what `/` serves.
 
 let shopSlug: string | null = null;
 

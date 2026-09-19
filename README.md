@@ -12,6 +12,15 @@ A mobile-first, multi-tenant storefront and seller admin console built with Reac
 - Supabase-backed data access with row-level security expected at the database layer
 - Starter and Business feature plans
 
+## Project documentation
+
+| File | What it is |
+| --- | --- |
+| [`CLAUDE.md`](CLAUDE.md) | Architecture, layering rules, conventions. Read before changing structure. |
+| [`PROJECT.md`](PROJECT.md) | Project memory: product context, decision log (D1–D46), open tasks, status. |
+| [`supabase/README.md`](supabase/README.md) | Schema, security model, how migrations are applied. |
+| [`design/design.md`](design/design.md) | Design system and screen inventory. |
+
 ## Tech stack
 
 - React 19
@@ -77,7 +86,7 @@ npm run dev
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | For live data | Public Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | For live data | Public anonymous key; access must be protected by RLS |
-| `VITE_DEFAULT_PLAN` | No | `starter` or `business`; currently defaults to `business` |
+| `VITE_DEFAULT_PLAN` | No | `starter` or `business`. Fallback only — `shops.plan` in the database is the source of truth. Resolution fails closed to `starter` when unset or invalid. |
 
 See [`.env.example`](.env.example) for details.
 

@@ -5,9 +5,18 @@ Multi-tenant backend for the storefront SaaS. Schema, RLS and RPCs live in
 
 ## Migrations
 
+All seven are applied to the live project. Never apply a migration to production
+without the owner's explicit go-ahead — see `.claude/skills/supabase-migration/SKILL.md`.
+
 | File | What it creates |
 |---|---|
 | `0001_init_saas.sql` | `shops`, `payment_accounts`, `shipping_zones`, `products`, `orders`, `order_items`; RLS on all tables; `place_order()` + `lookup_order()` RPCs |
+| `0002_harden_search_path.sql` | Pins `search_path` on `set_updated_at()` |
+| `0003_platform_plan_and_usage.sql` | `shops.plan` (NOT NULL DEFAULT `'starter'`), monthly billable-usage view + RPC, Storage buckets (`shop-logos`, `product-images`) with tenant-safe path policies |
+| `0004_product_promo_price_check.sql` | `CHECK`: `promo_price < price` whenever `is_promotion` |
+| `0005_fix_storage_policy_path.sql` | Corrects the Storage policy's shop-id path segment |
+| `0006_optimize_rls_and_fk_index.sql` | RLS predicate optimization + missing FK indexes |
+| `0007_production_hardening.sql` | Rate limiting on the anon RPCs; platform-managed `plan`/`owner_id`/billing triggers; stricter `place_order()` / `lookup_order()` validation. Raises 16 typed exceptions (`rate_limit_exceeded`, `duplicate_order_limit`, `business_plan_required`, …) — **the frontend does not map these to Burmese copy yet** (open task in `PROJECT.md`) |
 
 ## Security model (read before touching)
 
@@ -28,8 +37,8 @@ Multi-tenant backend for the storefront SaaS. Schema, RLS and RPCs live in
 ## Applying (manual — not automated, not committed as run)
 
 > ⚠️ Do **not** apply to a production project without the owner's explicit go.
-> The target project ref is an infrastructure decision (see
-> `context/infrastructure.md` — a shared Supabase project already exists).
+> This app has its own dedicated Supabase project, deliberately separate from any
+> shared one — the project ref is in `PROJECT.md`'s Stack section.
 
 Options:
 
@@ -42,6 +51,8 @@ the project URL + public anon key.
 
 ## Open items (Phase 2)
 
-- Storage bucket + policy for shop logos / (optional) payment slips.
-- Anti-abuse on `place_order` (anon insert) — rate limit / captcha / hCaptcha.
 - Auto payment verification (KBZPay/WavePay notification ingestion) — the moat.
+
+Shipped since this list was written: Storage buckets + tenant-safe policies
+(`0003`, path fix in `0005`) and anti-abuse rate limiting on the anon RPCs
+(`0007`). Slip upload was dropped for MVP — see `PROJECT.md` D6.

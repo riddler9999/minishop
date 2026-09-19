@@ -30,8 +30,8 @@ export function useShopNavigate() {
  * effects when the URL slug changes, so buyer pages can put it in a fetch
  * effect's dependency array to re-query on client-side navigation between shops.
  * Returns `null` on the slug-less root storefront. Lives here (with the other
- * route-derived hooks) rather than in lib/shopContext, which stays importable by
- * the non-React data layer (backend.ts).
+ * route-derived hooks) rather than in ./shopContext, which stays importable by
+ * the non-React data layer (each feature's api/ module).
  */
 export function useShopSlugParam(): string | null {
   return useParams<{slug?: string}>().slug ?? null;

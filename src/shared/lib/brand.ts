@@ -4,7 +4,7 @@
 // this storefront is sold to ANY Myanmar seller (TikTok, Facebook, Telegram,
 // Viber, a printed QR…), not a TikTok-only tool. A real tenant's storefront
 // shows the SELLER's own shop name/logo instead (see resolveShop() in
-// backend.ts and the storefront <Layout>); these constants are the fallback for
+// @/features/tenancy/shopResolver.ts and the storefront <Layout>); these are the fallback for
 // the root demo shop and the seller-facing admin console.
 
 export const APP_NAME = 'Mini Shop';

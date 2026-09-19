@@ -115,6 +115,21 @@ has now closed the second by doing the real click-through themselves (D31).
   D34). Full design (the upload-before-write / complete-list-into-write / delete-new-on-failure /
   never-delete-old-before-write-succeeds invariant, and the two call sites' wiring) is in D35; the
   owner decisions that unblocked it are in D34.
+- [ ] **Owner decision — agent tooling hygiene** (found in D47, none of it blocking):
+  (1) No `.mcp.json`, so the Supabase/Vercel/GitHub MCP servers this project actually
+  depends on must be configured per-session instead of being declared project-scoped.
+  (2) `.claude/settings.json` commits `enabledPlugins` for `superpowers@superpowers-dev`
+  and `ecc@ecc` — personal plugin choices imposed on every contributor and every CI-side
+  agent session; consider moving them to a local settings file. It also has no
+  `permissions` block, so every session re-prompts for routine `npm`/`git` commands.
+  (3) `.claude/skills/` is 4.5 MB / 193 files, of which only `supabase-migration` is
+  written for this repo; the other 13 are vendored third-party UI/a11y skills whose
+  `allowed-tools` reference MCP servers (`chrome-devtools`, `accesslint`) this project
+  does not run, and they are listed to the model on every single session.
+  (4) No PR template, `CONTRIBUTING.md`, or `LICENSE`. (5) No formatter config
+  (`.prettierrc` / `.editorconfig`), so agent-written code has no canonical format to
+  converge on and `npm run lint` cannot catch drift.
+
 - [ ] **Frontend — map the 16 DB error codes from `0007` to Burmese copy.** `place_order()` and
   the plan/billing triggers raise `rate_limit_exceeded`, `duplicate_order_limit`, `invalid_cart`,
   `business_plan_required`, `plan_is_platform_managed` and 11 more; nothing in `src/` catches them,
@@ -173,6 +188,36 @@ has now closed the second by doing the real click-through themselves (D31).
 **Phase 2, once paying sellers exist:** auto payment verify (KBZPay/Wave notification forwarder → webhook → match), analytics, staff seats, custom domains, pricing from real willingness-to-pay data.
 
 ## Decisions
+
+- D47 (2026-09-19) — **Repo audited for agent-readiness and documentation truth; both
+  had real defects.** Two classes of finding:
+  **(a) Stale paths the D46 restructure itself introduced.** 24 references across 12 source
+  files still named the pre-restructure layout (`src/lib/backend.ts`, `src/lib/store.ts`,
+  `src/lib/api.ts`, `src/pages/admin/Onboarding.tsx`, `src/data/products.ts`) inside
+  comments. Files moved; the comments describing them did not. In a repo navigated by
+  coding agents this is not cosmetic — comments are the map, so a wrong path actively
+  misroutes. All 24 repointed. One was stale from long before D46:
+  `shopContext.ts` still claimed "there is no routing yet to supply that", years after
+  `/s/<slug>` shipped.
+  **(b) Documentation that contradicted the code.**
+  `.env.example` said `VITE_DEFAULT_PLAN` "defaults to `business`" and that per-shop plans
+  did not exist yet ("a `shops.plan` column, a Backend task") — both false since 0003 and
+  the fail-closed change in PR #25; a reader following it would have configured the
+  opposite of the real behavior. `README.md` repeated the same wrong default.
+  `supabase/README.md` listed **only `0001`** in its migrations table (six versions and two
+  years of schema missing), pointed at `context/infrastructure.md` which does not exist in
+  this repo, and listed two already-shipped items (Storage buckets, anon rate limiting) as
+  open Phase 2 work. `CLAUDE.md` said the decision log ran "D1–D33". All corrected.
+  **Agent tooling:** the repo had **no `AGENTS.md`**, so Codex and every other non-Claude
+  agent started with zero project instructions — CLAUDE.md is Claude-specific and is not
+  read by them. Added one that *points to* `CLAUDE.md` rather than copying it, so the two
+  cannot drift (the exact failure mode this audit found everywhere else). Node 22 was
+  claimed in `README.md` and pinned in CI but enforced nowhere locally — added `.nvmrc`
+  and `engines`.
+  **Left for the owner to decide** (see Open Tasks): no `.mcp.json`; `.claude/settings.json`
+  commits two personal plugin choices to the repo; 13 of the 15 vendored skills are
+  third-party UI/a11y skills (4.5 MB, 193 files) whose `allowed-tools` name MCP servers
+  this project does not run.
 
 - D46 (2026-09-19) — **`src/` restructured: feature-first, with the layering enforced by lint.**
   The old layout had `src/lib/` as a 19-file dumping ground (infrastructure, domain types, React

@@ -1,7 +1,7 @@
 // ---- Client-side image prep for Storage uploads -----------------------------
 // Pure browser-side helpers used by the Settings logo picker and the product
 // image picker before handing a File to the EXISTING adminApi.uploadShopLogo /
-// uploadProductImage methods (src/lib/backend.ts) — this file never talks to
+// uploadProductImage methods (@/features/shop/api/storage.ts) — it never talks to
 // Supabase itself, so it is not a second storage layer, just shared
 // validation/conversion + the inverse of the upload methods' path construction
 // (deriving a path back out of a previously-persisted public URL).

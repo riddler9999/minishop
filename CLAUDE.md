@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-tenant SaaS storefront for Myanmar TikTok sellers. A seller drops a `/s/<slug>` link in
 their TikTok bio; buyers order through a self-serve storefront that must work inside TikTok's
 in-app WebView (no native app, no bot/messaging API — this is **not** a sales agent). See
-`PROJECT.md` for full product context, decision log (D1–D33), open tasks, and status — read it
+`PROJECT.md` for full product context, decision log (D1–D46), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
 ## Session communication preference (standing, until this project is done)
@@ -65,7 +65,7 @@ domain/  <-  core/ , shared/  <-  features/*  <-  data/  <-  app/
 
 | Layer | Holds | May import |
 |---|---|---|
-| `src/domain/` | Pure types + rules: `product`, `order`, `shop`, `plan`, `slug`, `orderStatus` | nothing (leaf — no React, no I/O) |
+| `src/domain/` | Pure types + rules: `product`, `order`, `shop`, `plan`, `slug`, `orderStatus` | other `domain/` modules only (leaf — no React, no I/O, no other layer) |
 | `src/core/` | Infrastructure: `supabase/client`, `supabase/database.types`, `storage/` | `domain` |
 | `src/shared/` | Cross-feature UI/util: `ui/Layout`, `ui/NotFound`, `hooks/`, `lib/format`, `lib/brand` | `domain`, `core` |
 | `src/features/*/` | One bounded context each: its own `api/`, `components/`, `pages/` | `domain`, `core`, `shared`, another feature's **components** (never its `api/`) |

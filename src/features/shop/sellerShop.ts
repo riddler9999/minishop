@@ -1,10 +1,10 @@
 // ---- Seller's own shop — lookup + onboarding creation -----------------------
-// Split out from src/lib/backend.ts (the storefront/admin data layer) because
-// this is needed one step earlier: BEFORE a shop row exists at all, to decide
-// whether a freshly-authenticated seller should land on the onboarding form or
-// the dashboard (see App.tsx's RequireAdmin and pages/admin/Onboarding.tsx).
-// backend.ts's resolveOwnShopId() intentionally throws when there's no shop
-// yet — useful once you already know one should exist, wrong for this check.
+// Kept apart from this feature's api/ modules because it is needed one step
+// earlier: BEFORE a shop row exists at all, to decide whether a freshly-
+// authenticated seller should land on the onboarding form or the dashboard
+// (see @/app/routes/RequireAdmin.tsx and @/features/auth/pages/Onboarding.tsx).
+// @/features/tenancy/ownShop.ts's resolveOwnShopId() intentionally throws when
+// there's no shop yet — right once you know one should exist, wrong here.
 
 import {requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
