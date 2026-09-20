@@ -15,13 +15,13 @@ function Brand() {
   const logoUrl = shop?.logoUrl;
 
   return (
-    <ShopLink to="/" className="flex min-w-0 flex-col items-center justify-center text-center">
+    <ShopLink to="/" className="flex min-w-0 max-w-full flex-col items-center justify-center overflow-hidden px-2 text-center">
       {logoUrl ? (
         <img src={logoUrl} alt="" className="mb-1 h-8 w-8 rounded-full object-cover ring-2 ring-[#fbcfe8]" />
       ) : (
         <ShoppingBag className="mb-1 h-5 w-5 text-[#e11d48]" strokeWidth={1.6} aria-hidden="true" />
       )}
-      <span className="max-w-[180px] truncate text-[18px] font-bold leading-none tracking-[-0.02em] text-slate-950 sm:max-w-[260px] sm:text-[22px]">
+      <span className="w-full max-w-[180px] truncate text-[18px] font-bold leading-none tracking-[-0.02em] text-slate-950 sm:max-w-[260px] sm:text-[22px]">
         {name}
       </span>
     </ShopLink>
@@ -52,10 +52,21 @@ export default function Layout({children}: {children: React.ReactNode}) {
     window.scrollTo({top: 0, behavior: 'instant' as ScrollBehavior});
   }, [pathname]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   return (
-    <div className="flex min-h-screen flex-col bg-white pb-[74px] md:pb-0">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-white pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-40 border-b border-rose-100 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto grid h-[82px] max-w-[1440px] grid-cols-[48px_1fr_48px] items-center px-3 sm:h-[96px] sm:grid-cols-[170px_1fr_220px] sm:px-6 lg:px-8">
+        <div className="mx-auto grid h-[82px] w-full max-w-[1440px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 px-3 sm:h-[96px] sm:grid-cols-[112px_minmax(0,1fr)_112px] sm:px-6 lg:grid-cols-[180px_minmax(0,1fr)_180px] lg:px-8">
           <div className="flex items-center justify-start">
             <button
               type="button"
@@ -68,7 +79,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
 
           <Brand />
 
-          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+          <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
             <ShopLink
               to="/products"
               aria-label="ပစ္စည်းရှာရန်"
@@ -91,7 +102,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
 
             <ShopLink
               to="/products"
-              className="hidden min-h-11 items-center rounded-full bg-[#e11d48] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#be123c] sm:inline-flex">
+              className="hidden min-h-11 items-center rounded-full bg-[#e11d48] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#be123c] lg:inline-flex">
               ပစ္စည်းများကြည့်ရန်
             </ShopLink>
           </div>
@@ -162,8 +173,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
 
       <nav
         aria-label="ဆိုင်လမ်းညွှန်"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-rose-100 bg-white/97 shadow-[0_-8px_30px_rgba(190,24,93,0.06)] backdrop-blur-xl md:hidden"
-        style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+        className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-3 grid-rows-1 border-t border-rose-100 bg-white/97 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(190,24,93,0.06)] backdrop-blur-xl md:hidden">
         {BOTTOM_NAV.map((item, index) => {
           const Icon = item.icon;
           const isCart = item.to === '/cart';
@@ -174,7 +184,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
               end={item.end}
               className={({isActive}) =>
                 cx(
-                  'relative flex min-h-[68px] flex-col items-center justify-center gap-1 border-rose-100 text-[11px] font-medium transition',
+                  'relative flex h-[68px] min-w-0 flex-col items-center justify-center gap-1 border-rose-100 px-1 text-center text-[11px] font-medium leading-none transition',
                   index < BOTTOM_NAV.length - 1 ? 'border-r' : '',
                   isActive ? 'text-[#e11d48]' : 'text-slate-600',
                 )
