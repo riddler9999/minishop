@@ -23,9 +23,7 @@ Read `CLAUDE.md` and `PROJECT.md` first if you haven't — this file assumes tha
    `supabase/README.md`). Every screen must work one-handed, on a mid-range Android, inside a
    host app's embedded browser.
 2. **Localized copy, English code.** Buyer storefront copy remains Burmese-first. Seller-facing screens follow their recorded product decision; the Admin analytics dashboard is English-only per D50. (`.my` in `index.css` remains available where Burmese script is used.)
-   Mockups and design docs may use English placeholders for speed, but nothing English ships
-   to a real screen. See `orderStatus.ts` for the canonical status labels — don't invent new
-   English ones.
+   Mockups and design docs may use English placeholders for speed. Shipped UI must follow the language decision recorded for that surface. See `orderStatus.ts` for canonical status labels; do not invent parallel status semantics.
 3. **Product-neutral chrome, tenant-specific storefront.** `src/shared/lib/brand.ts` names the SaaS
    product itself (fallback logo/name for the demo shop and admin chrome); a real tenant's
    storefront shows the seller's own shop name/logo via `resolveShop()`, not these constants.
@@ -100,16 +98,13 @@ secondary to actionable order/stock lists. Admin analytics dashboard copy is Eng
 | Overview / dashboard | `src/features/admin/pages/Dashboard.tsx` | Shipped |
 | Products | `src/features/catalog/pages/AdminProducts.tsx` | Shipped |
 | Orders (list + detail, payment verification) | `src/features/orders/pages/AdminOrders.tsx` | Shipped |
-| Shipping zones | `src/features/shipping/pages/AdminShipping.tsx` | Shipped (Business plan / advanced-shipping gated) |
+| Shipping zones | `src/features/shipping/pages/AdminShipping.tsx` | Shipped (Business plan / advanced-shipping gated; intentionally not linked from redesigned admin navigation per D50) |
 | Settings | `src/features/shop/pages/Settings.tsx` | Shipped |
 | Login / Onboarding | `src/features/auth/pages/Login.tsx`, `Onboarding.tsx` | Shipped |
 | Customers (dedicated list) | — | **Proposed.** Not in `AdminLayout`'s nav today. |
 | Marketing | — | **Proposed.** Not in `AdminLayout`'s nav today. |
 
-Current admin nav (`src/features/admin/components/AdminLayout.tsx`, Burmese labels): ခြုံငုံ (Overview) ·
-ပစ္စည်းများ (Products) · Order များ (Orders) · ပို့ဆောင်ခ ဇုန် (Shipping, gated) · ဆိုင်
-ချိန်ညှိ (Settings). Any new nav item follows this list's pattern — Burmese label, one
-`lucide-react` icon, `requiresAdvancedShipping`-style flag if plan-gated.
+Current redesigned admin nav (`src/features/admin/components/AdminLayout.tsx`, English labels per D50): Home · Products · Orders · Settings. Shipping is intentionally not linked from this navigation. New nav items must follow the screen-specific language decision, use one `lucide-react` icon, and preserve applicable plan gating.
 
 Payment verification (Orders detail: payment slip view, Verify/Reject) must stay aligned
 with the manual-verification model in `CLAUDE.md` — last-5-digits matching, no slip upload
