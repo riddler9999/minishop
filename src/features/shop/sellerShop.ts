@@ -67,6 +67,11 @@ export interface UpdateShopInput {
   defaultDeliveryFee?: number;
 }
 
+/** Map the Settings write boundary's DB failure to seller-facing Burmese copy. */
+export function mapUpdateOwnShopError(rawMessage: string | null | undefined): string {
+  return mapDbError(rawMessage, 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။');
+}
+
 /**
  * Update the seller's own shop branding/settings. RLS (`shops_owner_all`)
  * confines the write to the row this user owns; the `owner_id` filter is a
@@ -92,7 +97,7 @@ export async function updateOwnShop(userId: string, input: UpdateShopInput): Pro
   // (0007) raises plan_is_platform_managed / owner_is_platform_managed /
   // business_plan_required (e.g. a logo change after a Business→Starter
   // downgrade) — map those to Burmese instead of leaking the raw code.
-  if (error || !data) throw new Error(mapDbError(error?.message, 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။'));
+  if (error || !data) throw new Error(mapUpdateOwnShopError(error?.message));
   return mapOwnShop(data as ShopRow);
 }
 
