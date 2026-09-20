@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-tenant SaaS storefront for Myanmar TikTok sellers. A seller drops a `/s/<slug>` link in
 their TikTok bio; buyers order through a self-serve storefront that must work inside TikTok's
 in-app WebView (no native app, no bot/messaging API — this is **not** a sales agent). See
-`PROJECT.md` for full product context, decision log (D1–D47), open tasks, and status — read it
+`PROJECT.md` for full product context, decision log (D1–D49), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
 ## Session communication preference (standing, until this project is done)
@@ -130,9 +130,14 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `lookup_order()` RPCs), `0002_harden_search_path.sql`, `0003_platform_plan_and_usage.sql`
   (`shops.plan`, billable-usage view/RPC, storage buckets — see `PROJECT.md` D25),
   `0004_product_promo_price_check.sql` (`CHECK`: `promo_price < price` when `is_promotion`),
-  `0005_fix_storage_policy_path.sql`, `0006_optimize_rls_and_fk_index.sql`, and
+  `0005_fix_storage_policy_path.sql`, `0006_optimize_rls_and_fk_index.sql`,
   `0007_production_hardening.sql` (rate limiting, platform-managed plan/owner/billing triggers,
-  stricter `place_order`/`lookup_order` validation). **All seven are applied to the live project.**
+  stricter `place_order`/`lookup_order` validation), and `0008_shop_owner_unique.sql`
+  (`unique(owner_id)` on `shops`, dropping the now-redundant `shops_owner_idx` — makes the
+  one-shop-per-owner invariant the admin flow already assumes real; see `PROJECT.md` D49).
+  **`0001`–`0007` are applied to the live project; `0008` is pending — not yet applied (needs
+  owner go-ahead; fails if duplicate `owner_id` rows exist — run the migration's duplicate-detection
+  query first).**
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state

@@ -10,22 +10,18 @@ import {ShieldAlert, Store} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {createOwnShop, getOwnShop} from '@/features/shop/sellerShop';
 import {APP_INITIAL} from '@/shared/lib/brand';
-import {SLUG_RE} from '@/domain/slug';
-
-function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
-}
+import {SLUG_RE, slugify} from '@/domain/slug';
+import {settleOwnShopLookup} from '@/domain/shopAccess';
 
 export default function Onboarding() {
   const {loading: authLoading, session, user} = useAdminAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [hasShop, setHasShop] = useState(false);
+  // Distinguish a failed lookup from "no shop yet": on error, don't silently
+  // show the create form to a seller who may already own a shop — surface it.
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -41,19 +37,38 @@ export default function Onboarding() {
       return;
     }
     let alive = true;
-    getOwnShop(user.id)
-      .then((shop) => alive && setHasShop(Boolean(shop)))
-      .catch(() => alive && setHasShop(false))
+    setChecking(true);
+    setLoadError(false);
+    settleOwnShopLookup(() => getOwnShop(user.id))
+      .then((result) => {
+        if (!alive) return;
+        if (result.status === 'error') setLoadError(true);
+        else setHasShop(Boolean(result.shop));
+      })
       .finally(() => alive && setChecking(false));
     return () => {
       alive = false;
     };
-  }, [user]);
+  }, [user, retry]);
 
   if (!authLoading && !session) return <Navigate to="/admin/login" replace />;
-  if (!checking && hasShop) return <Navigate to="/admin" replace />;
+  if (!checking && !loadError && hasShop) return <Navigate to="/admin" replace />;
   if (authLoading || checking) {
     return <div className="grid min-h-screen place-items-center bg-ink text-sm text-cream-200">Loading…</div>;
+  }
+  if (loadError) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-ink px-4 text-center">
+        <div className="max-w-sm">
+          <p className="my text-sm text-cream-200">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
+          <button
+            onClick={() => setRetry((n) => n + 1)}
+            className="my mt-4 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600">
+            ထပ်ကြိုးစားရန်
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const submit = async (e: React.FormEvent) => {

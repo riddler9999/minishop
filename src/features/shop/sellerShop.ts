@@ -9,6 +9,7 @@
 import {requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
 import {mapUpdateOwnShopError} from '@/domain/dbError';
+import {recoverCreateShopError} from '@/domain/shopAccess';
 
 export interface OwnShop {
   id: string;
@@ -117,16 +118,10 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
     .select(OWN_SHOP_COLUMNS)
     .single();
   if (error) {
-    // 23505 = unique_violation (slug already taken).
-    if (error.code === '23505') {
-      throw new Error('ဤ link (slug) ကို အသုံးပြုပြီးသားဖြစ်ပါသည် — တခြား link ရွေးပါ။');
-    }
-    if (error.message.includes('shops_slug_format')) {
-      throw new Error(
-        'Link format မှားနေပါသည် — အင်္ဂလိပ်စာလုံးအသေး/နံပါတ်/(-) ဖြင့်၊ ၃ လုံးအထက် ဖြစ်ရပါမည်။',
-      );
-    }
-    throw new Error(error.message);
+    // A unique violation here means either the slug is taken or this owner
+    // already has a shop; recoverCreateShopError() disambiguates by looking up
+    // the owner's own shop and recovers to it idempotently. See its doc + D49.
+    return recoverCreateShopError(error, () => getOwnShop(userId));
   }
   return mapOwnShop(data as ShopRow);
 }
