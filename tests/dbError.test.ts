@@ -1,11 +1,26 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {readFile} from 'node:fs/promises';
 import {
   DB_ERROR_MESSAGES,
   DEFAULT_DB_ERROR_MESSAGE,
   mapDbError,
   type DbErrorCode,
 } from '../src/domain/dbError.ts';
+
+const migrationPath = new URL('../supabase/migrations/0007_production_hardening.sql', import.meta.url);
+
+// Every code the migration raises via `raise exception '<code>'`, with the
+// `:%`/`:v_id` format suffix on the stock codes stripped. This reads the actual
+// DB contract so the catalog can't silently drift from it.
+async function codesRaisedByMigration(): Promise<Set<string>> {
+  const sql = await readFile(migrationPath, 'utf8');
+  const codes = new Set<string>();
+  for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)/gi)) {
+    codes.add(m[1]);
+  }
+  return codes;
+}
 
 describe('mapDbError', () => {
   it('maps every bare code to its Burmese message', () => {
@@ -41,8 +56,14 @@ describe('mapDbError', () => {
     assert.equal(mapDbError(undefined), DEFAULT_DB_ERROR_MESSAGE);
   });
 
-  it('covers all 18 typed exceptions raised by migration 0007', () => {
-    // Guards against a code being added to the DB contract but not the catalog.
-    assert.equal(Object.keys(DB_ERROR_MESSAGES).length, 18);
+  it('has a Burmese message for every code migration 0007 actually raises', async () => {
+    // Real drift guard: reads the codes out of the migration SQL and asserts the
+    // catalog covers each one. A new/renamed typed code in a future migration
+    // fails here until it is added to DB_ERROR_MESSAGES.
+    const raised = await codesRaisedByMigration();
+    assert.ok(raised.size > 0, 'expected to parse at least one raised code from the migration');
+    for (const code of raised) {
+      assert.ok(code in DB_ERROR_MESSAGES, `catalog is missing a message for '${code}'`);
+    }
   });
 });

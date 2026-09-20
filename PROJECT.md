@@ -213,12 +213,11 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 
 ### P0 — Code (frontend)
 
-- [ ] **`0007` ရဲ့ DB error code ၁၆ ခုကို မြန်မာစာအဖြစ် mapping လုပ်ရန်**
-  - `rate_limit_exceeded`, `duplicate_order_limit`, `invalid_cart`, `business_plan_required`,
-    `plan_is_platform_managed` စသည် — `src/` မှာ ဘာမှ မဖမ်းထားဘူး
-  - `Checkout.tsx` က `e.message` ကို တိုက်ရိုက်ပြတယ် → buyer က TikTok WebView ထဲမှာ
-    English Postgres error အကြမ်းကို မြင်ရနိုင်တယ်
-  - `features/checkout/api.ts` မှာ ဟောင်းတဲ့ code ၅ ခုအတွက် mapper ရှိပြီးသား — ဒါကို တိုးချဲ့ရန်
+- [x] **`0007` ရဲ့ DB error code တွေကို မြန်မာစာအဖြစ် mapping လုပ်ရန်** (D48, PR #29)
+  - `src/domain/dbError.ts` — typed code ၁၈ ခုလုံးအတွက် `DB_ERROR_MESSAGES` + `mapDbError()`
+  - checkout `place_order`၊ orders `lookup_order`၊ `sellerShop.updateOwnShop()` (Settings ရဲ့ တကယ်
+    သုံးတဲ့ write path)၊ product create/update ရဲ့ API boundary တွေမှာ ချိတ်ထားပြီ
+  - `tests/dbError.test.ts` က migration SQL နဲ့ catalog ကို တိုက်စစ်တဲ့ drift guard ပါဝင်
 
 ### P2 — Agent tooling (owner ဆုံးဖြတ်ရန်, blocking မဟုတ်)
 
@@ -284,6 +283,22 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 - Real willingness-to-pay data ပေါ်မူတည်တဲ့ pricing
 
 ## အရေးကြီး Architecture Decisions
+
+### D48 — DB Typed Error တွေကို Domain Catalog တစ်ခုတည်းက Burmese အဖြစ် Map လုပ်တယ်
+
+`0007` က raise လုပ်တဲ့ typed exception တွေ (`rate_limit_exceeded`, `duplicate_order_limit`,
+`business_plan_required`, `plan_is_platform_managed` စသည် ၁၈ ခု) ကို buyer/seller တွေ raw English
+Postgres code အဖြစ် မြင်နေရတာကို ဖြေရှင်းဖို့ `src/domain/dbError.ts` (pure leaf, `orderStatus.ts`
+pattern) ကို single source of truth အဖြစ်ထည့်ထားတယ် — `DB_ERROR_MESSAGES` catalog + `mapDbError()`
+(stock code ရဲ့ `:<product_id>` suffix ဖြုတ်၊ exact-match ပြီး longest-substring fallback)။
+
+Mapping ကို **API boundary** မှာသာ ချိတ်ထားတယ် (UI component မဟုတ်) — checkout `place_order`၊ orders
+`lookup_order`၊ seller shop update ရဲ့ **တကယ်သုံးတဲ့ write path** `sellerShop.updateOwnShop()`
+(Settings page က `adminApi.updateShopSettings()` ကို မခေါ်ဘူးဆိုတာ code review က ဖော်ထုတ်ခဲ့လို့
+အဲဒီ path ကို ဦးစားပေးချိတ်ထားတယ်)၊ နဲ့ product create/update။ DB က enforcement boundary
+(RLS + trigger) ဆက်ဖြစ်ပြီး frontend က render/copy သာ ဆုံးဖြတ်တဲ့ separation ကို ထိန်းထားတယ်။
+`tests/dbError.test.ts` က migration SQL ထဲက raised code တွေကို ထုတ်ဖတ်ပြီး catalog နဲ့ တိုက်စစ်တဲ့
+drift guard ပါဝင်တယ် — migration အသစ်တစ်ခုက code အသစ်/အမည်ပြောင်းရင် test fail ဖြစ်မယ်။
 
 ### D47 — Agent Readiness နဲ့ Documentation Truth Audit
 
