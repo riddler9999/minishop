@@ -27,7 +27,7 @@ export function getYangonAnalyticsWindow(now = new Date()) {
   const todayStart = yangonStartOfDay(now);
   const currentStart = new Date(todayStart.getTime() - 6 * DAY_MS);
   const previousStart = new Date(todayStart.getTime() - 13 * DAY_MS);
-  const previousEnd = new Date(todayStart.getTime() - 7 * DAY_MS);
+  const previousEnd = currentStart;
   const currentEnd = new Date(todayStart.getTime() + DAY_MS);
   return {todayStart, currentStart, currentEnd, previousStart, previousEnd};
 }
