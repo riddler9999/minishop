@@ -284,6 +284,14 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 
 ## အရေးကြီး Architecture Decisions
 
+### D49 — Shop တစ်ဆိုင် per Owner ကို DB Invariant အဖြစ် Enforce လုပ်တယ်
+
+Seller signup flow ကို audit လုပ်ရာမှာ latent lockout risk တစ်ခုတွေ့ခဲ့တယ်။ Admin flow တစ်ခုလုံး (`RequireAdmin`, `Onboarding` self-guard, `ownShop`) က "owner တစ်ယောက် = shop တစ်ဆိုင်" ဆိုတဲ့ invariant ကို `.maybeSingle()` နဲ့ မှီခိုနေပြီး၊ `.maybeSingle()` က row ၂ ခုတွေ့ရင် **throw** ဖြစ်တယ်။ ဒါပေမဲ့ `shops` table မှာ `owner_id` အပေါ် unique constraint မရှိခဲ့ဘူး (non-unique index `shops_owner_idx` သာ)။ Double-submit / two-tab / navigate မဖြစ်မီ retry ကနေ shop ၂ ခုဖြစ်သွားရင် နောက်ပိုင်း login တိုင်း `getOwnShop()` throw → seller ဟာ console ထဲ ဘယ်တော့မှ ဝင်လို့မရတော့တဲ့ dead-lock ဖြစ်နိုင်တယ်။
+
+**ဆုံးဖြတ်ချက်:** migration `0008_shop_owner_unique.sql` နဲ့ `unique(owner_id)` constraint (`shops_owner_unique`) ထည့်ပြီး DB level မှာ invariant ကို enforce လုပ်တယ်။ Unique constraint က ကိုယ်ပိုင် unique index တစ်ခု ဆောက်ပေးတာမို့ အရင်ရှိပြီးသား non-unique `shops_owner_idx` က redundant ဖြစ်သွားတယ် — အဲဒါကို migration ထဲမှာပဲ `drop index` လုပ်တယ်။ `createOwnShop()` က owner-collision (23505) တိုင်းမှာ owner ရဲ့ ဆိုင်ကို အရင်ရှာ → ရှိရင် idempotent recover (double-submit လုပ်သူကို သူ့ dashboard သို့ပို့) → မရှိမှသာ slug collision ဟု သတ်မှတ်တယ်။ `RequireAdmin`/`Onboarding` ကလည်း transient fetch error နဲ့ "no shop" ကို ခွဲ (error မှာ retry screen ပြ၊ redirect မလုပ်)။ `slugify` က slice ပြီးမှ hyphen trim (trailing `-` fail ရှောင်ရန်)။ ဒီ behaviour တွေအားလုံးကို `tests/sellerShop.test.ts` နဲ့ `tests/slug.test.ts` မှာ regression test နဲ့ ချုပ်ထားတယ်။
+
+**Pending:** `0008` ကို live project သို့ **မ apply ရသေးပါ** — owner go-ahead လိုအပ်ပြီး duplicate `owner_id` row ရှိရင် constraint add မအောင်မြင်။ Apply မလုပ်ခင် operator က migration ထဲက read-only duplicate-detection query ကို run ပြီး duplicate မရှိကြောင်း အရင်စစ်ရမယ် (`0001`–`0007` applied; `0008` pending)။ (PR #28)
+
 ### D48 — DB Typed Error တွေကို Domain Catalog တစ်ခုတည်းက Burmese အဖြစ် Map လုပ်တယ်
 
 `0007` က raise လုပ်တဲ့ typed exception တွေ (`rate_limit_exceeded`, `duplicate_order_limit`,

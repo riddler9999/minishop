@@ -117,15 +117,17 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
     .select(OWN_SHOP_COLUMNS)
     .single();
   if (error) {
-    // 23505 = unique_violation. Two constraints can trip it: the owner already
-    // has a shop (shops_owner_unique, added in migration 0008 — recover to it
-    // idempotently so a double-submit lands the seller on their real shop
-    // instead of a false "slug taken"), or the slug is taken by someone else.
-    if (error.code === '23505' && error.message.includes('shops_owner_unique')) {
+    // 23505 = unique_violation, from one of two constraints: the owner already
+    // has a shop (shops_owner_unique, migration 0008) or the slug is taken by
+    // someone else (slug unique, 0001). A double-submit with the same slug
+    // trips BOTH at once and Postgres reports only one — often the older slug
+    // index — so we can't key the owner case off the constraint name. Instead,
+    // on ANY 23505 first look up this owner's shop: if one exists, recover to
+    // it idempotently (so a double-submit lands on their real shop, never a
+    // false "slug taken"); only if they own none is it a genuine slug clash.
+    if (error.code === '23505') {
       const existing = await getOwnShop(userId);
       if (existing) return existing;
-    }
-    if (error.code === '23505') {
       throw new Error('ဤ link (slug) ကို အသုံးပြုပြီးသားဖြစ်ပါသည် — တခြား link ရွေးပါ။');
     }
     if (error.message.includes('shops_slug_format')) {
