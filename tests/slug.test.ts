@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {isValidSlug} from '../src/lib/slug.ts';
+import {isValidSlug} from '../src/domain/slug.ts';
 
 describe('isValidSlug', () => {
   it('accepts valid shop slugs', () => {

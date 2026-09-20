@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {normalizePlan, resolvePlanValue} from '../src/lib/planRules.ts';
+import {normalizePlan, resolvePlanValue} from '../src/domain/plan.ts';
 
 describe('plan rules', () => {
   it('only unlocks business for an explicit business value', () => {
