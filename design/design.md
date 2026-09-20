@@ -84,7 +84,7 @@ secondary to actionable order/stock lists. Admin analytics dashboard copy is Eng
 | Home | `src/features/catalog/pages/Home.tsx` | Shipped |
 | Product listing | `src/features/catalog/pages/Products.tsx` | Shipped |
 | Product detail | `src/features/catalog/pages/ProductDetail.tsx` | Shipped |
-| Cart (drawer) | `src/features/cart/components/CartDrawer.tsx`, `src/features/cart/pages/Cart.tsx` | Shipped |
+| Cart (drawer only) | `src/features/cart/components/CartDrawer.tsx` | Shipped |
 | Checkout | `src/features/checkout/pages/Checkout.tsx` | Shipped |
 | Order success | `src/features/checkout/pages/OrderSuccess.tsx` | Shipped |
 | Order lookup (order no. + phone) | `src/features/orders/pages/OrderLookup.tsx` | Shipped |

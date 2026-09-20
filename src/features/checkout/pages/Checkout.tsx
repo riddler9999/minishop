@@ -119,43 +119,43 @@ export default function Checkout() {
   if (!items.length) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="my text-ink-soft">ခြင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
-        <ShopLink to="/products" className="mt-4 inline-block rounded-full bg-brand-700 px-6 py-3 font-semibold text-cream-100">ဈေးဝယ်မယ်</ShopLink>
+        <p className="my text-slate-500">ခြင်းထဲတွင် ပစ္စည်းမရှိသေးပါ။</p>
+        <ShopLink to="/products" className="mt-4 inline-block rounded-full bg-[#e11d48] px-6 py-3 font-semibold text-white">ဈေးဝယ်မယ်</ShopLink>
       </div>
     );
   }
 
-  const label = 'mb-1.5 block text-sm font-semibold text-ink';
+  const label = 'mb-1.5 block text-sm font-semibold text-slate-950';
   const input =
-    'w-full rounded-xl border border-cream-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-400';
+    'w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#e11d48]';
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-6 font-display text-2xl font-bold text-brand-800">Order တင်မယ်</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-slate-950">Order တင်မယ်</h1>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {/* 1. Delivery info */}
-          <section className="rounded-2xl border border-cream-200 bg-white p-5">
-            <h2 className="mb-4 flex items-center gap-2 font-semibold text-brand-800">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-700 text-xs text-white">၁</span>
+          <section className="rounded-2xl border border-rose-100 bg-white p-5">
+            <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-950">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e11d48] text-xs text-white">၁</span>
               ပို့ဆောင်မည့် လိပ်စာ
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="checkout-name" className={label}>အမည် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-name" className={label}>အမည် <span className="text-[#e11d48]">*</span></label>
                 <input id="checkout-name" className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="အမည်ရေးပါ" />
               </div>
               <div>
-                <label htmlFor="checkout-phone" className={label}>ဖုန်းနံပါတ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-phone" className={label}>ဖုန်းနံပါတ် <span className="text-[#e11d48]">*</span></label>
                 <input id="checkout-phone" className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09…" inputMode="tel" />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="checkout-street" className={label}>လမ်းအမည် / အိမ်အမှတ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-street" className={label}>လမ်းအမည် / အိမ်အမှတ် <span className="text-[#e11d48]">*</span></label>
                 <input id="checkout-street" className={input} value={street} onChange={(e) => setStreet(e.target.value)} placeholder="ဥပမာ — မြသီတာလမ်း၊ အမှတ် ၁၂၃" />
               </div>
               <div>
-                <label htmlFor="checkout-region" className={label}>တိုင်း / ပြည်နယ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-region" className={label}>တိုင်း / ပြည်နယ် <span className="text-[#e11d48]">*</span></label>
                 <select
                   id="checkout-region"
                   className={input}
@@ -171,7 +171,7 @@ export default function Checkout() {
                 </select>
               </div>
               <div>
-                <label htmlFor="checkout-township" className={label}>မြို့နယ် <span className="text-brand-600">*</span></label>
+                <label htmlFor="checkout-township" className={label}>မြို့နယ် <span className="text-[#e11d48]">*</span></label>
                 <select
                   id="checkout-township"
                   className={cx(input, !region && 'cursor-not-allowed opacity-60')}
@@ -186,12 +186,12 @@ export default function Checkout() {
               </div>
             </div>
             {fee != null && (
-              <p className="my mt-3 rounded-lg bg-cream-100 px-3 py-2 text-sm text-ink">
-                📦 {township} — ပို့ဆောင်ခ <span className="font-bold text-brand-700">{ks(fee)}</span>
+              <p className="my mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-slate-950">
+                📦 {township} — ပို့ဆောင်ခ <span className="font-bold text-[#e11d48]">{ks(fee)}</span>
               </p>
             )}
             {live && shipErr && (
-              <div className="my mt-3 flex items-center justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">
+              <div className="my mt-3 flex items-center justify-between gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-[#e11d48]">
                 <span>ပို့ဆောင်ခ တင်ယူ၍မရပါ။</span>
                 <button type="button" onClick={() => setShipReload((n) => n + 1)} className="font-semibold underline">
                   ပြန်ကြိုးစားရန်
@@ -201,63 +201,63 @@ export default function Checkout() {
           </section>
 
           {/* 2. Payment */}
-          <section className="rounded-2xl border border-cream-200 bg-white p-5">
-            <h2 className="mb-4 flex items-center gap-2 font-semibold text-brand-800">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-700 text-xs text-white">၂</span>
+          <section className="rounded-2xl border border-rose-100 bg-white p-5">
+            <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-950">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e11d48] text-xs text-white">၂</span>
               ငွေပေးချေမှု
             </h2>
 
-            <p className="my mb-2 text-sm font-semibold text-ink">ငွေပေးချေမှုနည်းလမ်း ရွေးပါ</p>
+            <p className="my mb-2 text-sm font-semibold text-slate-950">ငွေပေးချေမှုနည်းလမ်း ရွေးပါ</p>
             <div className="grid gap-3 sm:grid-cols-3">
               {METHODS.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setMethod(m.key)}
-                  className={cx('rounded-xl border-2 p-3 text-left transition', method === m.key ? 'border-brand-600 bg-brand-50' : 'border-cream-200 bg-white')}>
-                  <span className="my block text-sm font-semibold text-ink">{m.label}</span>
-                  <span className="my text-xs text-ink-soft">{m.sub}</span>
+                  className={cx('rounded-xl border-2 p-3 text-left transition', method === m.key ? 'border-[#e11d48] bg-rose-50' : 'border-rose-100 bg-white')}>
+                  <span className="my block text-sm font-semibold text-slate-950">{m.label}</span>
+                  <span className="my text-xs text-slate-500">{m.sub}</span>
                 </button>
               ))}
             </div>
 
-            <div className="my mt-4 rounded-xl border border-dashed border-gold-500/50 bg-cream-100 px-4 py-3">
-              <span className="text-xs text-ink-soft">{method === 'cod' ? 'အိမ်ရောက်မှ ပေးရမည့် ငွေ' : 'အခု လွှဲရမည့် ငွေ'}</span>
-              <div className="font-display text-2xl font-bold text-brand-700">{fee != null ? ks(grandTotal) : '—'}</div>
+            <div className="my mt-4 rounded-xl border border-dashed border-rose-200 bg-rose-50 px-4 py-3">
+              <span className="text-xs text-slate-500">{method === 'cod' ? 'အိမ်ရောက်မှ ပေးရမည့် ငွေ' : 'အခု လွှဲရမည့် ငွေ'}</span>
+              <div className="font-display text-2xl font-bold text-[#e11d48]">{fee != null ? ks(grandTotal) : '—'}</div>
             </div>
 
             {method === 'cod' ? (
-              <p className="my mt-3 rounded-lg bg-cream-100 px-3 py-2 text-sm text-ink">
+              <p className="my mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-slate-950">
                 🚚 ပစ္စည်း အိမ်တိုင်ရာရောက် ပို့ဆောင်ချိန်တွင် ငွေပေးချေနိုင်ပါသည်။ အခု ကြိုတင်ပေးစရာ မလိုပါ။
               </p>
             ) : (
               <>
                 <div className="mt-3 space-y-2">
                   {providerAccounts.map((a) => (
-                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-xl border border-cream-200 bg-cream-50 px-4 py-3">
+                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-xl border border-rose-100 bg-rose-50/40 px-4 py-3">
                       <div className="min-w-0">
-                        <p className="my truncate text-sm font-semibold text-ink">{a.accountName}</p>
-                        <p className="font-display text-base font-bold tracking-wide text-brand-700">{a.phone}</p>
+                        <p className="my truncate text-sm font-semibold text-slate-950">{a.accountName}</p>
+                        <p className="font-display text-base font-bold tracking-wide text-[#e11d48]">{a.phone}</p>
                       </div>
                       <button
                         onClick={() => copy(a.phone, a.phone)}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-3 py-2 text-xs font-bold text-brand-900 hover:bg-gold-400">
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#e11d48] px-3 py-2 text-xs font-bold text-white hover:bg-[#be123c]">
                         {copied === a.phone ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                         {copied === a.phone ? 'ကူးပြီး' : 'ကူးမယ်'}
                       </button>
                     </div>
                   ))}
-                  {providerAccounts.length === 0 && <p className="my text-sm text-ink-soft">အကောင့် မရရှိနိုင်ပါ။</p>}
+                  {providerAccounts.length === 0 && <p className="my text-sm text-slate-500">အကောင့် မရရှိနိုင်ပါ။</p>}
                 </div>
                 {fee != null && (
-                  <p className="my mt-3 text-sm text-ink-soft">
-                    👆 ဤနံပါတ်သို့ <b className="text-brand-700">{ks(grandTotal)}</b> လွှဲပြီး အောက်တွင် transaction ၏ နောက်ဆုံး ၅ လုံး ဖြည့်ပါ။
+                  <p className="my mt-3 text-sm text-slate-500">
+                    👆 ဤနံပါတ်သို့ <b className="text-[#e11d48]">{ks(grandTotal)}</b> လွှဲပြီး အောက်တွင် transaction ၏ နောက်ဆုံး ၅ လုံး ဖြည့်ပါ။
                   </p>
                 )}
 
                 {/* Payment reference — last 5 digits of the transfer (WebView-safe; no slip upload). */}
                 <div className="mt-4">
                   <label htmlFor="checkout-reftail" className={label}>
-                    ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံး <span className="text-brand-600">*</span>
+                    ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံး <span className="text-[#e11d48]">*</span>
                   </label>
                   <input
                     id="checkout-reftail"
@@ -268,7 +268,7 @@ export default function Checkout() {
                     inputMode="numeric"
                     maxLength={5}
                   />
-                  <p className="my mt-2 text-xs text-ink-soft">
+                  <p className="my mt-2 text-xs text-slate-500">
                     KBZPay / WavePay transaction ID ၏ နောက်ဆုံး ၅ လုံးကို ရိုက်ထည့်ပါ — ဆိုင်မှ ပမာဏနှင့် တိုက်ဆိုင်စစ်ဆေး၍ အတည်ပြုပေးပါမည်။
                   </p>
                 </div>
@@ -279,42 +279,42 @@ export default function Checkout() {
 
         {/* Summary rail */}
         <div className="h-fit space-y-4 lg:sticky lg:top-20">
-          <div className="rounded-2xl border border-cream-200 bg-white p-5">
-            <h2 className="font-display text-lg font-bold text-brand-800">အော်ဒါ အကျဉ်း</h2>
+          <div className="rounded-2xl border border-rose-100 bg-white p-5">
+            <h2 className="font-display text-lg font-bold text-slate-950">အော်ဒါ အကျဉ်း</h2>
             <div className="my mt-3 max-h-56 space-y-2 overflow-y-auto">
               {items.map((it) => (
                 <div key={it.id} className="flex items-center gap-2 text-sm">
-                  <div className="h-10 w-9 shrink-0 overflow-hidden rounded-md bg-cream-100">
-                    {it.image ? <img src={it.image} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><ImageOff className="h-4 w-4 text-ink-soft" /></div>}
+                  <div className="h-10 w-9 shrink-0 overflow-hidden rounded-md bg-rose-50">
+                    {it.image ? <img src={it.image} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><ImageOff className="h-4 w-4 text-slate-500" /></div>}
                   </div>
                   <span className="my flex-1 truncate">{it.name} ×{it.qty}</span>
                   <span className="font-semibold">{ks(it.price * it.qty)}</span>
                 </div>
               ))}
             </div>
-            <div className="my mt-4 space-y-2 border-t border-cream-200 pt-4 text-sm">
-              <div className="flex justify-between"><span className="text-ink-soft">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-soft">ပို့ဆောင်ခ</span><span className="font-semibold">{fee != null ? ks(fee) : '—'}</span></div>
-              <div className="flex justify-between border-t border-cream-200 pt-2 text-base">
+            <div className="my mt-4 space-y-2 border-t border-rose-100 pt-4 text-sm">
+              <div className="flex justify-between"><span className="text-slate-500">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(subtotal)}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">ပို့ဆောင်ခ</span><span className="font-semibold">{fee != null ? ks(fee) : '—'}</span></div>
+              <div className="flex justify-between border-t border-rose-100 pt-2 text-base">
                 <span className="font-bold">စုစုပေါင်း</span>
-                <span className="font-display font-bold text-brand-700">{fee != null ? ks(grandTotal) : '—'}</span>
+                <span className="font-display font-bold text-[#e11d48]">{fee != null ? ks(grandTotal) : '—'}</span>
               </div>
             </div>
           </div>
 
-          {err && <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">{err}</div>}
+          {err && <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-[#e11d48]">{err}</div>}
 
           <button
             disabled={!ready || submitting}
             onClick={submit}
-            className="w-full rounded-full bg-brand-700 px-6 py-4 font-bold text-cream-100 shadow-lg transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">
+            className="w-full rounded-full bg-[#e11d48] px-6 py-4 font-bold text-white shadow-lg transition hover:bg-[#be123c] disabled:cursor-not-allowed disabled:opacity-50">
             {submitting ? (
               <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> တင်နေသည်…</span>
             ) : (
               <>✅ ဒါပဲ ဝယ်တော့မယ် {fee != null && `— ${ks(grandTotal)}`}</>
             )}
           </button>
-          {!ready && <p className="my text-center text-xs text-ink-soft">အမည်၊ ဖုန်း၊ လိပ်စာ၊ တိုင်း/မြို့နယ် ဖြည့်ပါ။</p>}
+          {!ready && <p className="my text-center text-xs text-slate-500">အမည်၊ ဖုန်း၊ လိပ်စာ၊ တိုင်း/မြို့နယ် ဖြည့်ပါ။</p>}
         </div>
       </div>
     </div>
