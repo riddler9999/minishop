@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {NavLink, Outlet, Link} from 'react-router-dom';
-import {Bell, Home, LogOut, Menu, Package, Settings, ShoppingBag, Store, Truck, X} from 'lucide-react';
+import {Bell, Home, LogOut, Menu, Package, Settings, ShoppingBag, Store, X} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
 import {APP_INITIAL, APP_NAME, shopInitial} from '@/shared/lib/brand';
@@ -13,24 +13,20 @@ interface NavEntry {
   end: boolean;
   label: string;
   icon: React.ComponentType<{className?: string}>;
-  requiresAdvancedShipping?: boolean;
 }
 
 const NAV: NavEntry[] = [
   {to: '/admin', end: true, label: 'Home', icon: Home},
   {to: '/admin/products', end: false, label: 'Products', icon: Package},
   {to: '/admin/orders', end: false, label: 'Orders', icon: ShoppingBag},
-  {to: '/admin/shipping', end: false, label: 'Shipping', icon: Truck, requiresAdvancedShipping: true},
   {to: '/admin/settings', end: false, label: 'Settings', icon: Settings},
 ];
 
 function MobileNav() {
-  const {features} = usePlan();
-  const items = NAV.filter((entry) => !entry.requiresAdvancedShipping || features.advancedShipping);
   return (
     <nav aria-label="Admin navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-lg grid-cols-4">
-        {items.filter((entry) => entry.to !== '/admin/shipping').map((entry) => {
+        {NAV.map((entry) => {
           const Icon = entry.icon;
           return (
             <NavLink key={entry.to} to={entry.to} end={entry.end} className={({isActive}) => cx('flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition', isActive ? 'text-pink-500' : 'text-slate-500 hover:text-slate-900')}>
@@ -45,11 +41,9 @@ function MobileNav() {
 }
 
 function DesktopNav() {
-  const {features} = usePlan();
-  const items = NAV.filter((entry) => !entry.requiresAdvancedShipping || features.advancedShipping);
   return (
     <nav className="space-y-1.5">
-      {items.map((entry) => {
+      {NAV.map((entry) => {
         const Icon = entry.icon;
         return (
           <NavLink key={entry.to} to={entry.to} end={entry.end} className={({isActive}) => cx('flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition', isActive ? 'bg-pink-50 text-pink-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950')}>
