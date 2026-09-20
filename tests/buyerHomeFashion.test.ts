@@ -8,29 +8,25 @@ async function readHome() {
   return readFile(homePath, 'utf8');
 }
 
-test('buyer home uses the fashion storefront contract', async () => {
+test('buyer home keeps real tenant catalog and navigation contracts', async () => {
   const source = await readHome();
 
-  assert.match(source, /New Arrivals/);
-  assert.match(source, /Shop Now/);
-  assert.match(source, /bg-white/);
-  assert.match(source, /#(?:ec4899|db2777|e11d48|ff[0-9a-f]{4})/i);
-  assert.match(source, /ProductCard/);
   assert.match(source, /api\.products\(\{scope: 'active', limit: 12\}\)/);
-  assert.match(source, /to="\/products"/);
+  assert.match(source, /api\.categories\(\)/);
+  assert.match(source, /ProductCard/);
+  assert.match(source, /useShopNavigate/);
+  assert.match(source, /\/products\?q=/);
+  assert.match(source, /\/products\?category=/);
+  assert.match(source, /encodeURIComponent/);
 });
 
-test('buyer home removes jewellery-specific presentation', async () => {
+test('buyer home uses Burmese fashion copy and removes jewellery presentation', async () => {
   const source = (await readHome()).toLowerCase();
 
-  for (const forbidden of [
-    'fine jewellery',
-    'traditional gold',
-    'diamond jewellery',
-    'crafted with meaning',
-    'shop the collection',
-    'jewel-cta',
-  ]) {
+  assert.match(source, /အသစ်ရောက် ပစ္စည်းများ/);
+  assert.match(source, /ပစ္စည်းများကြည့်ရန်/);
+
+  for (const forbidden of ['fine jewellery', 'traditional gold', 'diamond jewellery', 'crafted with meaning', 'shop the collection', 'jewel-cta']) {
     assert.equal(source.includes(forbidden), false, `unexpected jewellery copy/style: ${forbidden}`);
   }
 });
