@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {ArrowRight, Headphones, PackageCheck, ShieldCheck} from 'lucide-react';
+import {ArrowRight, ClipboardList, PackageCheck, ShieldCheck} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
@@ -34,7 +34,7 @@ function Hero({product}: {product: Product | null}) {
             <img src={image} alt={product?.name ?? 'ဖက်ရှင်ပစ္စည်း'} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fbcfe8] via-[#f9a8d4] to-[#fff0f6]">
-              {shop?.logoUrl ? <img src={shop.logoUrl} alt={`${shop.name} logo`} className="h-28 w-28 rounded-full bg-white object-contain p-3 shadow-xl" /> : null}
+              {shop?.logoUrl ? <img src={shop.logoUrl} alt={`${shop.name} ဆိုင်အမှတ်တံဆိပ်`} className="h-28 w-28 rounded-full bg-white object-contain p-3 shadow-xl" /> : null}
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" aria-hidden="true" />
@@ -110,17 +110,23 @@ function ProductSection({products, loading, error}: {products: Product[]; loadin
   );
 }
 
-function Promo() {
+function Promo({product}: {product: Product | null}) {
+  if (!product) return null;
+
+  const image = product.image ?? product.images[0] ?? null;
+
   return (
     <section className="bg-white px-4 py-5 sm:px-8 sm:py-8">
-      <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 overflow-hidden rounded-[28px] bg-[#fff0f6] px-6 py-8 sm:flex-row sm:items-center sm:px-10 sm:py-10">
-        <div>
-          <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">ပစ္စည်းအားလုံးကို တစ်နေရာတည်းမှာကြည့်ပါ။</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">ဒီဆိုင်မှာ လက်ရှိရရှိနိုင်တဲ့ ပစ္စည်းအားလုံးကို ရှာဖွေကြည့်နိုင်ပါတယ်။</p>
+      <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[28px] bg-[#fff0f6] sm:grid-cols-[1fr_220px]">
+        <div className="flex flex-col justify-center px-6 py-8 sm:px-10 sm:py-10">
+          <p className="text-sm font-semibold text-[#e11d48]">အထူးဈေးနှုန်း</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">{product.name}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">အထူးဈေးနှုန်းနဲ့ ရရှိနေတဲ့ ပစ္စည်းကို အခုပဲကြည့်ပါ။</p>
+          <ShopLink to={`/products/${product.id}`} className="mt-5 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[#e11d48] px-6 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
+            အသေးစိတ်ကြည့်ရန် <ArrowRight className="h-4 w-4" />
+          </ShopLink>
         </div>
-        <ShopLink to="/products" className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#e11d48] px-6 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-          အားလုံးကြည့်ရန် <ArrowRight className="h-4 w-4" />
-        </ShopLink>
+        {image ? <img src={image} alt={product.name} className="h-56 w-full object-cover sm:h-full" /> : null}
       </div>
     </section>
   );
@@ -128,19 +134,19 @@ function Promo() {
 
 function ServiceStrip() {
   const services = [
-    {title: 'လွယ်ကူစွာ ဝယ်ယူနိုင်ခြင်း', icon: PackageCheck},
-    {title: 'လုံခြုံသော ငွေချေမှု', icon: ShieldCheck},
-    {title: 'အကူအညီလိုပါသလား', icon: Headphones},
+    {title: 'လွယ်ကူစွာ ဝယ်ယူနိုင်ခြင်း', icon: PackageCheck, to: '/products'},
+    {title: 'လုံခြုံသော ငွေချေမှု', icon: ShieldCheck, to: '/cart'},
+    {title: 'အော်ဒါအခြေအနေစစ်ရန်', icon: ClipboardList, to: '/orders'},
   ];
 
   return (
     <section className="border-t border-slate-100 bg-white px-4 py-8 sm:px-8">
       <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        {services.map(({title, icon: Icon}) => (
-          <div key={title} className="flex items-center justify-center gap-3 px-4 py-5 text-sm font-medium text-slate-700">
+        {services.map(({title, icon: Icon, to}) => (
+          <ShopLink key={title} to={to} className="flex min-h-14 items-center justify-center gap-3 px-4 py-5 text-sm font-medium text-slate-700 transition hover:bg-[#fff7fa] hover:text-[#e11d48]">
             <Icon className="h-5 w-5 text-[#e11d48]" strokeWidth={1.7} />
             {title}
-          </div>
+          </ShopLink>
         ))}
       </div>
     </section>
@@ -177,6 +183,7 @@ export default function Home() {
   }, [slug]);
 
   const visibleProducts = products ?? [];
+  const promotion = visibleProducts.find((product) => product.isPromotion) ?? null;
 
   return (
     <div className="bg-white">
@@ -184,7 +191,7 @@ export default function Home() {
       <ProductSearch />
       <CategoryRail categories={categories} />
       <ProductSection products={visibleProducts} loading={products === null && !error} error={error} />
-      <Promo />
+      <Promo product={promotion} />
       <ServiceStrip />
     </div>
   );
