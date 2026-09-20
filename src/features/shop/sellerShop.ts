@@ -7,8 +7,8 @@
 // there's no shop yet — right once you know one should exist, wrong here.
 
 import {requireSupabase} from '@/core/supabase/client';
-import {mapDbError} from '@/domain/dbError';
 import type {TablesUpdate} from '@/core/supabase/database.types';
+import {mapUpdateOwnShopError} from '@/features/shop/sellerShopError';
 
 export interface OwnShop {
   id: string;
@@ -65,11 +65,6 @@ export interface UpdateShopInput {
   phone?: string | null;
   logoUrl?: string | null;
   defaultDeliveryFee?: number;
-}
-
-/** Map the Settings write boundary's DB failure to seller-facing Burmese copy. */
-export function mapUpdateOwnShopError(rawMessage: string | null | undefined): string {
-  return mapDbError(rawMessage, 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။');
 }
 
 /**
