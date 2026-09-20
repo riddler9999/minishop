@@ -22,8 +22,7 @@ Read `CLAUDE.md` and `PROJECT.md` first if you haven't — this file assumes tha
    (see `shopContext.ts`) or a reliable file picker (`uploadSlip()` is a no-op — see
    `supabase/README.md`). Every screen must work one-handed, on a mid-range Android, inside a
    host app's embedded browser.
-2. **Burmese-first copy, English code.** All buyer/seller-facing text ships in Burmese
-   (`.my` class in `index.css` gives Burmese script extra `line-height` for legibility).
+2. **Localized copy, English code.** Buyer storefront copy remains Burmese-first. Seller-facing screens follow their recorded product decision; the Admin analytics dashboard is English-only per D50. (`.my` in `index.css` remains available where Burmese script is used.)
    Mockups and design docs may use English placeholders for speed, but nothing English ships
    to a real screen. See `orderStatus.ts` for the canonical status labels — don't invent new
    English ones.
@@ -75,7 +74,7 @@ The seller dashboard uses a mobile-first analytics treatment: pale cool-gray can
 pink/cyan/violet/orange semantic icon chips, large compact metrics, one simple 7-day trend chart,
 and bottom navigation on narrow screens. This is intentionally denser and more app-like than the
 buyer storefront. Keep one-handed touch targets at 44px+, avoid decorative motion, and keep charts
-secondary to actionable order/stock lists.
+secondary to actionable order/stock lists. Admin analytics dashboard copy is English-only (D50). Shipping is intentionally absent from the redesigned admin navigation.
 
 ## 3. Screen inventory
 
