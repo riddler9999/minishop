@@ -7,6 +7,7 @@ import {
   mapDbError,
   type DbErrorCode,
 } from '../src/domain/dbError.ts';
+import {mapUpdateOwnShopError} from '../src/features/shop/sellerShop.ts';
 
 const migrationsDir = new URL('../supabase/migrations/', import.meta.url);
 
