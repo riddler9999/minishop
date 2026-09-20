@@ -52,6 +52,17 @@ export default function Layout({children}: {children: React.ReactNode}) {
     window.scrollTo({top: 0, behavior: 'instant' as ScrollBehavior});
   }, [pathname]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-white pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-40 border-b border-rose-100 bg-white/95 backdrop-blur-xl">
