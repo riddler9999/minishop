@@ -5,8 +5,10 @@ Multi-tenant backend for the storefront SaaS. Schema, RLS and RPCs live in
 
 ## Migrations
 
-All seven are applied to the live project. Never apply a migration to production
-without the owner's explicit go-ahead — see `.claude/skills/supabase-migration/SKILL.md`.
+`0001`–`0007` are applied to the live project; `0008` is **pending — not yet applied**
+(needs owner go-ahead, and fails if duplicate `owner_id` rows exist). Never apply a
+migration to production without the owner's explicit go-ahead — see
+`.claude/skills/supabase-migration/SKILL.md`.
 
 | File | What it creates |
 |---|---|
@@ -17,6 +19,7 @@ without the owner's explicit go-ahead — see `.claude/skills/supabase-migration
 | `0005_fix_storage_policy_path.sql` | Corrects the Storage policy's shop-id path segment |
 | `0006_optimize_rls_and_fk_index.sql` | RLS predicate optimization + missing FK indexes |
 | `0007_production_hardening.sql` | Rate limiting on the anon RPCs; platform-managed `plan`/`owner_id`/billing triggers; stricter `place_order()` / `lookup_order()` validation. Raises typed exceptions (`rate_limit_exceeded`, `duplicate_order_limit`, `business_plan_required`, …) — the frontend maps these to Burmese copy via `src/domain/dbError.ts` (`mapDbError`, see D48) |
+| `0008_shop_owner_unique.sql` | `unique(owner_id)` on `shops` (`shops_owner_unique`), dropping the now-redundant `shops_owner_idx` — enforces one shop per owner (the admin flow assumes it; see `PROJECT.md` D49). **Pending — not yet applied** (run the migration's duplicate-detection query before applying) |
 
 ## Security model (read before touching)
 
