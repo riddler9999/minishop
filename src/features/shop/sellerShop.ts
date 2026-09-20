@@ -8,6 +8,7 @@
 
 import {requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
+import {mapUpdateOwnShopError} from '@/domain/dbError';
 
 export interface OwnShop {
   id: string;
@@ -87,7 +88,11 @@ export async function updateOwnShop(userId: string, input: UpdateShopInput): Pro
     .eq('owner_id', userId)
     .select(OWN_SHOP_COLUMNS)
     .maybeSingle();
-  if (error || !data) throw new Error(error?.message || 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။');
+  // This is the write path the Settings page actually uses. The shops trigger
+  // (0007) raises plan_is_platform_managed / owner_is_platform_managed /
+  // business_plan_required (e.g. a logo change after a Business→Starter
+  // downgrade) — map those to Burmese instead of leaking the raw code.
+  if (error || !data) throw new Error(mapUpdateOwnShopError(error?.message));
   return mapOwnShop(data as ShopRow);
 }
 

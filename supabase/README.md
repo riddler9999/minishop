@@ -16,7 +16,7 @@ without the owner's explicit go-ahead — see `.claude/skills/supabase-migration
 | `0004_product_promo_price_check.sql` | `CHECK`: `promo_price < price` whenever `is_promotion` |
 | `0005_fix_storage_policy_path.sql` | Corrects the Storage policy's shop-id path segment |
 | `0006_optimize_rls_and_fk_index.sql` | RLS predicate optimization + missing FK indexes |
-| `0007_production_hardening.sql` | Rate limiting on the anon RPCs; platform-managed `plan`/`owner_id`/billing triggers; stricter `place_order()` / `lookup_order()` validation. Raises 16 typed exceptions (`rate_limit_exceeded`, `duplicate_order_limit`, `business_plan_required`, …) — **the frontend does not map these to Burmese copy yet** (open task in `PROJECT.md`) |
+| `0007_production_hardening.sql` | Rate limiting on the anon RPCs; platform-managed `plan`/`owner_id`/billing triggers; stricter `place_order()` / `lookup_order()` validation. Raises typed exceptions (`rate_limit_exceeded`, `duplicate_order_limit`, `business_plan_required`, …) — the frontend maps these to Burmese copy via `src/domain/dbError.ts` (`mapDbError`, see D48) |
 
 ## Security model (read before touching)
 

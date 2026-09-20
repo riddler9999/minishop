@@ -3,6 +3,7 @@
 // a phone number alone would let anyone enumerate a buyer's order history.
 
 import {requireSupabase} from '@/core/supabase/client';
+import {mapDbError} from '@/domain/dbError';
 import type {TrackedOrder} from '@/domain/order';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 
@@ -24,7 +25,7 @@ export const orderLookupApi = {
       p_order_no: orderNo,
       p_phone: phone,
     });
-    if (error) throw new Error('Order ရှာမတွေ့ပါ။');
+    if (error) throw new Error(mapDbError(error.message, 'Order ရှာမတွေ့ပါ။'));
 
     const o = data as {
       order_no: string;

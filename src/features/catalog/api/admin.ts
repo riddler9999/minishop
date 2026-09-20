@@ -3,6 +3,7 @@
 // (RLS enforces the same boundary server-side). Composed into `adminApi`.
 
 import {requireSupabase} from '@/core/supabase/client';
+import {mapDbError} from '@/domain/dbError';
 import type {TablesInsert, TablesUpdate} from '@/core/supabase/database.types';
 import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
@@ -46,7 +47,9 @@ export const catalogAdminApi = {
       .eq('shop_id', shopId)
       .select()
       .maybeSingle();
-    if (error || !data) throw new Error('ပစ္စည်း ရှာမတွေ့ပါ');
+    // A promo edit on a non-business shop trips business_plan_required (0007);
+    // map it so the seller sees the upsell, not a raw "not found".
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ရှာမတွေ့ပါ'));
     return {product: mapProduct(data)};
   },
 
@@ -71,7 +74,7 @@ export const catalogAdminApi = {
       arrival_date: input.arrivalDate ?? null,
     };
     const {data, error} = await sb.from('products').insert(row).select().maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ပစ္စည်း ဖန်တီး၍မရပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ဖန်တီး၍မရပါ။'));
     return {product: mapProduct(data)};
   },
 

@@ -4,19 +4,11 @@
 // so prices sent from this client are advisory only. See supabase/README.md.
 
 import {requireSupabase} from '@/core/supabase/client';
+import {mapDbError} from '@/domain/dbError';
 import type {OrderResult} from '@/domain/order';
 import type {MerchantAccount} from '@/domain/shop';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 import {resolveShop} from '@/features/tenancy/shopResolver';
-
-function mapPlaceOrderError(msg: string): string {
-  if (msg.includes('shop_not_found')) return 'ဆိုင် ရှာမတွေ့ပါ။';
-  if (msg.includes('empty_cart')) return 'ခြင်းထဲတွင် ပစ္စည်းမရှိပါ။';
-  if (msg.includes('missing_customer')) return 'အမည် / ဖုန်းနံပါတ် ဖြည့်ပါ။';
-  if (msg.includes('product_unavailable')) return 'ပစ္စည်းအချို့ မရရှိတော့ပါ — refresh လုပ်ပြီး ပြန်စမ်းကြည့်ပါ။';
-  if (msg.includes('invalid_payment_method')) return 'ငွေပေးချေမှုနည်းလမ်း မှားနေပါသည်။';
-  return 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။';
-}
 
 
 export const checkoutApi = {
@@ -79,7 +71,7 @@ export const checkoutApi = {
       p_payment_ref_tail: b.paymentRefTail ?? '',
       p_items: b.items.map((i) => ({product_id: i.id, qty: i.qty})),
     });
-    if (error) throw new Error(mapPlaceOrderError(error.message));
+    if (error) throw new Error(mapDbError(error.message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။'));
 
     const r = data as {
       order_no: string;
