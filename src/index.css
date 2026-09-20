@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 /* ---- Mini Shop design system ------------------------------------------------
-   Warm ivory + deep espresso + jewellery-gold. Token names stay stable because
-   admin and storefront components already depend on brand/cream/gold/ink roles.
-   The buyer storefront adds a restrained editorial layer on top of these roles. */
+   Shared semantic tokens for the admin console and buyer flows. Token names stay
+   stable because existing modules depend on brand/cream/gold/ink roles. The buyer
+   home adds its white/blush-pink fashion layer with Tailwind utilities. */
 @theme {
   --font-myanmar: 'Padauk', 'Noto Sans Myanmar', system-ui, sans-serif;
   --font-display: Georgia, 'Times New Roman', 'Padauk', serif;
@@ -73,24 +73,6 @@ textarea {
   letter-spacing: -0.015em;
 }
 
-.jewel-cta {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(135deg, #d2a248 0%, #b67a22 100%);
-  color: white;
-  box-shadow: 0 10px 28px rgba(115, 72, 19, 0.18);
-  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
-}
-
-.jewel-cta:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.04);
-  box-shadow: 0 14px 34px rgba(115, 72, 19, 0.24);
-}
-
-.jewel-cta:focus-visible {
-  outline: 2px solid #b98428;
-  outline-offset: 3px;
-}
 
 .no-scrollbar {
   -ms-overflow-style: none;
@@ -136,13 +118,11 @@ textarea {
   }
 
   .card-lift,
-  .jewel-cta,
   .card-lift img {
     transition: none !important;
   }
 
-  .card-lift:hover,
-  .jewel-cta:hover {
+  .card-lift:hover {
     transform: none;
   }
 }
