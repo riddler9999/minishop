@@ -160,7 +160,7 @@ export default function Dashboard() {
     return {date, total};
   }), [currentStart, orders]);
 
-  const recentOrders = orders.slice(0, 3);
+  const recentActionOrders = actionOrders.slice(0, 3);
   const lowStockPreview = lowStock.slice(0, 2);
 
   return (
@@ -205,11 +205,11 @@ export default function Dashboard() {
         </div>
         {loading ? (
           <div className="space-y-2 px-4 pb-4">{Array.from({length: 3}).map((_, index) => <div key={index} className="h-16 animate-pulse rounded-2xl bg-slate-50" />)}</div>
-        ) : recentOrders.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm text-slate-500">No orders yet.</div>
+        ) : recentActionOrders.length === 0 ? (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">No new orders need action.</div>
         ) : (
           <ul className="divide-y divide-slate-100 px-3 pb-2 sm:px-4">
-            {recentOrders.map((order) => {
+            {recentActionOrders.map((order) => {
               const firstItem = order.items[0];
               const status = statusMeta(order.status);
               return (
