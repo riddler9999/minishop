@@ -54,16 +54,16 @@ export default function Onboarding() {
   if (!authLoading && !session) return <Navigate to="/admin/login" replace />;
   if (!checking && !loadError && hasShop) return <Navigate to="/admin" replace />;
   if (authLoading || checking) {
-    return <div className="grid min-h-screen place-items-center bg-ink text-sm text-cream-200">Loading…</div>;
+    return <div className="grid min-h-screen place-items-center bg-white text-sm text-slate-500">Loading…</div>;
   }
   if (loadError) {
     return (
-      <div className="grid min-h-screen place-items-center bg-ink px-4 text-center">
+      <div className="grid min-h-screen place-items-center bg-white px-4 text-center">
         <div className="max-w-sm">
-          <p className="my text-sm text-cream-200">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
+          <p className="my text-sm text-slate-500">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
           <button
             onClick={() => setRetry((n) => n + 1)}
-            className="my mt-4 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600">
+            className="my mt-4 rounded-xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-[#be123c]">
             ထပ်ကြိုးစားရန်
           </button>
         </div>
@@ -95,19 +95,19 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center bg-ink px-4 py-10">
+    <div className="grid min-h-screen place-items-center bg-white px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-gold-500 font-display text-2xl font-bold text-white shadow-lg">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#fb7185] to-[#e11d48] font-display text-2xl font-bold text-white shadow-lg">
             {APP_INITIAL}
           </span>
-          <h1 className="my mt-4 font-display text-2xl font-bold text-white">ဆိုင် စတင်ဖွင့်ရန်</h1>
-          <p className="my mt-1 text-sm text-cream-200/70">အဆင့် ၄ ဆင့်ဖြင့် မိနစ်ပိုင်းအတွင်း ဆိုင်ဖွင့်နိုင်သည်</p>
+          <h1 className="my mt-4 font-display text-2xl font-bold text-slate-950">ဆိုင် စတင်ဖွင့်ရန်</h1>
+          <p className="my mt-1 text-sm text-slate-500/70">အဆင့် ၄ ဆင့်ဖြင့် မိနစ်ပိုင်းအတွင်း ဆိုင်ဖွင့်နိုင်သည်</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3 rounded-2xl bg-white p-6 shadow-xl">
           <label className="block">
-            <span className="my mb-1.5 block text-sm font-semibold text-ink">ဆိုင်နာမည်</span>
+            <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင်နာမည်</span>
             <input
               value={name}
               onChange={(e) => {
@@ -115,14 +115,14 @@ export default function Onboarding() {
                 if (!slugTouched) setSlug(slugify(e.target.value));
               }}
               placeholder="ဥပမာ — Su Su Fashion"
-              className="w-full rounded-xl border border-cream-200 bg-cream-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
             />
           </label>
 
           <label className="block">
-            <span className="my mb-1.5 block text-sm font-semibold text-ink">ဆိုင် Link</span>
-            <div className="flex items-center gap-1 rounded-xl border border-cream-200 bg-cream-50 px-3.5 py-2.5 focus-within:border-brand-400">
-              <span className="my shrink-0 text-sm text-ink-soft">/s/</span>
+            <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင် Link</span>
+            <div className="flex items-center gap-1 rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 focus-within:border-brand-400">
+              <span className="my shrink-0 text-sm text-slate-500">/s/</span>
               <input
                 value={slug}
                 onChange={(e) => {
@@ -130,12 +130,12 @@ export default function Onboarding() {
                   setSlugTouched(true);
                 }}
                 placeholder="su-su-fashion"
-                className="my w-full bg-transparent text-sm outline-none placeholder:text-ink-soft"
+                className="my w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
               />
             </div>
-            <span className="my mt-1 block text-xs text-ink-soft">
+            <span className="my mt-1 block text-xs text-slate-500">
               ဆိုင် link — {slug.trim() ? (
-                <span className="font-semibold text-brand-600">/s/{slug.trim()}</span>
+                <span className="font-semibold text-[#e11d48]">/s/{slug.trim()}</span>
               ) : (
                 'ဖောက်သည်ကို မျှဝေမည့် အမြဲတမ်း လိပ်စာ'
               )}
@@ -144,41 +144,41 @@ export default function Onboarding() {
           </label>
 
           <label className="block">
-            <span className="my mb-1.5 block text-sm font-semibold text-ink">ဖုန်းနံပါတ် (ရွေးချယ်)</span>
+            <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဖုန်းနံပါတ် (ရွေးချယ်)</span>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09xxxxxxxxx"
-              className="w-full rounded-xl border border-cream-200 bg-cream-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
             />
           </label>
 
           <label className="block">
-            <span className="my mb-1.5 block text-sm font-semibold text-ink">ပုံမှန် ပို့ခ (Ks)</span>
+            <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ပုံမှန် ပို့ခ (Ks)</span>
             <input
               inputMode="numeric"
               value={fee}
               onChange={(e) => setFee(e.target.value)}
-              className="w-full rounded-xl border border-cream-200 bg-cream-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
             />
-            <span className="my mt-1 block text-xs text-ink-soft">
+            <span className="my mt-1 block text-xs text-slate-500">
               ဒေသအလိုက် ပို့ခ သတ်မှတ်ချက်မရှိလျှင် ဒီပမာဏကို သုံးမည် (နောက်မှ ပြင်နိုင်သည်)
             </span>
           </label>
 
           {err && (
-            <p className="my flex items-center gap-1.5 text-sm text-brand-600">
+            <p className="my flex items-center gap-1.5 text-sm text-[#e11d48]">
               <ShieldAlert className="h-4 w-4 shrink-0" /> {err}
             </p>
           )}
 
           <button
             disabled={saving}
-            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50">
+            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e11d48] py-3 text-sm font-bold text-slate-950 transition hover:bg-[#be123c] disabled:opacity-50">
             <Store className="h-4 w-4" /> {saving ? 'ဖန်တီးနေသည်…' : 'ဆိုင် ဖန်တီးရန်'}
           </button>
 
-          <p className="my pt-1 text-center text-xs text-ink-soft">
+          <p className="my pt-1 text-center text-xs text-slate-500">
             Logo၊ ငွေလွှဲအကောင့်၊ ပို့ဆောင်ခ ဇုန်များကို ဆိုင်ဖွင့်ပြီးမှ “ဆိုင် ချိန်ညှိ” တွင် ထည့်နိုင်သည်။
           </p>
         </form>
