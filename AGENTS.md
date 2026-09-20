@@ -11,7 +11,7 @@ two can never drift apart.**
    hazards, conventions. Read it before changing any structure. It is not optional
    background: the layering it describes is a build gate (see "Enforcement" below).
 2. **[`PROJECT.md`](PROJECT.md)** — the project's memory, not a README: product
-   context, the decision log (D1–D46), open tasks, current status. Read it before
+   context, the decision log (D1–D47), open tasks, current status. Read it before
    making architectural changes, and add a decision entry when you make one.
 3. **[`supabase/README.md`](supabase/README.md)** — schema, the security model, and
    how migrations are applied.
