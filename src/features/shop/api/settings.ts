@@ -4,6 +4,7 @@
 // able to self-upgrade.
 
 import {requireSupabase} from '@/core/supabase/client';
+import {mapDbError} from '@/domain/dbError';
 import type {TablesUpdate} from '@/core/supabase/database.types';
 import type {ShopPlan, ShopSettings, ShopSettingsPatch} from '@/domain/shop';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
@@ -43,7 +44,9 @@ export const shopSettingsApi = {
     if (patch.logoUrl !== undefined) dbPatch.logo_url = patch.logoUrl;
     if (patch.defaultDeliveryFee !== undefined) dbPatch.default_delivery_fee = patch.defaultDeliveryFee;
     const {data, error} = await sb.from('shops').update(dbPatch).eq('id', shopId).select('id').maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ဆိုင် အချက်အလက် သိမ်း၍မရပါ။');
+    // The shops trigger raises plan_is_platform_managed / owner_is_platform_managed /
+    // business_plan_required (0007) — surface those as Burmese, not raw codes.
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ဆိုင် အချက်အလက် သိမ်း၍မရပါ။'));
     return {ok: true};
   },
 };
