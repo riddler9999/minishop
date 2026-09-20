@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Menu, Search, ShoppingBag, X} from 'lucide-react';
+import {Home, Package, Search, ShoppingBag, UserRound, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
@@ -27,9 +27,9 @@ function Brand() {
 }
 
 const DRAWER_NAV = [
-  {to: '/', label: 'ပင်မစာမျက်နှာ'},
-  {to: '/products', label: 'ပစ္စည်းများ'},
-  {to: '/orders', label: 'အော်ဒါရှာရန်'},
+  {to: '/', label: 'ပင်မစာမျက်နှာ', icon: Home},
+  {to: '/products', label: 'ပစ္စည်းများ', icon: Package},
+  {to: '/orders', label: 'အော်ဒါရှာရန်', icon: Search},
 ];
 
 export default function Layout({children}: {children: React.ReactNode}) {
@@ -96,12 +96,26 @@ export default function Layout({children}: {children: React.ReactNode}) {
               <div><p className="text-2xl font-bold text-slate-950">{shopName}</p><p className="mt-1 text-xs font-medium text-[#e11d48]">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
               <button type="button" aria-label="မီနူးပိတ်ရန်" onClick={() => setMenuOpen(false)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-[#f3eadf]"><X className="h-6 w-6" /></button>
             </div>
-            <nav className="mt-7 flex flex-col">
-              {DRAWER_NAV.map((item) => <ShopLink key={item.to} to={item.to} className="border-b border-rose-100 py-5 text-2xl font-semibold text-slate-900 transition hover:pl-1 hover:text-[#e11d48]">{item.label}</ShopLink>)}
+            <nav className="mt-7 grid grid-cols-3 gap-4">
+              {DRAWER_NAV.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <ShopLink
+                    key={item.to}
+                    to={item.to}
+                    aria-label={item.label}
+                    title={item.label}
+                    className="grid aspect-square place-items-center rounded-2xl border border-rose-100 text-slate-900 transition hover:border-[#e11d48] hover:bg-rose-50 hover:text-[#e11d48]">
+                    <Icon className="h-7 w-7" strokeWidth={1.7} />
+                  </ShopLink>
+                );
+              })}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
-              <p className="text-xs leading-5 text-slate-500">ဆိုင်မှာရှိတဲ့ ဖက်ရှင်ပစ္စည်းအားလုံးကို တစ်နေရာတည်းမှာ ရွေးချယ်ဝယ်ယူနိုင်ပါတယ်။</p>
-              <ShopLink to="/products" className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">ပစ္စည်းများကြည့်ရန်</ShopLink>
+              <ShopLink to="/account" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
+                <UserRound className="h-5 w-5" strokeWidth={1.8} />
+                Account
+              </ShopLink>
             </div>
           </aside>
         </div>
