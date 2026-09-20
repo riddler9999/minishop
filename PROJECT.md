@@ -285,6 +285,46 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 
 ## အရေးကြီး Architecture Decisions
 
+### D47 — Agent Readiness နဲ့ Documentation Truth Audit
+
+D46 restructure ပြီးတဲ့နောက် repo ကို coding agents တွေအတွက် တကယ်အသင့်ဖြစ်/မဖြစ်နဲ့ documentation က code အတိုင်းမှန်/မမှန် ပြန်စစ်ခဲ့တယ်။
+
+တွေ့ခဲ့တာ နှစ်မျိုးရှိတယ်:
+
+1. D46 မှာ file တွေရွှေ့ပြီးနောက် comment 24 နေရာက path အဟောင်းတွေကို ဆက်ညွှန်နေတယ်။ `src/lib/backend.ts`, `src/lib/store.ts`, `src/lib/api.ts`, `src/pages/admin/Onboarding.tsx`, `src/data/products.ts` စတဲ့ stale path တွေကို လက်ရှိ path အသစ်တွေနဲ့ပြင်ထားတယ်။ Coding agent တွေအတွက် comment က navigation map ဖြစ်လို့ path မှားတာကို cosmetic issue လို့မယူဆရ။
+2. `.env.example`, `README.md`, `supabase/README.md`, `CLAUDE.md` ထဲက code နဲ့မကိုက်တော့တဲ့အချက်တွေကိုပြင်ထားတယ်။ အထူးသဖြင့် plan fallback က `business` မဟုတ်ဘဲ fail-closed `starter` ဖြစ်တာ၊ migration `0001`–`0007` အကုန်ရှိတာ၊ Storage နဲ့ anon rate limiting က ship ပြီးသားဖြစ်တာတွေကို မှန်အောင်ညှိထားတယ်။
+
+Codex နဲ့ အခြား non-Claude agents တွေအတွက် `AGENTS.md` အသစ်ထည့်ထားတယ်။ Rule နှစ်စုံ drift မဖြစ်အောင် `CLAUDE.md` ကို single source of truth အဖြစ်ညွှန်ထားတယ်။ Local Node version ကို CI နဲ့တူအောင် `.nvmrc` နဲ့ `package.json#engines` မှာ Node 22 သတ်မှတ်ထားတယ်။
+
+Owner ဆုံးဖြတ်ရန်ကျန်တာတွေက `.mcp.json`, repo ထဲ commit လုပ်ထားတဲ့ personal Claude plugin settings, vendored third-party skills နဲ့ PR template / formatter config ဖြစ်တယ်။ ဒီအချက်တွေက pilot blocker မဟုတ်ဘူး။
+
+### D46 — `src/` ကို Feature-first Architecture အဖြစ်ပြန်ဖွဲ့ပြီး Layering ကို Lint နဲ့ Enforce လုပ်ထားတယ်
+
+အရင် structure မှာ `src/lib/` က infrastructure, domain types, React providers နဲ့ utilities တွေ ရောနေတဲ့ 19-file dumping ground ဖြစ်နေတယ်။ `backend.ts` တစ်ဖိုင်တည်းမှာ buyer နဲ့ seller နှစ်ဖက်လုံးရဲ့ query တွေ 822 LOC အထိစုနေတယ်။ ပိုအရေးကြီးတာက production Supabase layer က domain types တွေကို localStorage demo backend ဖြစ်တဲ့ `lib/api.ts` ဆီက import လုပ်နေတဲ့ dependency inversion ရှိတယ်။
+
+Structure အသစ်:
+
+`domain/ ← core/, shared/ ← features/* ← data/ ← app/`
+
+- `domain/` — pure types နဲ့ rules
+- `core/` — Supabase client နဲ့ Storage infrastructure
+- `shared/` — cross-feature UI, hooks နဲ့ utilities
+- `features/*` — tenancy, catalog, cart, checkout, orders, shipping, billing, shop, auth, admin
+- `data/` — demo/live switch နဲ့ cross-feature API composition
+- `app/` — composition root နဲ့ routes
+
+ဒီ layering ကို convention အဖြစ်ရေးထားရုံမဟုတ်ဘဲ `eslint.config.js` ရဲ့ `no-restricted-imports` နဲ့ enforce လုပ်ထားတယ်။ Feature တစ်ခုက နောက် feature ရဲ့ `api/` ကို import လုပ်တာ၊ page က `liveApi` ကိုတိုက်ရိုက်ခေါ်တာ၊ `domain/` က React/Supabase ကိုယူတာတွေ lint fail ဖြစ်မယ်။ `@/*` alias ကို repo root မဟုတ်ဘဲ `src/*` ကိုညွှန်ထားတယ်။
+
+ဒီပြောင်းလဲမှုက behavior-preserving restructure ဖြစ်ပြီး runtime logic ကိုပြန်မရေးထားဘူး။ Verification မှာ TypeScript clean, ESLint 0 errors, tests 7/7 pass, Vite build pass ဖြစ်တယ်။ မပါသေးတာတွေက DB error code 16 မျိုးကို Burmese copy နဲ့ map လုပ်ခြင်း၊ production bundle က demo layer ဖယ်ခြင်းနဲ့ test/CI hardening ဖြစ်ပြီး open tasks အဖြစ်ဆက်ထားတယ်။
+
+### D45 — PR #24 နဲ့ PR #25 ကို Decision Log ထဲ Backfill လုပ်ထားတယ်
+
+PR #24 မှာ repo ရဲ့ ပထမဆုံး CI workflow ထည့်ခဲ့တယ်။ PR တိုင်းနဲ့ `main` မှာ lint → test → build run တယ်။ Native `node --test` test suite, `npm test` နဲ့ `npm run check` ကိုလည်းထည့်ထားတယ်။
+
+PR #25 production hardening မှာ migrations `0005_fix_storage_policy_path`, `0006_optimize_rls_and_fk_index`, `0007_production_hardening` ထည့်ပြီး 2026-09-16 ရက်နေ့မှာ live project ကို apply လုပ်ထားတယ်။ Plan resolution ကို fail-closed `starter` လုပ်ထားတယ်။ Supabase မရှိတဲ့ tenant route က demo shop ပြမယ့်အစား service unavailable ပြတယ်။ `vercel.json` မှာ CSP, HSTS နဲ့ `frame-ancestors` headers ထည့်ထားတယ်။
+
+`0007` ကြောင့် plan gating က frontend-only မဟုတ်တော့ဘဲ database ကပါ enforce လုပ်တယ်။ ဒါပေမယ့် DB typed error 16 မျိုးကို frontend မှာ Burmese message မပြောင်းရသေးလို့ ဥပမာ rate limit တိုက်ရင် buyer က `rate_limit_exceeded` raw string မြင်နိုင်တယ်။ ဒီအလုပ်ကို open task အဖြစ်ထားတယ်။
+
 ### D44 — Custom SMTP က Pilot Blocker
 
 Project မှာ custom SMTP မ configure ရသေးတာကို signup OTP rollout လုပ်ချိန်မှာတွေ့ခဲ့တယ်။ ဒီအချက်ကြောင့် Supabase email template editing ပိတ်ထားပြီး default mailer ကို production auth delivery အတွက် ယုံကြည်လို့မရဘူး။
