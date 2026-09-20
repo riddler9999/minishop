@@ -45,11 +45,11 @@ export default function ProductCard({product, variant = 'default', className}: {
           {hasPromo && <span className="text-[10px] text-[#8f8377] line-through sm:text-[11px]">{ks(product.price)}</span>}
         </div>
 
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
-          <button type="button" disabled={!product.inStock} onClick={quickAdd} className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[#e11d48] bg-white px-2 py-2 text-[11px] font-semibold text-[#e11d48] transition hover:bg-[#fff0f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 sm:text-xs">
+        <div className="mt-auto flex flex-col gap-1.5 pt-3">
+          <button type="button" disabled={!product.inStock} onClick={quickAdd} className="inline-flex min-h-8 items-center justify-center gap-1 rounded-lg border border-[#e11d48] bg-white px-2 py-1.5 text-[10px] font-semibold text-[#e11d48] transition hover:bg-[#fff0f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 sm:text-[11px]">
             <ShoppingBag className="h-3.5 w-3.5 shrink-0" /> ခြင်းထဲထည့်မည်
           </button>
-          <button type="button" disabled={!product.inStock} onClick={buyNow} className="min-h-10 rounded-xl bg-[#e11d48] px-2 py-2 text-[11px] font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:text-xs">ဝယ်မည်</button>
+          <button type="button" disabled={!product.inStock} onClick={buyNow} className="min-h-8 rounded-lg bg-[#e11d48] px-2 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:text-[11px]">ဝယ်မည်</button>
         </div>
       </div>
     </article>
@@ -57,5 +57,5 @@ export default function ProductCard({product, variant = 'default', className}: {
 }
 
 export function ProductCardSkeleton({compact = false}: {compact?: boolean}) {
-  return <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_12px_32px_rgba(86,46,62,0.08)]"><div className={cx(compact ? 'aspect-square' : 'aspect-4/5', 'animate-pulse bg-[#f8eef2]')} /><div className="space-y-2 p-3"><div className="h-4 w-3/4 animate-pulse rounded bg-rose-50" /><div className="h-4 w-1/3 animate-pulse rounded bg-rose-50" /><div className="grid grid-cols-2 gap-2 pt-2"><div className="h-10 animate-pulse rounded-xl bg-rose-50" /><div className="h-10 animate-pulse rounded-xl bg-rose-50" /></div></div></div>;
+  return <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-[0_12px_32px_rgba(86,46,62,0.08)]"><div className={cx(compact ? 'aspect-square' : 'aspect-4/5', 'animate-pulse bg-[#f8eef2]')} /><div className="space-y-2 p-3"><div className="h-4 w-3/4 animate-pulse rounded bg-rose-50" /><div className="h-4 w-1/3 animate-pulse rounded bg-rose-50" /><div className="space-y-1.5 pt-2"><div className="h-8 animate-pulse rounded-lg bg-rose-50" /><div className="h-8 animate-pulse rounded-lg bg-rose-50" /></div></div></div>;
 }
