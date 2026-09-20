@@ -28,7 +28,7 @@ export default function Storefront() {
         <Route path="shipping-policy" element={<PolicyPage title="ပို့ဆောင်သည့်ပုံစံ" />} />
         <Route path="refund-policy" element={<PolicyPage title="Refund Policy" />} />
         <Route path="privacy-policy" element={<PolicyPage title="Privacy Policy" />} />
-        <Route path="terms" element={<PolicyPage title="Terms of Service" />} />
+        <Route path="terms-of-service" element={<PolicyPage title="Terms of Service" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
