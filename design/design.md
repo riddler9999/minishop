@@ -115,11 +115,11 @@ pipeline. Don't design a screen that implies automatic payment confirmation.
 ## 4. Store themes
 
 The public storefront (`Home`, `Products`, `ProductDetail`, `Cart`, `Checkout`) currently
-ships one fixed visual theme — the pink/porcelain/cyan tokens in §2. A seller-selectable
+ships one fixed buyer visual direction — white, blush-pink surfaces, hot-pink actions, and tenant product imagery. Shared admin tokens remain defined in §2. A seller-selectable
 **store theme** (so a food seller doesn't look like a fashion seller) is a **proposed**
 feature; per-theme specs live in `design/themes/`:
 
-- `design/themes/minimal.md` — Minimal (Default): the current pink/porcelain look.
+- `design/themes/minimal.md` — Minimal (Default): the current white/blush-pink look.
 - `design/themes/bold.md` — Bold: dark/high-contrast variant of the same brand palette.
 - `design/themes/classic-shop.md` — Classic Shop: warm, food/grocery-oriented palette.
 
@@ -159,6 +159,4 @@ only records the target visual language.
 - Reduced motion: respect `prefers-reduced-motion` for `.fade-up`/`.card-lift`-style
   animations before adding a new motion-heavy pattern.
 
-This repo also vendors third-party UI/UX and accessibility skills for Claude Code sessions
-(see `.claude/skills/` and `.claude/settings.json`) — load them when doing real design work
-on these screens rather than re-deriving guidelines from scratch.
+Third-party UI/UX and accessibility skills are not vendored in this repository. Install or load them from the developer environment when needed. The only committed project-specific skill is `.claude/skills/supabase-migration/SKILL.md`.

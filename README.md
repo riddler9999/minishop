@@ -1,10 +1,10 @@
 # Mini Shop
 
-A mobile-first, multi-tenant storefront and seller admin console built with React, TypeScript, Vite, Tailwind CSS, and Supabase.
+A mobile-first, multi-tenant storefront and seller admin console for Myanmar online sellers, built with React, TypeScript, Vite, Tailwind CSS, and Supabase.
 
 ## Features
 
-- Customer storefront with product browsing and product details
+- Burmese-first white/blush-pink fashion storefront with tenant branding, product search, real categories, promotions, and product details
 - Cart, checkout, order confirmation, and order lookup
 - Seller authentication, onboarding, dashboard, product management, orders, shipping, and settings
 - Tenant storefront URLs at `/s/:slug`
@@ -17,7 +17,7 @@ A mobile-first, multi-tenant storefront and seller admin console built with Reac
 | File | What it is |
 | --- | --- |
 | [`CLAUDE.md`](CLAUDE.md) | Architecture, layering rules, conventions. Read before changing structure. |
-| [`PROJECT.md`](PROJECT.md) | Project memory: product context, decision log (D1–D47), open tasks, status. |
+| [`PROJECT.md`](PROJECT.md) | Project memory: product context, decision log (D1–D51), open tasks, status. |
 | [`supabase/README.md`](supabase/README.md) | Schema, security model, how migrations are applied. |
 | [`design/design.md`](design/design.md) | Design system and screen inventory. |
 
@@ -89,6 +89,23 @@ npm run dev
 | `VITE_DEFAULT_PLAN` | No | `starter` or `business`. Fallback only — `shops.plan` in the database is the source of truth. Resolution fails closed to `starter` when unset or invalid. |
 
 See [`.env.example`](.env.example) for details.
+
+## Repository structure
+
+```text
+src/
+  app/       Composition root and routes
+  core/      Supabase and storage infrastructure
+  data/      Demo/live backend adapters
+  domain/    Pure types and business rules
+  features/  Catalog, cart, checkout, orders, admin, auth, billing, shop, shipping, tenancy
+  shared/    Cross-feature UI and utilities
+supabase/    Migrations and backend documentation
+tests/       Node test-runner regression tests
+design/      Current design system and proposed themes
+```
+
+Repository-specific agent guidance lives in `AGENTS.md` and `CLAUDE.md`. Only the project-specific Supabase migration procedure is committed under `.claude/skills/`; third-party skills and personal plugin settings are intentionally kept out of the repository.
 
 ## Continuous integration
 

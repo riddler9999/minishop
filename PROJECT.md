@@ -146,17 +146,18 @@ Storage + DB row နှစ်ခုကြား shared transaction မရှိ�
 
 ## UI / Design
 
-Storefront နဲ့ Admin Dashboard ကို TikTok pink/cyan look ကနေ **premium minimalist boutique** direction ကို ပြောင်းထားတယ်။
+Buyer storefront ကို **white + blush-pink mobile-first fashion shop** direction နဲ့ ship လုပ်ထားတယ်။ Admin Dashboard ကတော့ compact analytics direction နဲ့ သီးခြားရှိတယ်။
 
-Design direction:
+Buyer storefront direction:
 
-- Near-black
-- Warm porcelain
-- Muted gold
-- Mobile-first storefront
+- White canvas + blush-pink surfaces + hot-pink CTA
+- Burmese-first buyer copy
+- Tenant shop name/logo
+- Real product-image hero
+- Query-based search နဲ့ tenant-derived category links
+- Real promotion product ရှိမှသာ promotion banner ပြခြင်း
 - Mobile bottom navigation
-- Category quick links
-- Simplified product actions
+- Existing ProductCard / cart / checkout / tenant routing ကို preserve လုပ်ခြင်း
 
 Design specs တွေကို `design/` အောက်မှာ reference အနေနဲ့ထားတယ်။
 
@@ -184,6 +185,7 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 - [x] Production Vercel deployment
 - [x] Core live browser verification
 - [x] Automated Starter ↔ Business gating verification
+- [x] Buyer storefront ကို white/blush-pink fashion direction ပြောင်းပြီး Burmese copy, real search/category links, product-image hero, real promotions နဲ့ mobile buyer chrome ship လုပ် (PR #31)
 - [x] CI pipeline (`lint → test → build`) နဲ့ ပထမဆုံး test suite (PR #24)
 - [x] Production hardening — rate limiting, plan/owner/billing ကို DB trigger နဲ့ enforce,
       CSP/HSTS header, fail-closed plan နဲ့ tenant routing (PR #25, migrations 0005–0007)
@@ -222,8 +224,6 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 ### P2 — Agent tooling (owner ဆုံးဖြတ်ရန်, blocking မဟုတ်)
 
 - [ ] `.mcp.json` မရှိ — Supabase/Vercel/GitHub MCP server တွေကို session တိုင်း ကိုယ်တိုင်ပြင်ရနေတယ်
-- [ ] `.claude/settings.json` က personal plugin ၂ ခုကို repo ထဲ commit လုပ်ထား၊ `permissions` block မရှိ
-- [ ] `.claude/skills/` = 4.5 MB / ဖိုင် ၁၉၃ ခု — `supabase-migration` တစ်ခုပဲ ဒီ repo အတွက်
 - [ ] PR template / `CONTRIBUTING.md` / `LICENSE` / formatter config မရှိ
 
 ### P1 — Real Device Verification
@@ -469,6 +469,12 @@ Phase-0 customer discovery pilot ကိုကျော်ပြီး product �
 ### D7 — Production Migration Safety Rule
 
 **Owner ရဲ့ explicit approval မရှိဘဲ production Supabase migration ကို apply မလုပ်ရ။**
+
+### D51 — Buyer Fashion Storefront + Repository Cleanup
+
+Buyer storefront ကို jewellery-specific presentation ကနေ white + blush-pink fashion direction ပြောင်းထားတယ်။ Buyer-facing copy က Burmese-first ဖြစ်ပြီး search နဲ့ category chips တွေက existing `/products?q=` / `/products?category=` contracts ကိုသုံးတယ်။ Promotion banner က real `isPromotion` product ရှိမှသာပြပြီး tenant routing, ProductCard, cart/checkout နဲ့ Supabase data flow ကိုမပြောင်းထားဘူး။
+
+Repo cleanup အနေနဲ့ runtime မှာမသုံးတော့တဲ့ jewellery assets နဲ့ `.jewel-cta` style ကိုဖယ်ထားတယ်။ Personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားတော့ဘူး။ Project-specific `.claude/skills/supabase-migration/SKILL.md` တစ်ခုပဲထားမယ်။ Third-party tools/skills ကို developer environment ကနေ install/use လုပ်ရမယ်။
 
 ### D50 — Admin Analytics Dashboard English + Shipping Removed
 

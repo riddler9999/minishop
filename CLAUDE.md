@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-tenant SaaS storefront for Myanmar TikTok sellers. A seller drops a `/s/<slug>` link in
 their TikTok bio; buyers order through a self-serve storefront that must work inside TikTok's
 in-app WebView (no native app, no bot/messaging API — this is **not** a sales agent). See
-`PROJECT.md` for full product context, decision log (D1–D49), open tasks, and status — read it
+`PROJECT.md` for full product context, decision log (D1–D51), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
 ## Session communication preference (standing, until this project is done)
@@ -181,5 +181,6 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   formatting or status logic elsewhere.
 - UI copy defaults to Burmese for buyer-facing text and seller-facing screens unless a screen-specific product decision records an English exception. D50 makes the Admin analytics dashboard English-only. Code comments and identifiers are English.
 - Tailwind v4 (via `@tailwindcss/vite`), not a `tailwind.config.js`-driven v3 setup.
+- Keep personal Claude plugin settings and vendored third-party skills out of the repository. Only the project-specific `.claude/skills/supabase-migration/SKILL.md` is committed.
 - Path alias `@/*` → `src/*` (see `tsconfig.json` / `vite.config.ts`). Use it for every
   cross-module import; `./` only for siblings inside the same folder.
