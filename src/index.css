@@ -122,8 +122,7 @@ textarea {
     transition: none !important;
   }
 
-  .card-lift:hover,
-  .jewel-cta:hover {
+  .card-lift:hover {
     transform: none;
   }
 }
