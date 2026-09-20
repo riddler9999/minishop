@@ -1,0 +1,1 @@
+Demo storefront image assets. Banner and product imagery are stored here so Vercel serves them from the same origin. Generated/optimized WebP assets are committed separately.
