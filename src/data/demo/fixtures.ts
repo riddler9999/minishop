@@ -1,17 +1,55 @@
 // ---- DEMO DATA -------------------------------------------------------------
 // This is a DEMO storefront. No backend / no database. All products, merchant
 // accounts and orders are fake, client-side data so the store can be deployed
-// as a pure static site (Vercel) with no secrets. Product photos are real
-// CLOTHING placeholders from loremflickr (keyword-matched per garment, with a
-// fixed `lock` so each product keeps the same stable image). Product names are
-// chosen to match the garment shown in the photo.
+// as a pure static site (Vercel) with no secrets. Product imagery is rendered
+// as self-contained, brand-styled `data:` SVG placeholders. The demo must not
+// depend on any external image host: a third-party host (loremflickr) proved
+// unreliable in production and broke every product photo. Inline `data:` images
+// always render, need no network round-trip, and require no CSP host allowance.
 
 import type {Product} from '@/domain/product';
 import type {MerchantAccount} from '@/domain/shop';
 
-// Clothing photo matched to a garment keyword; `lock` keeps the image stable.
-const img = (keyword: string, lock: number) =>
-  `https://loremflickr.com/800/1000/${keyword}?lock=${lock}`;
+// Per-category placeholder palette — soft brand tints, one distinct hue per group.
+const CATEGORY_THEME: Record<string, {bg: string; deep: string; accent: string}> = {
+  'အင်္ကျီ': {bg: '#ffe4ec', deep: '#fbb6ce', accent: '#e11d48'},
+  'ဂါဝန်': {bg: '#f3e8ff', deep: '#d8b4fe', accent: '#9333ea'},
+  'စကတ် & ဘောင်းဘီ': {bg: '#e0f2fe', deep: '#a5d8f3', accent: '#0284c7'},
+  'အနွေးထည်': {bg: '#fef3c7', deep: '#fcd9a1', accent: '#d97706'},
+};
+const FALLBACK_THEME = {bg: '#fff0f6', deep: '#fbcfe8', accent: '#e11d48'};
+
+// The Latin part of "မြန်မာ — English Name". SVG <text> rendered inside an <img>
+// cannot rely on a Myanmar webfont being present, so card labels stay Latin.
+const latinLabel = (name: string): string => {
+  const parts = name.split('—');
+  return (parts[1] ?? parts[0]).trim();
+};
+
+// A self-contained product-photo placeholder as a `data:` URI. `variant` rotates
+// the gradient per gallery image so a single product's images look distinct.
+const img = (name: string, category: string, variant: number): string => {
+  const t = CATEGORY_THEME[category] ?? FALLBACK_THEME;
+  const label = latinLabel(name);
+  const [x1, y1, x2, y2] = (['0 0 1 1', '1 0 0 1', '0 1 1 0'][variant % 3]).split(' ');
+  const font = "font-family='system-ui,-apple-system,Segoe UI,Roboto,sans-serif'";
+  const shirt =
+    'M280 330 L360 285 Q400 330 440 285 L520 330 L610 400 L560 470 ' +
+    'L505 435 L505 690 L295 690 L295 435 L240 470 L190 400 Z';
+  const svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='800' height='1000' viewBox='0 0 800 1000'>" +
+    `<defs><linearGradient id='g' x1='${x1}' y1='${y1}' x2='${x2}' y2='${y2}'>` +
+    `<stop offset='0' stop-color='${t.bg}'/><stop offset='1' stop-color='${t.deep}'/>` +
+    '</linearGradient></defs>' +
+    "<rect width='800' height='1000' fill='url(#g)'/>" +
+    "<circle cx='400' cy='450' r='250' fill='#ffffff' opacity='0.3'/>" +
+    `<path d='${shirt}' fill='#ffffff' opacity='0.85' stroke='${t.accent}' stroke-width='6' stroke-linejoin='round'/>` +
+    `<rect x='40' y='40' width='128' height='52' rx='18' fill='${t.accent}' opacity='0.92'/>` +
+    `<text x='104' y='75' text-anchor='middle' font-size='26' font-weight='700' fill='#ffffff' ${font}>DEMO</text>` +
+    `<text x='400' y='840' text-anchor='middle' font-size='42' font-weight='700' fill='#334155' ${font}>${label}</text>` +
+    '</svg>';
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
 
 interface DemoSeed {
   name: string;
@@ -21,8 +59,8 @@ interface DemoSeed {
   price: number;
   promoPrice?: number;
   stock: number;
-  keyword: string; // loremflickr tag(s) — the garment in the photo
-  locks: number[]; // one per gallery image
+  keyword: string; // garment descriptor (documents the item; not a network dependency)
+  locks: number[]; // one entry per gallery image — its length sets the image count
   description: string;
 }
 
@@ -170,7 +208,7 @@ const SEEDS: DemoSeed[] = [
 
 // Build full Product objects (matches the api.ts Product shape 1:1).
 export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
-  const images = s.locks.map((lock) => img(s.keyword, lock));
+  const images = s.locks.map((_lock, variant) => img(s.name, s.category, variant));
   const isPromotion = s.promoPrice != null;
   const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
   return {
