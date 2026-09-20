@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Home, Package, Search, ShoppingBag, UserRound, X} from 'lucide-react';
+import {Home, Package, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
@@ -112,8 +112,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
               })}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
-              <ShopLink to="/account" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-                <UserRound className="h-5 w-5" strokeWidth={1.8} />
+              <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
                 Account
               </ShopLink>
             </div>
