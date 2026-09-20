@@ -29,7 +29,7 @@ export default function ProductDiscoveryComparison() {
             <br />
             တစ်နေရာတည်းမှာ
           </div>
-          <div className="grid">
+          <div className="product-grid">
             {landingProducts.map((product) => (
               <div key={product.label}>
                 <span>{product.icon}</span>
