@@ -11,8 +11,8 @@ type PayMethod = 'cod' | 'kpay' | 'wave';
 
 const METHODS: {key: PayMethod; label: string; sub: string}[] = [
   {key: 'cod', label: 'Cash on Delivery', sub: 'အိမ်ရောက် ငွေချေ'},
-  {key: 'kpay', label: 'KBZPay', sub: 'ကြိုတင် ငွေလွှဲ'},
-  {key: 'wave', label: 'WavePay', sub: 'ကြိုတင် ငွေလွှဲ'},
+  {key: 'kpay', label: 'KBZPay', sub: 'ငွေကြိုရှင်း'},
+  {key: 'wave', label: 'WavePay', sub: 'ငွေကြိုရှင်း'},
 ];
 
 export default function Checkout() {
@@ -225,11 +225,7 @@ export default function Checkout() {
               <div className="font-display text-2xl font-bold text-[#e11d48]">{fee != null ? ks(grandTotal) : '—'}</div>
             </div>
 
-            {method === 'cod' ? (
-              <p className="my mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-slate-950">
-                🚚 ပစ္စည်း အိမ်တိုင်ရာရောက် ပို့ဆောင်ချိန်တွင် ငွေပေးချေနိုင်ပါသည်။ အခု ကြိုတင်ပေးစရာ မလိုပါ။
-              </p>
-            ) : (
+            {method !== 'cod' && (
               <>
                 <div className="mt-3 space-y-2">
                   {providerAccounts.map((a) => (
@@ -240,7 +236,7 @@ export default function Checkout() {
                       </div>
                       <button
                         onClick={() => copy(a.phone, a.phone)}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#e11d48] px-3 py-2 text-xs font-bold text-white hover:bg-[#be123c]">
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e11d48] px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#be123c]">
                         {copied === a.phone ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                         {copied === a.phone ? 'ကူးပြီး' : 'ကူးမယ်'}
                       </button>
@@ -248,16 +244,10 @@ export default function Checkout() {
                   ))}
                   {providerAccounts.length === 0 && <p className="my text-sm text-slate-500">အကောင့် မရရှိနိုင်ပါ။</p>}
                 </div>
-                {fee != null && (
-                  <p className="my mt-3 text-sm text-slate-500">
-                    👆 ဤနံပါတ်သို့ <b className="text-[#e11d48]">{ks(grandTotal)}</b> လွှဲပြီး အောက်တွင် transaction ၏ နောက်ဆုံး ၅ လုံး ဖြည့်ပါ။
-                  </p>
-                )}
-
                 {/* Payment reference — last 5 digits of the transfer (WebView-safe; no slip upload). */}
                 <div className="mt-4">
                   <label htmlFor="checkout-reftail" className={label}>
-                    ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံး <span className="text-[#e11d48]">*</span>
+                    Transaction နံပါတ်၏ နောက်ဆုံးဂဏန်း ၅လုံး ဖြည့်ပေးပါ <span className="text-[#e11d48]">*</span>
                   </label>
                   <input
                     id="checkout-reftail"
@@ -268,9 +258,6 @@ export default function Checkout() {
                     inputMode="numeric"
                     maxLength={5}
                   />
-                  <p className="my mt-2 text-xs text-slate-500">
-                    KBZPay / WavePay transaction ID ၏ နောက်ဆုံး ၅ လုံးကို ရိုက်ထည့်ပါ — ဆိုင်မှ ပမာဏနှင့် တိုက်ဆိုင်စစ်ဆေး၍ အတည်ပြုပေးပါမည်။
-                  </p>
                 </div>
               </>
             )}
@@ -311,10 +298,9 @@ export default function Checkout() {
             {submitting ? (
               <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> တင်နေသည်…</span>
             ) : (
-              <>✅ ဒါပဲ ဝယ်တော့မယ် {fee != null && `— ${ks(grandTotal)}`}</>
+              <>✅ အော်ဒါတင်မည် {fee != null && `— ${ks(grandTotal)}`}</>
             )}
           </button>
-          {!ready && <p className="my text-center text-xs text-slate-500">အမည်၊ ဖုန်း၊ လိပ်စာ၊ တိုင်း/မြို့နယ် ဖြည့်ပါ။</p>}
         </div>
       </div>
     </div>
