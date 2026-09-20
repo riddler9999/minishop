@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import {Navigate, useLocation} from 'react-router-dom';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {getOwnShop} from '@/features/shop/sellerShop';
+import {settleOwnShopLookup} from '@/domain/shopAccess';
 
 // Route guard for the admin console: requires a real Supabase session AND an
 // onboarded shop (a `shops` row owned by that session's user). A session
@@ -27,9 +28,12 @@ export default function RequireAdmin({children}: {children: React.ReactNode}) {
     let alive = true;
     setChecking(true);
     setLoadError(false);
-    getOwnShop(user.id)
-      .then((shop) => alive && setHasShop(Boolean(shop)))
-      .catch(() => alive && setLoadError(true))
+    settleOwnShopLookup(() => getOwnShop(user.id))
+      .then((result) => {
+        if (!alive) return;
+        if (result.status === 'error') setLoadError(true);
+        else setHasShop(Boolean(result.shop));
+      })
       .finally(() => alive && setChecking(false));
     return () => {
       alive = false;

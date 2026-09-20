@@ -13,8 +13,27 @@
 -- Adding this constraint makes that invariant real. It also lets createOwnShop
 -- treat an owner collision as "shop already exists" and recover idempotently.
 --
--- NOTE: this fails if duplicate rows already exist. Resolve any duplicates
--- before applying (none expected on the current single-tenant-per-owner data).
+-- ============================================================================
+-- BEFORE APPLYING — this migration FAILS if duplicate `owner_id` rows already
+-- exist (the UNIQUE constraint cannot be created over them). Run this read-only
+-- check first; it must return ZERO rows before you apply. It only reads — it
+-- neither deletes nor merges anything, and resolving any duplicates it surfaces
+-- is a manual, owner-approved decision (never automate row deletion/merge):
+--
+--   select owner_id, count(*) as shop_count, array_agg(id) as shop_ids
+--   from public.shops
+--   group by owner_id
+--   having count(*) > 1;
+--
+-- Never apply to production without the owner's explicit go-ahead — see
+-- .claude/skills/supabase-migration/SKILL.md.
+-- ============================================================================
 
 alter table public.shops
   add constraint shops_owner_unique unique (owner_id);
+
+-- The UNIQUE constraint above is backed by its own unique index on (owner_id),
+-- so the pre-existing non-unique index is now redundant — drop it to avoid
+-- maintaining two indexes on the same column. `if exists` keeps this safe on a
+-- database where the index was never created.
+drop index if exists public.shops_owner_idx;

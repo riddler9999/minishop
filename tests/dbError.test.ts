@@ -21,20 +21,23 @@ const SUPERSEDED_OCCURRENCES = new Set([
   '0001_init_saas.sql:order_no_generation_failed',
 ]);
 
-// Every code raised via `raise exception '<code>'` across ALL migration files
-// (the `:%`/`:v_id` format suffix on the stock codes is naturally excluded by
-// the pattern). Scanning the whole directory — not just 0007 — is what makes
-// this a real guard: a future 0008 raising a new typed code trips it too.
-async function codesRaisedByMigrations(): Promise<Set<string>> {
+// Every `<file>:<code>` occurrence of `raise exception '<code>'` across ALL
+// migration files (the `:%`/`:v_id` format suffix on the stock codes is
+// naturally excluded by the pattern). Scanning the whole directory — not just
+// 0007 — is what makes this a real guard: a future migration raising a new
+// typed code trips it too. Keyed by file so a superseded occurrence (a code a
+// later CREATE OR REPLACE dropped, still present in the older file's text) can
+// be excluded without also excusing a live code of the same name.
+async function occurrencesRaisedByMigrations(): Promise<Set<string>> {
   const names = (await readdir(migrationsDir)).filter((n) => n.endsWith('.sql')).sort();
-  const codes = new Set<string>();
+  const occurrences = new Set<string>();
   for (const name of names) {
     const sql = await readFile(new URL(name, migrationsDir), 'utf8');
     for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)/gi)) {
-      codes.add(m[1]);
+      occurrences.add(`${name}:${m[1]}`);
     }
   }
-  return codes;
+  return occurrences;
 }
 
 describe('mapDbError', () => {
@@ -82,10 +85,12 @@ describe('mapDbError', () => {
     // Real drift guard: reads the codes out of every migration's SQL and asserts
     // the catalog covers each live one. A new/renamed typed code in a future
     // migration (e.g. 0008) fails here until it is added to DB_ERROR_MESSAGES.
-    const raised = await codesRaisedByMigrations();
-    assert.ok(raised.size > 0, 'expected to parse at least one raised code from the migrations');
-    for (const code of raised) {
-      assert.ok(code in DB_ERROR_MESSAGES, `catalog is missing a message for '${code}'`);
+    const occurrences = await occurrencesRaisedByMigrations();
+    assert.ok(occurrences.size > 0, 'expected to parse at least one raised code from the migrations');
+    for (const occurrence of occurrences) {
+      if (SUPERSEDED_OCCURRENCES.has(occurrence)) continue;
+      const code = occurrence.slice(occurrence.indexOf(':') + 1);
+      assert.ok(code in DB_ERROR_MESSAGES, `catalog is missing a message for '${code}' (${occurrence})`);
     }
   });
 });

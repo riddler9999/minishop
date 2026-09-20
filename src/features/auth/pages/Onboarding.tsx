@@ -10,18 +10,8 @@ import {ShieldAlert, Store} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {createOwnShop, getOwnShop} from '@/features/shop/sellerShop';
 import {APP_INITIAL} from '@/shared/lib/brand';
-import {SLUG_RE} from '@/domain/slug';
-
-function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .slice(0, 40)
-    // Trim hyphens AFTER slicing: truncating at the 40-char boundary can land
-    // on a hyphen, and a trailing '-' would fail SLUG_RE and force a manual fix.
-    .replace(/^-+|-+$/g, '');
-}
+import {SLUG_RE, slugify} from '@/domain/slug';
+import {settleOwnShopLookup} from '@/domain/shopAccess';
 
 export default function Onboarding() {
   const {loading: authLoading, session, user} = useAdminAuth();
@@ -49,9 +39,12 @@ export default function Onboarding() {
     let alive = true;
     setChecking(true);
     setLoadError(false);
-    getOwnShop(user.id)
-      .then((shop) => alive && setHasShop(Boolean(shop)))
-      .catch(() => alive && setLoadError(true))
+    settleOwnShopLookup(() => getOwnShop(user.id))
+      .then((result) => {
+        if (!alive) return;
+        if (result.status === 'error') setLoadError(true);
+        else setHasShop(Boolean(result.shop));
+      })
       .finally(() => alive && setChecking(false));
     return () => {
       alive = false;
