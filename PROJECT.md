@@ -298,7 +298,7 @@ Mapping ကို **API boundary** မှာသာ ချိတ်ထားတ�
 အဲဒီ path ကို ဦးစားပေးချိတ်ထားတယ်)၊ နဲ့ product create/update။ DB က enforcement boundary
 (RLS + trigger) ဆက်ဖြစ်ပြီး frontend က render/copy သာ ဆုံးဖြတ်တဲ့ separation ကို ထိန်းထားတယ်။
 `tests/dbError.test.ts` က migration SQL ထဲက raised code တွေကို ထုတ်ဖတ်ပြီး catalog နဲ့ တိုက်စစ်တဲ့
-drift guard ပါဝင်တယ် — migration အသစ်တစ်ခုက code အသစ်/အမည်ပြောင်းရင် test fail ဖြစ်မယ်။
+drift guard ပါဝင်တယ် — migration 0007 ထဲက code တိုး/ဖယ်/အမည်ပြောင်းတာနဲ့ catalog မကိုက်ရင် test fail ဖြစ်မယ်။ နောက် migration မှာ typed code အသစ်ထည့်ရင် catalog နဲ့ contract test scope ကို အတူ update လုပ်ရမယ်။
 
 ### D47 — Agent Readiness နဲ့ Documentation Truth Audit
 
