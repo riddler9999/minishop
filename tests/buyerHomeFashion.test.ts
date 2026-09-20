@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const homePath = new URL('../src/features/catalog/pages/Home.tsx', import.meta.url);
 const layoutPath = new URL('../src/shared/ui/Layout.tsx', import.meta.url);
+const landingCssPath = new URL('../src/features/landing/pages/landing.css', import.meta.url);
 
 async function readHome() {
   return readFile(homePath, 'utf8');
@@ -52,6 +53,12 @@ test('buyer storefront uses Burmese fashion copy and removes jewellery presentat
   }
 });
 
+test('landing stylesheet does not leak generic nav or grid selectors into storefront', async () => {
+  const css = await readFile(landingCssPath, 'utf8');
+
+  assert.equal(/(^|})\.nav\{/.test(css), false, 'landing .nav must not override storefront bottom nav');
+  assert.equal(/(^|})\.grid\{/.test(css), false, 'landing .grid must not override Tailwind grid utility');
+});
 
 test('buyer shell keeps a stable responsive header and bottom navigation contract', async () => {
   const source = await readFile(layoutPath, 'utf8');
