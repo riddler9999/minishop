@@ -17,7 +17,7 @@ A mobile-first, multi-tenant storefront and seller admin console built with Reac
 | File | What it is |
 | --- | --- |
 | [`CLAUDE.md`](CLAUDE.md) | Architecture, layering rules, conventions. Read before changing structure. |
-| [`PROJECT.md`](PROJECT.md) | Project memory: product context, decision log (D1–D46), open tasks, status. |
+| [`PROJECT.md`](PROJECT.md) | Project memory: product context, decision log (D1–D47), open tasks, status. |
 | [`supabase/README.md`](supabase/README.md) | Schema, security model, how migrations are applied. |
 | [`design/design.md`](design/design.md) | Design system and screen inventory. |
 
