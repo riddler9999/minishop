@@ -1,0 +1,16 @@
+import {Link} from 'react-router-dom';
+import './landing.css';
+
+const products = ['👕','🎧','🧴','🎒','⌚','☕'];
+
+export default function Landing(){
+  return <main className="landing">
+    <nav className="nav"><div className="brand">▢ <b>MiniShop</b></div><div className="links"><a href="#how">ဘယ်လိုအလုပ်လုပ်လဲ</a><a href="#use">အသုံးပြုနိုင်တာများ</a><Link to="/admin/login">Login</Link><Link className="btn small" to="/admin/onboarding">ကိုယ့်ဆိုင်ကို စဖွင့်မယ် →</Link></div></nav>
+    <section className="hero">
+      <div className="copy"><span className="eyebrow">Social Media ကနေ ကိုယ့် Online Shop အထိ</span><h1>မမြင်ရတဲ့ပစ္စည်းကို<br/>Customer က <em>ဝယ်လို့မရဘူး။</em></h1><p>Social Media မှာ Post တစ်ခု၊ Message တစ်ခုနဲ့ ကိုယ့်ဆိုင်မှာရှိတဲ့ ပစ္စည်းအားလုံးကို ပြဖို့မလွယ်ပါဘူး။</p><p><b>MiniShop နဲ့ ကိုယ့်ပစ္စည်းအားလုံးကို တစ်နေရာတည်းမှာ စုထားပြီး Customer ကို ကြည့်ခိုင်းလိုက်ပါ။</b></p><p>သူတို့လိုချင်တဲ့ပစ္စည်းတစ်ခုကို လာကြည့်ရင်း တခြားပစ္စည်းတွေကိုပါ ရှာတွေ့နိုင်မယ်။</p><div className="promise">ပစ္စည်းတွေ ပိုမြင်ရလေလေ၊<br/><b>ဝယ်ဖို့အခွင့်အရေး ပိုများလေလေ။</b></div><div className="actions"><Link className="btn" to="/admin/onboarding">ကိုယ့်ဆိုင်ကို စဖွင့်မယ် →</Link><a className="btn ghost" href="/s/demo">Demo ကြည့်မယ်</a></div></div>
+      <div className="compare"><div><h3>Social Media မှာ</h3><div className="phone chat"><small>Customer</small><div className="bubble">ဒီပစ္စည်း ဈေးဘယ်လောက်လဲ?</div><div className="single">👟<b>Sneakers</b><span>MMK 45,000</span></div><div className="bubble muted">တခြားပစ္စည်းတွေရော?</div></div><p>ပစ္စည်းတစ်ခုချင်းစီပဲ မြင်ရတယ်</p></div><div className="arrow">→</div><div><h3>MiniShop နဲ့</h3><div className="phone shop"><b>MiniShop</b><div className="shopTitle">ပစ္စည်းအားလုံး<br/>တစ်နေရာတည်းမှာ</div><div className="grid">{products.map((x,i)=><div key={i}><span>{x}</span><small>{['Fashion','Audio','Beauty','Bags','Watches','Food'][i]}</small></div>)}</div></div><p>ကိုယ့်ဆိုင်တစ်ခုလုံးကို ကြည့်နိုင်တယ်</p></div></div>
+    </section>
+    <section id="how" className="how"><h2>ဘယ်လိုအလုပ်လုပ်လဲ?</h2><div className="steps">{[['01','ကိုယ့်ဆိုင်ကို ဖန်တီးမယ်','ပစ္စည်းတွေကို MiniShop ထဲ ထည့်ပါ။'],['02','Link ကို မျှဝေမယ်','Social Media bio, post နဲ့ message မှာ link ကိုထည့်ပါ။'],['03','Customer က ကြည့်မယ်','ကိုယ့်ပစ္စည်းအားလုံးကို တစ်နေရာတည်းမှာ ကြည့်နိုင်မယ်။'],['04','Order ရလာမယ်','ကြိုက်တဲ့ပစ္စည်းကို ရွေးပြီး order တင်နိုင်မယ်။']].map(s=><article key={s[0]}><span>{s[0]}</span><h3>{s[1]}</h3><p>{s[2]}</p></article>)}</div></section>
+    <section id="use" className="use"><div><span className="eyebrow">ပစ္စည်းအမျိုးအစား မရွေး</span><h2>သင့်ပစ္စည်းတွေကို<br/>ပိုမြင်ရအောင် ပြလိုက်ပါ။</h2><p>Fashion ကနေ Electronics၊ Beauty၊ Food နဲ့ Home products အထိ — Social Media ပေါ်မှာ ရောင်းနေတဲ့ ဆိုင်တိုင်းအတွက်။</p><Link className="btn" to="/admin/onboarding">ကိုယ့်ဆိုင်ကို စဖွင့်မယ် →</Link></div><div className="catalog">{products.map((x,i)=><div key={i}><span>{x}</span><b>{['အဝတ်အထည်','အီလက်ထရွန်းနစ်','အလှကုန်','အိတ်နှင့် Accessories','နာရီ','စားသောက်ကုန်'][i]}</b></div>)}</div></section>
+  </main>
+}
