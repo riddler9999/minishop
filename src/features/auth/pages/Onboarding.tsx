@@ -63,7 +63,7 @@ export default function Onboarding() {
           <p className="my text-sm text-slate-500">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
           <button
             onClick={() => setRetry((n) => n + 1)}
-            className="my mt-4 rounded-xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-[#be123c]">
+            className="my mt-4 rounded-xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#be123c]">
             ထပ်ကြိုးစားရန်
           </button>
         </div>
@@ -121,7 +121,7 @@ export default function Onboarding() {
 
           <label className="block">
             <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင် Link</span>
-            <div className="flex items-center gap-1 rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 focus-within:border-brand-400">
+            <div className="flex items-center gap-1 rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 focus-within:border-[#e11d48]">
               <span className="my shrink-0 text-sm text-slate-500">/s/</span>
               <input
                 value={slug}
@@ -174,7 +174,7 @@ export default function Onboarding() {
 
           <button
             disabled={saving}
-            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e11d48] py-3 text-sm font-bold text-slate-950 transition hover:bg-[#be123c] disabled:opacity-50">
+            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e11d48] py-3 text-sm font-bold text-white transition hover:bg-[#be123c] disabled:opacity-50">
             <Store className="h-4 w-4" /> {saving ? 'ဖန်တီးနေသည်…' : 'ဆိုင် ဖန်တီးရန်'}
           </button>
 
