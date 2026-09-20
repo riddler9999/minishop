@@ -13,8 +13,7 @@ before making architectural changes; it is the project's memory, not just a READ
 ## Session communication preference (standing, until this project is done)
 
 - Reply to the user in Burmese (မြန်မာဘာသာ) throughout the session. This is about the chat
-  reply itself, not code — it doesn't change the "UI copy is Burmese; code comments/identifiers
-  are English" rule below.
+  reply itself, not code — it does not change the UI-language rules below.
 - End every reply with one explicit line: if there is a next action the user themselves needs to
   take, state it plainly in Burmese, give the exact prompt text to use verbatim, and say whether
   it should be pasted into a **new session** or the **current chat**. If nothing is needed from
@@ -180,7 +179,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   labels shared by storefront + admin), `src/shared/lib/brand.ts` (product-neutral app name/
   branding, used outside `PlanProvider`) are shared utilities — check them before adding parallel
   formatting or status logic elsewhere.
-- UI copy is Burmese for all buyer/seller-facing text; code comments and identifiers are English.
+- UI copy defaults to Burmese for buyer-facing text and seller-facing screens unless a screen-specific product decision records an English exception. D50 makes the Admin analytics dashboard English-only. Code comments and identifiers are English.
 - Tailwind v4 (via `@tailwindcss/vite`), not a `tailwind.config.js`-driven v3 setup.
 - Path alias `@/*` → `src/*` (see `tsconfig.json` / `vite.config.ts`). Use it for every
   cross-module import; `./` only for siblings inside the same folder.

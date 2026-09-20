@@ -470,6 +470,14 @@ Phase-0 customer discovery pilot ကိုကျော်ပြီး product �
 
 **Owner ရဲ့ explicit approval မရှိဘဲ production Supabase migration ကို apply မလုပ်ရ။**
 
+### D50 — Admin Analytics Dashboard English + Shipping Removed
+
+Admin analytics dashboard copy ကို English-only အဖြစ်ထားမယ်။ Buyer storefront နဲ့ တခြား screen တွေရဲ့ language rule ကို ဒီ decision က မပြောင်းဘူး။ Screen-specific exception အဖြစ်ပဲ သတ်မှတ်တယ်။
+
+Redesigned admin navigation မှာ Shipping entry ကို မပြတော့ဘူး။ Underlying shipping capability / route / data ကို ဒီ UI change က မဖျက်ဘူး; navigation surface ကနေပဲ ဖယ်ထားတာ။
+
+"New Orders" section က badge နဲ့ list ကို တစ်မျိုးတည်းသော source (`OPEN_STATUSES`) ကနေယူရမယ်။ Action လိုတဲ့ order count ကိုပြပြီး completed order list ပြတာမျိုး semantic mismatch မဖြစ်စေရ။
+
 ## Engineering Notes / Standing Rules
 
 - `plan.tsx` က JSX provider export လုပ်တဲ့အတွက် `.tsx` ဖြစ်ရမယ်။

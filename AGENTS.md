@@ -51,8 +51,7 @@ this is **not** a sales agent.
   `service_role` key. RLS is the enforcement boundary, not the frontend.
 - **Use the `@/*` alias** (→ `src/*`) for every cross-module import; plain `./` only
   for siblings in the same folder.
-- **UI copy is Burmese** for all buyer- and seller-facing text; **code comments and
-  identifiers are English**.
+- **UI copy defaults to Burmese** for buyer-facing text and seller-facing screens unless a screen-specific product decision records an English exception. **D50 makes the Admin analytics dashboard English-only.** Code comments and identifiers are English.
 - **Keep comments truthful.** If you move a file, update every comment that names a
   path — stale paths are what agents navigate by, so a wrong one is a real defect.
 
