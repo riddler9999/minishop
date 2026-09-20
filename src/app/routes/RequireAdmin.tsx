@@ -12,6 +12,12 @@ export default function RequireAdmin({children}: {children: React.ReactNode}) {
   const location = useLocation();
   const [checking, setChecking] = useState(true);
   const [hasShop, setHasShop] = useState(false);
+  // A failed lookup is NOT the same as "no shop": treat null (genuinely no
+  // shop) as onboarding, but a thrown error (network/RLS) as a retryable state,
+  // never a redirect — otherwise a transient blip bounces an onboarded seller
+  // into onboarding as if their shop vanished.
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -20,20 +26,35 @@ export default function RequireAdmin({children}: {children: React.ReactNode}) {
     }
     let alive = true;
     setChecking(true);
+    setLoadError(false);
     getOwnShop(user.id)
       .then((shop) => alive && setHasShop(Boolean(shop)))
-      .catch(() => alive && setHasShop(false))
+      .catch(() => alive && setLoadError(true))
       .finally(() => alive && setChecking(false));
     return () => {
       alive = false;
     };
-  }, [user]);
+  }, [user, retry]);
 
   if (authLoading || (session && checking)) {
     return <div className="grid min-h-screen place-items-center bg-ink text-sm text-cream-200">Loading…</div>;
   }
   if (!session) {
     return <Navigate to="/admin/login" replace state={{from: location.pathname}} />;
+  }
+  if (loadError) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-ink px-4 text-center">
+        <div className="max-w-sm">
+          <p className="my text-sm text-cream-200">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
+          <button
+            onClick={() => setRetry((n) => n + 1)}
+            className="my mt-4 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600">
+            ထပ်ကြိုးစားရန်
+          </button>
+        </div>
+      </div>
+    );
   }
   if (!hasShop) {
     return <Navigate to="/admin/onboarding" replace />;

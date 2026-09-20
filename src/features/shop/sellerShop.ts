@@ -117,7 +117,14 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
     .select(OWN_SHOP_COLUMNS)
     .single();
   if (error) {
-    // 23505 = unique_violation (slug already taken).
+    // 23505 = unique_violation. Two constraints can trip it: the owner already
+    // has a shop (shops_owner_unique, added in migration 0008 — recover to it
+    // idempotently so a double-submit lands the seller on their real shop
+    // instead of a false "slug taken"), or the slug is taken by someone else.
+    if (error.code === '23505' && error.message.includes('shops_owner_unique')) {
+      const existing = await getOwnShop(userId);
+      if (existing) return existing;
+    }
     if (error.code === '23505') {
       throw new Error('ဤ link (slug) ကို အသုံးပြုပြီးသားဖြစ်ပါသည် — တခြား link ရွေးပါ။');
     }
