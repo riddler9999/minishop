@@ -95,7 +95,12 @@ export default function Layout({children}: {children: React.ReactNode}) {
       <footer className="border-t border-rose-100 bg-slate-950 text-white">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
           <div><p className="text-xl font-bold">{shopName}</p><p className="mt-1 text-xs text-rose-200">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
-          <div className="flex items-center gap-5 text-sm text-white/65"><ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink><ShopLink to="/orders" className="hover:text-white">အော်ဒါရှာရန်</ShopLink></div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/65 sm:justify-start">
+            <ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink>
+            <ShopLink to="/orders" className="hover:text-white">အော်ဒါရှာရန်</ShopLink>
+            <ShopLink to="/privacy-policy" className="hover:text-white">Privacy Policy</ShopLink>
+            <ShopLink to="/terms-of-service" className="hover:text-white">Terms of Service</ShopLink>
+          </div>
           <p className="text-xs text-white/45">© {new Date().getFullYear()} {shopName}</p>
         </div>
       </footer>
