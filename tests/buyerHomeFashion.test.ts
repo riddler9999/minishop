@@ -51,3 +51,23 @@ test('buyer storefront uses Burmese fashion copy and removes jewellery presentat
     assert.equal(source.includes(forbidden), false, `unexpected jewellery/English copy: ${forbidden}`);
   }
 });
+
+
+test('buyer shell keeps a stable responsive header and bottom navigation contract', async () => {
+  const source = await readFile(layoutPath, 'utf8');
+
+  assert.match(source, /grid-cols-\[48px_minmax\(0,1fr\)_48px\]/);
+  assert.match(source, /sm:grid-cols-\[112px_minmax\(0,1fr\)_112px\]/);
+  assert.match(source, /lg:grid-cols-\[180px_minmax\(0,1fr\)_180px\]/);
+  assert.match(source, /overflow-x-clip/);
+  assert.match(source, /pb-\[calc\(68px\+env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(source, /h-\[calc\(68px\+env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(source, /grid-cols-3 grid-rows-1/);
+  assert.match(source, /h-\[68px\]/);
+  assert.match(source, /Products|ပစ္စည်း/);
+  assert.match(source, /Cart|ခြင်း/);
+  assert.match(source, /Orders|အော်ဒါ/);
+
+  assert.equal(source.includes('sm:grid-cols-[170px_1fr_220px]'), false);
+  assert.equal(source.includes('pb-[74px]'), false);
+});
