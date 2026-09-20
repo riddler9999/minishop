@@ -8,7 +8,7 @@
 
 import {requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
-import {mapUpdateOwnShopError} from '@/features/shop/sellerShopError';
+import {mapUpdateOwnShopError} from '@/domain/dbError';
 
 export interface OwnShop {
   id: string;
