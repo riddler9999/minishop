@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {NavLink, useLocation} from 'react-router-dom';
-import {ClipboardList, Menu, Search, ShoppingBag, X} from 'lucide-react';
+import {ClipboardList, Grid2X2, Menu, Search, ShoppingBag, X} from 'lucide-react';
 import {useCart} from '@/features/cart/state';
 import {cx} from '@/shared/lib/format';
 import {shopHref} from '@/features/tenancy/shopContext';
@@ -35,7 +35,7 @@ const DRAWER_NAV = [
 ];
 
 const BOTTOM_NAV = [
-  {to: '/products', label: 'ပစ္စည်း', icon: ShoppingBag, end: false},
+  {to: '/products', label: 'ပစ္စည်း', icon: Grid2X2, end: false},
   {to: '/cart', label: 'ခြင်း', icon: ShoppingBag, end: false},
   {to: '/orders', label: 'အော်ဒါ', icon: ClipboardList, end: false},
 ];
@@ -104,7 +104,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
           <div>
             <p className="text-xl font-bold">{shopName}</p>
-            <p className="mt-1 text-xs text-rose-200">Online Fashion Store</p>
+            <p className="mt-1 text-xs text-rose-200">အွန်လိုင်းဖက်ရှင်ဆိုင်</p>
           </div>
           <div className="flex items-center gap-5 text-sm text-white/65">
             <ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink>
@@ -128,7 +128,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
             <div className="flex items-center justify-between border-b border-rose-100 pb-5">
               <div>
                 <p className="text-2xl font-bold text-slate-950">{shopName}</p>
-                <p className="mt-1 text-xs font-medium text-[#e11d48]">Online Fashion Store</p>
+                <p className="mt-1 text-xs font-medium text-[#e11d48]">အွန်လိုင်းဖက်ရှင်ဆိုင်</p>
               </div>
               <button
                 type="button"
