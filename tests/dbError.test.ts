@@ -68,6 +68,13 @@ describe('mapDbError', () => {
     assert.equal(mapDbError(undefined), DEFAULT_DB_ERROR_MESSAGE);
   });
 
+  it('maps the settings write boundary via its seller-specific fallback', () => {
+    // mapUpdateOwnShopError = mapDbError bound to the shop-settings fallback.
+    assert.equal(mapUpdateOwnShopError('business_plan_required'), DB_ERROR_MESSAGES.business_plan_required);
+    assert.equal(mapUpdateOwnShopError('plan_is_platform_managed'), DB_ERROR_MESSAGES.plan_is_platform_managed);
+    assert.equal(mapUpdateOwnShopError('Failed to fetch'), 'ဆိုင် အချက်အလက် ပြင်၍မရပါ။');
+  });
+
   it('has a Burmese message for every code the migrations actually raise', async () => {
     // Real drift guard: reads the codes out of every migration's SQL and asserts
     // the catalog covers each live one. A new/renamed typed code in a future
