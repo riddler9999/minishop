@@ -1,74 +1,75 @@
 import {useEffect, useState} from 'react';
-import {ArrowRight, Headphones, PackageCheck, Search, ShieldCheck, Sparkles} from 'lucide-react';
+import {ArrowRight, Headphones, PackageCheck, ShieldCheck} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
-import {ShopLink, useShopSlugParam} from '@/features/tenancy/ShopLink';
+import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
+import {SearchBox} from '@/shared/ui/Layout';
 
-const categories = ['New In', 'Tops', 'Dresses', 'Bottoms', 'Sets', 'Accessories'];
-
-function Hero() {
+function Hero({product}: {product: Product | null}) {
   const shop = getCachedShopInfo();
+  const image = product?.image ?? product?.images[0] ?? null;
 
   return (
     <section className="bg-white px-4 pb-5 pt-5 sm:px-8 sm:pb-8 lg:pt-8">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-[#fff0f6] sm:rounded-[36px]">
-        <div className="grid min-h-[420px] items-center lg:grid-cols-2 lg:min-h-[520px]">
-          <div className="relative z-10 px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
-            <p className="text-sm font-semibold text-[#e11d48]">{shop?.name ?? 'Your Shop'}</p>
-            <h1 className="mt-4 max-w-xl text-4xl font-bold leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
-              Find your next favorite look.
-            </h1>
-            <p className="mt-5 max-w-md text-sm leading-6 text-slate-600 sm:text-base">
-              Browse the latest styles from this shop in one simple place.
-            </p>
-            <ShopLink
-              to="/products"
-              className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#e11d48] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-2">
-              Shop Now <ArrowRight className="h-4 w-4" />
-            </ShopLink>
-          </div>
+      <div className="mx-auto grid min-h-[440px] max-w-7xl overflow-hidden rounded-[28px] bg-[#fff0f6] sm:rounded-[36px] lg:grid-cols-2 lg:min-h-[520px]">
+        <div className="relative z-10 flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 lg:py-16">
+          <p className="text-sm font-semibold text-[#e11d48]">{shop?.name ?? 'သင့်ဆိုင်'}</p>
+          <h1 className="mt-4 max-w-xl text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
+            ကိုယ်နှစ်သက်မယ့် ဖက်ရှင်ကို ရှာဖွေလိုက်ပါ။
+          </h1>
+          <p className="mt-5 max-w-md text-sm leading-6 text-slate-600 sm:text-base">
+            ဒီဆိုင်ရဲ့ နောက်ဆုံးရောက် ဖက်ရှင်ပစ္စည်းတွေကို တစ်နေရာတည်းမှာ လွယ်လွယ်ကူကူ ကြည့်နိုင်ပါတယ်။
+          </p>
+          <ShopLink
+            to="/products"
+            className="mt-7 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-[#e11d48] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-2">
+            ပစ္စည်းများကြည့်ရန် <ArrowRight className="h-4 w-4" />
+          </ShopLink>
+        </div>
 
-          <div className="relative hidden h-full min-h-[420px] overflow-hidden lg:block" aria-hidden="true">
-            <div className="absolute -right-12 top-10 h-72 w-72 rounded-full bg-[#fbcfe8]" />
-            <div className="absolute bottom-8 right-24 h-56 w-44 rotate-6 rounded-[40px] bg-white shadow-[0_24px_80px_rgba(190,24,93,0.12)]" />
-            <div className="absolute bottom-16 right-48 h-72 w-52 -rotate-6 rounded-[44px] bg-[#f9a8d4] shadow-[0_24px_80px_rgba(190,24,93,0.12)]" />
-            <Sparkles className="absolute right-16 top-20 h-8 w-8 text-[#e11d48]" strokeWidth={1.5} />
-          </div>
+        <div className="relative min-h-[320px] overflow-hidden sm:min-h-[380px] lg:min-h-[520px]">
+          {image ? (
+            <img src={image} alt={product?.name ?? 'ဖက်ရှင်ပစ္စည်း'} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#fbcfe8] via-[#f9a8d4] to-[#fff0f6]">
+              {shop?.logoUrl ? <img src={shop.logoUrl} alt={`${shop.name} logo`} className="h-28 w-28 rounded-full bg-white object-contain p-3 shadow-xl" /> : null}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" aria-hidden="true" />
         </div>
       </div>
     </section>
   );
 }
 
-function SearchBar() {
+function ProductSearch() {
+  const navigate = useShopNavigate();
+
   return (
     <section className="bg-white px-4 py-3 sm:px-8">
-      <ShopLink
-        to="/products"
-        aria-label="Browse and search products"
-        className="mx-auto flex min-h-12 max-w-7xl items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 transition hover:border-[#f9a8d4] hover:bg-[#fff7fa]">
-        <Search className="h-4 w-4" />
-        Search products
-      </ShopLink>
+      <div className="mx-auto max-w-7xl">
+        <SearchBox defaultValue="" onSubmit={(query) => navigate(query ? `/products?q=${encodeURIComponent(query)}` : '/products')} />
+      </div>
     </section>
   );
 }
 
-function CategoryRail() {
+function CategoryRail({categories}: {categories: string[]}) {
+  if (categories.length === 0) return null;
+
   return (
     <section className="bg-white px-4 py-5 sm:px-8">
       <div className="no-scrollbar mx-auto flex max-w-7xl gap-2 overflow-x-auto pb-1">
-        {categories.map((category, index) => (
+        <ShopLink to="/products" className="shrink-0 rounded-full border border-[#e11d48] bg-[#e11d48] px-4 py-2 text-sm font-medium text-white">
+          အားလုံး
+        </ShopLink>
+        {categories.map((category) => (
           <ShopLink
             key={category}
-            to="/products"
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${
-              index === 0
-                ? 'border-[#e11d48] bg-[#e11d48] text-white'
-                : 'border-[#f3d6e2] bg-[#fff7fa] text-slate-700 hover:border-[#f9a8d4]'
-            }`}>
+            to={`/products?category=${encodeURIComponent(category)}`}
+            className="shrink-0 rounded-full border border-[#f3d6e2] bg-[#fff7fa] px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[#f9a8d4]">
             {category}
           </ShopLink>
         ))}
@@ -83,11 +84,11 @@ function ProductSection({products, loading, error}: {products: Product[]; loadin
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
           <div>
-            <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">New Arrivals</h2>
-            <p className="mt-1 text-sm text-slate-500">Fresh picks from the shop.</p>
+            <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">အသစ်ရောက် ပစ္စည်းများ</h2>
+            <p className="mt-1 text-sm text-slate-500">ဆိုင်မှာ လက်ရှိရရှိနိုင်တဲ့ နောက်ဆုံးပေါ်ပစ္စည်းများ။</p>
           </div>
           <ShopLink to="/products" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#e11d48]">
-            View All <ArrowRight className="h-4 w-4" />
+            အားလုံးကြည့်ရန် <ArrowRight className="h-4 w-4" />
           </ShopLink>
         </div>
 
@@ -101,7 +102,7 @@ function ProductSection({products, loading, error}: {products: Product[]; loadin
 
         {!loading && !error && products.length === 0 && (
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-12 text-center text-sm text-slate-500">
-            This shop has not added products yet.
+            ဒီဆိုင်မှာ ပစ္စည်းမတင်ရသေးပါ။
           </div>
         )}
       </div>
@@ -114,11 +115,11 @@ function Promo() {
     <section className="bg-white px-4 py-5 sm:px-8 sm:py-8">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 overflow-hidden rounded-[28px] bg-[#fff0f6] px-6 py-8 sm:flex-row sm:items-center sm:px-10 sm:py-10">
         <div>
-          <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">More styles, one easy shop.</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">Explore everything currently available from this store.</p>
+          <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">ပစ္စည်းအားလုံးကို တစ်နေရာတည်းမှာကြည့်ပါ။</h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">ဒီဆိုင်မှာ လက်ရှိရရှိနိုင်တဲ့ ပစ္စည်းအားလုံးကို ရှာဖွေကြည့်နိုင်ပါတယ်။</p>
         </div>
         <ShopLink to="/products" className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#e11d48] px-6 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-          Browse All <ArrowRight className="h-4 w-4" />
+          အားလုံးကြည့်ရန် <ArrowRight className="h-4 w-4" />
         </ShopLink>
       </div>
     </section>
@@ -127,9 +128,9 @@ function Promo() {
 
 function ServiceStrip() {
   const services = [
-    {title: 'Easy Shopping', icon: PackageCheck},
-    {title: 'Secure Checkout', icon: ShieldCheck},
-    {title: 'Need Help?', icon: Headphones},
+    {title: 'လွယ်ကူစွာ ဝယ်ယူနိုင်ခြင်း', icon: PackageCheck},
+    {title: 'လုံခြုံသော ငွေချေမှု', icon: ShieldCheck},
+    {title: 'အကူအညီလိုပါသလား', icon: Headphones},
   ];
 
   return (
@@ -148,6 +149,7 @@ function ServiceStrip() {
 
 export default function Home() {
   const [products, setProducts] = useState<Product[] | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState('');
   const slug = useShopSlugParam();
 
@@ -156,10 +158,16 @@ export default function Home() {
 
     (async () => {
       try {
-        const {products: nextProducts} = await api.products({scope: 'active', limit: 12});
-        if (alive) setProducts(nextProducts);
+        const [{products: nextProducts}, {categories: nextCategories}] = await Promise.all([
+          api.products({scope: 'active', limit: 12}),
+          api.categories(),
+        ]);
+        if (alive) {
+          setProducts(nextProducts);
+          setCategories(nextCategories);
+        }
       } catch (e: any) {
-        if (alive) setError(e.message || 'We could not load products right now.');
+        if (alive) setError(e.message || 'ပစ္စည်းများကို ယခုလောလောဆယ် ဆွဲယူ၍မရပါ။');
       }
     })();
 
@@ -168,12 +176,14 @@ export default function Home() {
     };
   }, [slug]);
 
+  const visibleProducts = products ?? [];
+
   return (
     <div className="bg-white">
-      <Hero />
-      <SearchBar />
-      <CategoryRail />
-      <ProductSection products={products ?? []} loading={products === null && !error} error={error} />
+      <Hero product={visibleProducts[0] ?? null} />
+      <ProductSearch />
+      <CategoryRail categories={categories} />
+      <ProductSection products={visibleProducts} loading={products === null && !error} error={error} />
       <Promo />
       <ServiceStrip />
     </div>
