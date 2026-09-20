@@ -11,7 +11,7 @@ import Settings from '@/features/shop/pages/Settings';
 import Landing from '@/features/landing/pages/Landing';
 import AdminConsole from './routes/AdminConsole';
 import RequireAdmin from './routes/RequireAdmin';
-import ShopRoute from './routes/ShopRoute';
+import ShopRoute, {RootStorefront} from './routes/ShopRoute';
 
 export default function App() {
   return (
@@ -20,7 +20,13 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/onboarding" element={<Onboarding />} />
-        <Route path="/admin" element={<RequireAdmin><AdminConsole /></RequireAdmin>}>
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminConsole />
+            </RequireAdmin>
+          }>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
@@ -28,7 +34,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />
-        <Route path="*" element={<Landing />} />
+        <Route path="*" element={<RootStorefront />} />
       </Routes>
     </AdminAuthProvider>
   );
