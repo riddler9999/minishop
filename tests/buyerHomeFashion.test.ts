@@ -80,6 +80,16 @@ test('buyer shell keeps the responsive header and no mobile bottom navigation', 
   assert.equal(source.includes('h-[68px]'), false);
 });
 
+test('storefront exposes privacy and terms routes and footer links', async () => {
+  const storefront = await readFile(storefrontPath, 'utf8');
+  const layout = await readFile(layoutPath, 'utf8');
+
+  assert.match(storefront, /path="privacy-policy"/);
+  assert.match(storefront, /path="terms-of-service"/);
+  assert.match(layout, /to="\/privacy-policy"[^>]*>Privacy Policy/);
+  assert.match(layout, /to="\/terms-of-service"[^>]*>Terms of Service/);
+});
+
 test('cart is drawer-only and the standalone cart page is removed', async () => {
   const storefront = await readFile(storefrontPath, 'utf8');
   const drawer = await readFile(cartDrawerPath, 'utf8');

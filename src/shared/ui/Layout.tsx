@@ -1,7 +1,8 @@
 import {useEffect, useState} from 'react';
-import {Home, Menu, Package, Search, ShoppingBag, X} from 'lucide-react';
+import {Menu, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
+import {api} from '@/data/dataSource';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
 import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
@@ -27,14 +28,16 @@ function Brand() {
 }
 
 const DRAWER_NAV = [
-  {to: '/', label: 'ပင်မစာမျက်နှာ', icon: Home},
-  {to: '/products', label: 'ပစ္စည်းများ', icon: Package},
+  {to: '/', label: 'ပင်မ'},
+  {to: '/shipping-policy', label: 'ပို့ဆောင်သည့်ပုံစံ'},
+  {to: '/refund-policy', label: 'Refund Policy'},
 ];
 
 export default function Layout({children}: {children: React.ReactNode}) {
   const {count, openDrawer} = useCart();
   const {pathname} = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const shop = getCachedShopInfo();
   const shopName = shop?.name ?? APP_NAME;
 
@@ -42,6 +45,18 @@ export default function Layout({children}: {children: React.ReactNode}) {
     setMenuOpen(false);
     window.scrollTo({top: 0, behavior: 'instant' as ScrollBehavior});
   }, [pathname]);
+
+  useEffect(() => {
+    let alive = true;
+    api.categories().then((r) => {
+      if (alive) setCategories(r.categories);
+    }).catch(() => {
+      if (alive) setCategories([]);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [shopName]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -80,7 +95,12 @@ export default function Layout({children}: {children: React.ReactNode}) {
       <footer className="border-t border-rose-100 bg-slate-950 text-white">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
           <div><p className="text-xl font-bold">{shopName}</p><p className="mt-1 text-xs text-rose-200">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
-          <div className="flex items-center gap-5 text-sm text-white/65"><ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink><ShopLink to="/orders" className="hover:text-white">အော်ဒါရှာရန်</ShopLink></div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/65 sm:justify-start">
+            <ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink>
+            <ShopLink to="/orders" className="hover:text-white">အော်ဒါရှာရန်</ShopLink>
+            <ShopLink to="/privacy-policy" className="hover:text-white">Privacy Policy</ShopLink>
+            <ShopLink to="/terms-of-service" className="hover:text-white">Terms of Service</ShopLink>
+          </div>
           <p className="text-xs text-white/45">© {new Date().getFullYear()} {shopName}</p>
         </div>
       </footer>
@@ -95,20 +115,23 @@ export default function Layout({children}: {children: React.ReactNode}) {
               <div><p className="text-2xl font-bold text-slate-950">{shopName}</p><p className="mt-1 text-xs font-medium text-[#e11d48]">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
               <button type="button" aria-label="မီနူးပိတ်ရန်" onClick={() => setMenuOpen(false)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-[#f3eadf]"><X className="h-6 w-6" /></button>
             </div>
-            <nav className="mt-7 grid grid-cols-3 gap-4">
-              {DRAWER_NAV.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <ShopLink
-                    key={item.to}
-                    to={item.to}
-                    aria-label={item.label}
-                    title={item.label}
-                    className="grid aspect-square place-items-center rounded-2xl border border-rose-100 text-slate-900 transition hover:border-[#e11d48] hover:bg-rose-50 hover:text-[#e11d48]">
-                    <Icon className="h-7 w-7" strokeWidth={1.7} />
-                  </ShopLink>
-                );
-              })}
+            <nav className="mt-7 flex flex-col">
+              <ShopLink to="/" className="border-b border-rose-100 py-4 text-base font-semibold text-slate-900 transition hover:text-[#e11d48]">
+                ပင်မ
+              </ShopLink>
+              {categories.map((category) => (
+                <ShopLink
+                  key={category}
+                  to={`/products?category=${encodeURIComponent(category)}`}
+                  className="border-b border-rose-100 py-4 text-base font-semibold text-slate-900 transition hover:text-[#e11d48]">
+                  {category}
+                </ShopLink>
+              ))}
+              {DRAWER_NAV.slice(1).map((item) => (
+                <ShopLink key={item.to} to={item.to} className="border-b border-rose-100 py-4 text-base font-semibold text-slate-900 transition hover:text-[#e11d48]">
+                  {item.label}
+                </ShopLink>
+              ))}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
               <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">

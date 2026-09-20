@@ -8,6 +8,7 @@ import Products from '@/features/catalog/pages/Products';
 import Checkout from '@/features/checkout/pages/Checkout';
 import OrderSuccess from '@/features/checkout/pages/OrderSuccess';
 import OrderLookup from '@/features/orders/pages/OrderLookup';
+import PolicyPage from '@/shared/ui/PolicyPage';
 
 // Storefront branch — keeps the customer-facing chrome (header/footer/cart).
 // Mounted at both the root (`/*`, demo shop, no slug) and `/s/:slug/*` (a real
@@ -24,6 +25,10 @@ export default function Storefront() {
         <Route path="checkout" element={<Checkout />} />
         <Route path="order/:orderId" element={<OrderSuccess />} />
         <Route path="orders" element={<OrderLookup />} />
+        <Route path="shipping-policy" element={<PolicyPage title="ပို့ဆောင်သည့်ပုံစံ" />} />
+        <Route path="refund-policy" element={<PolicyPage title="Refund Policy" />} />
+        <Route path="privacy-policy" element={<PolicyPage title="Privacy Policy" />} />
+        <Route path="terms-of-service" element={<PolicyPage title="Terms of Service" />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
