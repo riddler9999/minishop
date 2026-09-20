@@ -191,7 +191,7 @@ export default function Checkout() {
               </p>
             )}
             {live && shipErr && (
-              <div className="my mt-3 flex items-center justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-[#e11d48]">
+              <div className="my mt-3 flex items-center justify-between gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-[#e11d48]">
                 <span>ပို့ဆောင်ခ တင်ယူ၍မရပါ။</span>
                 <button type="button" onClick={() => setShipReload((n) => n + 1)} className="font-semibold underline">
                   ပြန်ကြိုးစားရန်
@@ -220,7 +220,7 @@ export default function Checkout() {
               ))}
             </div>
 
-            <div className="my mt-4 rounded-xl border border-dashed border-gold-500/50 bg-rose-50 px-4 py-3">
+            <div className="my mt-4 rounded-xl border border-dashed border-rose-200 bg-rose-50 px-4 py-3">
               <span className="text-xs text-slate-500">{method === 'cod' ? 'အိမ်ရောက်မှ ပေးရမည့် ငွေ' : 'အခု လွှဲရမည့် ငွေ'}</span>
               <div className="font-display text-2xl font-bold text-[#e11d48]">{fee != null ? ks(grandTotal) : '—'}</div>
             </div>
@@ -233,7 +233,7 @@ export default function Checkout() {
               <>
                 <div className="mt-3 space-y-2">
                   {providerAccounts.map((a) => (
-                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-xl border border-rose-100 bg-cream-50 px-4 py-3">
+                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-xl border border-rose-100 bg-rose-50/40 px-4 py-3">
                       <div className="min-w-0">
                         <p className="my truncate text-sm font-semibold text-slate-950">{a.accountName}</p>
                         <p className="font-display text-base font-bold tracking-wide text-[#e11d48]">{a.phone}</p>
