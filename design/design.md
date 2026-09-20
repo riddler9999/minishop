@@ -69,6 +69,14 @@ carousels). Reuse these utility classes before adding new ones.
 
 ---
 
+### Admin analytics surface
+
+The seller dashboard uses a mobile-first analytics treatment: pale cool-gray canvas, white cards,
+pink/cyan/violet/orange semantic icon chips, large compact metrics, one simple 7-day trend chart,
+and bottom navigation on narrow screens. This is intentionally denser and more app-like than the
+buyer storefront. Keep one-handed touch targets at 44px+, avoid decorative motion, and keep charts
+secondary to actionable order/stock lists.
+
 ## 3. Screen inventory
 
 ### 3.1 Storefront (buyer-facing, mounted under both `/*` demo and `/s/:slug/*` — see
