@@ -18,6 +18,7 @@ export default function App() {
     <AdminAuthProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/onboarding" element={<Onboarding />} />
         <Route
