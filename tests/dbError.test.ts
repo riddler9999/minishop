@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {readFile} from 'node:fs/promises';
+import {readFile, readdir} from 'node:fs/promises';
 import {
   DB_ERROR_MESSAGES,
   DEFAULT_DB_ERROR_MESSAGE,
@@ -8,16 +8,27 @@ import {
   type DbErrorCode,
 } from '../src/domain/dbError.ts';
 
-const migrationPath = new URL('../supabase/migrations/0007_production_hardening.sql', import.meta.url);
+const migrationsDir = new URL('../supabase/migrations/', import.meta.url);
 
-// Every code the migration raises via `raise exception '<code>'`, with the
-// `:%`/`:v_id` format suffix on the stock codes stripped. This reads the actual
-// DB contract so the catalog can't silently drift from it.
-async function codesRaisedByMigration(): Promise<Set<string>> {
-  const sql = await readFile(migrationPath, 'utf8');
+// Codes raised only by an earlier function definition that a LATER migration
+// replaced via CREATE OR REPLACE, so they are no longer part of the live DB
+// contract and intentionally have no Burmese message. 0007 rewrote 0001's
+// place_order(): `missing_customer` -> `invalid_customer`, and the order-number
+// generation no longer raises `order_no_generation_failed`.
+const SUPERSEDED_CODES = new Set(['missing_customer', 'order_no_generation_failed']);
+
+// Every code raised via `raise exception '<code>'` across ALL migration files
+// (the `:%`/`:v_id` format suffix on the stock codes is naturally excluded by
+// the pattern). Scanning the whole directory — not just 0007 — is what makes
+// this a real guard: a future 0008 raising a new typed code trips it too.
+async function codesRaisedByMigrations(): Promise<Set<string>> {
+  const names = (await readdir(migrationsDir)).filter((n) => n.endsWith('.sql')).sort();
   const codes = new Set<string>();
-  for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)/gi)) {
-    codes.add(m[1]);
+  for (const name of names) {
+    const sql = await readFile(new URL(name, migrationsDir), 'utf8');
+    for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)/gi)) {
+      codes.add(m[1]);
+    }
   }
   return codes;
 }
@@ -56,13 +67,14 @@ describe('mapDbError', () => {
     assert.equal(mapDbError(undefined), DEFAULT_DB_ERROR_MESSAGE);
   });
 
-  it('has a Burmese message for every code migration 0007 actually raises', async () => {
-    // Real drift guard: reads the codes out of the migration SQL and asserts the
-    // catalog covers each one. A new/renamed typed code in a future migration
-    // fails here until it is added to DB_ERROR_MESSAGES.
-    const raised = await codesRaisedByMigration();
-    assert.ok(raised.size > 0, 'expected to parse at least one raised code from the migration');
+  it('has a Burmese message for every code the migrations actually raise', async () => {
+    // Real drift guard: reads the codes out of every migration's SQL and asserts
+    // the catalog covers each live one. A new/renamed typed code in a future
+    // migration (e.g. 0008) fails here until it is added to DB_ERROR_MESSAGES.
+    const raised = await codesRaisedByMigrations();
+    assert.ok(raised.size > 0, 'expected to parse at least one raised code from the migrations');
     for (const code of raised) {
+      if (SUPERSEDED_CODES.has(code)) continue; // replaced by a later migration
       assert.ok(code in DB_ERROR_MESSAGES, `catalog is missing a message for '${code}'`);
     }
   });
