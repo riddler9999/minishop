@@ -55,7 +55,7 @@ export default function CartDrawer() {
         aria-hidden={!drawerOpen}>
         <header className="flex items-center justify-between border-b border-rose-100 px-5 py-4">
           <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
-            <ShoppingBag className="h-5 w-5" /> စျေးဝယ်ခြင်း
+            <ShoppingBag className="h-5 w-5" /> ဈေးခြင်းတောင်း
             {count > 0 && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-[#e11d48]">{count}</span>}
           </h2>
           <button onClick={closeDrawer} aria-label="ပိတ်ရန်" className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-rose-50 hover:text-[#e11d48]">
@@ -111,7 +111,6 @@ export default function CartDrawer() {
                 <span className="my font-semibold text-slate-900">စုစုပေါင်း</span>
                 <span className="text-xl font-bold text-[#e11d48]">{ks(subtotal)}</span>
               </div>
-              <p className="my mb-3 text-xs text-slate-500">ပို့ဆောင်ခ Checkout တွင် တွက်ပါမည်။</p>
               <button
                 onClick={() => go('/checkout')}
                 className="w-full rounded-xl bg-[#e11d48] px-6 py-3 font-bold text-white transition hover:bg-[#be123c]">
