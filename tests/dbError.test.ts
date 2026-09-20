@@ -16,7 +16,10 @@ const migrationsDir = new URL('../supabase/migrations/', import.meta.url);
 // contract and intentionally have no Burmese message. 0007 rewrote 0001's
 // place_order(): `missing_customer` -> `invalid_customer`, and the order-number
 // generation no longer raises `order_no_generation_failed`.
-const SUPERSEDED_CODES = new Set(['missing_customer', 'order_no_generation_failed']);
+const SUPERSEDED_OCCURRENCES = new Set([
+  '0001_init_saas.sql:missing_customer',
+  '0001_init_saas.sql:order_no_generation_failed',
+]);
 
 // Every code raised via `raise exception '<code>'` across ALL migration files
 // (the `:%`/`:v_id` format suffix on the stock codes is naturally excluded by
@@ -82,7 +85,6 @@ describe('mapDbError', () => {
     const raised = await codesRaisedByMigrations();
     assert.ok(raised.size > 0, 'expected to parse at least one raised code from the migrations');
     for (const code of raised) {
-      if (SUPERSEDED_CODES.has(code)) continue; // replaced by a later migration
       assert.ok(code in DB_ERROR_MESSAGES, `catalog is missing a message for '${code}'`);
     }
   });
