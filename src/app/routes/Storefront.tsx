@@ -2,7 +2,6 @@
 import {Route, Routes} from 'react-router-dom';
 import Layout from '@/shared/ui/Layout';
 import NotFound from '@/shared/ui/NotFound';
-import Cart from '@/features/cart/pages/Cart';
 import Home from '@/features/catalog/pages/Home';
 import ProductDetail from '@/features/catalog/pages/ProductDetail';
 import Products from '@/features/catalog/pages/Products';
@@ -22,7 +21,6 @@ export default function Storefront() {
         <Route index element={<Home />} />
         <Route path="products" element={<Products />} />
         <Route path="products/:id" element={<ProductDetail />} />
-        <Route path="cart" element={<Cart />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="order/:orderId" element={<OrderSuccess />} />
         <Route path="orders" element={<OrderLookup />} />
