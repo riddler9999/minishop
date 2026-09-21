@@ -1,3 +1,16 @@
+/* The app-wide default font pairing ("boutique" — Calistoga/Inter, see
+   domain/fontPairing.ts, PROJECT.md D54) plus the "classic" alternative a
+   seller can opt into from Store Design. Both load here (not injected at
+   runtime) so admin console + every storefront always has them warm; Google's
+   CSS2 endpoint splits each family into per-script @font-face rules with
+   unicode-range, so a page that never renders Cormorant/Montserrat glyphs
+   never actually downloads those font files. `display=swap` avoids invisible
+   text while a face loads. The "minimal" pairing (domain/fontPairing.ts)
+   intentionally needs no import — it's the original system-font stack.
+   Must precede `@import 'tailwindcss'` below: CSS requires every @import to
+   come before any other rule, and Tailwind's own import expands into @layer
+   content that would otherwise push a later @import into an invalid position. */
+@import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=Cormorant:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 /* ---- Mini Shop design system ------------------------------------------------
@@ -6,8 +19,10 @@
    home adds its white/blush-pink fashion layer with Tailwind utilities. */
 @theme {
   --font-myanmar: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, sans-serif;
-  --font-display: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Matches FONT_PAIRINGS.boutique in src/domain/fontPairing.ts — the app-wide
+     default. A shop's Layout overrides these two per its own theme.fontPairing. */
+  --font-display: 'Calistoga', 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', Georgia, serif;
+  --font-sans: 'Inter', 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --color-cream-50: #fffdf9;
   --color-cream-100: #f6efe5;

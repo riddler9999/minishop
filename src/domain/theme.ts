@@ -14,6 +14,8 @@
 // so a shop with no theme (or before migration 0009 is applied) simply shows
 // the original hardcoded copy.
 
+import {type FontPairingId, DEFAULT_FONT_PAIRING, isFontPairingId} from './fontPairing.ts';
+
 /** A hex colour string, e.g. `#e11d48`. */
 export type HexColor = string;
 
@@ -57,6 +59,8 @@ export interface ProductTheme {
 }
 
 export interface StorefrontTheme {
+  /** Latin display/body font pairing for storefront headings and copy (see `domain/fontPairing`). */
+  fontPairing: FontPairingId;
   /** Accent colour for the Homepage hero + its call-to-action buttons. */
   accentColor: HexColor;
   announcement: AnnouncementTheme;
@@ -67,7 +71,12 @@ export interface StorefrontTheme {
 
 // Defaults deliberately mirror the storefront's ORIGINAL hardcoded copy, so a
 // shop that has never opened Store Design (theme = {}) looks exactly as before.
+// `fontPairing` is the one exception: it follows the app-wide typography
+// baseline (see PROJECT.md D54), the same way an unopened shop already
+// inherits the app's global color/spacing tokens rather than some frozen
+// snapshot — a seller who wants the original system-font look picks `minimal`.
 export const DEFAULT_THEME: StorefrontTheme = {
+  fontPairing: DEFAULT_FONT_PAIRING,
   accentColor: '#e11d48',
   announcement: {
     enabled: false,
@@ -148,6 +157,7 @@ export function normalizeTheme(raw: unknown): StorefrontTheme {
   const category = isObject(raw.category) ? raw.category : {};
   const product = isObject(raw.product) ? raw.product : {};
   return {
+    fontPairing: isFontPairingId(raw.fontPairing) ? raw.fontPairing : d.fontPairing,
     accentColor: hexColor(raw.accentColor, d.accentColor),
     announcement: {
       enabled: bool(announcement.enabled, d.announcement.enabled),
