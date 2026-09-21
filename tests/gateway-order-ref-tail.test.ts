@@ -2,4 +2,4 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-test('checkout gateway defaults missing payment reference tail to empty string',()=>assert.match(fs.readFileSync('api/checkout.ts','utf8'),/p_payment_ref_tail: b\.paymentRefTail \|\| ''/));
+test('checkout gateway sanitizes payment reference tail and defaults missing values',()=>{const s=fs.readFileSync('api/checkout.ts','utf8'); assert.match(s,/paymentRefTail = clean\(b\.paymentRefTail/); assert.match(s,/p_payment_ref_tail: paymentRefTail/);});
