@@ -330,11 +330,13 @@ error ဖြစ်ရင် null → default; core shop payload ဘယ်တေ�
 invariant (unsaved upload ကို replace/save-fail/unmount မှာ cleanup၊ old object ကို write
 အောင်မြင်မှသာ ဖျက်) ကို Settings logo နဲ့တူအောင် လိုက်နာထားတယ်။
 
-**Pending:** `0009` ကို live project သို့ **မ apply ရသေးပါ** (D7 — owner go-ahead လိုအပ်)။ Frontend
-က defensive ဖြစ်လို့ migration မတိုင်ခင် code ကို ship လုပ်လည်း storefront/console မကျ; Store Design
-က save/persist မလုပ်နိုင်သေးတာပဲ ကွာတယ်။ Apply ပြီးမှ `database.types.ts` ကို regenerate စစ်ပါ
-(ယခု `theme: Json` ကို manual ထည့်ထားတယ်)။ `tests/theme.test.ts` က normalizeTheme contract ကို
-guard လုပ်တယ်။
+**Applied (2026-09-21):** `0009_shop_theme` ကို owner go-ahead ဖြင့် live project
+(`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီးပြီ — `list_migrations` မှာ `20260921221919 shop_theme`
+အဖြစ်တည်ရှိတယ်။ `database.types.ts` ရဲ့ `shops` block က live schema (`theme: Json`) နဲ့ တိတိကျကျ
+sync ဖြစ်နေတာ regenerate output နဲ့တိုက်စစ်ပြီးဖြစ်တယ် (ကျန် generator drift ကို မထည့်ဘဲ hand-maintained
+version ကို ထားတယ် — CLAUDE.md type-maintenance standing rule အတိုင်း)။ `tests/theme.test.ts` က
+normalizeTheme contract ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကတော့ pending ဆက်ဖြစ်တယ် —
+ဒီ migration က မထိ။)
 
 ### D49 — Shop တစ်ဆိုင် per Owner ကို DB Invariant အဖြစ် Enforce လုပ်တယ်
 
