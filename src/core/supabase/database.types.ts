@@ -283,9 +283,12 @@ export type Database = {
         Row: {
           created_at: string
           default_delivery_fee: number
+          delivery_service: string
           id: string
           is_active: boolean
           logo_url: string | null
+          origin_region: string | null
+          origin_township: string | null
           name: string
           owner_id: string
           phone: string | null
@@ -296,9 +299,12 @@ export type Database = {
         Insert: {
           created_at?: string
           default_delivery_fee?: number
+          delivery_service?: string
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          origin_region?: string | null
+          origin_township?: string | null
           name: string
           owner_id: string
           phone?: string | null
@@ -309,6 +315,7 @@ export type Database = {
         Update: {
           created_at?: string
           default_delivery_fee?: number
+          delivery_service?: string
           id?: string
           is_active?: boolean
           logo_url?: string | null
