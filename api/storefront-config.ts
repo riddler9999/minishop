@@ -1,4 +1,6 @@
-export default function handler(_req: any, res: any) {
-  res.setHeader('Cache-Control', 'no-store');
-  res.status(200).json({gateway: 'first-party', version: 1});
+import {sendJson} from './_http.js';
+
+export default function handler(req: any, res: any) {
+  if (req.method !== 'GET') return sendJson(res, 405, {error: 'Method not allowed'});
+  return sendJson(res, 200, {gateway: 'first-party', version: 1});
 }
