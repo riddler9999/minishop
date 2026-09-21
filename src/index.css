@@ -5,9 +5,9 @@
    stable because existing modules depend on brand/cream/gold/ink roles. The buyer
    home adds its white/blush-pink fashion layer with Tailwind utilities. */
 @theme {
-  --font-myanmar: 'Noto Sans Myanmar', 'Myanmar Text', system-ui, sans-serif;
-  --font-display: Georgia, 'Times New Roman', 'Noto Sans Myanmar', serif;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Myanmar', 'Myanmar Text', sans-serif;
+  --font-myanmar: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, sans-serif;
+  --font-display: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Pyidaungsu', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   --color-cream-50: #fffdf9;
   --color-cream-100: #f6efe5;
