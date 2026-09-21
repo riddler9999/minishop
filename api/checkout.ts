@@ -1,6 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
+import {rateLimit} from './_rate-limit.js';
 
 export default async function handler(req: any, res: any) {
   const env = supabaseEnv();
@@ -18,6 +19,7 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 200, {accounts: (accounts || []).map((r: any) => ({provider:r.provider,label:r.provider==='kpay'?'KBZPay':'WavePay',accountName:r.account_name,phone:r.phone,tail:''})), zones: zones || [], defaultFee: shop.default_delivery_fee}, true);
   }
   if (req.method === 'POST') {
+    if (!rateLimit(req, 10)) return sendJson(res, 429, {error: 'Too many requests'});
     const b = req.body || {};
     const {data, error} = await sb.rpc('place_order', {
       p_shop_slug: b.slug, p_customer_name: b.customer?.name, p_customer_phone: b.customer?.phone,
