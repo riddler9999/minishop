@@ -530,6 +530,14 @@ Buyer storefront ကို jewellery-specific presentation ကနေ white + blu
 
 Repo cleanup အနေနဲ့ runtime မှာမသုံးတော့တဲ့ jewellery assets နဲ့ `.jewel-cta` style ကိုဖယ်ထားတယ်။ Personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားတော့ဘူး။ Project-specific `.claude/skills/supabase-migration/SKILL.md` တစ်ခုပဲထားမယ်။ Third-party tools/skills ကို developer environment ကနေ install/use လုပ်ရမယ်။
 
+### D53 — `ui-ux-pro-max` Skill ကို D51 Policy ရဲ့ Named Exception အဖြစ် Vendor လုပ်တယ်
+
+D51 က personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားရ၊ project-specific `supabase-migration` skill တစ်ခုပဲ commit လုပ်ရမယ်လို့ ဆုံးဖြတ်ခဲ့တယ်။ Project owner ရဲ့ explicit request အရ ဒီ policy ကို named exception တစ်ခုနဲ့ ချိန်ညှိထားတယ် — blanket reopening မဟုတ်ဘူး။
+
+**ဆုံးဖြတ်ချက်:** `nextlevelbuilder/ui-ux-pro-max-skill` (MIT license, npm package `ui-ux-pro-max-cli@2.15.0`) ကို `.claude/skills/ui-ux-pro-max/` + ၎င်းရဲ့ bundled sub-skills (`banner-design`, `brand`, `design`, `design-system`, `slides`, `ui-styling`) အဖြစ် repo ထဲ vendor လုပ်ထားတယ်။ Install လုပ်ခင် `npm pack` နဲ့ tarball ကို download ပြီး `dist/index.js` ကို manual review လုပ်ခဲ့တယ် — `init` command (non-`--legacy`) က bundled templates/assets ကို local file copy + text substitution ချည်းသာ လုပ်တာ (network call, `child_process` exec, credential access မပါ) ဆိုတာ confirm ဖြစ်ခဲ့လို့ `npx` ကို run မယ့်အစား ဒီ repo ထဲမှာပဲ ထပ်တူ manual reproduce လုပ်ခဲ့တယ်။ `--legacy` mode ကိုသာ GitHub release ကနေ download လုပ်တာမို့ မသုံးထားဘူး။ `ui-styling` sub-skill ရဲ့ upstream `LICENSE.txt` ကို ဖျက်မထားဘူး။
+
+**Scope/maintenance:** ဒီ exception ကို ဒီ skill bundle တစ်ခုတည်းအတွက်ပဲ သတ်မှတ်တယ်; နောက်ထပ် third-party skill/plugin ကို repo ထဲ vendor လုပ်ချင်ရင် project owner ဆီက အသစ် go-ahead ထပ်လိုတယ်။ Skill ကို update ချင်ရင် အသစ် tarball ကို ထပ် download/review ပြီးမှ diff ကို manual verify လုပ်ပြီးမှ commit လုပ်ရမယ် — CI/lint ကနေ ဒီ skill data files တွေကို validate မလုပ်ဘူး, third-party content အနေနဲ့ trust boundary အပြင်ဘက်ကထားရမယ်။
+
 ### D50 — Admin Analytics Dashboard English + Shipping Removed
 
 Admin analytics dashboard copy ကို English-only အဖြစ်ထားမယ်။ Buyer storefront နဲ့ တခြား screen တွေရဲ့ language rule ကို ဒီ decision က မပြောင်းဘူး။ Screen-specific exception အဖြစ်ပဲ သတ်မှတ်တယ်။
