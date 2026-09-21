@@ -3,7 +3,11 @@
   "buildCommand": "vite build",
   "outputDirectory": "dist",
   "framework": null,
-  "rewrites": [{"source": "/((?!api/|assets/).*)", "destination": "/index.html"}],
+  "rewrites": [
+    {"source": "/api/storefront/product-images/:path*", "destination": "/api/storefront?mediaBucket=product-images&mediaPath=:path*"},
+    {"source": "/api/storefront/shop-logos/:path*", "destination": "/api/storefront?mediaBucket=shop-logos&mediaPath=:path*"},
+    {"source": "/((?!api/|assets/).*)", "destination": "/index.html"}
+  ],
   "headers": [
     {
       "source": "/(.*)",

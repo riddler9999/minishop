@@ -14,10 +14,24 @@ function media(url: string | null) {
 }
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'GET') return json(res, 405, {error: 'Method not allowed'});
+  if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, {error: 'Method not allowed'});
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) return json(res, 503, {error: 'Backend unavailable'});
+  const mediaBucket = String(req.query?.mediaBucket || '');
+  const mediaPath = String(req.query?.mediaPath || '');
+  if (mediaBucket || mediaPath) {
+    if (!['product-images', 'shop-logos'].includes(mediaBucket) || !mediaPath) return res.status(404).end();
+    const safePath = mediaPath.split('/').filter(Boolean).map((part: string) => encodeURIComponent(part)).join('/');
+    const upstream = await fetch(`${url}/storage/v1/object/public/${encodeURIComponent(mediaBucket)}/${safePath}`);
+    if (!upstream.ok) return res.status(upstream.status).end();
+    const type = upstream.headers.get('content-type');
+    if (type) res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
+    if (req.method === 'HEAD') return res.status(200).end();
+    return res.status(200).send(Buffer.from(await upstream.arrayBuffer()));
+  }
+  if (req.method === 'HEAD') return res.status(404).end();
   const slug = String(req.query?.slug || '').trim();
   if (!slug) return json(res, 400, {error: 'Missing shop slug'});
   const sb = createClient(url, key, {auth: {persistSession: false, autoRefreshToken: false}});
