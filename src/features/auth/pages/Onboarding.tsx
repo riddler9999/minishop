@@ -12,6 +12,7 @@ import {createOwnShop, getOwnShop} from '@/features/shop/sellerShop';
 import {APP_INITIAL} from '@/shared/lib/brand';
 import {SLUG_RE, slugify} from '@/domain/slug';
 import {settleOwnShopLookup} from '@/domain/shopAccess';
+import {regionNames, townshipsOf} from '@/shared/data/locations';
 
 export default function Onboarding() {
   const {loading: authLoading, session, user} = useAdminAuth();
@@ -28,6 +29,9 @@ export default function Onboarding() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [phone, setPhone] = useState('');
   const [fee, setFee] = useState('0');
+  const [originRegion, setOriginRegion] = useState('');
+  const [originTownship, setOriginTownship] = useState('');
+  const [deliveryService, setDeliveryService] = useState<'ninjavan' | 'custom'>('ninjavan');
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -79,13 +83,22 @@ export default function Onboarding() {
     if (!SLUG_RE.test(cleanSlug)) {
       return setErr('Link (slug) သည် အင်္ဂလိပ်စာလုံးအသေး/နံပါတ်/(-) ဖြင့်၊ ၃ လုံးအထက် ဖြစ်ရပါမည်။');
     }
+    if (!originRegion || !originTownship) return setErr('ဆိုင်တည်နေရာကို ရွေးပါ။');
     const feeN = Number(fee);
-    if (!Number.isFinite(feeN) || feeN < 0) return setErr('ပို့ခ မမှန်ပါ။');
+    if (deliveryService === 'custom' && (!Number.isFinite(feeN) || feeN < 0)) return setErr('ပို့ခ မမှန်ပါ။');
 
     setErr('');
     setSaving(true);
     try {
-      await createOwnShop(user.id, {name, slug: cleanSlug, phone, defaultDeliveryFee: feeN});
+      await createOwnShop(user.id, {
+        name,
+        slug: cleanSlug,
+        phone,
+        defaultDeliveryFee: deliveryService === 'custom' ? feeN : 0,
+        originRegion,
+        originTownship,
+        deliveryService,
+      });
       navigate('/admin', {replace: true});
     } catch (e: any) {
       setErr(e.message || 'ဆိုင် ဖန်တီး၍မရပါ။');
@@ -153,16 +166,65 @@ export default function Onboarding() {
             />
           </label>
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင်တည်နေရာ တိုင်း / ပြည်နယ်</span>
+              <select
+                value={originRegion}
+                onChange={(e) => {
+                  setOriginRegion(e.target.value);
+                  setOriginTownship('');
+                }}
+                className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]">
+                <option value="">— ရွေးချယ်ပါ —</option>
+                {regionNames().map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="my mb-1.5 block text-sm font-semibold text-slate-950">မြို့ / မြို့နယ်</span>
+              <select
+                value={originTownship}
+                disabled={!originRegion}
+                onChange={(e) => setOriginTownship(e.target.value)}
+                className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48] disabled:opacity-60">
+                <option value="">{originRegion ? '— ရွေးချယ်ပါ —' : 'တိုင်းအရင်ရွေးပါ'}</option>
+                {townshipsOf(originRegion).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <div>
+            <span className="my mb-1.5 block text-sm font-semibold text-slate-950">Delivery Service</span>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ['ninjavan', 'Ninja Van', 'ပို့သူ/လက်ခံသူ တည်နေရာအလိုက် အော်တိုတွက်မည်'],
+                ['custom', 'Custom', 'ကိုယ်ပိုင်ပို့ခကို သတ်မှတ်မည်'],
+              ] as const).map(([key, title, sub]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDeliveryService(key)}
+                  className={`rounded-xl border p-3 text-left transition ${deliveryService === key ? 'border-[#e11d48] bg-rose-50' : 'border-rose-100 bg-white'}`}>
+                  <span className="my block text-sm font-bold text-slate-950">{title}</span>
+                  <span className="my mt-1 block text-xs text-slate-500">{sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className="block">
             <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ပုံမှန် ပို့ခ (Ks)</span>
             <input
               inputMode="numeric"
               value={fee}
+              disabled={deliveryService !== 'custom'}
               onChange={(e) => setFee(e.target.value)}
-              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
+              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48] disabled:cursor-not-allowed disabled:opacity-50"
             />
             <span className="my mt-1 block text-xs text-slate-500">
-              ဒေသအလိုက် ပို့ခ သတ်မှတ်ချက်မရှိလျှင် ဒီပမာဏကို သုံးမည် (နောက်မှ ပြင်နိုင်သည်)
+              {deliveryService === 'ninjavan'
+                ? 'Ninja Van ကိုရွေးထားလျှင် checkout မှာ sender city + customer township အလိုက် အော်တိုတွက်မည်'
+                : 'Custom ကိုရွေးထားလျှင် zone မရှိသောနေရာများအတွက် ဒီပမာဏကို သုံးမည်'}
             </span>
           </label>
 
