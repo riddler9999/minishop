@@ -24,6 +24,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      ninjavan_rates: {
+        Row: { id: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label: string; is_active: boolean; created_at: string }
+        Insert: { id?: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label?: string; is_active?: boolean; created_at?: string }
+        Update: { id?: string; origin_township?: string; destination_region?: string; destination_township?: string; fee?: number; source_label?: string; is_active?: boolean; created_at?: string }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -73,6 +79,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_fee: number
+          delivery_service: string | null
+          origin_township: string | null
           grand_total: number
           id: string
           is_billable: boolean
@@ -94,6 +102,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_fee?: number
+          delivery_service?: string | null
+          origin_township?: string | null
           grand_total?: number
           id?: string
           is_duplicate?: boolean
@@ -114,6 +124,8 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           delivery_fee?: number
+          delivery_service?: string | null
+          origin_township?: string | null
           grand_total?: number
           id?: string
           is_duplicate?: boolean
@@ -369,6 +381,10 @@ export type Database = {
           p_township: string
         }
         Returns: Json
+      }
+      resolve_delivery_fee: {
+        Args: { p_shop_id: string; p_region: string; p_township: string }
+        Returns: number
       }
       usage_tier: {
         Args: { p_count: number }
