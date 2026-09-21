@@ -18,7 +18,10 @@ export default function HeroSection() {
         <h1 id="landing-title">မမြင်ရတဲ့ပစ္စည်းကို<br/><span>Customer က ဝယ်လို့မရဘူး။</span></h1>
         <p className="landing-hero-lede">MiniShop နဲ့ သင့်ပစ္စည်းတွေကို Online Shop အဖြစ် လွယ်လွယ်ကူကူ ပြပြီး TikTok, Telegram နဲ့ Facebook က Customer တွေ Order တင်နိုင်အောင် လုပ်ပါ။</p>
         <div className="landing-hero-actions">
-          <Link className="landing-primary-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <span aria-hidden="true">→</span></Link>
+          <div className="landing-hero-buttons">
+            <Link className="landing-primary-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <span aria-hidden="true">→</span></Link>
+            <Link className="landing-demo-cta" to="/demo">Demo Store ကြည့်မယ်</Link>
+          </div>
           <span className="landing-cta-note">အခမဲ့စတင်နိုင်သည် · Credit Card မလို</span>
         </div>
       </div>
