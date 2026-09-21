@@ -5,7 +5,10 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  {ignores: ['dist']},
+  // `.claude/skills/` holds vendored third-party skill bundles (see CLAUDE.md, PROJECT.md D51/D53)
+  // with their own Node/Python tooling — not part of this app's source, and not meant to satisfy
+  // this project's TS/React lint rules.
+  {ignores: ['dist', '.claude']},
   js.configs.recommended,
   ...tseslint.configs.recommended,
   jsxA11y.flatConfigs.recommended,

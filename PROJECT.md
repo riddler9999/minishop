@@ -530,7 +530,7 @@ Buyer storefront ကို jewellery-specific presentation ကနေ white + blu
 
 Repo cleanup အနေနဲ့ runtime မှာမသုံးတော့တဲ့ jewellery assets နဲ့ `.jewel-cta` style ကိုဖယ်ထားတယ်။ Personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားတော့ဘူး။ Project-specific `.claude/skills/supabase-migration/SKILL.md` တစ်ခုပဲထားမယ်။ Third-party tools/skills ကို developer environment ကနေ install/use လုပ်ရမယ်။
 
-### D52 — `ui-ux-pro-max` Skill ကို D51 Policy ရဲ့ Named Exception အဖြစ် Vendor လုပ်တယ်
+### D53 — `ui-ux-pro-max` Skill ကို D51 Policy ရဲ့ Named Exception အဖြစ် Vendor လုပ်တယ်
 
 D51 က personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားရ၊ project-specific `supabase-migration` skill တစ်ခုပဲ commit လုပ်ရမယ်လို့ ဆုံးဖြတ်ခဲ့တယ်။ Project owner ရဲ့ explicit request အရ ဒီ policy ကို named exception တစ်ခုနဲ့ ချိန်ညှိထားတယ် — blanket reopening မဟုတ်ဘူး။
 
