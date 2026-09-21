@@ -4,6 +4,8 @@ on:
     paths:
       - 'api/**'
       - 'src/features/catalog/**'
+      - 'src/features/checkout/**'
+      - 'src/features/orders/**'
       - 'src/features/tenancy/**'
       - 'vercel.json'
       - 'tests/**'
@@ -12,6 +14,8 @@ on:
     paths:
       - 'api/**'
       - 'src/features/catalog/**'
+      - 'src/features/checkout/**'
+      - 'src/features/orders/**'
       - 'src/features/tenancy/**'
       - 'vercel.json'
       - 'tests/**'
