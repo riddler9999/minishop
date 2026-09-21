@@ -1,9 +1,9 @@
 # First-party storefront gateway
 
-Public buyer reads use `/api/storefront` so the browser no longer needs a direct Supabase connection for shop resolution and catalog browsing. The Vercel function uses the public anon key and existing RLS; no service-role key is used.
+Public buyer traffic uses same-origin `/api/*` endpoints so the browser no longer needs a direct Supabase connection for shop resolution, catalog browsing, checkout configuration, order placement, order lookup, or Supabase-backed storefront media. The Vercel functions use the public anon key and existing RLS; no service-role key is used.
 
-Required Vercel environment variables: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. For compatibility the function also accepts the existing `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values.
+Required Vercel environment variables: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. For compatibility the gateway also accepts the existing `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` values.
 
-`/api/health` checks that the server-side Supabase path is reachable without exposing credentials.
+`/api/health` checks that the server-side Supabase path is reachable without exposing credentials. `/api/storefront-config` identifies the active gateway architecture.
 
-Seller authentication/admin writes and checkout/order RPCs remain on the existing Supabase client until their authenticated proxy/session design is migrated separately. Supabase-hosted image URLs also remain direct and are allowed by CSP.
+Seller authentication/admin writes remain on the existing browser Supabase client until an authenticated cookie/BFF session migration can be done without weakening RLS. Legacy/non-Supabase image URLs remain compatible; Supabase-hosted image URLs returned to buyers are rewritten through the first-party media proxy.
