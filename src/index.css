@@ -13,16 +13,16 @@
   --color-cream-100: #f6efe5;
   --color-cream-200: #e8dccb;
 
-  --color-brand-50: #f8f3eb;
-  --color-brand-100: #ede1d0;
-  --color-brand-200: #dcc5a2;
-  --color-brand-300: #c9a56d;
-  --color-brand-400: #ad7e3e;
-  --color-brand-500: #8f6026;
-  --color-brand-600: #70471c;
-  --color-brand-700: #513117;
-  --color-brand-800: #342014;
-  --color-brand-900: #1d120b;
+  --color-brand-50: #fff1f6;
+  --color-brand-100: #ffe1ec;
+  --color-brand-200: #ffc2d6;
+  --color-brand-300: #ff91b5;
+  --color-brand-400: #f9578d;
+  --color-brand-500: #ec1f62;
+  --color-brand-600: #d61251;
+  --color-brand-700: #ad0f40;
+  --color-brand-800: #7f1035;
+  --color-brand-900: #4d0a22;
 
   --color-gold-50: #fffaf0;
   --color-gold-100: #f8edcf;
@@ -34,8 +34,8 @@
   --color-gold-700: #744b1b;
   --color-gold-800: #503314;
 
-  --color-ink: #2a2018;
-  --color-ink-soft: #766b60;
+  --color-ink: #0f1d31;
+  --color-ink-soft: #6e788a;
 }
 
 :root {
@@ -44,12 +44,12 @@
 
 html {
   scroll-behavior: smooth;
-  background: #fffdf9;
+  background: #f7f9fc;
 }
 
 body {
   margin: 0;
-  background: #fffdf9;
+  background: #f7f9fc;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

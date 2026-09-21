@@ -70,7 +70,7 @@ function Sidebar() {
       </div>
       <div className="mt-8 flex-1"><DesktopNav /></div>
       <div className="space-y-1 border-t border-slate-200 pt-3">
-        <Link to="/" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><Store className="h-[18px] w-[18px]" />View store</Link>
+        <Link to={shop?.slug ? `/s/${shop.slug}` : '/demo'} className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-pink-50 hover:text-pink-600"><Store className="h-[18px] w-[18px]" />View store</Link>
         <button onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><LogOut className="h-[18px] w-[18px]" />Sign out</button>
       </div>
     </div>
@@ -106,7 +106,7 @@ export default function AdminLayout() {
           <div className="ml-auto flex items-center gap-2">
             <span aria-label="Notifications" className="relative grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-sm"><Bell className="h-5 w-5" /><span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-pink-500" /></span>
             <div className="flex h-11 items-center gap-2 rounded-2xl bg-white px-2.5 shadow-sm">
-              {shop?.logoUrl ? <img src={shop.logoUrl} alt="" className="h-8 w-8 rounded-xl object-cover" /> : <div className="grid h-8 w-8 place-items-center rounded-xl bg-cyan-50 text-sm font-black text-cyan-600">{shopInitial(shop?.name)}</div>}
+              {shop?.logoUrl ? <img src={shop.logoUrl} alt="" className="h-8 w-8 rounded-xl object-cover" /> : <div className="grid h-8 w-8 place-items-center rounded-xl bg-pink-50 text-sm font-black text-pink-600">{shopInitial(shop?.name)}</div>}
               <span className="hidden max-w-[140px] truncate text-sm font-semibold text-slate-800 sm:block">{shop?.name ?? APP_NAME}</span>
             </div>
           </div>
