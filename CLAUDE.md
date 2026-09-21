@@ -181,6 +181,6 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   formatting or status logic elsewhere.
 - UI copy defaults to Burmese for buyer-facing text and seller-facing screens unless a screen-specific product decision records an English exception. D50 makes the Admin analytics dashboard English-only. Code comments and identifiers are English.
 - Tailwind v4 (via `@tailwindcss/vite`), not a `tailwind.config.js`-driven v3 setup.
-- Keep personal Claude plugin settings and vendored third-party skills out of the repository. Only the project-specific `.claude/skills/supabase-migration/SKILL.md` is committed.
+- Keep personal Claude plugin settings out of the repository, and don't vendor further third-party skills without the owner's explicit go-ahead (see `PROJECT.md` D51/D52). Committed under `.claude/skills/`: the project-specific `supabase-migration/SKILL.md`, plus the vendored `ui-ux-pro-max` skill bundle (`ui-ux-pro-max/`, `banner-design/`, `brand/`, `design/`, `design-system/`, `slides/`, `ui-styling/` — MIT-licensed, from `nextlevelbuilder/ui-ux-pro-max-skill`, D52).
 - Path alias `@/*` → `src/*` (see `tsconfig.json` / `vite.config.ts`). Use it for every
   cross-module import; `./` only for siblings inside the same folder.
