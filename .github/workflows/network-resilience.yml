@@ -1,0 +1,28 @@
+name: Network resilience
+on:
+  pull_request:
+    paths:
+      - 'api/**'
+      - 'src/features/catalog/**'
+      - 'src/features/tenancy/**'
+      - 'vercel.json'
+      - 'tests/**'
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'src/features/catalog/**'
+      - 'src/features/tenancy/**'
+      - 'vercel.json'
+      - 'tests/**'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check

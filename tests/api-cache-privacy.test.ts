@@ -1,0 +1,5 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+test('order lookup response is not public cached',()=>{ const s=fs.readFileSync('api/storefront-orders.ts','utf8'); assert.match(s,/sendJson\(res, 200, \{order: data\}, false\)/); });
