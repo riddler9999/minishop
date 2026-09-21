@@ -3,7 +3,7 @@ import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
-const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,price,promo_price,is_promotion,stock,status,image_url,arrival_date,expiry_date';
+const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
 
 function media(url: string | null) {
   if (!url) return null;
