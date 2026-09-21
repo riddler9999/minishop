@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
-import {Link} from 'react-router-dom';
-import {AlertTriangle, ArrowRight, BarChart3, Box, Package, ShoppingBag} from 'lucide-react';
+import {Link, useNavigate} from 'react-router-dom';
+import {AlertTriangle, ArrowRight, BarChart3, Box, LogOut, Package, ShoppingBag} from 'lucide-react';
 import {adminApi} from '@/data/dataSource';
 import type {AdminOrder} from '@/domain/order';
 import type {Product} from '@/domain/product';
@@ -9,6 +9,7 @@ import {usePlan} from '@/features/billing/plan';
 import {UpgradeCard} from '@/features/billing/PlanGate';
 import {statusMeta, PAID_STATUSES, OPEN_STATUSES, type OrderStatus} from '@/domain/orderStatus';
 import {addYangonDays, getYangonAnalyticsWindow, YANGON_TZ} from '@/features/admin/lib/analyticsTime';
+import {useAdminAuth} from '@/features/auth/adminAuth';
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -91,6 +92,9 @@ function RevenueTrend({points}: {points: RevenuePoint[]}) {
 
 export default function Dashboard() {
   const {shop, features} = usePlan();
+  const {signOut} = useAdminAuth();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +164,12 @@ export default function Dashboard() {
     return {date, total};
   }), [currentStart, orders]);
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
+    navigate('/admin/login', {replace: true});
+  };
+
   const recentActionOrders = actionOrders.slice(0, 3);
   const lowStockPreview = lowStock.slice(0, 2);
 
@@ -170,7 +180,18 @@ export default function Dashboard() {
           <h1 className="text-[30px] font-black tracking-tight text-slate-950 sm:text-4xl">Sale Analytics</h1>
           <p className="mt-1 text-sm text-slate-500">Your shop performance at a glance</p>
         </div>
-        <PeriodBadge />
+        <div className="flex items-center gap-2">
+          <PeriodBadge />
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Log out">
+            <LogOut className="h-4 w-4" />
+            {signingOut ? 'Logging out…' : 'Logout'}
+          </button>
+        </div>
       </header>
 
       <section className="grid grid-cols-2 gap-3">
