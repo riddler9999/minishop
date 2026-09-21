@@ -12,14 +12,14 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     const slug = clean(req.query?.slug, 100);
     if (!slug) return sendJson(res, 400, {error: 'Missing shop'});
-    const {data: shop} = await sb.from('shops').select('id,default_delivery_fee').eq('slug', slug).eq('is_active', true).maybeSingle();
+    const {data: shop} = await sb.from('shops').select('id,default_delivery_fee,delivery_service,origin_region,origin_township').eq('slug', slug).eq('is_active', true).maybeSingle();
     if (!shop) return sendJson(res, 404, {error: 'Shop not found'});
     const [{data: accounts, error: ae}, {data: zones, error: ze}] = await Promise.all([
       sb.from('payment_accounts').select('provider,account_name,phone').eq('shop_id', shop.id).eq('is_active', true),
       sb.from('shipping_zones').select('region,township,fee').eq('shop_id', shop.id),
     ]);
     if (ae || ze) return sendJson(res, 502, {error: 'Checkout configuration unavailable'});
-    return sendJson(res, 200, {accounts: (accounts || []).map((r: any) => ({provider:r.provider,label:r.provider==='kpay'?'KBZPay':'WavePay',accountName:r.account_name,phone:r.phone,tail:''})), zones: zones || [], defaultFee: shop.default_delivery_fee}, true);
+    return sendJson(res, 200, {accounts: (accounts || []).map((r: any) => ({provider:r.provider,label:r.provider==='kpay'?'KBZPay':'WavePay',accountName:r.account_name,phone:r.phone,tail:''})), zones: zones || [], defaultFee: shop.default_delivery_fee, deliveryService: shop.delivery_service, origin: {region: shop.origin_region, township: shop.origin_township}}, true);
   }
   if (req.method === 'POST') {
     if (!rateLimit(req, 10)) return sendJson(res, 429, {error: mapDbError('rate_limit_exceeded')});
