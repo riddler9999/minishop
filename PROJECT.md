@@ -11,9 +11,9 @@ Mini Shop က Myanmar online seller တွေအတွက် multi-tenant SaaS s
 **Live + Owner Verified — Pilot အဆင့်ကို ဆက်သွားရန်**
 
 Owner: Moe Htet  
-Current production: `https://minishop-xi-brown.vercel.app`
+Current production: `https://minishopmm.vercel.app`
 
-အဓိက Milestone တွေဖြစ်တဲ့ routing, buyer storefront, seller admin နဲ့ checkout delivery-fee logic တွေကို live deployment ပေါ်မှာ စမ်းသပ်ပြီး အလုပ်လုပ်တာအတည်ပြုပြီးပြီ။ Starter / Business plan gating ကိုလည်း real browser automation နဲ့ စမ်းပြီးဖြစ်တယ်။
+အဓိက Milestone တွေဖြစ်တဲ့ routing, buyer storefront, seller admin နဲ့ checkout delivery-fee logic တွေကို live deployment ပေါ်မှာ စမ်းသပ်ပြီး အလုပ်လုပ်တာအတည်ပြုပြီးပြီ။ Starter / Business plan gating ကိုလည်း real browser automation နဲ့ စမ်းပြီးဖြစ်တယ်။ 2026-09-21 မှာ storefront product-image 404 ကို first-party Vercel media gateway rewrite နဲ့ပြင်ပြီး production မှာ catalog API + proxied WebP image endpoint နှစ်ခုလုံး 200 OK ဖြစ်တာ verify လုပ်ထားတယ်။
 
 လက်ရှိ pilot မစခင် အရေးအကြီးဆုံး blocker က **seller signup email flow** ဖြစ်တယ်။ Frontend ဘက်မှာ 6-digit OTP confirmation flow ရှိပြီးသားဖြစ်ပေမယ့် Supabase Auth က default/shared mailer ကိုပဲ သုံးနေသေးတယ်။ Production seller တွေအတွက် reliable auth email ပို့နိုင်ဖို့ **Custom SMTP** configure လုပ်ဖို့လိုတယ်။ SMTP မပြီးမချင်း signup confirmation နဲ့ password reset email delivery ကို production-ready လို့ မယူဆရ။
 
@@ -184,6 +184,9 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 - [x] ESLint + React Hooks + JSX accessibility checks
 - [x] Production Vercel deployment
 - [x] Core live browser verification
+- [x] First-party storefront network gateway + Vercel product-image proxy routing (PR #42–#43)
+- [x] Production product image endpoint 200 OK + WebP response verification (2026-09-21)
+- [x] CI + Network resilience suites green on PR #43 before merge
 - [x] Automated Starter ↔ Business gating verification
 - [x] Buyer storefront ကို white/blush-pink fashion direction ပြောင်းပြီး Burmese copy, real search/category links, product-image hero, real promotions နဲ့ mobile buyer chrome ship လုပ် (PR #31)
 - [x] CI pipeline (`lint → test → build`) နဲ့ ပထမဆုံး test suite (PR #24)
@@ -248,6 +251,14 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 - [ ] Shop plan ကို owner/admin ဘက်ကပြောင်းနိုင်မယ့် minimal backend path
 - [ ] Billing / subscription model ဆုံးဖြတ်ရန်
 - [ ] Usage tracking ကို commercial pricing နဲ့ချိတ်ရန်
+
+## 2026-09-21 Repository Update
+
+- PR #42 ကို merge လုပ်ပြီး storefront/catalog/checkout/order network traffic ကို first-party gateway architecture သို့ပြောင်းထားတယ်။
+- PR #43 မှာ Vercel dynamic media route 404 ကို `/api/storefront/product-images/:path*` နှင့် `/api/storefront/shop-logos/:path*` rewrite → stable `/api/storefront` function proxy ဖြင့်ပြင်ထားတယ်။
+- Product catalog က same-origin image URL ပြန်ပေးပြီး production image request က 200 OK WebP ပြန်လာတာ verify လုပ်ထားတယ်။
+- Gateway tests ကို hardened checkout/health implementation နဲ့ sync လုပ်ပြီး PR merge မတိုင်ခင် CI နဲ့ Network resilience checks နှစ်ခုလုံး PASS ဖြစ်တယ်။
+- Region → Township dependent checkout, seller shipping-zone CRUD, delivery-fee calculation, COD/KBZPay/WavePay, payment-account management, order creation/lookup နဲ့ admin order status/payment verification flow တွေက implementation ရှိပြီးသားဖြစ်လို့ open feature work အဖြစ်မယူရ။
 
 ## နောက် Session မှာ ဒီကနေစရန်
 
