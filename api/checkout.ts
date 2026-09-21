@@ -1,4 +1,5 @@
 import {createClient} from '@supabase/supabase-js';
+import {mapDbError} from '../src/domain/dbError.js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {rateLimit} from './_rate-limit.js';
@@ -21,7 +22,7 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 200, {accounts: (accounts || []).map((r: any) => ({provider:r.provider,label:r.provider==='kpay'?'KBZPay':'WavePay',accountName:r.account_name,phone:r.phone,tail:''})), zones: zones || [], defaultFee: shop.default_delivery_fee}, true);
   }
   if (req.method === 'POST') {
-    if (!rateLimit(req, 10)) return sendJson(res, 429, {error: 'Too many requests'});
+    if (!rateLimit(req, 10)) return sendJson(res, 429, {error: mapDbError('rate_limit_exceeded')});
     const b = req.body || {};
     const slug = clean(b.slug, 100);
     const customer = {
@@ -41,7 +42,7 @@ export default async function handler(req: any, res: any) {
       p_payment_method: paymentMethod, p_payment_ref_tail: paymentRefTail,
       p_items: items,
     });
-    if (error) return sendJson(res, 400, {error: error.message});
+    if (error) return sendJson(res, 400, {error: mapDbError(error.message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။')});
     return sendJson(res, 200, {order: data});
   }
   return sendJson(res, 405, {error: 'Method not allowed'});
