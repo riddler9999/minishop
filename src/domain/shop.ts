@@ -4,15 +4,22 @@
 // read-only to sellers (enforced in the DB by 0007_production_hardening.sql).
 
 import type {Plan} from './plan';
+import type {StorefrontTheme} from './theme';
 
 /** Alias kept for call sites that read the plan off a shop row. */
 export type ShopPlan = Plan;
 
+// Public tenant branding + storefront customization, resolved for a `/s/:slug`
+// visit (see features/tenancy/shopResolver.ts). `theme` is always a complete,
+// normalized StorefrontTheme — never null — so storefront pages can read it
+// unconditionally (a shop with no saved theme resolves to DEFAULT_THEME).
 export interface ShopInfo {
   id: string;
+  slug: string;
   name: string;
   logoUrl: string | null;
   defaultDeliveryFee: number;
+  theme: StorefrontTheme;
 }
 
 export interface MerchantAccount {
