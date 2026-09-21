@@ -295,6 +295,49 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 
 ## အရေးကြီး Architecture Decisions
 
+### D52 — Store Design (Storefront Customization / Theme)
+
+Seller က Admin Dashboard ကနေ storefront ရဲ့ **Homepage / Category page / Product page**
+တွေကို Shopify store-builder ပုံစံ customize လုပ်နိုင်အောင် "Store Design" feature ထည့်ထားတယ်။
+Editor က inspector (ဘယ်ဘက် form) + live phone preview (ညာဘက် canvas) ဆိုတဲ့ two-pane
+ပုံစံဖြစ်ပြီး draft `StorefrontTheme` တစ်ခုတည်းက drive လုပ်တယ် (`/admin/design`)။
+
+**Data model** — `shops.theme` (jsonb) column အသစ် (migration `0009_shop_theme.sql`)။
+Customization က cosmetic သက်သက် — hero/section copy, section toggle (hero / category rail /
+search box / related products), hero image, announcement bar, accent colour။ Security boundary
+မဟုတ်ဘူး — RLS (`shops_owner_all`) က owner-scoped write ကို ဆက်ထိန်းပြီး၊ 0007 trigger က
+`theme` ကို မကိုင်လို့ trigger ပြင်စရာမလို။
+
+**Fail-safe** — `src/domain/theme.ts` (pure leaf, `plan.ts`/`orderStatus.ts` pattern) မှာ
+`DEFAULT_THEME` + `normalizeTheme()` ရှိတယ်။ `normalizeTheme()` က မည်သည့် untrusted value
+(raw jsonb, null, partial/old blob, garbage) ကိုမဆို complete + valid `StorefrontTheme`
+အဖြစ် ပြန်ပေးတယ် — invalid/missing field တိုင်း default ဆီ fall back လုပ်တာမို့ storefront ဘယ်တော့မှ
+ပျက်လို့မရ။ `DEFAULT_THEME` က storefront ရဲ့ မူလ hardcoded Burmese copy အတိအကျဖြစ်လို့ theme
+မသတ်မှတ်ရသေးတဲ့ ဆိုင် (theme = `{}`) က အရင်အတိုင်းပဲ မြင်ရမယ်။
+
+**Read paths (defensive)** — write/read နှစ်ဖက်လုံးမှာ `normalizeTheme()` ဖြတ်တယ်။
+Storefront gateway (`api/storefront.ts` action=shop) က `theme` ကို **သီးခြား query** နဲ့ဆွဲပြီး
+error ဖြစ်ရင် null → default; core shop payload ဘယ်တော့မှ မကျ။ `shopResolver` က `ShopInfo`
+ကို slug + normalized theme နဲ့ဆောက်ပြီး hero image ကို first-party media proxy
+(`/api/storefront/shop-logos/…`, PR #43) ဆီ rewrite လုပ်တယ်။ Admin `getShopTheme()` က column
+မရှိသေးရင် `supported:false` ပြန်ပေးပြီး editor မှာ migration-pending banner ပြတယ်။
+
+**Plan gating** — `features.branding` (Business) အောက်မှာ gate လုပ်ထားတယ် (logo/branding နဲ့
+ကိုက်ညီအောင်)။ Starter မှာ `UpgradeCard` ပြတယ်။ Downgrade လုပ်ရင် theme data မဖျက် — upgrade
+ပြန်လုပ်ရင် ပြန်ပေါ်တယ်။
+
+**Hero image** — `uploadShopLogo` (shop-logos bucket) ကို ပြန်သုံးပြီး upload-before-write
+invariant (unsaved upload ကို replace/save-fail/unmount မှာ cleanup၊ old object ကို write
+အောင်မြင်မှသာ ဖျက်) ကို Settings logo နဲ့တူအောင် လိုက်နာထားတယ်။
+
+**Applied (2026-09-21):** `0009_shop_theme` ကို owner go-ahead ဖြင့် live project
+(`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီးပြီ — `list_migrations` မှာ `20260921221919 shop_theme`
+အဖြစ်တည်ရှိတယ်။ `database.types.ts` ရဲ့ `shops` block က live schema (`theme: Json`) နဲ့ တိတိကျကျ
+sync ဖြစ်နေတာ regenerate output နဲ့တိုက်စစ်ပြီးဖြစ်တယ် (ကျန် generator drift ကို မထည့်ဘဲ hand-maintained
+version ကို ထားတယ် — CLAUDE.md type-maintenance standing rule အတိုင်း)။ `tests/theme.test.ts` က
+normalizeTheme contract ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကတော့ pending ဆက်ဖြစ်တယ် —
+ဒီ migration က မထိ။)
+
 ### D49 — Shop တစ်ဆိုင် per Owner ကို DB Invariant အဖြစ် Enforce လုပ်တယ်
 
 Seller signup flow ကို audit လုပ်ရာမှာ latent lockout risk တစ်ခုတွေ့ခဲ့တယ်။ Admin flow တစ်ခုလုံး (`RequireAdmin`, `Onboarding` self-guard, `ownShop`) က "owner တစ်ယောက် = shop တစ်ဆိုင်" ဆိုတဲ့ invariant ကို `.maybeSingle()` နဲ့ မှီခိုနေပြီး၊ `.maybeSingle()` က row ၂ ခုတွေ့ရင် **throw** ဖြစ်တယ်။ ဒါပေမဲ့ `shops` table မှာ `owner_id` အပေါ် unique constraint မရှိခဲ့ဘူး (non-unique index `shops_owner_idx` သာ)။ Double-submit / two-tab / navigate မဖြစ်မီ retry ကနေ shop ၂ ခုဖြစ်သွားရင် နောက်ပိုင်း login တိုင်း `getOwnShop()` throw → seller ဟာ console ထဲ ဘယ်တော့မှ ဝင်လို့မရတော့တဲ့ dead-lock ဖြစ်နိုင်တယ်။

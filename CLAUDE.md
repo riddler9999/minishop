@@ -131,12 +131,14 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `0004_product_promo_price_check.sql` (`CHECK`: `promo_price < price` when `is_promotion`),
   `0005_fix_storage_policy_path.sql`, `0006_optimize_rls_and_fk_index.sql`,
   `0007_production_hardening.sql` (rate limiting, platform-managed plan/owner/billing triggers,
-  stricter `place_order`/`lookup_order` validation), and `0008_shop_owner_unique.sql`
+  stricter `place_order`/`lookup_order` validation), `0008_shop_owner_unique.sql`
   (`unique(owner_id)` on `shops`, dropping the now-redundant `shops_owner_idx` — makes the
-  one-shop-per-owner invariant the admin flow already assumes real; see `PROJECT.md` D49).
-  **`0001`–`0007` are applied to the live project; `0008` is pending — not yet applied (needs
-  owner go-ahead; fails if duplicate `owner_id` rows exist — run the migration's duplicate-detection
-  query first).**
+  one-shop-per-owner invariant the admin flow already assumes real; see `PROJECT.md` D49), and
+  `0009_shop_theme.sql` (`shops.theme jsonb` — seller-editable Store Design customization,
+  cosmetic only, owner-scoped by existing RLS; see `PROJECT.md` D52).
+  **`0001`–`0007` and `0009` are applied to the live project; `0008` is pending — not yet applied
+  (needs owner go-ahead; fails if duplicate `owner_id` rows exist — run the migration's
+  duplicate-detection query first).**
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state

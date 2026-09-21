@@ -3,7 +3,7 @@ import {Menu, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
-import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
+import {getCachedShopInfo, getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
 import CartDrawer from '@/features/cart/components/CartDrawer';
@@ -32,6 +32,19 @@ const DRAWER_NAV = [
   {to: '/shipping-policy', label: 'ပို့ဆောင်သည့်ပုံစံ'},
   {to: '/refund-policy', label: 'Refund Policy'},
 ];
+
+// Storefront-wide announcement bar (Store Design). Hidden unless the seller has
+// both enabled it and given it text.
+function AnnouncementBar() {
+  const theme = getStorefrontTheme();
+  const {enabled, text} = theme.announcement;
+  if (!enabled || !text.trim()) return null;
+  return (
+    <div style={{backgroundColor: theme.accentColor}} className="px-4 py-2 text-center text-xs font-semibold text-white sm:text-sm">
+      {text}
+    </div>
+  );
+}
 
 export default function Layout({children, drawerFooterAction}: {children: React.ReactNode; drawerFooterAction?: React.ReactNode}) {
   const {count, openDrawer} = useCart();
@@ -70,6 +83,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip bg-white">
+      <AnnouncementBar />
       <header className="sticky top-0 z-40 border-b border-rose-100 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto grid h-[82px] w-full max-w-[1440px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 px-3 sm:h-[96px] sm:grid-cols-[112px_minmax(0,1fr)_112px] sm:px-6 lg:grid-cols-[180px_minmax(0,1fr)_180px] lg:px-8">
           <div className="flex items-center justify-start">
