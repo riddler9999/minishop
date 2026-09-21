@@ -1,4 +1,4 @@
-const ALLOWED_BUCKETS = new Set(['product-images', 'shop-assets']);
+const ALLOWED_BUCKETS = new Set(['product-images', 'shop-logos']);
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return res.status(405).end();
