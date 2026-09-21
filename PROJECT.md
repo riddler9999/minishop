@@ -95,11 +95,16 @@ Business-only UI features တွေထဲမှာ promotions, township shipping
 
 Seller authentication ကို Supabase email/password သုံးထားတယ်။
 
-Flow:
+Flow (paid-onboarding gate — D53):
 
-`Signup → Email Confirmation → Login/Session → /admin/onboarding → Shop Creation → Admin Console`
+`Signup → Email Confirmation → Login/Session → /admin/subscribe (Plan ဝယ် + Screenshot) → [Owner manual approve] → /admin/onboarding → Shop Creation → Admin Console`
 
-`RequireAdmin` က session ရှိရုံတင်မဟုတ်ဘဲ seller မှာ shop ရှိ/မရှိပါစစ်တယ်။ Shop မရှိသေးရင် `/admin/onboarding` ကို redirect လုပ်တယ်။
+`RequireAdmin` က session ရှိရုံတင်မဟုတ်ဘဲ seller ရဲ့ shop နဲ့ plan-application status နှစ်ခုလုံးပေါ်မူတည်ပြီး
+နေရာချတယ် (`resolveSellerGate` → `resolveOnboardingGate`): shop ရှိရင် `/admin`; application `approved`
+ဖြစ်ပြီး shop မရှိသေးရင် `/admin/onboarding`; ကျန်တာ (`none`/`pending`/`rejected`) အားလုံး `/admin/subscribe`
+ကို redirect လုပ်တယ်။ Plan payment approval က **manual + owner-only** ဖြစ်ပြီး in-app super-admin surface
+မရှိ — owner က Supabase dashboard မှာ screenshot ကြည့်ပြီး `status` ကို flip လုပ်တယ် (manual last-5
+payment-verification philosophy D4–D6 နဲ့ ကိုက်ညီ)။
 
 Fresh signup confirmation အတွက် frontend မှာ 6-digit OTP flow ထည့်ပြီးသား။ Email link ကို fallback အနေနဲ့ထားနိုင်ပေမယ့် OTP ကို primary flow အဖြစ်သုံးထားတယ်။
 
@@ -294,6 +299,52 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 - Real willingness-to-pay data ပေါ်မူတည်တဲ့ pricing
 
 ## အရေးကြီး Architecture Decisions
+
+### D53 — Paid Onboarding Gate (Plan ဝယ် → Manual Approval → Onboarding)
+
+Seller တစ်ယောက် ဆိုင်စဖွင့်ခွင့်မရမီ **plan ကို ကြိုဝယ်** ရမယ်: Starter (50,000 Ks) သို့ Business
+(80,000 Ks) ရွေး → KBZPay/WavePay/AYA (`09969222535`, MOE HTET KYAW) သို့ ငွေလွှဲ → ငွေလွှဲ
+screenshot upload → **owner က manual approve** ပြီးမှ `/admin/onboarding` ကို ရောက်တယ်။
+
+**Approval surface — Supabase dashboard (manual, owner-only).** App ထဲမှာ super-admin console
+မဆောက်ဘူး — repo ရဲ့ manual last-5 payment-verification MVP philosophy (D4–D6) နဲ့ ကိုက်ညီစေဖို့နဲ့
+scope creep ရှောင်ဖို့ဖြစ်တယ်။ Owner က `shop_applications` row + `payment-proofs` object ကို Supabase
+dashboard (service_role) မှာကြည့်ပြီး `status` ကို `approved`/`rejected` သတ်မှတ်တယ်။ Business ဝယ်သူ
+အတွက် `shops.plan` ကိုလည်း owner ကပဲ dashboard ကနေ သတ်မှတ်ရမယ် — `0007` trigger က shop insert
+တိုင်းကို `plan='starter'` force လုပ်ထားလို့ (plan က platform-managed) seller က self-upgrade မလုပ်နိုင်။
+
+**Data model** — `shop_applications` table အသစ် (migration `0010_shop_application_gate.sql`),
+PK = `owner_id` (auth.uid()) မို့ seller တစ်ယောက် application တစ်ခုပဲ။ Columns: `plan`,
+`payment_method` (kpay/wave/aya), `payment_ref_tail` (optional last-5), `screenshot_path`, `amount`
+(informational — owner က တကယ့်လွှဲငွေကို screenshot နဲ့တိုက်စစ်တာမို့ enforcement မဟုတ်), `status`
+(pending/approved/rejected, default pending), `review_note`, timestamps။
+
+**Security** — RLS: seller က ကိုယ့် row ကိုသာ select/insert/update လုပ်နိုင်။ `status` က
+platform-managed: `protect_shop_application()` trigger (0007 ရဲ့ `protect_shop_managed_fields`
+pattern) က authenticated caller ကို insert/resubmit မှာ `status='pending'` သာခွင့်ပြု —
+`approved`/`rejected` ကို ကိုယ်တိုင်မသတ်မှတ်နိုင်၊ approved ဖြစ်ပြီးသား row ကို ပြန်မထိနိုင်၊ `owner_id`
+immutable။ Owner (service_role, `auth.uid()` null) က dashboard ကနေ လွတ်လပ်စွာ approve/reject လုပ်နိုင်။
+
+**Storage** — `payment-proofs` bucket အသစ် (**private**, `public=false`): ငွေလွှဲ screenshot က sensitive
+မို့ shop-logos/product-images လို world-readable မဖြစ်ရ။ Path owner-scoped: `payment-proofs/<owner_id>/…`
+(RLS က first folder segment = auth.uid() ကိုစစ်)။ JPEG ကိုပါ လက်ခံ (banking-app screenshot က JPG
+များ), PNG→WebP conversion မလုပ် (proof က capture, storefront media pipeline မဟုတ်)။ Seller ဘက် proof
+upload က in-app WebView constraint (D-log slip-upload no-op) နဲ့မဆန့်ကျင် — အဲဒါက buyer WebView အတွက်;
+ဒါက seller admin-side, logo/product image upload capability အတိုင်း established။
+
+**Fail-closed + invariant** — `resolveOnboardingGate()` (`src/domain/subscription.ts`, pure leaf) က gate
+decision ကို တစ်နေရာတည်းမှာထား; RequireAdmin/Onboarding/Subscribe သုံးဖက်လုံး `resolveSellerGate()`
+(`features/billing/application.ts`) ကနေ route လုပ်တယ်။ Application upload က upload-before-write invariant
+လိုက်နာ (proof အရင်တင် → row write → write fail ရင် uploaded object ကို delete; resubmit မှာ အဟောင်း
+delete write အောင်မြင်မှသာ)။ Lookup fail (network/RLS) ကို retry screen ပြ — redirect မလုပ် (D49 pattern)။
+
+**Applied (2026-09-21):** `0010_shop_application_gate` ကို owner go-ahead ဖြင့် live project
+(`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး (`list_migrations`: `20260921224420 shop_application_gate`)။
+`database.types.ts` ရဲ့ `shop_applications` block က regenerate output နဲ့ 1:1 sync; security advisor မှာ
+new table အတွက် RLS/policy warning မရှိ။ DB error code ၃ ခု (`application_status_is_platform_managed`,
+`application_owner_is_immutable`, `application_already_approved`) ကို `dbError.ts` catalog ထဲထည့်ပြီး
+`tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` က pending ဆက်ဖြစ် —
+ဒီ migration က မထိ။)
 
 ### D52 — Store Design (Storefront Customization / Theme)
 

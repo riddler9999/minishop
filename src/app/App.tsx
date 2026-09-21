@@ -3,6 +3,7 @@ import {Route, Routes} from 'react-router-dom';
 import {AdminAuthProvider} from '@/features/auth/adminAuth';
 import AdminLogin from '@/features/auth/pages/Login';
 import Onboarding from '@/features/auth/pages/Onboarding';
+import Subscribe from '@/features/billing/pages/Subscribe';
 import Dashboard from '@/features/admin/pages/Dashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/subscribe" element={<Subscribe />} />
         <Route path="/admin/onboarding" element={<Onboarding />} />
         <Route
           path="/admin"
