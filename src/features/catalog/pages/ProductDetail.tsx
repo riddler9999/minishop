@@ -6,6 +6,7 @@ import type {Product} from '@/domain/product';
 import {useCart} from '@/features/cart/state';
 import {ks} from '@/shared/lib/format';
 import ProductCard from '@/features/catalog/components/ProductCard';
+import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 
 const COLOR_MAP: Record<string, string> = {
@@ -20,6 +21,7 @@ export default function ProductDetail() {
   const shopNav = useShopNavigate();
   const slug = useShopSlugParam();
   const {add} = useCart();
+  const theme = getStorefrontTheme();
   const [product, setProduct] = useState<Product | null>(null);
   const [err, setErr] = useState('');
   const [active, setActive] = useState(0);
@@ -74,13 +76,13 @@ export default function ProductDetail() {
           <div className="mt-7 flex items-center"><div className="flex items-center rounded-full border border-cream-200 bg-white"><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Plus className="h-4 w-4" /></button></div></div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button disabled={!product.inStock} onClick={doAdd} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-brand-700 bg-white px-6 py-3 font-semibold text-brand-700 transition hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50">{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> ခြင်းထဲထည့်မည်</>}</button>
-            <button disabled={!product.inStock} onClick={buyNow} className="flex-1 rounded-full bg-brand-700 px-6 py-3 font-semibold text-cream-100 transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">ဝယ်မည်</button>
+            <button disabled={!product.inStock} onClick={doAdd} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-brand-700 bg-white px-6 py-3 font-semibold text-brand-700 transition hover:bg-cream-100 disabled:cursor-not-allowed disabled:opacity-50">{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
+            <button disabled={!product.inStock} onClick={buyNow} className="flex-1 rounded-full bg-brand-700 px-6 py-3 font-semibold text-cream-100 transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">{theme.product.buyNowLabel}</button>
           </div>
         </div>
       </div>
 
-      {related.length > 0 && (
+      {theme.product.relatedEnabled && related.length > 0 && (
         <section className="mt-14 overflow-hidden">
           <h2 className="mb-5 font-display text-xl font-bold text-brand-800 sm:text-2xl">ဆင်တူ ပစ္စည်းများ</h2>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 sm:mx-0 sm:px-0">

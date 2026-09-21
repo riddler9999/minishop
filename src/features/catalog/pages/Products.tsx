@@ -5,6 +5,7 @@ import type {Product} from '@/domain/product';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import {SearchBox} from '@/shared/ui/Layout';
 import {cx} from '@/shared/lib/format';
+import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {useShopSlugParam} from '@/features/tenancy/ShopLink';
 
 const PAGE = 12;
@@ -20,6 +21,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const slug = useShopSlugParam();
+  const theme = getStorefrontTheme();
   const reqIdRef = useRef(0);
 
   useEffect(() => {
@@ -70,12 +72,14 @@ export default function Products() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-brand-800">ပစ္စည်းများ</h1>
+          <h1 className="font-display text-2xl font-bold text-brand-800">{theme.category.heading}</h1>
           <p className="my mt-1 text-sm text-ink-soft">{total} မျိုး တွေ့ရှိသည်</p>
         </div>
-        <div className="w-full sm:w-72">
-          <SearchBox defaultValue={q} onSubmit={(val) => update({q: val})} />
-        </div>
+        {theme.category.searchEnabled && (
+          <div className="w-full sm:w-72">
+            <SearchBox defaultValue={q} onSubmit={(val) => update({q: val})} />
+          </div>
+        )}
       </div>
 
       <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto pb-1">

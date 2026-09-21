@@ -291,6 +291,7 @@ export type Database = {
           phone: string | null
           plan: string
           slug: string
+          theme: Json
           updated_at: string
         }
         Insert: {
@@ -304,6 +305,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           slug: string
+          theme?: Json
           updated_at?: string
         }
         Update: {
@@ -317,6 +319,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           slug?: string
+          theme?: Json
           updated_at?: string
         }
         Relationships: []

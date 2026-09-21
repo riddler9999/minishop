@@ -4,6 +4,10 @@ import test from 'node:test';
 
 const homePath = new URL('../src/features/catalog/pages/Home.tsx', import.meta.url);
 const layoutPath = new URL('../src/shared/ui/Layout.tsx', import.meta.url);
+// The buyer-facing default copy now lives in the storefront theme defaults
+// (Store Design). Home.tsx renders it via theme.home.* instead of hardcoding
+// the strings, so the copy guard reads the theme module too.
+const themePath = new URL('../src/domain/theme.ts', import.meta.url);
 const storefrontPath = new URL('../src/app/routes/Storefront.tsx', import.meta.url);
 const cartDrawerPath = new URL('../src/features/cart/components/CartDrawer.tsx', import.meta.url);
 const cartPagePath = new URL('../src/features/cart/pages/Cart.tsx', import.meta.url);
@@ -38,7 +42,7 @@ test('buyer home keeps the simplified discovery flow without cart shortcuts', as
 });
 
 test('buyer storefront uses Burmese fashion copy and removes jewellery presentation', async () => {
-  const source = ((await readHome()) + (await readFile(layoutPath, 'utf8'))).toLowerCase();
+  const source = ((await readHome()) + (await readFile(layoutPath, 'utf8')) + (await readFile(themePath, 'utf8'))).toLowerCase();
 
   assert.match(source, /အသစ်ရောက် ပစ္စည်းများ/);
   assert.match(source, /ပစ္စည်းများကြည့်ရန်/);

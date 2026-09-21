@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {NavLink, Outlet, Link} from 'react-router-dom';
-import {Bell, Home, LogOut, Menu, Package, Settings, ShoppingBag, Store, X} from 'lucide-react';
+import {Bell, Home, LogOut, Menu, Package, Palette, Settings, ShoppingBag, Store, X} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
 import {APP_INITIAL, APP_NAME, shopInitial} from '@/shared/lib/brand';
@@ -19,13 +19,14 @@ const NAV: NavEntry[] = [
   {to: '/admin', end: true, label: 'Home', icon: Home},
   {to: '/admin/products', end: false, label: 'Products', icon: Package},
   {to: '/admin/orders', end: false, label: 'Orders', icon: ShoppingBag},
+  {to: '/admin/design', end: false, label: 'Design', icon: Palette},
   {to: '/admin/settings', end: false, label: 'Settings', icon: Settings},
 ];
 
 function MobileNav() {
   return (
     <nav aria-label="Admin navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden">
-      <div className="mx-auto grid max-w-lg grid-cols-4">
+      <div className="mx-auto grid max-w-lg grid-cols-5">
         {NAV.map((entry) => {
           const Icon = entry.icon;
           return (
