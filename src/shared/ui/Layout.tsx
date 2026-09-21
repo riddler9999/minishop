@@ -33,7 +33,7 @@ const DRAWER_NAV = [
   {to: '/refund-policy', label: 'Refund Policy'},
 ];
 
-export default function Layout({children}: {children: React.ReactNode}) {
+export default function Layout({children, drawerFooterAction}: {children: React.ReactNode; drawerFooterAction?: React.ReactNode}) {
   const {count, openDrawer} = useCart();
   const {pathname} = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,6 +57,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
       alive = false;
     };
   }, [shopName]);
+
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -134,9 +135,11 @@ export default function Layout({children}: {children: React.ReactNode}) {
               ))}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
-              <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-                အော်ဒါစစ်ရန်
-              </ShopLink>
+              {drawerFooterAction ?? (
+                <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
+                  အော်ဒါစစ်ရန်
+                </ShopLink>
+              )}
             </div>
           </aside>
         </div>
