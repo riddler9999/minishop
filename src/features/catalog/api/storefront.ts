@@ -1,7 +1,6 @@
 // ---- CATALOG: buyer-facing queries ------------------------------------------
 import type {Product} from '@/domain/product';
 import {getShopSlug} from '@/features/tenancy/shopContext';
-import {mapProduct, type ProductRow} from './mappers';
 
 async function request(params: Record<string, string | number | boolean | undefined>) {
   const slug = getShopSlug();
@@ -15,12 +14,10 @@ async function request(params: Record<string, string | number | boolean | undefi
 
 export const catalogStorefrontApi = {
   async products(opts: {scope?: 'active' | 'all'; featured?: boolean; category?: string; q?: string; limit?: number; offset?: number} = {}): Promise<{products: Product[]; total: number}> {
-    const data = await request({action: 'products', featured: opts.featured, category: opts.category, q: opts.q, limit: opts.limit, offset: opts.offset}) as {products: ProductRow[]; total: number};
-    return {products: data.products.map(mapProduct), total: data.total};
+    return request({action: 'products', featured: opts.featured, category: opts.category, q: opts.q, limit: opts.limit, offset: opts.offset}) as Promise<{products: Product[]; total: number}>;
   },
   async product(id: string): Promise<{product: Product}> {
-    const data = await request({action: 'product', id}) as {product: ProductRow};
-    return {product: mapProduct(data.product)};
+    return request({action: 'product', id}) as Promise<{product: Product}>;
   },
   async categories(): Promise<{categories: string[]}> {
     return request({action: 'categories'}) as Promise<{categories: string[]}>;
