@@ -1,11 +1,9 @@
 import {useEffect, useState} from 'react';
 import {Menu, Search, ShoppingBag, X} from 'lucide-react';
-import {Link, useLocation} from 'react-router-dom';
+import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
-import {useAdminAuth} from '@/features/auth/adminAuth';
-import {getOwnShop} from '@/features/shop/sellerShop';
 import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
 import CartDrawer from '@/features/cart/components/CartDrawer';
@@ -35,13 +33,11 @@ const DRAWER_NAV = [
   {to: '/refund-policy', label: 'Refund Policy'},
 ];
 
-export default function Layout({children}: {children: React.ReactNode}) {
+export default function Layout({children, drawerFooterAction}: {children: React.ReactNode; drawerFooterAction?: React.ReactNode}) {
   const {count, openDrawer} = useCart();
   const {pathname} = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
-  const [isOwnShop, setIsOwnShop] = useState(false);
-  const {user} = useAdminAuth();
   const shop = getCachedShopInfo();
   const shopName = shop?.name ?? APP_NAME;
 
@@ -62,21 +58,6 @@ export default function Layout({children}: {children: React.ReactNode}) {
     };
   }, [shopName]);
 
-  useEffect(() => {
-    let alive = true;
-    if (!user || !shop) {
-      setIsOwnShop(false);
-      return () => { alive = false; };
-    }
-    getOwnShop(user.id)
-      .then((own) => {
-        if (alive) setIsOwnShop(Boolean(own && own.slug === shop.slug));
-      })
-      .catch(() => {
-        if (alive) setIsOwnShop(false);
-      });
-    return () => { alive = false; };
-  }, [user, shop?.slug]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -154,11 +135,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
               ))}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
-              {isOwnShop ? (
-                <Link to="/admin" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-                  Dashboard
-                </Link>
-              ) : (
+              {drawerFooterAction ?? (
                 <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
                   အော်ဒါစစ်ရန်
                 </ShopLink>
