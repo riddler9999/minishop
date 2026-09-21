@@ -7,7 +7,7 @@ import {APP_INITIAL, APP_NAME} from '@/shared/lib/brand';
 type Mode = 'login' | 'signup' | 'confirm';
 
 export default function AdminLogin() {
-  const {signIn, signUp, verifyEmailOtp, resendSignupCode} = useAdminAuth();
+  const {signIn, signUp, signInWithGoogle, verifyEmailOtp, resendSignupCode} = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState<Mode>('login');
@@ -75,6 +75,17 @@ export default function AdminLogin() {
     }
 
     navigate(from, {replace: true});
+  };
+
+  const googleSignIn = async () => {
+    setErr('');
+    setNotice('');
+    setBusy(true);
+    const {error} = await signInWithGoogle();
+    if (error) {
+      setBusy(false);
+      setErr(error);
+    }
   };
 
   const resend = async () => {
@@ -147,7 +158,21 @@ export default function AdminLogin() {
               </div>
 
               {!isConfirm && (
-                <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
+                <>
+                  <button
+                    type="button"
+                    onClick={googleSignIn}
+                    disabled={busy || !isSupabaseConfigured}
+                    className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-white text-xs font-bold text-[#4285F4] shadow-sm">G</span>
+                    Continue with Google
+                  </button>
+                  <div className="mb-4 flex items-center gap-3 text-xs text-slate-400">
+                    <span className="h-px flex-1 bg-slate-200" />
+                    <span>or use email</span>
+                    <span className="h-px flex-1 bg-slate-200" />
+                  </div>
+                  <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
@@ -168,7 +193,8 @@ export default function AdminLogin() {
                     }>
                     Create account
                   </button>
-                </div>
+                  </div>
+                </>
               )}
 
               <form onSubmit={submit} className="space-y-4">
