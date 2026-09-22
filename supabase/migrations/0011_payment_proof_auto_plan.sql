@@ -23,8 +23,8 @@ create table if not exists public.payment_proofs (
 );
 
 create unique index if not exists payment_proofs_transaction_id_uidx
-  on public.payment_proofs (transaction_id)
-  where transaction_id is not null;
+  on public.payment_proofs (btrim(transaction_id))
+  where transaction_id is not null and btrim(transaction_id) <> '';
 
 create index if not exists payment_proofs_shop_created_idx
   on public.payment_proofs (shop_id, created_at desc);
@@ -64,28 +64,11 @@ as $$
 declare
   v_payment public.payment_proofs%rowtype;
   v_plan text;
+  v_transaction_id text := nullif(btrim(p_transaction_id), '');
+  v_status text;
+  v_reason text;
 begin
-  if p_transaction_id is null or btrim(p_transaction_id) = '' then
-    raise exception 'transaction_id_required';
-  end if;
-
-  if p_amount = 50000 then
-    v_plan := 'starter';
-  elsif p_amount = 80000 then
-    v_plan := 'business';
-  else
-    raise exception 'unsupported_plan_amount';
-  end if;
-
-  if lower(regexp_replace(coalesce(p_receiver_name,''), '[^a-zA-Z]', '', 'g'))
-       <> lower(regexp_replace('Moe Htet Kyaw', '[^a-zA-Z]', '', 'g')) then
-    raise exception 'receiver_name_mismatch';
-  end if;
-
-  if coalesce(p_confidence,0) < 0.92 then
-    raise exception 'verification_confidence_too_low';
-  end if;
-
+  -- Lock the proof first so every verification attempt has a durable outcome.
   select * into v_payment
   from public.payment_proofs
   where id = p_payment_id
@@ -95,23 +78,68 @@ begin
     raise exception 'payment_proof_not_found';
   end if;
 
-  if exists (
+  if v_transaction_id is null then
+    v_status := 'manual_review';
+    v_reason := 'transaction_id_required';
+  elsif p_amount not in (50000, 80000) then
+    v_status := 'rejected';
+    v_reason := 'unsupported_plan_amount';
+  elsif lower(regexp_replace(coalesce(p_receiver_name,''), '[^a-zA-Z]', '', 'g'))
+        <> lower(regexp_replace('Moe Htet Kyaw', '[^a-zA-Z]', '', 'g')) then
+    v_status := 'rejected';
+    v_reason := 'receiver_name_mismatch';
+  elsif coalesce(p_confidence,0) < 0.92 then
+    v_status := 'manual_review';
+    v_reason := 'verification_confidence_too_low';
+  elsif exists (
     select 1 from public.payment_proofs
-    where transaction_id = p_transaction_id
+    where btrim(transaction_id) = v_transaction_id
       and id <> p_payment_id
   ) then
-    raise exception 'duplicate_transaction_id';
+    v_status := 'rejected';
+    v_reason := 'duplicate_transaction_id';
+  end if;
+
+  if v_status is not null then
+    update public.payment_proofs
+    set amount = p_amount,
+        transaction_id = v_transaction_id,
+        paid_at = p_paid_at,
+        sender_name = p_sender_name,
+        receiver_name = p_receiver_name,
+        status = v_status,
+        detected_plan = null,
+        confidence = p_confidence,
+        rejection_reason = v_reason,
+        raw_extraction = coalesce(p_raw_extraction,'{}'::jsonb),
+        verified_at = now()
+    where id = p_payment_id;
+
+    return jsonb_build_object(
+      'ok', false,
+      'payment_id', p_payment_id,
+      'shop_id', v_payment.shop_id,
+      'status', v_status,
+      'reason', v_reason
+    );
+  end if;
+
+  if p_amount = 50000 then
+    v_plan := 'starter';
+  else
+    v_plan := 'business';
   end if;
 
   update public.payment_proofs
   set amount = p_amount,
-      transaction_id = p_transaction_id,
+      transaction_id = v_transaction_id,
       paid_at = p_paid_at,
       sender_name = p_sender_name,
       receiver_name = p_receiver_name,
       status = 'approved',
       detected_plan = v_plan,
       confidence = p_confidence,
+      rejection_reason = null,
       raw_extraction = coalesce(p_raw_extraction,'{}'::jsonb),
       verified_at = now()
   where id = p_payment_id;
@@ -124,9 +152,10 @@ begin
     'ok', true,
     'payment_id', p_payment_id,
     'shop_id', v_payment.shop_id,
+    'status', 'approved',
     'plan', v_plan,
     'amount', p_amount,
-    'transaction_id', p_transaction_id
+    'transaction_id', v_transaction_id
   );
 end;
 $$;
