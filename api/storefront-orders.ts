@@ -2,6 +2,7 @@ import {createClient} from '@supabase/supabase-js';
 import {mapDbError} from '../src/domain/dbError.js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
+import {forwardedClientIp} from './_client-ip.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return sendJson(res, 405, {error: 'Method not allowed'});
@@ -17,6 +18,7 @@ export default async function handler(req: any, res: any) {
 
   const sb = createClient(env.url, env.key, {
     auth: {persistSession: false, autoRefreshToken: false},
+    global: {headers: {'x-forwarded-for': forwardedClientIp(req)}},
   });
   const {data, error} = await sb.rpc('lookup_order', {
     p_shop_slug: slug,
