@@ -68,6 +68,12 @@ export type Database = {
         }
         Relationships: []
       }
+      ninjavan_rates: {
+        Row: { id: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label: string; is_active: boolean; created_at: string }
+        Insert: { id?: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label?: string; is_active?: boolean; created_at?: string }
+        Update: { id?: string; origin_township?: string; destination_region?: string; destination_township?: string; fee?: number; source_label?: string; is_active?: boolean; created_at?: string }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -117,6 +123,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_fee: number
+          delivery_service: string | null
+          origin_township: string | null
           grand_total: number
           id: string
           is_billable: boolean
@@ -138,6 +146,8 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_fee?: number
+          delivery_service?: string | null
+          origin_township?: string | null
           grand_total?: number
           id?: string
           is_duplicate?: boolean
@@ -158,6 +168,8 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           delivery_fee?: number
+          delivery_service?: string | null
+          origin_township?: string | null
           grand_total?: number
           id?: string
           is_duplicate?: boolean
@@ -327,9 +339,12 @@ export type Database = {
         Row: {
           created_at: string
           default_delivery_fee: number
+          delivery_service: string
           id: string
           is_active: boolean
           logo_url: string | null
+          origin_region: string | null
+          origin_township: string | null
           name: string
           owner_id: string
           phone: string | null
@@ -341,9 +356,12 @@ export type Database = {
         Insert: {
           created_at?: string
           default_delivery_fee?: number
+          delivery_service?: string
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          origin_region?: string | null
+          origin_township?: string | null
           name: string
           owner_id: string
           phone?: string | null
@@ -355,9 +373,12 @@ export type Database = {
         Update: {
           created_at?: string
           default_delivery_fee?: number
+          delivery_service?: string
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          origin_region?: string | null
+          origin_township?: string | null
           name?: string
           owner_id?: string
           phone?: string | null
@@ -409,6 +430,10 @@ export type Database = {
           p_township: string
         }
         Returns: Json
+      }
+      resolve_delivery_fee: {
+        Args: { p_shop_id: string; p_region: string; p_township: string }
+        Returns: number
       }
       usage_tier: {
         Args: { p_count: number }

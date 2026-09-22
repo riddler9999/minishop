@@ -18,6 +18,9 @@ export interface OwnShop {
   phone: string | null;
   logoUrl: string | null;
   defaultDeliveryFee: number;
+  originRegion: string | null;
+  originTownship: string | null;
+  deliveryService: 'ninjavan' | 'custom';
   // Per-tenant plan, from the `shops.plan` column added in migration 0003.
   // Selected below → plan.tsx's resolvePlan() gates features per-tenant.
   plan?: string | null;
@@ -30,6 +33,9 @@ type ShopRow = {
   phone: string | null;
   logo_url: string | null;
   default_delivery_fee: number;
+  origin_region: string | null;
+  origin_township: string | null;
+  delivery_service: 'ninjavan' | 'custom';
   plan: string | null;
 };
 
@@ -41,13 +47,16 @@ function mapOwnShop(r: ShopRow): OwnShop {
     phone: r.phone,
     logoUrl: r.logo_url,
     defaultDeliveryFee: r.default_delivery_fee,
+    originRegion: r.origin_region,
+    originTownship: r.origin_township,
+    deliveryService: r.delivery_service,
     plan: r.plan,
   };
 }
 
 // Columns fetched for the seller's own shop. `plan` (migration 0003) makes the
 // frontend gating layer (plan.tsx) per-tenant.
-const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee, plan';
+const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee, origin_region, origin_township, delivery_service, plan';
 
 /** Null means this user hasn't created a shop yet — not an error. */
 export async function getOwnShop(userId: string): Promise<OwnShop | null> {
@@ -66,6 +75,9 @@ export interface UpdateShopInput {
   phone?: string | null;
   logoUrl?: string | null;
   defaultDeliveryFee?: number;
+  originRegion?: string | null;
+  originTownship?: string | null;
+  deliveryService?: 'ninjavan' | 'custom';
 }
 
 /**
@@ -82,6 +94,9 @@ export async function updateOwnShop(userId: string, input: UpdateShopInput): Pro
   if (input.phone !== undefined) patch.phone = input.phone?.trim() || null;
   if (input.logoUrl !== undefined) patch.logo_url = input.logoUrl?.trim() || null;
   if (input.defaultDeliveryFee !== undefined) patch.default_delivery_fee = input.defaultDeliveryFee;
+  if (input.originRegion !== undefined) patch.origin_region = input.originRegion?.trim() || null;
+  if (input.originTownship !== undefined) patch.origin_township = input.originTownship?.trim() || null;
+  if (input.deliveryService !== undefined) patch.delivery_service = input.deliveryService;
 
   const {data, error} = await sb
     .from('shops')
@@ -102,6 +117,9 @@ export interface CreateShopInput {
   slug: string;
   phone: string;
   defaultDeliveryFee: number;
+  originRegion: string;
+  originTownship: string;
+  deliveryService: 'ninjavan' | 'custom';
 }
 
 export async function createOwnShop(userId: string, input: CreateShopInput): Promise<OwnShop> {
@@ -114,6 +132,9 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
       slug: input.slug.trim(),
       phone: input.phone.trim() || null,
       default_delivery_fee: input.defaultDeliveryFee,
+      origin_region: input.originRegion.trim(),
+      origin_township: input.originTownship.trim(),
+      delivery_service: input.deliveryService,
     })
     .select(OWN_SHOP_COLUMNS)
     .single();
