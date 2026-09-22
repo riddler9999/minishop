@@ -29,6 +29,17 @@ describe('distributed API rate limiting', () => {
     assert.doesNotMatch(lookup, /_rate-limit|new Map<.*count/i);
   });
 
+  it('forwards the requester IP across the Vercel-to-Supabase hop', async () => {
+    const [checkout, lookup, clientIp] = await Promise.all([
+      readFile(checkoutApi, 'utf8'),
+      readFile(lookupApi, 'utf8'),
+      readFile(new URL('../api/_client-ip.ts', import.meta.url), 'utf8'),
+    ]);
+    assert.match(clientIp, /x-forwarded-for/);
+    assert.match(checkout, /'x-forwarded-for': forwardedClientIp\(req\)/);
+    assert.match(lookup, /'x-forwarded-for': forwardedClientIp\(req\)/);
+  });
+
   it('maps database rate-limit failures to HTTP 429 at both API boundaries', async () => {
     const [checkout, lookup] = await Promise.all([
       readFile(checkoutApi, 'utf8'),
