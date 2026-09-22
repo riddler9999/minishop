@@ -1,34 +1,30 @@
+import {Check, ArrowRight} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
-const AVATAR_ASSET = 'data:image/webp;base64,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';
-
 const sellerBenefits = [
-  'မိနစ်ပိုင်းအတွင်း ကိုယ့် Online Shop ဖန်တီးနိုင်မယ်',
   'ပစ္စည်း၊ စျေးနှုန်းနဲ့ Category တွေ စီမံနိုင်မယ်',
   'COD, KBZPay, WavePay နဲ့ Order လက်ခံနိုင်မယ်',
   'Order တွေကို တစ်နေရာတည်းက စီမံနိုင်မယ်',
-  'မြန်မာဘာသာ Customer Support',
+  'မြန်မာ Online Seller workflow အတွက်တည်ဆောက်ထားတယ်',
 ];
 
 export default function UseCases() {
   return (
-    <section className="landing-owner-section" id="use">
-      <div className="landing-owner-card">
-        <span className="landing-owner-eyebrow">FOR MYANMAR ONLINE BUSINESS OWNERS</span>
-        <h2>သင့်ရဲ့ အွန်လိုင်းစီးပွားရေးကို ပိုလွယ်ကူအောင်</h2>
-        <p>TikTok, Telegram, Facebook ပေါ်က Customer တွေကို ကိုယ့် Online Shop တစ်ခုထဲ စုစည်းပြီး ပစ္စည်းတွေကြည့်၊ Order တင်နိုင်အောင် လုပ်ပေးပါ။</p>
-        <ul>{sellerBenefits.map((item) => <li key={item}>{item}</li>)}</ul>
-      </div>
+    <section className="landing-owner-section">
+      <article className="landing-owner-card">
+        <span className="landing-section-pill">FOR MYANMAR SELLERS</span>
+        <h2>Store တစ်ခုဖွင့်ဖို့<br/>Developer မလိုပါဘူး</h2>
+        <p>MiniShop က Social Media seller တွေအတွက် လိုအပ်တာကိုပဲ တိုက်ရိုက်ထားတယ် — ပစ္စည်းတင်၊ ပို့ခသတ်မှတ်၊ Order လက်ခံ၊ စီမံ။</p>
+        <ul>{sellerBenefits.map((item) => <li key={item}><Check size={17} aria-hidden="true"/>{item}</li>)}</ul>
+      </article>
 
-      <div className="landing-final-card">
-        <div className="landing-final-copy">
-          <span className="landing-owner-eyebrow">START TODAY</span>
-          <h2>သင့်ရဲ့ Online Shop ကို အခုပဲ စတင်ပါ</h2>
-          <p>Social Media မှာ ရောင်းနေရတဲ့လုပ်ငန်းကို MiniShop နဲ့ ရှင်းရှင်းလင်းလင်း စနစ်တကျ ပြောင်းလိုက်ပါ။</p>
-          <Link className="landing-primary-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <span aria-hidden="true">→</span></Link>
-        </div>
-        <img className="landing-avatar" src={AVATAR_ASSET} alt="MiniShop seller avatar"/>
-      </div>
+      <article className="landing-final-card">
+        <span className="landing-section-pill">START TODAY</span>
+        <h2>သင့် Store Link ကို<br/>ဒီနေ့ပဲ စလုပ်ပါ</h2>
+        <p>ပစ္စည်းတွေ ပိုရှင်းရှင်းပြ၊ Customer ကို Order တင်ရ ပိုလွယ်အောင်လုပ်ပါ။</p>
+        <Link className="landing-primary-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
+        <span className="landing-final-note">အခမဲ့စတင်နိုင်သည် · Credit Card မလို</span>
+      </article>
     </section>
   );
 }
