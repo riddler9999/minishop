@@ -4,6 +4,7 @@ import {AdminAuthProvider} from '@/features/auth/adminAuth';
 import AdminLogin from '@/features/auth/pages/Login';
 import Onboarding from '@/features/auth/pages/Onboarding';
 import Subscribe from '@/features/billing/pages/Subscribe';
+import Billing from '@/features/billing/pages/Billing';
 import Dashboard from '@/features/admin/pages/Dashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="shipping" element={<AdminShipping />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
           <Route path="settings" element={<Settings />} />
         </Route>
