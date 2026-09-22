@@ -41,7 +41,7 @@ export default function SuperAdminDashboard() {
   }
 
   if(loading) return <div className="grid min-h-screen place-items-center">Loading…</div>;
-  if(!session) return <Navigate to="/admin/login" replace />;
+  if(!session) return <Navigate to="/admin/login" replace state={{from:"/superadmin"}} />;
   if(error==='Forbidden') return <div className="grid min-h-screen place-items-center bg-slate-950 p-6 text-white"><div className="text-center"><ShieldCheck className="mx-auto mb-3 h-10 w-10"/><h1 className="text-xl font-bold">Super Admin only</h1><p className="mt-2 text-sm text-slate-400">This account is not in SUPERADMIN_EMAILS.</p></div></div>;
 
   const cards=[
