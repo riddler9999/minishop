@@ -6,6 +6,7 @@ import Onboarding from '@/features/auth/pages/Onboarding';
 import Subscribe from '@/features/billing/pages/Subscribe';
 import Billing from '@/features/billing/pages/Billing';
 import Dashboard from '@/features/admin/pages/Dashboard';
+import SuperAdminDashboard from '@/features/superadmin/pages/SuperAdminDashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
 import AdminShipping from '@/features/shipping/pages/AdminShipping';
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/admin/subscribe" element={<Subscribe />} />
         <Route path="/admin/onboarding" element={<Onboarding />} />
         <Route
