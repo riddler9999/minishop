@@ -3,6 +3,7 @@ import {mapDbError} from '../src/domain/dbError.js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
+import {normalizeCheckoutInput} from './checkout-input.js';
 
 type CheckoutDeps = {
   createClient: typeof createClient;
@@ -57,58 +58,22 @@ export function createCheckoutHandler(
     }
 
     if (req.method === 'POST') {
-      const b = req.body || {};
-      const slug = clean(b.slug, 100);
-      const customer = {
-        name: clean(b.customer?.name, 120),
-        phone: clean(b.customer?.phone, 30),
-        street: clean(b.customer?.street, 300),
-        region: clean(b.customer?.region, 100),
-        township: clean(b.customer?.township, 100),
-      };
-      const paymentMethod = clean(b.paymentMethod, 30);
-      const paymentRefTail = clean(b.paymentRefTail, 20);
-
-      // Client retries share this UUID. Postgres enforces idempotency with the
-      // (shop_id, idempotency_key) unique index inside place_order().
-      const rawKey = clean(b.idempotencyKey, 40);
-      const idempotencyKey =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawKey)
-          ? rawKey
-          : null;
-
-      const rawItems = Array.isArray(b.items) ? b.items.slice(0, 25) : [];
-      const items = rawItems
-        .map((i: any) => ({
-          product_id: clean(i?.id, 100),
-          qty: Math.min(Math.max(Math.floor(Number(i?.qty) || 0), 0), 100),
-        }))
-        .filter((i: any) => i.product_id && i.qty > 0);
-
-      if (
-        !slug ||
-        !customer.name ||
-        !customer.phone ||
-        !customer.street ||
-        !customer.region ||
-        !customer.township ||
-        !paymentMethod ||
-        items.length === 0
-      ) {
+      const input = normalizeCheckoutInput(req.body);
+      if (!input) {
         return sendJson(res, 400, {error: 'Invalid checkout payload'});
       }
 
       const {data, error} = await sb.rpc('place_order', {
-        p_shop_slug: slug,
-        p_customer_name: customer.name,
-        p_customer_phone: customer.phone,
-        p_street: customer.street,
-        p_region: customer.region,
-        p_township: customer.township,
-        p_payment_method: paymentMethod,
-        p_payment_ref_tail: paymentRefTail,
-        p_items: items,
-        p_idempotency_key: idempotencyKey,
+        p_shop_slug: input.slug,
+        p_customer_name: input.customer.name,
+        p_customer_phone: input.customer.phone,
+        p_street: input.customer.street,
+        p_region: input.customer.region,
+        p_township: input.customer.township,
+        p_payment_method: input.paymentMethod,
+        p_payment_ref_tail: input.paymentRefTail,
+        p_items: input.items,
+        p_idempotency_key: input.idempotencyKey,
       });
 
       if (error) {
