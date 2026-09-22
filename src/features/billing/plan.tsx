@@ -6,11 +6,11 @@
 //
 // PLAN SOURCE (forward-compatible):
 //   1. `shop.plan` — the `shops.plan` column (migration 0003), selected by
-//      getOwnShop() (see sellerShop.ts). Defaults to 'starter' for every shop
+//      getOwnShop() (see sellerShop.ts). Defaults to 'free_trial' for new shops
 //      at the DB level, so this wins for every real shop today.
 //   2. `VITE_DEFAULT_PLAN` env — only reached when `shop.plan` is null/absent
 //      (a shop fetched before 0003 shipped, or no shop context at all).
-//   3. Hard default `'starter'` — missing or malformed configuration must never\n//      unlock paid features.
+//   3. Hard default `'free_trial'` — missing or malformed configuration must never\n//      unlock paid features.
 //
 // Plan is deliberately NOT settable from the seller UI: a seller must not be
 // able to unlock Business by clicking a toggle. Changing a live shop's plan is
@@ -76,19 +76,23 @@ export const PLAN_LABEL: Record<Plan, string> = {
   business: 'Business',
 };
 
-/** Resolve the effective plan: shop column → env default → fail-closed starter. */
+/** Resolve the effective plan: shop column → env default → fail-closed free_trial. */
 export function resolvePlan(shop?: Pick<OwnShop, 'plan'> | null): Plan {
   const fromEnv = import.meta.env.VITE_DEFAULT_PLAN as string | undefined;
   return resolvePlanValue(shop?.plan, fromEnv);
 }
 
 // ---- React context ----------------------------------------------------------
+export type PlanLoadStatus = 'loading' | 'ready' | 'error';
+
 interface PlanValue {
+  status: PlanLoadStatus;
   loading: boolean;
+  error: boolean;
   plan: Plan;
   features: PlanFeatures;
   shop: OwnShop | null;
-  /** Re-fetch the shop (after a settings save changes name/logo/etc.). */
+  /** Re-fetch the shop (after a settings save changes name/logo/etc.) or retry a failed load. */
   refresh: () => void;
 }
 
@@ -101,17 +105,24 @@ const PlanContext = createContext<PlanValue | null>(null);
  * branding fields and the plan.
  */
 export function PlanProvider({userId, children}: {userId: string; children: ReactNode}) {
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<PlanLoadStatus>('loading');
   const [shop, setShop] = useState<OwnShop | null>(null);
   const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
+    setStatus('loading');
     getOwnShop(userId)
-      .then((s) => alive && setShop(s))
-      .catch(() => alive && setShop(null))
-      .finally(() => alive && setLoading(false));
+      .then((s) => {
+        if (!alive) return;
+        setShop(s);
+        setStatus('ready');
+      })
+      .catch(() => {
+        if (!alive) return;
+        setShop(null);
+        setStatus('error');
+      });
     return () => {
       alive = false;
     };
@@ -120,13 +131,15 @@ export function PlanProvider({userId, children}: {userId: string; children: Reac
   const value = useMemo<PlanValue>(() => {
     const plan = resolvePlan(shop);
     return {
-      loading,
+      status,
+      loading: status === 'loading',
+      error: status === 'error',
       plan,
       features: PLAN_FEATURES[plan],
       shop,
       refresh: () => setNonce((n) => n + 1),
     };
-  }, [loading, shop]);
+  }, [status, shop]);
 
   return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 }
