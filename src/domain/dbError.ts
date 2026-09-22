@@ -31,7 +31,7 @@ export type DbErrorCode =
   | 'verification_confidence_too_low'
   | 'payment_proof_not_found'
   | 'duplicate_transaction_id'
-  // Entitlements / pricing V1 (place_order + product/entitlement guards, 0013)
+  // Entitlements / pricing V1 (place_order + product/entitlement guards, 0016)
   | 'order_quota_exhausted'
   | 'subscription_inactive'
   | 'product_limit_reached'
