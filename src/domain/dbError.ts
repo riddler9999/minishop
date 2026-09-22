@@ -31,6 +31,16 @@ export type DbErrorCode =
   | 'verification_confidence_too_low'
   | 'payment_proof_not_found'
   | 'duplicate_transaction_id'
+  // Entitlements / pricing V1 (place_order + product/entitlement guards, 0013)
+  | 'order_quota_exhausted'
+  | 'subscription_inactive'
+  | 'product_limit_reached'
+  | 'extra_orders_not_available'
+  // Owner-only entitlement RPC guards (service_role; sellers rarely see these)
+  | 'duplicate_payment'
+  | 'invalid_credit_quantity'
+  | 'unknown_shop'
+  | 'invalid_plan'
   // place_order() validation
   | 'invalid_payment_method'
   | 'invalid_cart'
@@ -68,6 +78,18 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   verification_confidence_too_low: 'ငွေလွှဲအထောက်အထားကို အလိုအလျောက် အတည်ပြုရန် မသေချာသေးပါ — လူကိုယ်တိုင် စစ်ဆေးရန် လိုအပ်ပါသည်။',
   payment_proof_not_found: 'ငွေလွှဲအထောက်အထား ရှာမတွေ့ပါ — ပြန်တင်ပြီး ထပ်ကြိုးစားပါ။',
   duplicate_transaction_id: 'ဒီ Transaction ID ကို အသုံးပြုပြီးဖြစ်ပါသည်။',
+  order_quota_exhausted:
+    'ဆိုင်၏ order လက်ခံနိုင်မှု ကန့်သတ်ချက် ပြည့်သွားပါပြီ — ဆိုင်ရှင်ကို ဆက်သွယ်ပါ။',
+  subscription_inactive:
+    'ဆိုင်သည် ယာယီ order လက်ခံနိုင်ခြင်း မရှိသေးပါ — ဆိုင်ရှင်ကို ဆက်သွယ်ပါ။',
+  product_limit_reached:
+    'အခမဲ့ Free Trial တွင် ပစ္စည်း ၁၀ ခုအထိသာ ထည့်နိုင်ပါသည် — Starter / Business သို့ upgrade လုပ်ပါ။',
+  extra_orders_not_available:
+    'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
+  duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',
+  invalid_credit_quantity: 'Extra Orders အရေအတွက် မမှန်ပါ။',
+  unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
+  invalid_plan: 'Plan အမျိုးအစား မမှန်ပါ။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
   invalid_cart: 'Shopping Cart အချက်အလက် မမှန်ပါ။',
   invalid_customer: 'ဝယ်ယူသူ အချက်အလက် (အမည် / ဖုန်း / လိပ်စာ) မမှန်ပါ။',
