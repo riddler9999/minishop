@@ -25,25 +25,32 @@ import {normalizePlan, resolvePlanValue, type Plan} from '@/domain/plan';
 export {normalizePlan};
 export type {Plan};
 
+// Pricing V1 feature decisions:
+//   - Township shipping is now a CORE feature for every plan (no `advancedShipping`
+//     gate any more), so it is intentionally absent from this interface.
+//   - Payment verification (last-5 matching) is NOT a plan differentiator — it is
+//     available on every plan.
+//   - The remaining Business-only gates are the genuinely advanced operational
+//     features that were already implemented.
 export interface PlanFeatures {
   /** Promotion pricing on products + the storefront "featured" carousel. */
   promotions: boolean;
-  /** Per-township shipping zones (beyond the single default delivery fee). */
-  advancedShipping: boolean;
   /** Last-5-digit payment-verification workflow in order management. */
   paymentVerification: boolean;
   /** Analytics/KPI depth on the dashboard (low stock, revenue breakdown). */
   advancedDashboard: boolean;
-  /** Shop logo + extended branding in settings. */
+  /** Shop logo + extended branding in settings + Store Design. */
   branding: boolean;
   /** Integration-ready hooks surface (webhooks/exports placeholder). */
   integrations: boolean;
 }
 
-const STARTER: PlanFeatures = {
+// Free trial and Starter share the same (core) feature set; they differ only in
+// order quota and Extra-Orders eligibility (see domain/entitlement.ts), never in
+// which UI capabilities render.
+const CORE: PlanFeatures = {
   promotions: false,
-  advancedShipping: false,
-  paymentVerification: false,
+  paymentVerification: true,
   advancedDashboard: false,
   branding: false,
   integrations: false,
@@ -51,7 +58,6 @@ const STARTER: PlanFeatures = {
 
 const BUSINESS: PlanFeatures = {
   promotions: true,
-  advancedShipping: true,
   paymentVerification: true,
   advancedDashboard: true,
   branding: true,
@@ -59,11 +65,13 @@ const BUSINESS: PlanFeatures = {
 };
 
 export const PLAN_FEATURES: Record<Plan, PlanFeatures> = {
-  starter: STARTER,
+  free_trial: CORE,
+  starter: CORE,
   business: BUSINESS,
 };
 
 export const PLAN_LABEL: Record<Plan, string> = {
+  free_trial: 'Free Trial',
   starter: 'Starter',
   business: 'Business',
 };
