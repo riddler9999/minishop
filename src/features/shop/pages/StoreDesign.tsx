@@ -13,7 +13,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {AlertTriangle, Check, Eye, Image as ImageIcon, Loader2, Palette, Pencil, RotateCcw, Save, Sparkles, Upload, X} from 'lucide-react';
 import {adminApi} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
-import {DEFAULT_THEME, type StorefrontTheme} from '@/domain/theme';
+import {DEFAULT_THEME, THEME_PRESETS, themeFromPreset, type StorefrontTheme, type ThemePresetId} from '@/domain/theme';
 import {FONT_PAIRING_IDS, FONT_PAIRINGS, type FontPairingId} from '@/domain/fontPairing';
 import {usePlan} from '@/features/billing/plan';
 import {PlanBadge, UpgradeCard} from '@/features/billing/PlanGate';
@@ -22,9 +22,10 @@ import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/cor
 import {cx} from '@/shared/lib/format';
 import StorePreview, {type PreviewPage} from '@/features/shop/components/StorePreview';
 
-type Section = 'global' | 'home' | 'category' | 'product';
+type Section = 'themes' | 'global' | 'home' | 'category' | 'product';
 
 const SECTIONS: {id: Section; label: string; preview: PreviewPage}[] = [
+  {id: 'themes', label: 'Themes', preview: 'home'},
   {id: 'global', label: 'အထွေထွေ', preview: 'home'},
   {id: 'home', label: 'ပင်မစာမျက်နှာ', preview: 'home'},
   {id: 'category', label: 'ပစ္စည်းစာရင်း', preview: 'category'},
@@ -69,7 +70,7 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
   const [supported, setSupported] = useState(true);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [section, setSection] = useState<Section>('global');
+  const [section, setSection] = useState<Section>('themes');
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
@@ -124,6 +125,10 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
 
   // Nested updaters — each returns a new theme so React re-renders the preview.
   const patch = (p: Partial<StorefrontTheme>) => {setDraft((d) => ({...d, ...p})); setOk(false);};
+  const applyPreset = (id: ThemePresetId) => {
+    setDraft((current) => themeFromPreset(id, current));
+    setOk(false);
+  };
   const patchHome = (p: Partial<StorefrontTheme['home']>) => {setDraft((d) => ({...d, home: {...d.home, ...p}})); setOk(false);};
   const patchAnnouncement = (p: Partial<StorefrontTheme['announcement']>) => {setDraft((d) => ({...d, announcement: {...d.announcement, ...p}})); setOk(false);};
   const patchCategory = (p: Partial<StorefrontTheme['category']>) => {setDraft((d) => ({...d, category: {...d.category, ...p}})); setOk(false);};
@@ -249,6 +254,37 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
           </div>
 
           <div className="rounded-2xl border border-cream-200 bg-white p-4 sm:p-5">
+            {section === 'themes' && (
+              <div className="space-y-3">
+                <div>
+                  <h2 className="my text-base font-bold text-ink">Store Theme ရွေးရန်</h2>
+                  <p className="my mt-1 text-xs text-ink-soft">Theme ရွေးပြီးနောက် အရောင်၊ စာသား၊ ပုံနဲ့ typography ကို ဆက်ပြီး customize လုပ်နိုင်သည်။</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(Object.entries(THEME_PRESETS) as [ThemePresetId, (typeof THEME_PRESETS)[ThemePresetId]][]).map(([id, preset]) => {
+                    const active = draft.presetId === id;
+                    return (
+                      <button key={id} type="button" onClick={() => applyPreset(id)}
+                        className={cx('my overflow-hidden rounded-2xl border p-3 text-left transition', active ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-cream-200 bg-white hover:bg-cream-50')}>
+                        <span className="mb-3 flex h-16 overflow-hidden rounded-xl border border-black/5 bg-white">
+                          <span className="w-2/5" style={{backgroundColor: preset.theme.accentColor}} />
+                          <span className="flex flex-1 flex-col justify-center gap-1.5 p-2">
+                            <span className="h-2 w-4/5 rounded-full bg-slate-900/80" />
+                            <span className="h-1.5 w-full rounded-full bg-slate-200" />
+                            <span className="h-1.5 w-2/3 rounded-full bg-slate-200" />
+                          </span>
+                        </span>
+                        <span className="my flex items-center justify-between gap-2 text-sm font-bold text-ink">
+                          {preset.label}{active && <Check className="h-4 w-4 text-brand-500" />}
+                        </span>
+                        <span className="my mt-1 block text-xs leading-5 text-ink-soft">{preset.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {section === 'global' && (
               <div className="space-y-4">
                 <FontPairingField value={draft.fontPairing} onChange={(v) => patch({fontPairing: v})} />
