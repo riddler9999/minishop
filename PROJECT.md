@@ -564,7 +564,7 @@ Redesigned admin navigation မှာ Shipping entry ကို မပြတေ�
 "New Orders" section က badge နဲ့ list ကို တစ်မျိုးတည်းသော source (`OPEN_STATUSES`) ကနေယူရမယ်။ Action လိုတဲ့ order count ကိုပြပြီး completed order list ပြတာမျိုး semantic mismatch မဖြစ်စေရ။
 
 
-### D55 — Paid Onboarding Gate (Plan ဝယ် → Manual Approval → Onboarding)
+### D55 — Paid Onboarding Gate (historical pricing; superseded by D56/D57)
 
 Seller တစ်ယောက် ဆိုင်စဖွင့်ခွင့်မရမီ **plan ကို ကြိုဝယ်** ရမယ်: Starter (50,000 Ks) သို့ Business
 (80,000 Ks) ရွေး → KBZPay/WavePay/AYA (`09969222535`, MOE HTET KYAW) သို့ ငွေလွှဲ → ငွေလွှဲ
@@ -630,7 +630,7 @@ Extra Orders — 500 Ks/order, preset 1/5/10/20/30/50, volume discount မရှ
 **Billable order:** valid customer order တစ်ခု အောင်မြင်စွာ ဖန်တီးတာနဲ့ entitlement ၁ ခုကို
 **ချက်ချင်း** consume လုပ်တယ် (Accepted/Shipped/Completed မစောင့် — seller-controlled status က
 billing ကို မထိစေရ)။ Cancellation/rejection က auto-refund မလုပ်။ **Monthly quota ကို အရင်ကုန်အောင်
-သုံးပြီးမှ purchased balance ကို သုံးတယ်။** Consumption ကို `place_order()` (0013) ထဲမှာ atomic +
+သုံးပြီးမှ purchased balance ကို သုံးတယ်။** Consumption ကို `place_order()` (0016) ထဲမှာ atomic +
 idempotent (`orders.idempotency_key`) လုပ်ပြီး entitlement row ကို `FOR UPDATE` lock လုပ်ထားလို့
 double-click / retry / concurrent final-slot order များကို ကာကွယ်တယ်။ Pure math ကို
 `src/domain/entitlement.ts` မှာ single source of truth အဖြစ်ထားပြီး SQL RPC က တစ်သဝေမတိမ်း mirror လုပ်တယ်။
@@ -670,11 +670,9 @@ order (retry = order တစ်ခုတည်း, consume ၁ ကြိမ်), 
 `tests/entitlement.test.ts`, migration invariant တွေကို `tests/entitlementMigration.test.ts` က guard လုပ်တယ်။
 `npm run check` — lint + test (332 pass) + build အားလုံး green။
 
-**Pending — apply မလုပ်ရသေး:** `0013` ကို live project (`fsxdnmnycizjkgstokze`) သို့ **owner go-ahead
-မရမချင်း apply မလုပ်ရ** (D7)။ Apply ပြီးမှသာ `database.types.ts` ကို regenerate 1:1 လုပ်ရန်
-(လက်ရှိ hand-authored delta ကို အစားထိုးရန်)။ `0008` က pending ဆက်ဖြစ်။
+**Applied (2026-09-23):** `0016_entitlements_and_pricing` ကို live project (`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး entitlement tables/indexes/functions ကို runtime မှာ verify လုပ်ထားတယ်။ Existing shops အားလုံးမှာ entitlement row ရှိပြီး `shops.plan ↔ shop_entitlements.plan` drift = 0။ `0008_shop_owner_unique` က pending ဆက်ဖြစ်။
 
-### D57 — Pricing V1 (0013) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
+### D57 — Pricing V1 (0016) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
 
 Pricing V1 (D56, `0016_entitlements_and_pricing.sql`) ကို branch ခွဲပြီး develop လုပ်နေစဉ်
 `main` မှာ **သီးခြား parallel work** ဝင်လာတယ် — `0011_payment_proof_auto_plan.sql`
@@ -692,7 +690,17 @@ D57 မှာဖော်ပြထားတဲ့ semantic conflict နှစ်
 3. Already-approved payment proof retry ကို idempotent return လုပ်ပြီး subscription cycle အသစ်ထပ်မဖွင့်ဘူး။
 4. Historical migration `0011` ကို rewrite မလုပ်ဘဲ later migration နဲ့ runtime contract ကို replace လုပ်ထားတယ်။
 
-Production migration apply က repo fix နဲ့သီးခြား cutover step ဖြစ်ပြီး live migration history စစ်ပြီး owner approval နဲ့သာလုပ်ရမယ်။
+**Applied (2026-09-23):** live migration history ကို reconcile လုပ်ပြီး `0011_payment_proof_auto_plan` foundation နဲ့ `0017_reconcile_payment_activation` ကို production သို့ apply လုပ်ထားတယ်။ Runtime verification မှာ 30,000/60,000 pricing, entitlement-aware activation, replay safety, entitlement rows အားလုံး PASS ဖြစ်တယ်။ Delivery migrations `0013`–`0015` ကတော့ production မှာ pending ဆက်ဖြစ်။
+
+
+### D58 — Checkout API regression coverage + distributed rate limit + payment-proof storage seam
+
+2026-09-23 audit မှာ checkout API boundary, Vercel process-local rate limiting, billing proof storage responsibilities နဲ့ stale migration docs ကို cleanup လုပ်တယ်။
+
+- `api/checkout.ts` ကို injectable handler seam နဲ့ဖွဲ့ပြီး POST checkout regression tests ထည့်ထားတယ်: valid idempotency forwarding, malformed UUID fail-safe, incomplete payload reject, DB rate-limit → HTTP 429, cart cap = DB contract 25 items။
+- Vercel memory `Map` rate limiter ကိုဖယ်ထားတယ်။ Anonymous abuse limiting ရဲ့ source of truth က migration `0007` ရဲ့ `private.api_rate_limits` + advisory lock + `private.enforce_rate_limit()` ဖြစ်ပြီး `place_order()` / `lookup_order()` နှစ်ခုလုံး DB-side enforce လုပ်တယ်။
+- `src/features/billing/paymentProofStorage.ts` က validation + upload → persist → rollback-new-upload-on-failure → old-proof-delete-after-success invariant ကိုတစ်နေရာတည်း encapsulate လုပ်တယ်။ `application.ts` နဲ့ `orderPacks.ts` က DB persistence ပဲပိုင်တော့တယ်။
+- Migration references ကို `0016`/`0017` runtime truth နဲ့ညှိပြီး `supabase/README.md` ကို live history အတိုင်းပြင်ထားတယ်။ `0013`–`0015` delivery migrations က production pending ဖြစ်တာကို explicit မှတ်ထားတယ်။
 
 ## Engineering Notes / Standing Rules
 
