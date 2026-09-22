@@ -3,12 +3,11 @@ import {Plus, Trash2, Check, Pencil, Truck} from 'lucide-react';
 import {adminApi} from '@/data/dataSource';
 import type {ShippingZone} from '@/domain/shop';
 import {ks, cx} from '@/shared/lib/format';
-import {usePlan} from '@/features/billing/plan';
-import {UpgradeCard} from '@/features/billing/PlanGate';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 
+// Per-township shipping zones are a CORE feature on every plan (pricing V1 — the
+// old Business-only gate was removed here and in the RLS policy, migration 0013).
 export default function AdminShipping() {
-  const {features} = usePlan();
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
@@ -25,10 +24,6 @@ export default function AdminShipping() {
   const townships = useMemo(() => townshipsOf(region), [region]);
 
   useEffect(() => {
-    if (!features.advancedShipping) {
-      setLoading(false);
-      return;
-    }
     let alive = true;
     adminApi
       .listShippingZones()
@@ -38,7 +33,7 @@ export default function AdminShipping() {
     return () => {
       alive = false;
     };
-  }, [features.advancedShipping]);
+  }, []);
 
   // Prefill the fee input with the static-table suggestion whenever both
   // region+township are chosen (seller can still override — it's just a hint).
@@ -94,22 +89,6 @@ export default function AdminShipping() {
   };
 
   const field = 'w-full rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-brand-400';
-
-  // Advanced (per-township) shipping zones are a Business feature. Starter shops
-  // charge the single default delivery fee set in "ဆိုင် ချိန်ညှိ".
-  if (!features.advancedShipping) {
-    return (
-      <div className="space-y-5">
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink">
-          <Truck className="h-6 w-6 text-brand-500" /> ပို့ဆောင်ခ ဇုန်များ
-        </h1>
-        <UpgradeCard title="မြို့နယ်အလိုက် ပို့ဆောင်ခ ဇုန်များ">
-          မြို့နယ်တစ်ခုချင်းစီအတွက် ပို့ခ သီးသန့်သတ်မှတ်ခြင်းသည် Business package feature ဖြစ်သည်။ Starter package တွင်
-          ဆိုင်၏ default ပို့ခ တစ်ခုတည်းကို “ဆိုင် ချိန်ညှိ” တွင် သတ်မှတ်နိုင်သည်။
-        </UpgradeCard>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-5">
