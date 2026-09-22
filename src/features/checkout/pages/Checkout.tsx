@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Check, Copy, ImageOff, Loader2} from 'lucide-react';
 import {api, isLiveBackend} from '@/data/dataSource';
 import type {MerchantAccount} from '@/domain/shop';
@@ -8,6 +8,17 @@ import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 
 type PayMethod = 'cod' | 'kpay' | 'wave';
+
+// A v4-ish UUID for the order idempotency key. Uses crypto.randomUUID when the
+// (in-app WebView) runtime provides it, with a safe fallback otherwise.
+function newIdempotencyKey(): string {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0;
+    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
 
 const METHODS: {key: PayMethod; label: string; sub: string}[] = [
   {key: 'cod', label: 'Cash on Delivery', sub: 'အိမ်ရောက် ငွေချေ'},
@@ -36,6 +47,7 @@ export default function Checkout() {
   const [shipCfg, setShipCfg] = useState<Awaited<ReturnType<typeof api.shippingConfig>> | null>(null);
   const [shipErr, setShipErr] = useState(false);
   const [shipReload, setShipReload] = useState(0);
+  const idempotencyKey = useRef('');
 
   useEffect(() => {
     let alive = true;
@@ -98,6 +110,10 @@ export default function Checkout() {
     if (!ready || submitting) return;
     setSubmitting(true);
     setErr('');
+    // A stable idempotency key per checkout intent: reused across double-clicks
+    // and network retries so place_order() returns the SAME order (and bills it
+    // once) instead of creating a duplicate. Regenerated only after success.
+    if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
     try {
       const res = await api.createOrder({
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
@@ -105,7 +121,9 @@ export default function Checkout() {
         paymentMethod: method,
         shippingFee: fee ?? 0,
         paymentRefTail: isOnline ? refTail.trim() : undefined,
+        idempotencyKey: idempotencyKey.current,
       });
+      idempotencyKey.current = '';
       clear();
       nav(`/order/${encodeURIComponent(res.orderId)}`, {
         state: {result: res, method, name: name.trim(), phone: phone.trim()},

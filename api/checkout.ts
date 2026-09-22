@@ -31,6 +31,11 @@ export default async function handler(req: any, res: any) {
     };
     const paymentMethod = clean(b.paymentMethod, 30);
     const paymentRefTail = clean(b.paymentRefTail, 20);
+    // Idempotency key (client-supplied UUID): forwarded to place_order so a
+    // retry/double-click returns the original order instead of billing twice.
+    // Only a well-formed UUID is passed through; anything else becomes null.
+    const rawKey = clean(b.idempotencyKey, 40);
+    const idempotencyKey = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawKey) ? rawKey : null;
     const rawItems = Array.isArray(b.items) ? b.items.slice(0, 100) : [];
     const items = rawItems.map((i: any) => ({product_id: clean(i?.id, 100), qty: Math.min(Math.max(Math.floor(Number(i?.qty) || 0), 0), 100)})).filter((i: any) => i.product_id && i.qty > 0);
     if (!slug || !customer.name || !customer.phone || !customer.street || !customer.region || !customer.township || !paymentMethod || items.length === 0) {
@@ -41,6 +46,7 @@ export default async function handler(req: any, res: any) {
       p_street: customer.street, p_region: customer.region, p_township: customer.township,
       p_payment_method: paymentMethod, p_payment_ref_tail: paymentRefTail,
       p_items: items,
+      p_idempotency_key: idempotencyKey,
     });
     if (error) return sendJson(res, 400, {error: mapDbError(error.message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။')});
     return sendJson(res, 200, {order: data});
