@@ -132,8 +132,8 @@ export async function createOwnShop(userId: string, input: CreateShopInput): Pro
       slug: input.slug.trim(),
       phone: input.phone.trim() || null,
       default_delivery_fee: input.defaultDeliveryFee,
-      origin_region: input.originRegion,
-      origin_township: input.originTownship,
+      origin_region: input.originRegion.trim(),
+      origin_township: input.originTownship.trim(),
       delivery_service: input.deliveryService,
     })
     .select(OWN_SHOP_COLUMNS)
