@@ -15,7 +15,7 @@ export default function HeroSection() {
         </Link>
         <div className="landing-topbar-actions">
           <Link className="landing-text-link" to="/demo">Demo Store</Link>
-          <Link className="landing-topbar-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <ArrowRight size={16}/></Link>
+          <Link className="landing-topbar-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
         </div>
       </div>
 
@@ -41,7 +41,7 @@ export default function HeroSection() {
         </div>
         <div className="landing-floating-card landing-floating-card-top">
           <span className="landing-floating-icon"><Clock3 size={18} aria-hidden="true"/></span>
-          <span><strong>၂ မိနစ်ခန့်</strong><small>ဆိုင်ဖွင့်ရန်</small></span>
+          <span><strong>မြန်မြန်စတင်နိုင်</strong><small>လွယ်ကူတဲ့ setup</small></span>
         </div>
         <div className="landing-floating-card landing-floating-card-bottom">
           <span className="landing-floating-icon"><Smartphone size={18} aria-hidden="true"/></span>
