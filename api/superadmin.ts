@@ -2,7 +2,7 @@ import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
 import {requireSuperadmin} from './_superadmin.js';
 
-const ACTIONS = new Set(['activate','renew','upgrade','downgrade','cancel','credit-pack','toggle-shop']);
+const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
 
 export default async function handler(req: any, res: any) {
   const access = await requireSuperadmin(req);
@@ -28,7 +28,7 @@ export default async function handler(req: any, res: any) {
         pendingOrderPacks: (packs || []).filter((p: any) => p.status === 'pending').length,
         recordedRevenue: totalRevenue,
       },
-      shops: shops || [], applications: applications || [], packs: packs || [], entitlements: entitlements || [],
+      shops: shops || [], applications: await Promise.all((applications || []).map(async (a: any) => ({...a, proofUrl: a.screenshot_path ? (await sb.storage.from('payment-proofs').createSignedUrl(a.screenshot_path, 300)).data?.signedUrl || null : null}))), packs: await Promise.all((packs || []).map(async (p: any) => ({...p, proofUrl: p.screenshot_path ? (await sb.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 300)).data?.signedUrl || null : null}))), entitlements: entitlements || [],
     });
   }
 
@@ -40,7 +40,12 @@ export default async function handler(req: any, res: any) {
   const paymentRef = clean(body.paymentRef, 120) || null;
 
   let error: any = null;
-  if (action === 'activate') {
+  if (action === 'approve-application' || action === 'reject-application') {
+    const ownerId = clean(body.ownerId, 80);
+    if (!ownerId) return sendJson(res, 400, {error:'Missing owner'});
+    const status = action === 'approve-application' ? 'approved' : 'rejected';
+    ({error} = await sb.from('shop_applications').update({status, reviewed_at: new Date().toISOString(), review_note: clean(body.note, 500) || null}).eq('owner_id', ownerId).eq('status','pending'));
+  } else if (action === 'activate') {
     const plan = clean(body.plan, 30);
     if (!shopId || !['starter','business'].includes(plan)) return sendJson(res, 400, {error:'Invalid activation'});
     ({error} = await sb.rpc('admin_activate_subscription', {p_shop_id: shopId, p_plan: plan, p_payment_ref: paymentRef}));
@@ -61,6 +66,10 @@ export default async function handler(req: any, res: any) {
     const purchaseId = clean(body.purchaseId, 80);
     if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
     ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId}));
+  } else if (action === 'reject-pack') {
+    const purchaseId = clean(body.purchaseId, 80);
+    if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
+    ({error} = await sb.from('order_pack_purchases').update({status:'rejected', reviewed_at:new Date().toISOString(), review_note: clean(body.note,500)||null}).eq('id',purchaseId).eq('status','pending'));
   } else if (action === 'toggle-shop') {
     if (!shopId || typeof body.active !== 'boolean') return sendJson(res, 400, {error:'Invalid shop state'});
     ({error} = await sb.from('shops').update({is_active: body.active}).eq('id', shopId));
