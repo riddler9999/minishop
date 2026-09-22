@@ -29,9 +29,10 @@ describe('resolveOnboardingGate', () => {
 });
 
 describe('subscription pricing + payment config', () => {
-  it('prices match the owner-set plan fees', () => {
-    assert.equal(PLAN_PRICE_KS.starter, 50000);
-    assert.equal(PLAN_PRICE_KS.business, 80000);
+  it('prices match the finalized pricing V1 monthly fees', () => {
+    assert.equal(PLAN_PRICE_KS.free_trial, 0);
+    assert.equal(PLAN_PRICE_KS.starter, 30000);
+    assert.equal(PLAN_PRICE_KS.business, 60000);
   });
 
   it('the three payment methods each have a label', () => {
