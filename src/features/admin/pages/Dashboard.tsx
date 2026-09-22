@@ -7,6 +7,7 @@ import type {Product} from '@/domain/product';
 import {ks} from '@/shared/lib/format';
 import {usePlan} from '@/features/billing/plan';
 import {UpgradeCard} from '@/features/billing/PlanGate';
+import EntitlementSummary from '@/features/billing/components/EntitlementSummary';
 import {statusMeta, PAID_STATUSES, OPEN_STATUSES, type OrderStatus} from '@/domain/orderStatus';
 import {addYangonDays, getYangonAnalyticsWindow, YANGON_TZ} from '@/features/admin/lib/analyticsTime';
 import {useAdminAuth} from '@/features/auth/adminAuth';
@@ -213,6 +214,8 @@ export default function Dashboard() {
           );
         })}
       </section>
+
+      <EntitlementSummary />
 
       {!loading && <RevenueTrend points={revenuePoints} />}
 
