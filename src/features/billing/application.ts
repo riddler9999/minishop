@@ -25,7 +25,7 @@ export interface ShopApplication {
   paymentMethod: string;
   paymentRefTail: string | null;
   transactionId: string | null;
-  screenshotPath: string;
+  screenshotPath: string | null;
   amount: number;
   status: ApplicationStatus;
   reviewNote: string | null;
@@ -40,7 +40,7 @@ type ApplicationRow = {
   payment_method: string;
   payment_ref_tail: string | null;
   transaction_id: string | null;
-  screenshot_path: string;
+  screenshot_path: string | null;
   amount: number;
   status: string;
   review_note: string | null;
