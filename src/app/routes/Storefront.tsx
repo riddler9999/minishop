@@ -1,5 +1,6 @@
 // ---- SHELL: buyer storefront -------------------------------------------------
-import {Route, Routes} from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {Link, Route, Routes} from 'react-router-dom';
 import Layout from '@/shared/ui/Layout';
 import NotFound from '@/shared/ui/NotFound';
 import Home from '@/features/catalog/pages/Home';
@@ -9,6 +10,9 @@ import Checkout from '@/features/checkout/pages/Checkout';
 import OrderSuccess from '@/features/checkout/pages/OrderSuccess';
 import OrderLookup from '@/features/orders/pages/OrderLookup';
 import PolicyPage from '@/shared/ui/PolicyPage';
+import {useAdminAuth} from '@/features/auth/adminAuth';
+import {getOwnShop} from '@/features/shop/sellerShop';
+import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
 
 // Storefront branch — keeps the customer-facing chrome (header/footer/cart).
 // Mounted at both the root (`/*`, demo shop, no slug) and `/s/:slug/*` (a real
@@ -16,8 +20,37 @@ import PolicyPage from '@/shared/ui/PolicyPage';
 // them — absolute paths would throw "Absolute route path nested under…" under
 // `/s/:slug/*` (react-router v7).
 export default function Storefront() {
+  const {user} = useAdminAuth();
+  const shop = getCachedShopInfo();
+  const [ownership, setOwnership] = useState<'checking' | 'own' | 'other'>(() => user && shop ? 'checking' : 'other');
+
+  useEffect(() => {
+    let alive = true;
+    if (!user || !shop) {
+      setOwnership('other');
+      return () => { alive = false; };
+    }
+    setOwnership('checking');
+    getOwnShop(user.id)
+      .then((own) => {
+        if (alive) setOwnership(own?.slug === shop.slug ? 'own' : 'other');
+      })
+      .catch(() => {
+        if (alive) setOwnership('other');
+      });
+    return () => { alive = false; };
+  }, [user, shop?.slug]);
+
+  const drawerFooterAction = ownership === 'own' ? (
+    <Link to="/admin" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
+      Dashboard
+    </Link>
+  ) : ownership === 'checking' ? (
+    <div className="h-12 w-full animate-pulse rounded-full bg-rose-100" aria-label="Checking seller access" />
+  ) : undefined;
+
   return (
-    <Layout>
+    <Layout drawerFooterAction={drawerFooterAction}>
       <Routes>
         <Route index element={<Home />} />
         <Route path="products" element={<Products />} />

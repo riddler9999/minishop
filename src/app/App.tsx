@@ -3,11 +3,13 @@ import {Route, Routes} from 'react-router-dom';
 import {AdminAuthProvider} from '@/features/auth/adminAuth';
 import AdminLogin from '@/features/auth/pages/Login';
 import Onboarding from '@/features/auth/pages/Onboarding';
+import Subscribe from '@/features/billing/pages/Subscribe';
 import Dashboard from '@/features/admin/pages/Dashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
 import AdminShipping from '@/features/shipping/pages/AdminShipping';
 import Settings from '@/features/shop/pages/Settings';
+import StoreDesign from '@/features/shop/pages/StoreDesign';
 import Landing from '@/features/landing/pages/Landing';
 import AdminConsole from './routes/AdminConsole';
 import RequireAdmin from './routes/RequireAdmin';
@@ -20,6 +22,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/subscribe" element={<Subscribe />} />
         <Route path="/admin/onboarding" element={<Onboarding />} />
         <Route
           path="/admin"
@@ -32,6 +35,7 @@ export default function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="shipping" element={<AdminShipping />} />
+          <Route path="design" element={<StoreDesign />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />

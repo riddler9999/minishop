@@ -3,10 +3,29 @@ import {Menu, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
-import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
+import {FONT_PAIRINGS} from '@/domain/fontPairing';
+import {getCachedShopInfo, getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
 import CartDrawer from '@/features/cart/components/CartDrawer';
+
+/**
+ * CSS custom properties, scoped to the storefront root, that carry the shop's
+ * chosen font pairing. `font-display`/`font-sans` (Tailwind utilities backed by
+ * these same variable names, see index.css) already appear throughout the
+ * storefront and buyer flows (Products, ProductDetail, Checkout, OrderLookup,
+ * OrderSuccess), so overriding the variables here — plus recomputing this
+ * wrapper's own `font-family` so descendants without an explicit class inherit
+ * it too — retints the whole buyer experience without touching every page.
+ */
+function fontPairingStyle(fontPairing: keyof typeof FONT_PAIRINGS): React.CSSProperties {
+  const pairing = FONT_PAIRINGS[fontPairing];
+  return {
+    ['--font-display' as string]: pairing.display,
+    ['--font-sans' as string]: pairing.body,
+    fontFamily: 'var(--font-sans)',
+  };
+}
 
 function Brand() {
   const shop = getCachedShopInfo();
@@ -20,7 +39,7 @@ function Brand() {
       ) : (
         <ShoppingBag className="mb-1 h-5 w-5 text-[#e11d48]" strokeWidth={1.6} aria-hidden="true" />
       )}
-      <span className="w-full max-w-[180px] truncate text-[18px] font-bold leading-none tracking-[-0.02em] text-slate-950 sm:max-w-[260px] sm:text-[22px]">
+      <span className="font-display w-full max-w-[180px] truncate text-[18px] font-bold leading-none tracking-[-0.02em] text-slate-950 sm:max-w-[260px] sm:text-[22px]">
         {name}
       </span>
     </ShopLink>
@@ -33,13 +52,27 @@ const DRAWER_NAV = [
   {to: '/refund-policy', label: 'Refund Policy'},
 ];
 
-export default function Layout({children}: {children: React.ReactNode}) {
+// Storefront-wide announcement bar (Store Design). Hidden unless the seller has
+// both enabled it and given it text.
+function AnnouncementBar() {
+  const theme = getStorefrontTheme();
+  const {enabled, text} = theme.announcement;
+  if (!enabled || !text.trim()) return null;
+  return (
+    <div style={{backgroundColor: theme.accentColor}} className="px-4 py-2 text-center text-xs font-semibold text-white sm:text-sm">
+      {text}
+    </div>
+  );
+}
+
+export default function Layout({children, drawerFooterAction}: {children: React.ReactNode; drawerFooterAction?: React.ReactNode}) {
   const {count, openDrawer} = useCart();
   const {pathname} = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const shop = getCachedShopInfo();
   const shopName = shop?.name ?? APP_NAME;
+  const theme = getStorefrontTheme();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -58,6 +91,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
     };
   }, [shopName]);
 
+
   useEffect(() => {
     if (!menuOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -68,7 +102,8 @@ export default function Layout({children}: {children: React.ReactNode}) {
   }, [menuOpen]);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-clip bg-white">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-white" style={fontPairingStyle(theme.fontPairing)}>
+      <AnnouncementBar />
       <header className="sticky top-0 z-40 border-b border-rose-100 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto grid h-[82px] w-full max-w-[1440px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 px-3 sm:h-[96px] sm:grid-cols-[112px_minmax(0,1fr)_112px] sm:px-6 lg:grid-cols-[180px_minmax(0,1fr)_180px] lg:px-8">
           <div className="flex items-center justify-start">
@@ -78,14 +113,14 @@ export default function Layout({children}: {children: React.ReactNode}) {
           </div>
           <Brand />
           <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
-            <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="hidden h-11 w-11 place-items-center rounded-full text-[#271b12] transition hover:bg-[#f3eadf] sm:grid">
+            <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="hidden h-11 w-11 place-items-center rounded-full text-[#271b12] transition hover:bg-[#f3eadf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] sm:grid">
               <Search className="h-[22px] w-[22px]" strokeWidth={1.7} />
             </ShopLink>
             <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className="relative grid h-11 w-11 place-items-center rounded-full text-[#271b12] transition hover:bg-[#f3eadf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
               <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.7} />
               {count > 0 && <span className="absolute right-0 top-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#e11d48] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
             </button>
-            <ShopLink to="/products" className="hidden min-h-11 items-center rounded-full bg-[#e11d48] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#be123c] lg:inline-flex">ပစ္စည်းများကြည့်ရန်</ShopLink>
+            <ShopLink to="/products" className="hidden min-h-11 items-center rounded-full bg-[#e11d48] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-2 lg:inline-flex">ပစ္စည်းများကြည့်ရန်</ShopLink>
           </div>
         </div>
       </header>
@@ -134,9 +169,11 @@ export default function Layout({children}: {children: React.ReactNode}) {
               ))}
             </nav>
             <div className="mt-auto border-t border-rose-100 pt-6">
-              <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
-                အော်ဒါစစ်ရန်
-              </ShopLink>
+              {drawerFooterAction ?? (
+                <ShopLink to="/orders" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#e11d48] px-5 py-3 text-sm font-semibold text-white hover:bg-[#be123c]">
+                  အော်ဒါစစ်ရန်
+                </ShopLink>
+              )}
             </div>
           </aside>
         </div>

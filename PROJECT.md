@@ -295,6 +295,61 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 
 ## အရေးကြီး Architecture Decisions
 
+### D54 — Buyer Storefront + Admin Console Typography Redesign (Font Pairing)
+
+`/ui-ux-pro-max` skill ရဲ့ data-driven design-system search ("fashion clothing boutique storefront mobile") က လက်ရှိ visual identity (rose/blush accent, white background, minimal layout) ကို confirm လုပ်ပေးခဲ့တယ် — ဒါကြောင့် redesign ကို color/layout ground-up rebuild မလုပ်ဘဲ **typography + interaction polish** အဖြစ်ပဲ scope ချထားတယ် (owner ရွေးချယ်ချက်)။
+
+**ဆုံးဖြတ်ချက်:** App-wide default typography ကို system-sans ကနေ **Calistoga (display) / Inter (body)** ("boutique" pairing) အဖြစ် `src/index.css`-ရဲ့ `--font-display`/`--font-sans` tokens မှာ ပြောင်းထားတယ် — `font-display`/`font-sans` utility class တွေက admin console + buyer storefront (Products, ProductDetail, Checkout, OrderLookup, OrderSuccess) တစ်ခုလုံးမှာ ရှိပြီးသားဖြစ်လို့ token တစ်ခုတည်း ပြောင်းရုံနဲ့ site တစ်ခုလုံး အလိုအလျောက် retint ဖြစ်သွားတယ်။ **Myanmar glyph fallback အမြဲ ဦးစားပေးထားတယ်** — pairing တစ်ခုစီရဲ့ `font-family` stack မှာ Latin display face ပြီးရင် `Pyidaungsu`/`Noto Sans Myanmar` ချက်ချင်းလိုက်ထားတယ်၊ ဒါကြောင့် Burmese စာလုံး (buyer-facing copy အများစု) က မပြောင်းဘဲ ဆက်ပေါ်၊ Latin character (ဈေးနှုန်း၊ English label၊ brand name) ချည်းသာ boutique feel ရရှိတယ်။
+
+**Store Design (D52) theme system ကို ချဲ့ထားတယ်:** `StorefrontTheme.fontPairing` (`'boutique' | 'classic' | 'minimal'`, `src/domain/fontPairing.ts`) — seller တစ်ယောက်စီက Store Design > အထွေထွေ ကနေ ရွေးနိုင်တယ်။ Curated preset ၃ ခုပဲ ခွင့်ပြုထားတယ် (free-text font name/URL မဟုတ်ဘူး) — attacker-chosen remote stylesheet load ခံရနိုင်တဲ့ risk ကို ကာကွယ်ဖို့။ `theme.ts`'s existing fail-safe philosophy အတိုင်း `normalizeTheme()` က unknown value ကို default (`boutique`) ပြန်ပေးတယ်။ `jsonb` column (migration 0009) ရှိပြီးသားမို့ **schema migration အသစ် မလိုအပ်ပါ**။ Data model အနေနဲ့ D52 ရဲ့ "unopened theme = original hardcoded COPY" invariant ကို fontPairing က မဖျက်ဘူး — ဒါက app-wide design token (D51 ရဲ့ site-wide fashion redesign ကဲ့သို့) ဖြစ်ပြီး seller-authored COPY မဟုတ်လို့ပါ။
+
+**Admin console polish:** `AdminLayout.tsx` ရဲ့ nav link/button (desktop sidebar, mobile bottom nav, mobile drawer, header menu) တွေမှာ `focus-visible` ring မရှိတာကို skill ရဲ့ Accessibility Quick Reference (`keyboard-nav`, `focus-states`) အတိုင်း ထည့်ခဲ့တယ်။ Storefront ရဲ့ search icon link နဲ့ desktop CTA link မှာလည်း focus ring ချို့တဲ့နေတာကို ပြင်ခဲ့တယ်။
+
+**Verification:** `tests/theme.test.ts` + `tests/fontPairing.test.ts` က fail-safe normalization ကို cover လုပ်တယ်။ Browser screenshot verification (Playwright, Chromium) — Home/Products/ProductDetail — Myanmar text shaping အတွက် container ထဲမှာ Noto Sans Myanmar font install လုပ်ပြီးမှ စစ်ခဲ့တယ် (dev-only verification step, production concern မဟုတ်ဘူး — real device တွေမှာ Myanmar font ရှိပြီးသားဖြစ်မယ်)။
+
+### D52 — Store Design (Storefront Customization / Theme)
+
+Seller က Admin Dashboard ကနေ storefront ရဲ့ **Homepage / Category page / Product page**
+တွေကို Shopify store-builder ပုံစံ customize လုပ်နိုင်အောင် "Store Design" feature ထည့်ထားတယ်။
+Editor က inspector (ဘယ်ဘက် form) + live phone preview (ညာဘက် canvas) ဆိုတဲ့ two-pane
+ပုံစံဖြစ်ပြီး draft `StorefrontTheme` တစ်ခုတည်းက drive လုပ်တယ် (`/admin/design`)။
+
+**Data model** — `shops.theme` (jsonb) column အသစ် (migration `0009_shop_theme.sql`)။
+Customization က cosmetic သက်သက် — hero/section copy, section toggle (hero / category rail /
+search box / related products), hero image, announcement bar, accent colour။ Security boundary
+မဟုတ်ဘူး — RLS (`shops_owner_all`) က owner-scoped write ကို ဆက်ထိန်းပြီး၊ 0007 trigger က
+`theme` ကို မကိုင်လို့ trigger ပြင်စရာမလို။
+
+**Fail-safe** — `src/domain/theme.ts` (pure leaf, `plan.ts`/`orderStatus.ts` pattern) မှာ
+`DEFAULT_THEME` + `normalizeTheme()` ရှိတယ်။ `normalizeTheme()` က မည်သည့် untrusted value
+(raw jsonb, null, partial/old blob, garbage) ကိုမဆို complete + valid `StorefrontTheme`
+အဖြစ် ပြန်ပေးတယ် — invalid/missing field တိုင်း default ဆီ fall back လုပ်တာမို့ storefront ဘယ်တော့မှ
+ပျက်လို့မရ။ `DEFAULT_THEME` က storefront ရဲ့ မူလ hardcoded Burmese copy အတိအကျဖြစ်လို့ theme
+မသတ်မှတ်ရသေးတဲ့ ဆိုင် (theme = `{}`) က အရင်အတိုင်းပဲ မြင်ရမယ်။
+
+**Read paths (defensive)** — write/read နှစ်ဖက်လုံးမှာ `normalizeTheme()` ဖြတ်တယ်။
+Storefront gateway (`api/storefront.ts` action=shop) က `theme` ကို **သီးခြား query** နဲ့ဆွဲပြီး
+error ဖြစ်ရင် null → default; core shop payload ဘယ်တော့မှ မကျ။ `shopResolver` က `ShopInfo`
+ကို slug + normalized theme နဲ့ဆောက်ပြီး hero image ကို first-party media proxy
+(`/api/storefront/shop-logos/…`, PR #43) ဆီ rewrite လုပ်တယ်။ Admin `getShopTheme()` က column
+မရှိသေးရင် `supported:false` ပြန်ပေးပြီး editor မှာ migration-pending banner ပြတယ်။
+
+**Plan gating** — `features.branding` (Business) အောက်မှာ gate လုပ်ထားတယ် (logo/branding နဲ့
+ကိုက်ညီအောင်)။ Starter မှာ `UpgradeCard` ပြတယ်။ Downgrade လုပ်ရင် theme data မဖျက် — upgrade
+ပြန်လုပ်ရင် ပြန်ပေါ်တယ်။
+
+**Hero image** — `uploadShopLogo` (shop-logos bucket) ကို ပြန်သုံးပြီး upload-before-write
+invariant (unsaved upload ကို replace/save-fail/unmount မှာ cleanup၊ old object ကို write
+အောင်မြင်မှသာ ဖျက်) ကို Settings logo နဲ့တူအောင် လိုက်နာထားတယ်။
+
+**Applied (2026-09-21):** `0009_shop_theme` ကို owner go-ahead ဖြင့် live project
+(`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီးပြီ — `list_migrations` မှာ `20260921221919 shop_theme`
+အဖြစ်တည်ရှိတယ်။ `database.types.ts` ရဲ့ `shops` block က live schema (`theme: Json`) နဲ့ တိတိကျကျ
+sync ဖြစ်နေတာ regenerate output နဲ့တိုက်စစ်ပြီးဖြစ်တယ် (ကျန် generator drift ကို မထည့်ဘဲ hand-maintained
+version ကို ထားတယ် — CLAUDE.md type-maintenance standing rule အတိုင်း)။ `tests/theme.test.ts` က
+normalizeTheme contract ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကတော့ pending ဆက်ဖြစ်တယ် —
+ဒီ migration က မထိ။)
+
 ### D49 — Shop တစ်ဆိုင် per Owner ကို DB Invariant အဖြစ် Enforce လုပ်တယ်
 
 Seller signup flow ကို audit လုပ်ရာမှာ latent lockout risk တစ်ခုတွေ့ခဲ့တယ်။ Admin flow တစ်ခုလုံး (`RequireAdmin`, `Onboarding` self-guard, `ownShop`) က "owner တစ်ယောက် = shop တစ်ဆိုင်" ဆိုတဲ့ invariant ကို `.maybeSingle()` နဲ့ မှီခိုနေပြီး၊ `.maybeSingle()` က row ၂ ခုတွေ့ရင် **throw** ဖြစ်တယ်။ ဒါပေမဲ့ `shops` table မှာ `owner_id` အပေါ် unique constraint မရှိခဲ့ဘူး (non-unique index `shops_owner_idx` သာ)။ Double-submit / two-tab / navigate မဖြစ်မီ retry ကနေ shop ၂ ခုဖြစ်သွားရင် နောက်ပိုင်း login တိုင်း `getOwnShop()` throw → seller ဟာ console ထဲ ဘယ်တော့မှ ဝင်လို့မရတော့တဲ့ dead-lock ဖြစ်နိုင်တယ်။
@@ -487,6 +542,14 @@ Buyer storefront ကို jewellery-specific presentation ကနေ white + blu
 
 Repo cleanup အနေနဲ့ runtime မှာမသုံးတော့တဲ့ jewellery assets နဲ့ `.jewel-cta` style ကိုဖယ်ထားတယ်။ Personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားတော့ဘူး။ Project-specific `.claude/skills/supabase-migration/SKILL.md` တစ်ခုပဲထားမယ်။ Third-party tools/skills ကို developer environment ကနေ install/use လုပ်ရမယ်။
 
+### D53 — `ui-ux-pro-max` Skill ကို D51 Policy ရဲ့ Named Exception အဖြစ် Vendor လုပ်တယ်
+
+D51 က personal `.claude/settings.json` နဲ့ vendored third-party skills/data ကို repo ထဲမထားရ၊ project-specific `supabase-migration` skill တစ်ခုပဲ commit လုပ်ရမယ်လို့ ဆုံးဖြတ်ခဲ့တယ်။ Project owner ရဲ့ explicit request အရ ဒီ policy ကို named exception တစ်ခုနဲ့ ချိန်ညှိထားတယ် — blanket reopening မဟုတ်ဘူး။
+
+**ဆုံးဖြတ်ချက်:** `nextlevelbuilder/ui-ux-pro-max-skill` (MIT license, npm package `ui-ux-pro-max-cli@2.15.0`) ကို `.claude/skills/ui-ux-pro-max/` + ၎င်းရဲ့ bundled sub-skills (`banner-design`, `brand`, `design`, `design-system`, `slides`, `ui-styling`) အဖြစ် repo ထဲ vendor လုပ်ထားတယ်။ Install လုပ်ခင် `npm pack` နဲ့ tarball ကို download ပြီး `dist/index.js` ကို manual review လုပ်ခဲ့တယ် — `init` command (non-`--legacy`) က bundled templates/assets ကို local file copy + text substitution ချည်းသာ လုပ်တာ (network call, `child_process` exec, credential access မပါ) ဆိုတာ confirm ဖြစ်ခဲ့လို့ `npx` ကို run မယ့်အစား ဒီ repo ထဲမှာပဲ ထပ်တူ manual reproduce လုပ်ခဲ့တယ်။ `--legacy` mode ကိုသာ GitHub release ကနေ download လုပ်တာမို့ မသုံးထားဘူး။ `ui-styling` sub-skill ရဲ့ upstream `LICENSE.txt` ကို ဖျက်မထားဘူး။
+
+**Scope/maintenance:** ဒီ exception ကို ဒီ skill bundle တစ်ခုတည်းအတွက်ပဲ သတ်မှတ်တယ်; နောက်ထပ် third-party skill/plugin ကို repo ထဲ vendor လုပ်ချင်ရင် project owner ဆီက အသစ် go-ahead ထပ်လိုတယ်။ Skill ကို update ချင်ရင် အသစ် tarball ကို ထပ် download/review ပြီးမှ diff ကို manual verify လုပ်ပြီးမှ commit လုပ်ရမယ် — CI/lint ကနေ ဒီ skill data files တွေကို validate မလုပ်ဘူး, third-party content အနေနဲ့ trust boundary အပြင်ဘက်ကထားရမယ်။
+
 ### D50 — Admin Analytics Dashboard English + Shipping Removed
 
 Admin analytics dashboard copy ကို English-only အဖြစ်ထားမယ်။ Buyer storefront နဲ့ တခြား screen တွေရဲ့ language rule ကို ဒီ decision က မပြောင်းဘူး။ Screen-specific exception အဖြစ်ပဲ သတ်မှတ်တယ်။
@@ -494,6 +557,53 @@ Admin analytics dashboard copy ကို English-only အဖြစ်ထား�
 Redesigned admin navigation မှာ Shipping entry ကို မပြတော့ဘူး။ Underlying shipping capability / route / data ကို ဒီ UI change က မဖျက်ဘူး; navigation surface ကနေပဲ ဖယ်ထားတာ။
 
 "New Orders" section က badge နဲ့ list ကို တစ်မျိုးတည်းသော source (`OPEN_STATUSES`) ကနေယူရမယ်။ Action လိုတဲ့ order count ကိုပြပြီး completed order list ပြတာမျိုး semantic mismatch မဖြစ်စေရ။
+
+
+### D55 — Paid Onboarding Gate (Plan ဝယ် → Manual Approval → Onboarding)
+
+Seller တစ်ယောက် ဆိုင်စဖွင့်ခွင့်မရမီ **plan ကို ကြိုဝယ်** ရမယ်: Starter (50,000 Ks) သို့ Business
+(80,000 Ks) ရွေး → KBZPay/WavePay/AYA (`09969222535`, MOE HTET KYAW) သို့ ငွေလွှဲ → ငွေလွှဲ
+screenshot upload → **owner က manual approve** ပြီးမှ `/admin/onboarding` ကို ရောက်တယ်။
+
+**Approval surface — Supabase dashboard (manual, owner-only).** App ထဲမှာ super-admin console
+မဆောက်ဘူး — repo ရဲ့ manual last-5 payment-verification MVP philosophy (D4–D6) နဲ့ ကိုက်ညီစေဖို့နဲ့
+scope creep ရှောင်ဖို့ဖြစ်တယ်။ Owner က `shop_applications` row + `payment-proofs` object ကို Supabase
+dashboard (service_role) မှာကြည့်ပြီး `status` ကို `approved`/`rejected` သတ်မှတ်တယ်။ Business ဝယ်သူ
+အတွက် `shops.plan` ကိုလည်း owner ကပဲ dashboard ကနေ သတ်မှတ်ရမယ် — `0007` trigger က shop insert
+တိုင်းကို `plan='starter'` force လုပ်ထားလို့ (plan က platform-managed) seller က self-upgrade မလုပ်နိုင်။
+
+**Data model** — `shop_applications` table အသစ် (migration `0010_shop_application_gate.sql`),
+PK = `owner_id` (auth.uid()) မို့ seller တစ်ယောက် application တစ်ခုပဲ။ Columns: `plan`,
+`payment_method` (kpay/wave/aya), `payment_ref_tail` (optional last-5), `screenshot_path`, `amount`
+(informational — owner က တကယ့်လွှဲငွေကို screenshot နဲ့တိုက်စစ်တာမို့ enforcement မဟုတ်), `status`
+(pending/approved/rejected, default pending), `review_note`, timestamps။
+
+**Security** — RLS: seller က ကိုယ့် row ကိုသာ select/insert/update လုပ်နိုင်။ `status` က
+platform-managed: `protect_shop_application()` trigger (0007 ရဲ့ `protect_shop_managed_fields`
+pattern) က authenticated caller ကို insert/resubmit မှာ `status='pending'` သာခွင့်ပြု —
+`approved`/`rejected` ကို ကိုယ်တိုင်မသတ်မှတ်နိုင်၊ approved ဖြစ်ပြီးသား row ကို ပြန်မထိနိုင်၊ `owner_id`
+immutable။ Owner (service_role, `auth.uid()` null) က dashboard ကနေ လွတ်လပ်စွာ approve/reject လုပ်နိုင်။
+
+**Storage** — `payment-proofs` bucket အသစ် (**private**, `public=false`): ငွေလွှဲ screenshot က sensitive
+မို့ shop-logos/product-images လို world-readable မဖြစ်ရ။ Path owner-scoped: `payment-proofs/<owner_id>/…`
+(RLS က first folder segment = auth.uid() ကိုစစ်)။ JPEG ကိုပါ လက်ခံ (banking-app screenshot က JPG
+များ), PNG→WebP conversion မလုပ် (proof က capture, storefront media pipeline မဟုတ်)။ Seller ဘက် proof
+upload က in-app WebView constraint (D-log slip-upload no-op) နဲ့မဆန့်ကျင် — အဲဒါက buyer WebView အတွက်;
+ဒါက seller admin-side, logo/product image upload capability အတိုင်း established။
+
+**Fail-closed + invariant** — `resolveOnboardingGate()` (`src/domain/subscription.ts`, pure leaf) က gate
+decision ကို တစ်နေရာတည်းမှာထား; RequireAdmin/Onboarding/Subscribe သုံးဖက်လုံး `resolveSellerGate()`
+(`features/billing/application.ts`) ကနေ route လုပ်တယ်။ Application upload က upload-before-write invariant
+လိုက်နာ (proof အရင်တင် → row write → write fail ရင် uploaded object ကို delete; resubmit မှာ အဟောင်း
+delete write အောင်မြင်မှသာ)။ Lookup fail (network/RLS) ကို retry screen ပြ — redirect မလုပ် (D49 pattern)။
+
+**Applied (2026-09-21):** `0010_shop_application_gate` ကို owner go-ahead ဖြင့် live project
+(`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး (`list_migrations`: `20260921224420 shop_application_gate`)။
+`database.types.ts` ရဲ့ `shop_applications` block က regenerate output နဲ့ 1:1 sync; security advisor မှာ
+new table အတွက် RLS/policy warning မရှိ။ DB error code ၃ ခု (`application_status_is_platform_managed`,
+`application_owner_is_immutable`, `application_already_approved`) ကို `dbError.ts` catalog ထဲထည့်ပြီး
+`tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` က pending ဆက်ဖြစ် —
+ဒီ migration က မထိ။)
 
 ## Engineering Notes / Standing Rules
 

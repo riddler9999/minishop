@@ -24,6 +24,7 @@ interface AdminAuthValue {
   user: User | null;
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
   /** Confirms a fresh signup via the 6-digit code from the "Confirm signup"
    *  email, instead of the clickable link — see verifyEmailOtp() below for why. */
   verifyEmailOtp: (email: string, token: string) => Promise<AuthResult>;
@@ -99,6 +100,16 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     return {error: error ? mapAuthError(error.message) : null};
   };
 
+  const signInWithGoogle = async (): Promise<AuthResult> => {
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {error} = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {redirectTo: `${window.location.origin}/admin`},
+    });
+    return {error: error ? mapAuthError(error.message) : null};
+  };
+
   const verifyEmailOtp = async (email: string, token: string): Promise<AuthResult> => {
     const sb = getSupabase();
     if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
@@ -125,6 +136,7 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
       user: session?.user ?? null,
       signUp,
       signIn,
+      signInWithGoogle,
       verifyEmailOtp,
       resendSignupCode,
       signOut,

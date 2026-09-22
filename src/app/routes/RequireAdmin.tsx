@@ -2,21 +2,23 @@
 import {useEffect, useState} from 'react';
 import {Navigate, useLocation} from 'react-router-dom';
 import {useAdminAuth} from '@/features/auth/adminAuth';
-import {getOwnShop} from '@/features/shop/sellerShop';
-import {settleOwnShopLookup} from '@/domain/shopAccess';
+import {resolveSellerGate} from '@/features/billing/application';
 
 // Route guard for the admin console: requires a real Supabase session AND an
-// onboarded shop (a `shops` row owned by that session's user). A session
-// without a shop yet is sent to /admin/onboarding rather than the dashboard.
+// onboarded shop (a `shops` row owned by that session's user). A session with a
+// shop renders the console; a session without one is routed by the paid-
+// onboarding gate — /admin/onboarding once the plan application is APPROVED,
+// otherwise /admin/subscribe (buy a plan / wait for approval). See
+// resolveSellerGate() + resolveOnboardingGate().
 export default function RequireAdmin({children}: {children: React.ReactNode}) {
   const {loading: authLoading, session, user} = useAdminAuth();
   const location = useLocation();
   const [checking, setChecking] = useState(true);
-  const [hasShop, setHasShop] = useState(false);
-  // A failed lookup is NOT the same as "no shop": treat null (genuinely no
-  // shop) as onboarding, but a thrown error (network/RLS) as a retryable state,
-  // never a redirect — otherwise a transient blip bounces an onboarded seller
-  // into onboarding as if their shop vanished.
+  const [gate, setGate] = useState<'subscribe' | 'onboarding' | 'admin'>('subscribe');
+  // A failed lookup is NOT the same as "no shop": treat a resolved gate as
+  // authoritative, but a thrown error (network/RLS) as a retryable state, never
+  // a redirect — otherwise a transient blip bounces an onboarded seller out of
+  // the console as if their shop vanished.
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
 
@@ -28,11 +30,11 @@ export default function RequireAdmin({children}: {children: React.ReactNode}) {
     let alive = true;
     setChecking(true);
     setLoadError(false);
-    settleOwnShopLookup(() => getOwnShop(user.id))
+    resolveSellerGate(user.id)
       .then((result) => {
         if (!alive) return;
         if (result.status === 'error') setLoadError(true);
-        else setHasShop(Boolean(result.shop));
+        else setGate(result.gate);
       })
       .finally(() => alive && setChecking(false));
     return () => {
@@ -60,8 +62,11 @@ export default function RequireAdmin({children}: {children: React.ReactNode}) {
       </div>
     );
   }
-  if (!hasShop) {
+  if (gate === 'onboarding') {
     return <Navigate to="/admin/onboarding" replace />;
+  }
+  if (gate === 'subscribe') {
+    return <Navigate to="/admin/subscribe" replace />;
   }
   return <>{children}</>;
 }

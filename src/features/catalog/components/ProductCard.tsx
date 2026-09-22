@@ -22,7 +22,7 @@ export default function ProductCard({product, variant = 'default', className}: {
         <ShopLink to={to} className="absolute inset-0 block">
           {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /> : <div className="grid h-full w-full place-items-center text-[#8b7d6d]"><ImageOff className="h-9 w-9" /></div>}
           <div className="absolute inset-0 bg-gradient-to-t from-[#1c1109]/85 via-[#1c1109]/10 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-4 text-white"><h3 className="line-clamp-2 text-base font-semibold leading-snug">{product.name}</h3><span className="mt-1 block font-sans text-sm font-bold">{ks(price)}</span></div>
+          <div className="absolute inset-x-0 bottom-0 p-4 text-white"><h3 className="font-display line-clamp-2 text-base font-semibold leading-snug">{product.name}</h3><span className="mt-1 block font-sans text-sm font-bold">{ks(price)}</span></div>
         </ShopLink>
       </article>
     );
@@ -39,7 +39,7 @@ export default function ProductCard({product, variant = 'default', className}: {
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         {!compact && product.category && <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-[#9b6d2b]">{product.category}</p>}
-        <ShopLink to={to} className={cx('line-clamp-2 font-semibold leading-snug text-[#2a2018] transition hover:text-[#be123c]', compact ? 'text-[15px] sm:text-base' : 'mt-1 text-base')}>{product.name}</ShopLink>
+        <ShopLink to={to} className={cx('font-display line-clamp-2 font-semibold leading-snug text-[#2a2018] transition hover:text-[#be123c]', compact ? 'text-[15px] sm:text-base' : 'mt-1 text-base')}>{product.name}</ShopLink>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="font-sans text-[13px] font-bold text-[#251a12] sm:text-sm">{ks(price)}</span>
           {hasPromo && <span className="text-[10px] text-[#8f8377] line-through sm:text-[11px]">{ks(product.price)}</span>}
