@@ -10,6 +10,20 @@ in-app WebView (no native app, no bot/messaging API — this is **not** a sales 
 `PROJECT.md` for full product context, decision log (D1–D51), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
+## Agent skills
+
+### Issue tracker
+
+Engineering work is tracked in GitHub Issues for `riddler9999/minishop`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix` vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a single-context domain model: read root `CONTEXT.md` and relevant ADRs under `docs/adr/` before architectural changes. See `docs/agents/domain.md`.
+
 ## Session communication preference (standing, until this project is done)
 
 - Reply to the user in Burmese (မြန်မာဘာသာ) throughout the session. This is about the chat
@@ -136,25 +150,15 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   one-shop-per-owner invariant the admin flow already assumes real; see `PROJECT.md` D49), and
   `0009_shop_theme.sql` (`shops.theme jsonb` — seller-editable Store Design customization,
   cosmetic only, owner-scoped by existing RLS; see `PROJECT.md` D52, and
-  `0010_shop_application_gate.sql` (`shop_applications` table + private `payment-proofs` storage
-  bucket — paid onboarding gate; seller chooses a plan and uploads transfer proof, then the
-  platform owner manually approves before onboarding; owner-scoped RLS + platform-managed
-  `status` trigger; see `PROJECT.md` D55), `0011_payment_proof_auto_plan.sql` +
-  `0012_shop_application_transaction_id.sql` (a **separate, parallel** payment-proof
-  OCR/auto-verification path — `payment_proofs` table + `activate_plan_from_verified_payment()`
-  RPC + `shop_applications.transaction_id`; note it hardcodes the OLD 50000/80000 prices and sets
-  `shops.plan` WITHOUT touching `shop_entitlements`, so it does not yet integrate with the pricing-V1
-  entitlement system below — see `PROJECT.md` D57 for the reconciliation needed), and
-  `0016_entitlements_and_pricing.sql`
-  (**Pricing V1, D56** — the `free_trial` tier; `shop_entitlements` (monthly quota + permanent
-  purchased balance + subscription cycle), append-only `entitlement_ledger`, `order_pack_purchases`;
-  `orders.idempotency_key`; `place_order()` consumes ONE entitlement per order — monthly-first then
-  purchased — atomically + idempotently, locking the entitlement row `FOR UPDATE`; free-trial
-  10-product limit; township shipping un-gated to core; owner-only `admin_*` entitlement RPCs
-  granted only to `service_role`).
-  **`0001`–`0007`, `0009` and `0010` are applied to the live project; `0008` and `0011`–`0013` are
-  pending — not yet applied** (need owner go-ahead; `0008` fails if duplicate `owner_id` rows exist — run
-  the migration's duplicate-detection query first).
+  `0010_shop_application_gate.sql` (`shop_applications` + private payment-proof storage),
+  `0011_payment_proof_auto_plan.sql` and `0012_shop_application_transaction_id.sql` (historical
+  payment-proof automation foundation), `0013`–`0015` (delivery pricing), `0016_entitlements_and_pricing.sql`
+  (Pricing V1: Free Trial, subscription cycles, order entitlements, Extra Orders, idempotent order
+  consumption), and `0017_reconcile_payment_activation.sql` (current payment-proof activation:
+  30,000/60,000 Ks validation + delegation to entitlement-aware subscription activation).
+  Historical migrations may contain superseded rules; current runtime truth is the latest migration
+  plus `CONTEXT.md`. Never infer live migration application state from this file — check the live
+  Supabase migration history before applying anything.
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state
