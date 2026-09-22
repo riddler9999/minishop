@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it, before} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
-// Structural guard on migration 0013: the SQL is the real enforcement boundary
+// Structural guard on migration 0016: the SQL is the real enforcement boundary
 // (place_order() consumption, product limit, RLS un-gating), so assert its key
 // invariants are present. This is not a substitute for the live DB apply, but it
 // stops an accidental removal of a security- or billing-critical clause.
@@ -39,7 +39,6 @@ describe('0016 entitlements migration', () => {
   });
 
   it('consumes monthly quota FIRST, then purchased balance', () => {
-    // The order of the branches encodes "monthly first, then purchased".
     const monthlyIdx = sql.indexOf("v_consume := 'monthly'");
     const purchasedIdx = sql.indexOf("v_consume := 'purchased'");
     assert.ok(monthlyIdx > 0 && purchasedIdx > 0);
@@ -56,7 +55,7 @@ describe('0016 entitlements migration', () => {
     assert.match(sql, /v_ent\.cycle_end is null or v_ent\.cycle_end <= now\(\)/);
   });
 
-  it('enforces Extra Orders quantity presets and 500 Ks\/order server-side', () => {
+  it('enforces Extra Orders quantity presets and 500 Ks/order server-side', () => {
     assert.match(sql, /qty\s+integer not null check \(qty in \(1,5,10,20,30,50\)\)/);
     assert.match(sql, /amount\s+integer not null check \(amount = qty \* 500\)/);
   });
@@ -73,7 +72,6 @@ describe('0016 entitlements migration', () => {
   it('makes township shipping core (owner-scoped, not Business-only)', () => {
     assert.match(sql, /drop policy if exists ship_business_insert/);
     assert.match(sql, /create policy ship_owner_insert on public\.shipping_zones/);
-    // The new write policies must NOT re-introduce a plan = 'business' gate.
     const shippingBlock = sql.slice(sql.indexOf('create policy ship_owner_insert'), sql.indexOf('place_order(): consume'));
     assert.ok(!/plan = 'business'/.test(shippingBlock), 'township shipping must not be Business-gated');
   });
