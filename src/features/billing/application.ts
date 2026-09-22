@@ -11,6 +11,7 @@ import {requireSupabase} from '@/core/supabase/client';
 import {PAYMENT_PROOFS_BUCKET, safeFileExt} from '@/core/storage/buckets';
 import type {TablesInsert} from '@/core/supabase/database.types';
 import {mapDbError} from '@/domain/dbError';
+import type {Plan} from '@/domain/plan';
 import {getOwnShop} from '@/features/shop/sellerShop';
 import {
   resolveOnboardingGate,
@@ -128,18 +129,21 @@ export async function deletePaymentProof(path: string): Promise<void> {
 }
 
 export interface SubmitApplicationInput {
-  plan: 'starter' | 'business';
+  plan: Plan;
   paymentMethod: SubscriptionPaymentMethod;
   paymentRefTail: string | null;
-  screenshotPath: string;
+  // Null only for a free-trial application, which carries no payment (the DB
+  // CHECK `plan = 'free_trial' or screenshot_path is not null` enforces this).
+  screenshotPath: string | null;
   amount: number;
 }
 
 /**
  * Insert (first apply) or update (resubmit a rejected application) the seller's
- * application. `status` is left to its DB default 'pending' on insert and reset
- * to 'pending' on resubmit — the trigger (0010) rejects any attempt by a seller
- * to set 'approved'/'rejected'. Upsert on the owner_id PK covers both paths.
+ * application. For a paid plan `status` stays 'pending' until the owner
+ * approves (the trigger rejects any seller-set 'approved'/'rejected'); a
+ * free-trial application is AUTO-APPROVED by the trigger (0013), so the seller
+ * proceeds straight to onboarding. Upsert on the owner_id PK covers both paths.
  */
 export async function submitApplication(
   userId: string,
