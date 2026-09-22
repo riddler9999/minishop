@@ -683,18 +683,16 @@ Pricing V1 (D56, `0016_entitlements_and_pricing.sql`) ကို branch ခွဲ
 migration ကို `0011` ကနေ **`0013` သို့ renumber** လုပ်ပြီး `main` ကို merge ခဲ့တယ်။ DDL objects မတူလို့
 table/function collision မရှိ; local Postgres မှာ 0001–0013 အားလုံး clean apply + entitlement functest PASS။
 
-**Owner ဆုံးဖြတ်ရန် — semantic conflict နှစ်ခု (code မဟုတ်, product decision):**
+**Resolved 2026-09-23 — Pricing V1 reconciliation**
 
-1. **ဈေးနှုန်း မကိုက်ညီ။** `activate_plan_from_verified_payment()` က Starter/Business ကို **50000/80000**
-   အဖြစ် hardcode လုပ်ထားတယ်; D56 finalized pricing က **30000/60000**။ တစ်ခုခုကို ရွေးရမယ်။
-2. **Entitlement integration မရှိသေး။** အဲဒီ auto-verification RPC က `shops.plan` ကို တိုက်ရိုက်
-   set လုပ်ပေမယ့် `shop_entitlements` (quota/cycle) ကို **မထိ** — ဒါကြောင့် plan ပြောင်းပေမယ့် entitlement
-   row က stale ဖြစ်နိုင်တယ်။ Pricing V1 ရဲ့ canonical activation path က `admin_activate_subscription`
-   RPC (entitlements ကို fresh grant) ဖြစ်တယ်။ auto-verification ကို production သုံးမယ်ဆိုရင် အဲဒီ RPC ကို
-   `shop_entitlements` ကို sync လုပ်အောင် ပြင်ရမယ် (သို့) `admin_activate_subscription` ကို ခေါ်ခိုင်းရမယ်။
+D57 မှာဖော်ပြထားတဲ့ semantic conflict နှစ်ခုကို `0017_reconcile_payment_activation.sql` နဲ့ ဖြေရှင်းထားတယ်။
 
-ဒီ ညှိမှုကို production apply မတိုင်ခင် owner ဆုံးဖြတ်ရန်လိုအပ်တယ်။ ၂ ခုစလုံး pending — `0011`–`0013`
-ကို live project သို့ မ apply ရသေး။
+1. Current paid-plan amounts ကို Starter **30000** / Business **60000** အဖြစ် server-side validate လုပ်တယ်။
+2. Auto-verification RPC က `shops.plan` ကို တိုက်ရိုက်မပြောင်းတော့ဘဲ `admin_activate_subscription()` ကိုခေါ်ပြီး `shops.plan`, `shop_entitlements`, cycle counters နဲ့ ledger ကို တစ်လမ်းတည်း reconcile လုပ်တယ်။
+3. Already-approved payment proof retry ကို idempotent return လုပ်ပြီး subscription cycle အသစ်ထပ်မဖွင့်ဘူး။
+4. Historical migration `0011` ကို rewrite မလုပ်ဘဲ later migration နဲ့ runtime contract ကို replace လုပ်ထားတယ်။
+
+Production migration apply က repo fix နဲ့သီးခြား cutover step ဖြစ်ပြီး live migration history စစ်ပြီး owner approval နဲ့သာလုပ်ရမယ်။
 
 ## Engineering Notes / Standing Rules
 
