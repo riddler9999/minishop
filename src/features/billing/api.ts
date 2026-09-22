@@ -1,6 +1,6 @@
 // ---- BILLING: current-month usage + live order entitlements -----------------
 // getUsage() reads the analytics billable-usage view/RPC (0003). getEntitlement()
-// reads the pricing-V1 entitlement counters (0013) — the quota + purchased
+// reads the pricing-V1 entitlement counters (0016) — the quota + purchased
 // balance that actually gate order placement. Frontend plan gating lives in
 // plan.tsx; this module only reports numbers.
 
