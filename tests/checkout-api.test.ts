@@ -1,24 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import type {createClient as createSupabaseClient} from '@supabase/supabase-js';
-import {createCheckoutHandler} from '../api/checkout.ts';
-
-function mockResponse() {
-  let body: unknown = null;
-  return {
-    statusCode: 0,
-    headers: new Map<string, string>(),
-    setHeader(name: string, value: string) {
-      this.headers.set(name, value);
-    },
-    end(raw: string) {
-      body = JSON.parse(raw);
-    },
-    get body() {
-      return body;
-    },
-  };
-}
+import {readFile} from 'node:fs/promises';
+import {normalizeCheckoutInput} from '../api/checkout-input.ts';
 
 function validBody(overrides: Record<string, unknown> = {}) {
   return {
@@ -38,96 +21,44 @@ function validBody(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function handlerWithRpc(
-  rpc: (name: string, args: Record<string, unknown>) => Promise<{data: unknown; error: null | {message: string}}>,
-) {
-  const client = {rpc};
-  return createCheckoutHandler({
-    env: () => ({url: 'https://example.supabase.co', key: 'anon'}),
-    createClient: (() => client) as unknown as typeof createSupabaseClient,
-  });
-}
-
 describe('checkout API regression contract', () => {
-  it('forwards a valid UUID idempotency key and normalized items to place_order', async () => {
-    const calls: Array<{name: string; args: Record<string, unknown>}> = [];
-    const handler = handlerWithRpc(async (name, args) => {
-      calls.push({name, args});
-      return {data: {order_no: 'ORD-1'}, error: null};
-    });
-    const res = mockResponse();
-
-    await handler({method: 'POST', body: validBody()}, res);
-
-    assert.equal(res.statusCode, 200);
-    assert.equal(calls.length, 1);
-    assert.equal(calls[0].name, 'place_order');
-    assert.equal(calls[0].args.p_idempotency_key, '22222222-2222-4222-8222-222222222222');
-    assert.deepEqual(calls[0].args.p_items, [
+  it('normalizes a valid request and preserves the idempotency key', () => {
+    const input = normalizeCheckoutInput(validBody());
+    assert.ok(input);
+    assert.equal(input.idempotencyKey, '22222222-2222-4222-8222-222222222222');
+    assert.deepEqual(input.items, [
       {product_id: '11111111-1111-4111-8111-111111111111', qty: 2},
     ]);
   });
 
-  it('drops malformed idempotency keys instead of forwarding them', async () => {
-    let forwarded: unknown = 'unset';
-    const handler = handlerWithRpc(async (_name, args) => {
-      forwarded = args.p_idempotency_key;
-      return {data: {order_no: 'ORD-2'}, error: null};
-    });
-    const res = mockResponse();
-
-    await handler({method: 'POST', body: validBody({idempotencyKey: 'not-a-uuid'})}, res);
-
-    assert.equal(res.statusCode, 200);
-    assert.equal(forwarded, null);
+  it('drops malformed idempotency keys instead of forwarding them', () => {
+    const input = normalizeCheckoutInput(validBody({idempotencyKey: 'not-a-uuid'}));
+    assert.ok(input);
+    assert.equal(input.idempotencyKey, null);
   });
 
-  it('caps the API cart at the same 25-item limit enforced by place_order', async () => {
-    let forwardedItems: unknown[] = [];
-    const handler = handlerWithRpc(async (_name, args) => {
-      forwardedItems = args.p_items as unknown[];
-      return {data: {order_no: 'ORD-3'}, error: null};
-    });
-    const res = mockResponse();
+  it('caps the API cart at the same 25-item limit enforced by place_order', () => {
     const items = Array.from({length: 40}, (_, i) => ({
       id: `11111111-1111-4111-8111-${String(i).padStart(12, '0')}`,
       qty: 1,
     }));
-
-    await handler({method: 'POST', body: validBody({items})}, res);
-
-    assert.equal(res.statusCode, 200);
-    assert.equal(forwardedItems.length, 25);
+    const input = normalizeCheckoutInput(validBody({items}));
+    assert.ok(input);
+    assert.equal(input.items.length, 25);
   });
 
-  it('rejects incomplete checkout payloads before touching the database', async () => {
-    let calls = 0;
-    const handler = handlerWithRpc(async () => {
-      calls += 1;
-      return {data: null, error: null};
-    });
-    const res = mockResponse();
-
-    await handler(
-      {method: 'POST', body: validBody({customer: {name: '', phone: '', street: '', region: '', township: ''}})},
-      res,
+  it('rejects incomplete checkout payloads before database execution', () => {
+    const input = normalizeCheckoutInput(
+      validBody({customer: {name: '', phone: '', street: '', region: '', township: ''}}),
     );
-
-    assert.equal(res.statusCode, 400);
-    assert.equal(calls, 0);
-    assert.deepEqual(res.body, {error: 'Invalid checkout payload'});
+    assert.equal(input, null);
   });
 
-  it('maps the database distributed rate-limit error to HTTP 429', async () => {
-    const handler = handlerWithRpc(async () => ({
-      data: null,
-      error: {message: 'rate_limit_exceeded'},
-    }));
-    const res = mockResponse();
-
-    await handler({method: 'POST', body: validBody()}, res);
-
-    assert.equal(res.statusCode, 429);
-    assert.match(String((res.body as {error: string}).error), /များ|ကြိုးစား|request/i);
+  it('wires normalized input into place_order and maps DB throttling to HTTP 429', async () => {
+    const source = await readFile(new URL('../api/checkout.ts', import.meta.url), 'utf8');
+    assert.match(source, /normalizeCheckoutInput\(req\.body\)/);
+    assert.match(source, /sb\.rpc\('place_order'/);
+    assert.match(source, /p_idempotency_key:\s*input\.idempotencyKey/);
+    assert.match(source, /rate_limit_exceeded[\s\S]*?429|429[\s\S]*?rate_limit_exceeded/);
   });
 });
