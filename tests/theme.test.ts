@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {DEFAULT_THEME, normalizeTheme, type StorefrontTheme} from '../src/domain/theme.ts';
+import {DEFAULT_THEME, THEME_PRESETS, normalizeTheme, themeFromPreset, type StorefrontTheme} from '../src/domain/theme.ts';
 
 // normalizeTheme() is the storefront's fail-safe boundary: it takes an untrusted
 // value of ANY shape (raw jsonb, null, a partial/old blob, garbage) and must
@@ -82,6 +82,26 @@ describe('normalizeTheme — fail-safe coercion', () => {
     for (const bad of ['luxury', '', 123, null, undefined, {}]) {
       assert.equal(normalizeTheme({fontPairing: bad as unknown}).fontPairing, DEFAULT_THEME.fontPairing);
     }
+  });
+
+  it('ships exactly five valid storefront presets', () => {
+    assert.deepEqual(Object.keys(THEME_PRESETS).sort(), ['dark-luxury', 'fashion', 'fresh-market', 'minimal', 'modern-shop']);
+    for (const [id, preset] of Object.entries(THEME_PRESETS)) {
+      assert.equal(preset.theme.presetId, id);
+      assert.deepEqual(normalizeTheme(preset.theme), preset.theme);
+    }
+  });
+
+  it('applies a preset while preserving an existing hero image', () => {
+    const current = normalizeTheme({home: {heroImageUrl: 'https://cdn.example/hero.webp'}});
+    const next = themeFromPreset('dark-luxury', current);
+    assert.equal(next.presetId, 'dark-luxury');
+    assert.equal(next.home.heroImageUrl, current.home.heroImageUrl);
+    assert.equal(next.accentColor, THEME_PRESETS['dark-luxury'].theme.accentColor);
+  });
+
+  it('falls back to the default preset id for unknown persisted values', () => {
+    assert.equal(normalizeTheme({presetId: 'unknown'}).presetId, DEFAULT_THEME.presetId);
   });
 
   it('is idempotent (normalize∘normalize === normalize)', () => {
