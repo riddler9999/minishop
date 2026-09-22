@@ -32,13 +32,13 @@ const PLAN_CARDS: {plan: Plan; label: string; blurb: string; features: string[]}
     plan: 'business',
     label: 'Business',
     blurb: 'ရောင်းအားကောင်းသော ဆိုင်များအတွက် — feature အပြည့်အစုံ',
-    features: ['Promotion စျေးနှုန်း', 'မြို့နယ်အလိုက် ပို့ခ', 'ငွေလွှဲ အတည်ပြုစစ်ဆေးမှု', 'Analytics + Logo/Branding'],
+    features: ['လစဉ် Order ၁၅၀', 'Promotion စျေးနှုန်း', 'Analytics + Logo/Branding', 'Extra Orders ဝယ်နိုင်'],
   },
   {
     plan: 'starter',
     label: 'Starter',
     blurb: 'အသစ်စတင်သူများအတွက် — အခြေခံ ဆိုင်စီမံခန့်ခွဲမှု',
-    features: ['ပစ္စည်း စီမံခန့်ခွဲမှု', 'Order စီမံခန့်ခွဲမှု', 'ပုံမှန် ပို့ခ', 'ဖောက်သည် self-service order'],
+    features: ['လစဉ် Order ၆၀', 'ပစ္စည်း အကန့်အသတ်မဲ့', 'မြို့နယ်အလိုက် ပို့ခ', 'Extra Orders ဝယ်နိုင်'],
   },
 ];
 
@@ -168,9 +168,30 @@ function SubscribeForm({
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
+  const [startingFree, setStartingFree] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const amount = PLAN_PRICE_KS[plan];
+
+  // Free Trial needs no payment and is auto-approved by the DB (0013). Submit a
+  // free-trial application (no screenshot) and the gate flips to onboarding.
+  const startFreeTrial = async () => {
+    setErr('');
+    setStartingFree(true);
+    try {
+      await submitApplication(userId, {
+        plan: 'free_trial',
+        paymentMethod: 'kpay', // placeholder — free trial carries no payment
+        paymentRefTail: null,
+        screenshotPath: null,
+        amount: 0,
+      });
+      onSubmitted();
+    } catch (e: any) {
+      setErr(e?.message || 'Free Trial စတင်၍မရပါ — ပြန်ကြိုးစားပါ။');
+      setStartingFree(false);
+    }
+  };
 
   // Local object-URL preview of the chosen file; revoked on change/unmount.
   useEffect(() => {
@@ -246,6 +267,28 @@ function SubscribeForm({
     <Shell
       title="Plan ရွေးချယ်ပြီး ဆိုင်စတင်ရန်"
       subtitle="Plan ရွေး → ငွေလွှဲ → Screenshot တင် → အတည်ပြုပြီးမှ ဆိုင်ဖွင့်နိုင်သည်">
+      {/* Free Trial — no payment, start immediately */}
+      <div className="mb-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-display text-lg font-bold text-slate-950">Free Trial</p>
+            <p className="my mt-0.5 text-xs text-slate-500">Order ၂၀ (တစ်သက်တာ) · ပစ္စည်း ၁၀ ခုအထိ · အခမဲ့</p>
+          </div>
+          <span className="font-display text-lg font-bold text-emerald-600">0 Ks</span>
+        </div>
+        <button
+          type="button"
+          onClick={startFreeTrial}
+          disabled={startingFree}
+          className="my mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50">
+          <Store className="h-4 w-4" /> {startingFree ? 'စတင်နေသည်…' : 'အခမဲ့ ချက်ချင်း စတင်ရန်'}
+        </button>
+      </div>
+
+      <div className="my mb-4 flex items-center gap-3 text-xs text-slate-400">
+        <span className="h-px flex-1 bg-slate-200" /> သို့မဟုတ် plan ဝယ်ယူရန် <span className="h-px flex-1 bg-slate-200" />
+      </div>
+
       <form onSubmit={submit} className="space-y-5">
         {previous && (
           <div className="flex items-start gap-3 rounded-2xl bg-rose-50 p-4">
