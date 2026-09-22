@@ -77,7 +77,7 @@ export function createCheckoutHandler(
           ? rawKey
           : null;
 
-      const rawItems = Array.isArray(b.items) ? b.items.slice(0, 100) : [];
+      const rawItems = Array.isArray(b.items) ? b.items.slice(0, 25) : [];
       const items = rawItems
         .map((i: any) => ({
           product_id: clean(i?.id, 100),
