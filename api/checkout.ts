@@ -4,6 +4,7 @@ import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
 import {normalizeCheckoutInput} from './checkout-input.js';
+import {forwardedClientIp} from './_client-ip.js';
 
 type CheckoutDeps = {
   createClient: typeof createClient;
@@ -18,6 +19,9 @@ export function createCheckoutHandler(
     if (!env) return sendJson(res, 503, {error: 'Backend unavailable'});
     const sb = deps.createClient(env.url, env.key, {
       auth: {persistSession: false, autoRefreshToken: false},
+      // Preserve Vercel's requester IP across the server-to-Supabase hop so
+      // private.enforce_rate_limit() keys by buyer instead of Vercel egress.
+      global: {headers: {'x-forwarded-for': forwardedClientIp(req)}},
     });
 
     if (req.method === 'GET') {
