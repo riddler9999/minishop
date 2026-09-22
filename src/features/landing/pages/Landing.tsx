@@ -1,6 +1,12 @@
 import HeroSection from '../components/HeroSection';
-import HowItWorks from '../components/HowItWorks';
-import UseCases from '../components/UseCases';
+import {
+  DashboardFinalCTA,
+  MyanmarCheckout,
+  SellEverywhere,
+  StopSellingThroughChat,
+  ThemeShowcase,
+  ThreeStepStoreCreation,
+} from '../components/HomeSections';
 import './landing.css';
 
 export default function Landing() {
@@ -8,8 +14,12 @@ export default function Landing() {
     <main className="landing">
       <div className="landing-shell">
         <HeroSection />
-        <HowItWorks />
-        <UseCases />
+        <StopSellingThroughChat />
+        <ThreeStepStoreCreation />
+        <SellEverywhere />
+        <MyanmarCheckout />
+        <ThemeShowcase />
+        <DashboardFinalCTA />
         <footer className="landing-footer">
           <strong>MiniShop</strong>
           <span>Myanmar Online Business ကို ပိုလွယ်ကူအောင် ♡</span>
