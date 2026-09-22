@@ -19,13 +19,14 @@ import {
   type SubscriptionPaymentMethod,
 } from '@/domain/subscription';
 import {
-  deletePaymentProof,
   resolveSellerGate,
   submitApplication,
-  uploadPaymentProof,
-  validatePaymentProof,
   type ShopApplication,
 } from '@/features/billing/application';
+import {
+  persistWithPaymentProof,
+  validatePaymentProof,
+} from '@/features/billing/paymentProofStorage';
 
 const PLAN_CARDS: {plan: Plan; label: string; blurb: string; features: string[]}[] = [
   {
@@ -173,7 +174,7 @@ function SubscribeForm({
 
   const amount = PLAN_PRICE_KS[plan];
 
-  // Free Trial needs no payment and is auto-approved by the DB (0013). Submit a
+  // Free Trial needs no payment and is auto-approved by the DB (0016). Submit a
   // free-trial application (no screenshot) and the gate flips to onboarding.
   const startFreeTrial = async () => {
     setErr('');
@@ -238,25 +239,22 @@ function SubscribeForm({
 
     setErr('');
     setSaving(true);
-    let uploadedPath: string | null = null;
     try {
-      // Upload the proof FIRST, then write the row (upload-before-write
-      // invariant); on any write failure delete the just-uploaded object.
-      uploadedPath = (await uploadPaymentProof(userId, file)).path;
-      await submitApplication(userId, {
-        plan,
-        paymentMethod: method,
-        paymentRefTail: refTailClean || null,
-        screenshotPath: uploadedPath,
-        amount,
+      await persistWithPaymentProof({
+        userId,
+        file,
+        previousPath: previous?.screenshotPath,
+        persist: (screenshotPath) =>
+          submitApplication(userId, {
+            plan,
+            paymentMethod: method,
+            paymentRefTail: refTailClean || null,
+            screenshotPath,
+            amount,
+          }),
       });
-      // Resubmit: the row now points at the new object — remove the stale one.
-      if (previous?.screenshotPath && previous.screenshotPath !== uploadedPath) {
-        await deletePaymentProof(previous.screenshotPath).catch(() => {});
-      }
       onSubmitted();
     } catch (e: any) {
-      if (uploadedPath) await deletePaymentProof(uploadedPath).catch(() => {});
       setErr(e?.message || 'လျှောက်လွှာ တင်၍မရပါ — ပြန်ကြိုးစားပါ။');
     } finally {
       setSaving(false);
