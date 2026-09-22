@@ -99,9 +99,9 @@ export function MyanmarCheckout() {
       <div className="landing-checkout-preview">
         <div className="landing-checkout-phone">
           <div className="landing-checkout-bar">Checkout</div>
-          <label>Region</label><div className="landing-checkout-field">Yangon</div>
-          <label>Township</label><div className="landing-checkout-field">Sanchaung</div>
-          <label>Payment</label><div className="landing-payment-row"><span>COD</span><span>KBZPay</span><span>WavePay</span></div>
+          <span className="landing-checkout-label">Region</span><div className="landing-checkout-field">Yangon</div>
+          <span className="landing-checkout-label">Township</span><div className="landing-checkout-field">Sanchaung</div>
+          <span className="landing-checkout-label">Payment</span><div className="landing-payment-row"><span>COD</span><span>KBZPay</span><span>WavePay</span></div>
           <div className="landing-checkout-summary"><span>Delivery Fee</span><strong>3,000 MMK</strong></div>
           <div className="landing-checkout-button">Order Confirm</div>
         </div>
