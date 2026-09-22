@@ -248,9 +248,11 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 
 ### P2 — Platform Operations
 
-- [ ] Shop plan ကို owner/admin ဘက်ကပြောင်းနိုင်မယ့် minimal backend path
-- [ ] Billing / subscription model ဆုံးဖြတ်ရန်
-- [ ] Usage tracking ကို commercial pricing နဲ့ချိတ်ရန်
+- [x] Billing / subscription model ဆုံးဖြတ် (Pricing V1, D56 — Free Trial/Starter/Business + Extra Orders)
+- [x] Shop plan ကို owner ဘက်ကပြောင်းနိုင်မယ့် backend path (`admin_*` entitlement RPCs, service_role)
+- [x] Usage → commercial pricing (order entitlement consumption in `place_order()`)
+- [ ] **`0016` migration ကို owner go-ahead နဲ့ live project သို့ apply ရန်** (D7 — apply ပြီးမှ types regenerate)
+- [ ] Owner runbook — dashboard မှာ RPC တွေ call လုပ်နည်း (activate/renew/upgrade/credit) မှတ်တမ်းတင်ရန်
 
 ## 2026-09-21 Repository Update
 
@@ -604,6 +606,92 @@ new table အတွက် RLS/policy warning မရှိ။ DB error code ၃ �
 `application_owner_is_immutable`, `application_already_approved`) ကို `dbError.ts` catalog ထဲထည့်ပြီး
 `tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` က pending ဆက်ဖြစ် —
 ဒီ migration က မထိ။)
+
+### D56 — Pricing V1: Free Trial တီးယာ + Auditable Order Entitlement Model
+
+Commercial pricing ကို အပြီးသတ်ဆုံးဖြတ်ပြီး entitlement (quota + purchased balance) system ကို
+end-to-end ထည့်ထားတယ် (migration `0016_entitlements_and_pricing.sql`)။
+
+**Plans (finalized):**
+
+| Plan | ဈေး/လ | လစဉ် Order | ပစ္စည်း | Extra Orders |
+|---|---|---|---|---|
+| Free Trial | 0 Ks | 20 (**တစ်သက်တာ — reset မဖြစ်**) | 10 အထိ (server-enforced) | ဝယ်၍မရ |
+| Starter | 30,000 Ks | 60 / cycle | အကန့်အသတ်မဲ့ | ဝယ်နိုင် |
+| Business | 60,000 Ks | 150 / cycle | အကန့်အသတ်မဲ့ | ဝယ်နိုင် (+ advanced features) |
+
+Extra Orders — 500 Ks/order, preset 1/5/10/20/30/50, volume discount မရှိ။ ဝယ်ထားသည့်
+အရေအတွက် **ဘယ်တော့မှ သက်တမ်းမကုန်** — renewal / upgrade / downgrade / cancellation ကို
+ကျော်၍ ကျန်နေမည်။ active paid subscription မရှိလျှင် consume မလုပ်နိုင် (reactivate ပြီးမှ ပြန်သုံးနိုင်)။
+
+**Billable order:** valid customer order တစ်ခု အောင်မြင်စွာ ဖန်တီးတာနဲ့ entitlement ၁ ခုကို
+**ချက်ချင်း** consume လုပ်တယ် (Accepted/Shipped/Completed မစောင့် — seller-controlled status က
+billing ကို မထိစေရ)။ Cancellation/rejection က auto-refund မလုပ်။ **Monthly quota ကို အရင်ကုန်အောင်
+သုံးပြီးမှ purchased balance ကို သုံးတယ်။** Consumption ကို `place_order()` (0013) ထဲမှာ atomic +
+idempotent (`orders.idempotency_key`) လုပ်ပြီး entitlement row ကို `FOR UPDATE` lock လုပ်ထားလို့
+double-click / retry / concurrent final-slot order များကို ကာကွယ်တယ်။ Pure math ကို
+`src/domain/entitlement.ts` မှာ single source of truth အဖြစ်ထားပြီး SQL RPC က တစ်သဝေမတိမ်း mirror လုပ်တယ်။
+
+**Data model (concept ၄ ခုကို သီးခြားထား — "orders_remaining" တစ်ခုတည်း မဖြစ်စေရ):**
+`shop_entitlements` (plan, active, monthly_quota, monthly_used, purchased_balance, cycle_start/end,
+pending_plan) · append-only `entitlement_ledger` (grant/consume/purchase/renewal/upgrade/downgrade/
+cancel/adjust — money-in event တိုင်း `(shop_id, source_type, source_id)` unique index နဲ့ **duplicate
+payment protection**) · `order_pack_purchases` (seller ရဲ့ Extra-Orders ဝယ်ယူ request, manual proof)။
+RLS: seller က ကိုယ့် shop ရဲ့ row ကိုသာ read; write အားလုံး SECURITY DEFINER function ကနေ။
+
+**Manual prepaid billing** (D4–D6/D55 philosophy — in-app super-admin မဆောက်): owner က Supabase
+dashboard (service_role) ကနေ `admin_activate_subscription` / `admin_renew_subscription` /
+`admin_upgrade_plan` / `admin_schedule_downgrade` / `admin_credit_order_pack` /
+`admin_cancel_subscription` / `admin_adjust_entitlement` RPC တွေကို screenshot စစ်ပြီး run တယ်။
+Free Trial ကတော့ payment/approval မလို — application ကို trigger က auto-approve လုပ်လို့ seller က
+ချက်ချင်း onboarding သို့ ဆက်သွားနိုင်တယ်။
+
+**Mid-cycle upgrade (Starter → Business) — anti-loophole rule (chosen):** upgrade လုပ်ရင် monthly cap
+ကို 150 သို့ တင်ပေးမယ်၊ ဒါပေမယ့် **ဒီ cycle မှာ သုံးပြီးသား order အရေအတွက် (`monthly_used`) ကို
+ထိန်းထားတယ်** — fresh 150 မဟုတ်။ ဒါကြောင့် Starter 60 ကုန်အောင်သုံးပြီးမှ difference ပဲပေးပြီး
+fresh 150 ရအောင်လုပ်တဲ့ loophole မဖြစ်နိုင်။ Seller က ကျန် cycle အတွက် ဈေးနှုန်း **ကွာခြားချက်**
+(30,000 Ks) ကိုသာ ပေးရမယ်။ cycle_end မပြောင်း။ **Downgrade** ကတော့ `pending_plan` အဖြစ်မှတ်ပြီး
+**နောက် renewal မှသာ** သက်ရောက်တယ် — Business data ကို ဘယ်တော့မှ မဖျက် (cap ပဲ လျှော့)။
+
+**Feature gating ပြောင်းလဲမှု:** မြို့နယ်အလိုက် ပို့ခ (township shipping) ကို plan အားလုံးအတွက်
+**core** ဖြစ်အောင် Business-only gate (UI + `shipping_zones` RLS) ကို ဖယ်ထားတယ်။ ငွေလွှဲ
+အတည်ပြုစစ်ဆေးမှု (last-5) ကို plan differentiator မဟုတ်တော့ — plan အားလုံးမှာ ရနိုင်။ Business-only
+ကျန်သည်မှာ genuinely advanced features (promotions, analytics dashboard, branding/Store Design,
+integrations) သာ။ Free trial ရဲ့ ၁၁ ခုမြောက် ပစ္စည်းကို server-side (products trigger) မှာ ပိတ်တယ်။
+
+**Validation:** migration ၁၁ ခုလုံးကို local Postgres (Supabase objects stub) ပေါ်မှာ clean apply
+လုပ်ပြီး functional test နဲ့ အောက်ပါတို့ကို အတည်ပြုထားတယ် — Free 20 lifetime block, Free 10-product
+block, Starter 60, monthly-first-then-purchased, purchased permanence (renewal ကို ကျော်), idempotent
+order (retry = order တစ်ခုတည်း, consume ၁ ကြိမ်), duplicate-payment block, upgrade anti-loophole
+(used preserved, quota 150), downgrade-at-renewal, cancel → `subscription_inactive`။ Domain math ကို
+`tests/entitlement.test.ts`, migration invariant တွေကို `tests/entitlementMigration.test.ts` က guard လုပ်တယ်။
+`npm run check` — lint + test (332 pass) + build အားလုံး green။
+
+**Pending — apply မလုပ်ရသေး:** `0013` ကို live project (`fsxdnmnycizjkgstokze`) သို့ **owner go-ahead
+မရမချင်း apply မလုပ်ရ** (D7)။ Apply ပြီးမှသာ `database.types.ts` ကို regenerate 1:1 လုပ်ရန်
+(လက်ရှိ hand-authored delta ကို အစားထိုးရန်)။ `0008` က pending ဆက်ဖြစ်။
+
+### D57 — Pricing V1 (0013) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
+
+Pricing V1 (D56, `0016_entitlements_and_pricing.sql`) ကို branch ခွဲပြီး develop လုပ်နေစဉ်
+`main` မှာ **သီးခြား parallel work** ဝင်လာတယ် — `0011_payment_proof_auto_plan.sql`
+(`payment_proofs` table + `activate_plan_from_verified_payment()` OCR/auto-verification RPC) နှင့်
+`0012_shop_application_transaction_id.sql` (`shop_applications.transaction_id`)။ ဒါကြောင့် ကျွန်တော်တို့
+migration ကို `0011` ကနေ **`0013` သို့ renumber** လုပ်ပြီး `main` ကို merge ခဲ့တယ်။ DDL objects မတူလို့
+table/function collision မရှိ; local Postgres မှာ 0001–0013 အားလုံး clean apply + entitlement functest PASS။
+
+**Owner ဆုံးဖြတ်ရန် — semantic conflict နှစ်ခု (code မဟုတ်, product decision):**
+
+1. **ဈေးနှုန်း မကိုက်ညီ။** `activate_plan_from_verified_payment()` က Starter/Business ကို **50000/80000**
+   အဖြစ် hardcode လုပ်ထားတယ်; D56 finalized pricing က **30000/60000**။ တစ်ခုခုကို ရွေးရမယ်။
+2. **Entitlement integration မရှိသေး။** အဲဒီ auto-verification RPC က `shops.plan` ကို တိုက်ရိုက်
+   set လုပ်ပေမယ့် `shop_entitlements` (quota/cycle) ကို **မထိ** — ဒါကြောင့် plan ပြောင်းပေမယ့် entitlement
+   row က stale ဖြစ်နိုင်တယ်။ Pricing V1 ရဲ့ canonical activation path က `admin_activate_subscription`
+   RPC (entitlements ကို fresh grant) ဖြစ်တယ်။ auto-verification ကို production သုံးမယ်ဆိုရင် အဲဒီ RPC ကို
+   `shop_entitlements` ကို sync လုပ်အောင် ပြင်ရမယ် (သို့) `admin_activate_subscription` ကို ခေါ်ခိုင်းရမယ်။
+
+ဒီ ညှိမှုကို production apply မတိုင်ခင် owner ဆုံးဖြတ်ရန်လိုအပ်တယ်။ ၂ ခုစလုံး pending — `0011`–`0013`
+ကို live project သို့ မ apply ရသေး။
 
 ## Engineering Notes / Standing Rules
 
