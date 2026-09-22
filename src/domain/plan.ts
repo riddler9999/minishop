@@ -2,7 +2,7 @@
 // Three sellable tiers. `free_trial` is the entry tier every new shop starts on
 // (0 Ks, capped lifetime quota); `starter` and `business` are prepaid monthly
 // plans. Plan is PLATFORM-managed and read-only to sellers (enforced in the DB
-// by 0007/0013 triggers) — this module only classifies a raw value.
+// by 0007/0016 triggers) — this module only classifies a raw value.
 
 export type Plan = 'free_trial' | 'starter' | 'business';
 
