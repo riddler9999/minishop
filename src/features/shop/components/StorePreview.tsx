@@ -10,6 +10,7 @@
 import {ArrowRight, ImageOff, Search, ShoppingBag} from 'lucide-react';
 import type {Product} from '@/domain/product';
 import type {StorefrontTheme} from '@/domain/theme';
+import {FONT_PAIRINGS} from '@/domain/fontPairing';
 import {ks} from '@/shared/lib/format';
 
 export type PreviewPage = 'home' | 'category' | 'product';
@@ -27,7 +28,7 @@ function productImage(p: Product | undefined): string | null {
   return p ? p.images[0] ?? p.image ?? null : null;
 }
 
-function MiniProductCard({product}: {product: Product}) {
+function MiniProductCard({product, theme}: {product: Product; theme: StorefrontTheme}) {
   const img = productImage(product);
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
   return (
@@ -36,7 +37,7 @@ function MiniProductCard({product}: {product: Product}) {
         {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-rose-200"><ImageOff className="h-6 w-6" /></div>}
       </div>
       <div className="p-2">
-        <p className="truncate text-[11px] font-medium text-slate-700">{product.name}</p>
+        <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="truncate text-[11px] font-medium text-slate-700">{product.name}</p>
         <p className="text-[11px] font-bold text-slate-900">{ks(price)}</p>
       </div>
     </div>
@@ -66,7 +67,7 @@ function HomePreview({theme, products, categories, shopName, logoUrl}: Omit<Prev
           <div className="grid grid-cols-2">
             <div className="flex flex-col justify-center p-3">
               <p className="text-[10px] font-semibold" style={{color: theme.accentColor}}>{shopName}</p>
-              <p className="mt-1 text-sm font-bold leading-tight text-slate-950 line-clamp-3">{theme.home.heroHeadline}</p>
+              <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="mt-1 text-sm font-bold leading-tight text-slate-950 line-clamp-3">{theme.home.heroHeadline}</p>
               {theme.home.heroSubtext && <p className="mt-1.5 text-[10px] leading-snug text-slate-600 line-clamp-3">{theme.home.heroSubtext}</p>}
               <span style={{backgroundColor: theme.accentColor}} className="mt-2.5 inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white">{theme.home.heroCtaLabel} <ArrowRight className="h-2.5 w-2.5" /></span>
             </div>
@@ -92,7 +93,7 @@ function HomePreview({theme, products, categories, shopName, logoUrl}: Omit<Prev
         <p className="text-sm font-bold text-slate-950">{theme.home.featuredTitle}</p>
         {theme.home.featuredSubtitle && <p className="mb-2 text-[10px] text-slate-500">{theme.home.featuredSubtitle}</p>}
         <div className="mt-2 grid grid-cols-2 gap-2">
-          {products.slice(0, 4).map((p) => <MiniProductCard key={p.id} product={p} />)}
+          {products.slice(0, 4).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}
           {products.length === 0 && <p className="col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-6 text-center text-[10px] text-slate-500">ပစ္စည်းမတင်ရသေးပါ။</p>}
         </div>
       </div>
@@ -110,7 +111,7 @@ function CategoryPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopNam
         )}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {products.slice(0, 6).map((p) => <MiniProductCard key={p.id} product={p} />)}
+        {products.slice(0, 6).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}
         {products.length === 0 && <p className="col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-6 text-center text-[10px] text-slate-500">ပစ္စည်းမတင်ရသေးပါ။</p>}
       </div>
     </div>
@@ -126,7 +127,7 @@ function ProductPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName
       <div className="aspect-square overflow-hidden rounded-xl border border-rose-100 bg-rose-50">
         {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-rose-200"><ImageOff className="h-8 w-8" /></div>}
       </div>
-      <p className="mt-2 text-sm font-bold text-slate-900">{p?.name ?? 'ပစ္စည်းအမည်'}</p>
+      <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="mt-2 text-sm font-bold text-slate-900">{p?.name ?? 'ပစ္စည်းအမည်'}</p>
       <p className="text-xs font-bold text-slate-700">{ks(price)}</p>
       <div className="mt-3 flex gap-2">
         <span className="flex-1 rounded-full border border-slate-300 py-1.5 text-center text-[10px] font-semibold text-slate-700">{theme.product.addToCartLabel}</span>
@@ -136,7 +137,7 @@ function ProductPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName
         <div className="mt-4">
           <p className="mb-2 text-xs font-bold text-slate-800">ဆင်တူ ပစ္စည်းများ</p>
           <div className="grid grid-cols-2 gap-2">
-            {products.slice(1, 3).map((rp) => <MiniProductCard key={rp.id} product={rp} />)}
+            {products.slice(1, 3).map((rp) => <MiniProductCard key={rp.id} product={rp} theme={theme} />)}
           </div>
         </div>
       )}
@@ -147,7 +148,7 @@ function ProductPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName
 export default function StorePreview({theme, page, products, categories, shopName, logoUrl}: PreviewProps) {
   const announcement = theme.announcement.enabled && theme.announcement.text.trim();
   return (
-    <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[6px] border-slate-900 bg-white shadow-xl">
+    <div style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].body}} className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[6px] border-slate-900 bg-white shadow-xl">
       <div className="max-h-[640px] overflow-y-auto">
         {announcement && (
           <div style={{backgroundColor: theme.accentColor}} className="px-3 py-1.5 text-center text-[10px] font-semibold text-white">

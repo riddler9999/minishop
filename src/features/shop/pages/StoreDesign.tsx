@@ -14,6 +14,7 @@ import {AlertTriangle, Check, Eye, Image as ImageIcon, Loader2, Palette, Pencil,
 import {adminApi} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {DEFAULT_THEME, type StorefrontTheme} from '@/domain/theme';
+import {FONT_PAIRING_IDS, FONT_PAIRINGS, type FontPairingId} from '@/domain/fontPairing';
 import {usePlan} from '@/features/billing/plan';
 import {PlanBadge, UpgradeCard} from '@/features/billing/PlanGate';
 import {SHOP_LOGOS_BUCKET} from '@/core/storage/buckets';
@@ -250,6 +251,8 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
           <div className="rounded-2xl border border-cream-200 bg-white p-4 sm:p-5">
             {section === 'global' && (
               <div className="space-y-4">
+                <FontPairingField value={draft.fontPairing} onChange={(v) => patch({fontPairing: v})} />
+                <hr className="border-cream-200" />
                 <ColorField label="အသားပေးအရောင် (Accent)" value={draft.accentColor} onChange={(v) => patch({accentColor: v})} />
                 <Toggle label="ကြေညာချက်ဘား ပြရန်" hint="storefront စာမျက်နှာအားလုံး၏ ထိပ်တွင် ပေါ်မည်" checked={draft.announcement.enabled} onChange={(v) => patchAnnouncement({enabled: v})} />
                 <TextField label="ကြေညာချက် စာသား" value={draft.announcement.text} onChange={(v) => patchAnnouncement({text: v})} placeholder="ဥပမာ — ရန်ကုန်တွင်း အခမဲ့ပို့ဆောင်ပေးသည်" maxLength={200} />
@@ -327,6 +330,35 @@ function TextArea({label, value, onChange, maxLength}: {label: string; value: st
       <span className={lbl}>{label}</span>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} rows={2} className={cx(inputCls, 'resize-none')} />
     </label>
+  );
+}
+
+function FontPairingField({value, onChange}: {value: FontPairingId; onChange: (v: FontPairingId) => void}) {
+  return (
+    <div className="block">
+      <span className={lbl}>စာလုံးပုံစံ (Typography)</span>
+      <div role="radiogroup" aria-label="Typography" className="grid grid-cols-3 gap-2">
+        {FONT_PAIRING_IDS.map((id) => {
+          const pairing = FONT_PAIRINGS[id];
+          const active = value === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(id)}
+              className={cx(
+                'my flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-center transition',
+                active ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-cream-200 bg-white text-ink hover:bg-cream-100',
+              )}>
+              <span style={{fontFamily: pairing.display}} className="text-base">{pairing.sampleText}</span>
+              <span className="text-[11px] font-semibold">{pairing.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

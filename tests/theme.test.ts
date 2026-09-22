@@ -75,6 +75,15 @@ describe('normalizeTheme — fail-safe coercion', () => {
     }
   });
 
+  it('validates fontPairing against the known id set', () => {
+    assert.equal(normalizeTheme({fontPairing: 'classic'}).fontPairing, 'classic');
+    assert.equal(normalizeTheme({fontPairing: 'minimal'}).fontPairing, 'minimal');
+    assert.equal(normalizeTheme({fontPairing: 'boutique'}).fontPairing, 'boutique');
+    for (const bad of ['luxury', '', 123, null, undefined, {}]) {
+      assert.equal(normalizeTheme({fontPairing: bad as unknown}).fontPairing, DEFAULT_THEME.fontPairing);
+    }
+  });
+
   it('is idempotent (normalize∘normalize === normalize)', () => {
     const once: StorefrontTheme = normalizeTheme({accentColor: '#123456', home: {heroEnabled: false, heroImageUrl: 'https://x/y.webp'}, announcement: {enabled: true, text: 'Sale'}});
     assert.deepEqual(normalizeTheme(once), once);

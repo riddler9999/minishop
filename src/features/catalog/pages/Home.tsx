@@ -16,7 +16,7 @@ function Hero({product, theme}: {product: Product | null; theme: StorefrontTheme
       <div className="mx-auto grid min-h-[440px] max-w-7xl overflow-hidden rounded-[28px] bg-[#fff0f6] sm:rounded-[36px] lg:min-h-[520px] lg:grid-cols-2">
         <div className="relative z-10 flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 lg:py-16">
           <p className="text-sm font-semibold" style={{color: accent}}>{shop?.name ?? 'သင့်ဆိုင်'}</p>
-          <h1 className="mt-4 max-w-xl text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">{theme.home.heroHeadline}</h1>
+          <h1 className="font-display mt-4 max-w-xl text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">{theme.home.heroHeadline}</h1>
           {theme.home.heroSubtext && <p className="mt-5 max-w-md text-sm leading-6 text-slate-600 sm:text-base">{theme.home.heroSubtext}</p>}
           <ShopLink to="/products" style={{backgroundColor: accent}} className="mt-7 inline-flex min-h-12 w-fit items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">{theme.home.heroCtaLabel} <ArrowRight className="h-4 w-4" /></ShopLink>
         </div>
@@ -61,7 +61,7 @@ function ProductSection({products, loading, error, theme}: {products: Product[];
     <section className="bg-white px-4 py-9 sm:px-8 sm:py-12">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">{theme.home.featuredTitle}</h2>
+          <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">{theme.home.featuredTitle}</h2>
           {theme.home.featuredSubtitle && <p className="mt-1 text-sm text-slate-500">{theme.home.featuredSubtitle}</p>}
         </div>
         {error && <div className="mb-6 rounded-2xl border border-rose-100 bg-[#fff7fa] p-4 text-sm text-slate-700">{error}</div>}

@@ -295,6 +295,18 @@ Scope creep မဖြစ်အောင် paying seller / pilot evidence မရ
 
 ## အရေးကြီး Architecture Decisions
 
+### D54 — Buyer Storefront + Admin Console Typography Redesign (Font Pairing)
+
+`/ui-ux-pro-max` skill ရဲ့ data-driven design-system search ("fashion clothing boutique storefront mobile") က လက်ရှိ visual identity (rose/blush accent, white background, minimal layout) ကို confirm လုပ်ပေးခဲ့တယ် — ဒါကြောင့် redesign ကို color/layout ground-up rebuild မလုပ်ဘဲ **typography + interaction polish** အဖြစ်ပဲ scope ချထားတယ် (owner ရွေးချယ်ချက်)။
+
+**ဆုံးဖြတ်ချက်:** App-wide default typography ကို system-sans ကနေ **Calistoga (display) / Inter (body)** ("boutique" pairing) အဖြစ် `src/index.css`-ရဲ့ `--font-display`/`--font-sans` tokens မှာ ပြောင်းထားတယ် — `font-display`/`font-sans` utility class တွေက admin console + buyer storefront (Products, ProductDetail, Checkout, OrderLookup, OrderSuccess) တစ်ခုလုံးမှာ ရှိပြီးသားဖြစ်လို့ token တစ်ခုတည်း ပြောင်းရုံနဲ့ site တစ်ခုလုံး အလိုအလျောက် retint ဖြစ်သွားတယ်။ **Myanmar glyph fallback အမြဲ ဦးစားပေးထားတယ်** — pairing တစ်ခုစီရဲ့ `font-family` stack မှာ Latin display face ပြီးရင် `Pyidaungsu`/`Noto Sans Myanmar` ချက်ချင်းလိုက်ထားတယ်၊ ဒါကြောင့် Burmese စာလုံး (buyer-facing copy အများစု) က မပြောင်းဘဲ ဆက်ပေါ်၊ Latin character (ဈေးနှုန်း၊ English label၊ brand name) ချည်းသာ boutique feel ရရှိတယ်။
+
+**Store Design (D52) theme system ကို ချဲ့ထားတယ်:** `StorefrontTheme.fontPairing` (`'boutique' | 'classic' | 'minimal'`, `src/domain/fontPairing.ts`) — seller တစ်ယောက်စီက Store Design > အထွေထွေ ကနေ ရွေးနိုင်တယ်။ Curated preset ၃ ခုပဲ ခွင့်ပြုထားတယ် (free-text font name/URL မဟုတ်ဘူး) — attacker-chosen remote stylesheet load ခံရနိုင်တဲ့ risk ကို ကာကွယ်ဖို့။ `theme.ts`'s existing fail-safe philosophy အတိုင်း `normalizeTheme()` က unknown value ကို default (`boutique`) ပြန်ပေးတယ်။ `jsonb` column (migration 0009) ရှိပြီးသားမို့ **schema migration အသစ် မလိုအပ်ပါ**။ Data model အနေနဲ့ D52 ရဲ့ "unopened theme = original hardcoded COPY" invariant ကို fontPairing က မဖျက်ဘူး — ဒါက app-wide design token (D51 ရဲ့ site-wide fashion redesign ကဲ့သို့) ဖြစ်ပြီး seller-authored COPY မဟုတ်လို့ပါ။
+
+**Admin console polish:** `AdminLayout.tsx` ရဲ့ nav link/button (desktop sidebar, mobile bottom nav, mobile drawer, header menu) တွေမှာ `focus-visible` ring မရှိတာကို skill ရဲ့ Accessibility Quick Reference (`keyboard-nav`, `focus-states`) အတိုင်း ထည့်ခဲ့တယ်။ Storefront ရဲ့ search icon link နဲ့ desktop CTA link မှာလည်း focus ring ချို့တဲ့နေတာကို ပြင်ခဲ့တယ်။
+
+**Verification:** `tests/theme.test.ts` + `tests/fontPairing.test.ts` က fail-safe normalization ကို cover လုပ်တယ်။ Browser screenshot verification (Playwright, Chromium) — Home/Products/ProductDetail — Myanmar text shaping အတွက် container ထဲမှာ Noto Sans Myanmar font install လုပ်ပြီးမှ စစ်ခဲ့တယ် (dev-only verification step, production concern မဟုတ်ဘူး — real device တွေမှာ Myanmar font ရှိပြီးသားဖြစ်မယ်)။
+
 ### D52 — Store Design (Storefront Customization / Theme)
 
 Seller က Admin Dashboard ကနေ storefront ရဲ့ **Homepage / Category page / Product page**
