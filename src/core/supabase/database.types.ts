@@ -34,7 +34,7 @@ export type Database = {
           plan: string
           review_note: string | null
           reviewed_at: string | null
-          screenshot_path: string
+          screenshot_path: string | null
           status: string
           transaction_id: string | null
           updated_at: string
@@ -48,7 +48,7 @@ export type Database = {
           plan: string
           review_note?: string | null
           reviewed_at?: string | null
-          screenshot_path: string
+          screenshot_path?: string | null
           status?: string
           transaction_id?: string | null
           updated_at?: string
@@ -62,8 +62,131 @@ export type Database = {
           plan?: string
           review_note?: string | null
           reviewed_at?: string | null
-          screenshot_path?: string
+          screenshot_path?: string | null
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      entitlement_ledger: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: number
+          monthly_delta: number
+          note: string | null
+          order_id: string | null
+          purchased_delta: number
+          shop_id: string
+          source_id: string | null
+          source_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: never
+          monthly_delta?: number
+          note?: string | null
+          order_id?: string | null
+          purchased_delta?: number
+          shop_id: string
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: never
+          monthly_delta?: number
+          note?: string | null
+          order_id?: string | null
+          purchased_delta?: number
+          shop_id?: string
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Relationships: []
+      }
+      order_pack_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_method: string
+          payment_ref_tail: string | null
+          qty: number
+          review_note: string | null
+          reviewed_at: string | null
+          screenshot_path: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          payment_ref_tail?: string | null
+          qty: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_ref_tail?: string | null
+          qty?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_entitlements: {
+        Row: {
+          active: boolean
+          cycle_end: string | null
+          cycle_start: string | null
+          monthly_quota: number
+          monthly_used: number
+          pending_plan: string | null
+          plan: string
+          purchased_balance: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cycle_end?: string | null
+          cycle_start?: string | null
+          monthly_quota?: number
+          monthly_used?: number
+          pending_plan?: string | null
+          plan: string
+          purchased_balance?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cycle_end?: string | null
+          cycle_start?: string | null
+          monthly_quota?: number
+          monthly_used?: number
+          pending_plan?: string | null
+          plan?: string
+          purchased_balance?: number
+          shop_id?: string
           updated_at?: string
         }
         Relationships: []
@@ -127,6 +250,7 @@ export type Database = {
           origin_township: string | null
           grand_total: number
           id: string
+          idempotency_key: string | null
           is_billable: boolean
           is_duplicate: boolean
           is_test: boolean
@@ -150,6 +274,7 @@ export type Database = {
           origin_township?: string | null
           grand_total?: number
           id?: string
+          idempotency_key?: string | null
           is_duplicate?: boolean
           is_test?: boolean
           item_total?: number
@@ -172,6 +297,7 @@ export type Database = {
           origin_township?: string | null
           grand_total?: number
           id?: string
+          idempotency_key?: string | null
           is_duplicate?: boolean
           is_test?: boolean
           item_total?: number
@@ -409,6 +535,10 @@ export type Database = {
       }
     }
     Functions: {
+      current_shop_entitlement: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       current_shop_usage: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -421,6 +551,7 @@ export type Database = {
         Args: {
           p_customer_name: string
           p_customer_phone: string
+          p_idempotency_key?: string
           p_items: Json
           p_payment_method: string
           p_payment_ref_tail: string
