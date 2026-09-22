@@ -8,14 +8,19 @@
 import type {Plan} from '@/domain/plan';
 
 // ---- Pricing (Ks) -----------------------------------------------------------
-// Owner-set plan prices for the one-time onboarding purchase. Single source of
-// truth for the plan-selection UI and the informational `amount` stored on the
-// application (the owner still verifies the real transfer against the
-// screenshot — the amount is never a security check).
+// Prepaid MONTHLY plan prices (pricing V1). Single source of truth for the
+// plan-selection UI and the informational `amount` stored on the application
+// (the owner still verifies the real transfer against the screenshot — the
+// amount is never a security check). Free trial is 0 Ks (no payment).
 export const PLAN_PRICE_KS: Record<Plan, number> = {
-  starter: 50000,
-  business: 80000,
+  free_trial: 0,
+  starter: 30000,
+  business: 60000,
 };
+
+// The plan a seller can self-select without any payment or manual approval.
+// Every other plan goes through the transfer + proof + owner-approval flow.
+export const FREE_TRIAL_PLAN: Plan = 'free_trial';
 
 // ---- Payment methods accepted for the plan purchase -------------------------
 // Distinct from the buyer order flow's methods (cod/kpay/wave): this is the
