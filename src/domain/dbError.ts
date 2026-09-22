@@ -20,6 +20,17 @@ export type DbErrorCode =
   | 'owner_is_platform_managed'
   | 'business_plan_required'
   | 'billing_fields_are_platform_managed'
+  // Shop-application gate guards (shop_applications trigger, 0010)
+  | 'application_status_is_platform_managed'
+  | 'application_owner_is_immutable'
+  | 'application_already_approved'
+  // Payment-proof verification (0011)
+  | 'transaction_id_required'
+  | 'unsupported_plan_amount'
+  | 'receiver_name_mismatch'
+  | 'verification_confidence_too_low'
+  | 'payment_proof_not_found'
+  | 'duplicate_transaction_id'
   // place_order() validation
   | 'invalid_payment_method'
   | 'invalid_cart'
@@ -27,6 +38,8 @@ export type DbErrorCode =
   | 'invalid_payment_reference'
   | 'shop_not_found'
   | 'duplicate_order_limit'
+  | 'ninjavan_origin_missing'
+  | 'ninjavan_route_unavailable'
   | 'invalid_cart_item'
   | 'invalid_quantity'
   | 'product_unavailable'
@@ -44,12 +57,25 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   business_plan_required: 'ဒီလုပ်ဆောင်ချက်ကို Business Plan မှာသာ အသုံးပြုနိုင်ပါတယ်။',
   billing_fields_are_platform_managed:
     'ငွေတောင်းခံမှုဆိုင်ရာ အချက်အလက်ကို ပြောင်းလဲ၍မရပါ — Platform မှ စီမံခန့်ခွဲပါသည်။',
+  application_status_is_platform_managed:
+    'အတည်ပြုမှု အခြေအနေကို ကိုယ်တိုင် ပြောင်းလဲ၍မရပါ — Platform Admin မှ စိစစ်အတည်ပြုပါသည်။',
+  application_owner_is_immutable: 'လျှောက်လွှာ ပိုင်ရှင်ကို ပြောင်းလဲ၍မရပါ။',
+  application_already_approved:
+    'သင့်လျှောက်လွှာကို အတည်ပြုပြီးဖြစ်ပါသည် — ဆိုင်ဖွင့်ရန် ဆက်လက်လုပ်ဆောင်ပါ။',
+  transaction_id_required: 'ငွေလွှဲ Transaction ID မတွေ့ပါ — ငွေလွှဲအထောက်အထားကို ပြန်စစ်ပါ။',
+  unsupported_plan_amount: 'ငွေလွှဲပမာဏသည် ရွေးထားသော Plan ဈေးနှုန်းနှင့် မကိုက်ညီပါ။',
+  receiver_name_mismatch: 'ငွေလက်ခံသူအမည် မကိုက်ညီပါ — ငွေလွှဲအထောက်အထားကို ပြန်စစ်ပါ။',
+  verification_confidence_too_low: 'ငွေလွှဲအထောက်အထားကို အလိုအလျောက် အတည်ပြုရန် မသေချာသေးပါ — လူကိုယ်တိုင် စစ်ဆေးရန် လိုအပ်ပါသည်။',
+  payment_proof_not_found: 'ငွေလွှဲအထောက်အထား ရှာမတွေ့ပါ — ပြန်တင်ပြီး ထပ်ကြိုးစားပါ။',
+  duplicate_transaction_id: 'ဒီ Transaction ID ကို အသုံးပြုပြီးဖြစ်ပါသည်။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
   invalid_cart: 'Shopping Cart အချက်အလက် မမှန်ပါ။',
   invalid_customer: 'ဝယ်ယူသူ အချက်အလက် (အမည် / ဖုန်း / လိပ်စာ) မမှန်ပါ။',
   invalid_payment_reference: 'ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံးကို မှန်ကန်စွာ ဖြည့်ပါ။',
   shop_not_found: 'ဆိုင် ရှာမတွေ့ပါ။',
   duplicate_order_limit: 'ဒီ Order ကို ထပ်တင်ထားပြီးဖြစ်နိုင်ပါတယ်။',
+  ninjavan_origin_missing: 'ဆိုင်၏ Ninja Van ပို့မည့်နေရာ မသတ်မှတ်ရသေးပါ။',
+  ninjavan_route_unavailable: 'ဒီနေရာအတွက် Ninja Van ပို့ခ မရရှိသေးပါ — အခြားပို့ဆောင်မှုကို ရွေးပါ။',
   invalid_cart_item: 'ခြင်းထဲက ပစ္စည်း အချက်အလက် မမှန်ပါ။',
   invalid_quantity: 'ပစ္စည်း အရေအတွက် မမှန်ပါ။',
   product_unavailable: 'ပစ္စည်းအချို့ မရရှိတော့ပါ — refresh လုပ်ပြီး ပြန်စမ်းကြည့်ပါ။',
