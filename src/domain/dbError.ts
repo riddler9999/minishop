@@ -20,6 +20,10 @@ export type DbErrorCode =
   | 'owner_is_platform_managed'
   | 'business_plan_required'
   | 'billing_fields_are_platform_managed'
+  // Shop-application gate guards (shop_applications trigger, 0010)
+  | 'application_status_is_platform_managed'
+  | 'application_owner_is_immutable'
+  | 'application_already_approved'
   // place_order() validation
   | 'invalid_payment_method'
   | 'invalid_cart'
@@ -44,6 +48,11 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   business_plan_required: 'ဒီလုပ်ဆောင်ချက်ကို Business Plan မှာသာ အသုံးပြုနိုင်ပါတယ်။',
   billing_fields_are_platform_managed:
     'ငွေတောင်းခံမှုဆိုင်ရာ အချက်အလက်ကို ပြောင်းလဲ၍မရပါ — Platform မှ စီမံခန့်ခွဲပါသည်။',
+  application_status_is_platform_managed:
+    'အတည်ပြုမှု အခြေအနေကို ကိုယ်တိုင် ပြောင်းလဲ၍မရပါ — Platform Admin မှ စိစစ်အတည်ပြုပါသည်။',
+  application_owner_is_immutable: 'လျှောက်လွှာ ပိုင်ရှင်ကို ပြောင်းလဲ၍မရပါ။',
+  application_already_approved:
+    'သင့်လျှောက်လွှာကို အတည်ပြုပြီးဖြစ်ပါသည် — ဆိုင်ဖွင့်ရန် ဆက်လက်လုပ်ဆောင်ပါ။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
   invalid_cart: 'Shopping Cart အချက်အလက် မမှန်ပါ။',
   invalid_customer: 'ဝယ်ယူသူ အချက်အလက် (အမည် / ဖုန်း / လိပ်စာ) မမှန်ပါ။',

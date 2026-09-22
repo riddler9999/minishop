@@ -24,6 +24,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      shop_applications: {
+        Row: {
+          amount: number
+          created_at: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail: string | null
+          plan: string
+          review_note: string | null
+          reviewed_at: string | null
+          screenshot_path: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail?: string | null
+          plan: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          owner_id?: string
+          payment_method?: string
+          payment_ref_tail?: string | null
+          plan?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string

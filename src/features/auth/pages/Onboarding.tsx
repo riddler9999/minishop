@@ -8,18 +8,22 @@ import {useEffect, useState} from 'react';
 import {Navigate, useNavigate} from 'react-router-dom';
 import {ShieldAlert, Store} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
-import {createOwnShop, getOwnShop} from '@/features/shop/sellerShop';
+import {createOwnShop} from '@/features/shop/sellerShop';
+import {resolveSellerGate} from '@/features/billing/application';
 import {APP_INITIAL} from '@/shared/lib/brand';
 import {SLUG_RE, slugify} from '@/domain/slug';
-import {settleOwnShopLookup} from '@/domain/shopAccess';
 
 export default function Onboarding() {
   const {loading: authLoading, session, user} = useAdminAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
-  const [hasShop, setHasShop] = useState(false);
-  // Distinguish a failed lookup from "no shop yet": on error, don't silently
-  // show the create form to a seller who may already own a shop — surface it.
+  // Where the paid-onboarding gate says this seller belongs. The shop-creation
+  // form only renders for gate === 'onboarding' (plan application APPROVED, no
+  // shop yet); an approved-but-already-onboarded seller goes to /admin, and a
+  // seller who hasn't bought/been-approved is bounced to /admin/subscribe.
+  const [gate, setGate] = useState<'subscribe' | 'onboarding' | 'admin'>('subscribe');
+  // Distinguish a failed lookup from a resolved gate: on error, don't silently
+  // show the create form — surface a retry instead.
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
 
@@ -39,11 +43,11 @@ export default function Onboarding() {
     let alive = true;
     setChecking(true);
     setLoadError(false);
-    settleOwnShopLookup(() => getOwnShop(user.id))
+    resolveSellerGate(user.id)
       .then((result) => {
         if (!alive) return;
         if (result.status === 'error') setLoadError(true);
-        else setHasShop(Boolean(result.shop));
+        else setGate(result.gate);
       })
       .finally(() => alive && setChecking(false));
     return () => {
@@ -52,7 +56,8 @@ export default function Onboarding() {
   }, [user, retry]);
 
   if (!authLoading && !session) return <Navigate to="/admin/login" replace />;
-  if (!checking && !loadError && hasShop) return <Navigate to="/admin" replace />;
+  if (!checking && !loadError && gate === 'admin') return <Navigate to="/admin" replace />;
+  if (!checking && !loadError && gate === 'subscribe') return <Navigate to="/admin/subscribe" replace />;
   if (authLoading || checking) {
     return <div className="grid min-h-screen place-items-center bg-white text-sm text-slate-500">Loading…</div>;
   }

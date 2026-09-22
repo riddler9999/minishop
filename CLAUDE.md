@@ -135,7 +135,12 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   (`unique(owner_id)` on `shops`, dropping the now-redundant `shops_owner_idx` — makes the
   one-shop-per-owner invariant the admin flow already assumes real; see `PROJECT.md` D49), and
   `0009_shop_theme.sql` (`shops.theme jsonb` — seller-editable Store Design customization,
-  cosmetic only, owner-scoped by existing RLS; see `PROJECT.md` D52).
+  cosmetic only, owner-scoped by existing RLS; see `PROJECT.md` D52, and
+  `0010_shop_application_gate.sql` (`shop_applications` table + private `payment-proofs` storage
+  bucket — paid onboarding gate; seller chooses a plan and uploads transfer proof, then the
+  platform owner manually approves before onboarding; owner-scoped RLS + platform-managed
+  `status` trigger; see `PROJECT.md` D55).
+  **`0001`–`0007`, `0009` and `0010` are applied to the live project; `0008` is pending — not yet applied.**
   **`0001`–`0007` and `0009` are applied to the live project; `0008` is pending — not yet applied
   (needs owner go-ahead; fails if duplicate `owner_id` rows exist — run the migration's
   duplicate-detection query first).**
@@ -147,13 +152,14 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches
   amount + last-5 in the admin console. There is no slip upload (`uploadSlip()` is a deliberate
   no-op — in-app WebView file pickers are unreliable).
-- **DB error copy:** the typed exceptions `0007` raises (`rate_limit_exceeded`, `duplicate_order_limit`,
-  `business_plan_required`, `plan_is_platform_managed`, …) map to Burmese UI copy in
+- **DB error copy:** the typed exceptions `0007`/`0010` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
+  `business_plan_required`, `plan_is_platform_managed`, `application_status_is_platform_managed`, …) map to Burmese UI copy in
   `src/domain/dbError.ts` — the single source of truth (`DB_ERROR_MESSAGES` + `mapDbError()`),
   mirroring the `orderStatus.ts` pattern. Feature `api/` modules call `mapDbError(error.message,
   fallback)` at their boundary (checkout `place_order`, orders `lookup_order`, shop settings,
-  product create/update) instead of surfacing `e.message` raw. Add a new DB error code to that
-  catalog when a migration introduces one.
+  product create/update, paid-onboarding application submit) instead of surfacing `e.message` raw.
+  `tests/dbError.test.ts` scans every migration for raised codes, so add any new DB error code to
+  that catalog when a migration introduces one.
 - **Schema changes: never apply a migration to production without the owner's explicit
   go-ahead.** For the full procedure, see `.claude/skills/supabase-migration/SKILL.md`.
 - The dedicated Supabase project for this app is intentionally separate from any other/shared
