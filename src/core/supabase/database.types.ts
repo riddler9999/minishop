@@ -36,6 +36,7 @@ export type Database = {
           reviewed_at: string | null
           screenshot_path: string
           status: string
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -49,6 +50,7 @@ export type Database = {
           reviewed_at?: string | null
           screenshot_path: string
           status?: string
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {

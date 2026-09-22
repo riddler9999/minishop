@@ -24,6 +24,7 @@ export interface ShopApplication {
   plan: string;
   paymentMethod: string;
   paymentRefTail: string | null;
+  transactionId: string | null;
   screenshotPath: string;
   amount: number;
   status: ApplicationStatus;
@@ -38,6 +39,7 @@ type ApplicationRow = {
   plan: string;
   payment_method: string;
   payment_ref_tail: string | null;
+  transaction_id: string | null;
   screenshot_path: string;
   amount: number;
   status: string;
@@ -48,7 +50,7 @@ type ApplicationRow = {
 };
 
 const APPLICATION_COLUMNS =
-  'owner_id, plan, payment_method, payment_ref_tail, screenshot_path, amount, status, review_note, created_at, updated_at, reviewed_at';
+  'owner_id, plan, payment_method, payment_ref_tail, transaction_id, screenshot_path, amount, status, review_note, created_at, updated_at, reviewed_at';
 
 function normalizeStatus(raw: string): ApplicationStatus {
   return raw === 'approved' || raw === 'rejected' || raw === 'pending' ? raw : 'pending';
@@ -60,6 +62,7 @@ function mapApplication(r: ApplicationRow): ShopApplication {
     plan: r.plan,
     paymentMethod: r.payment_method,
     paymentRefTail: r.payment_ref_tail,
+    transactionId: r.transaction_id,
     screenshotPath: r.screenshot_path,
     amount: r.amount,
     status: normalizeStatus(r.status),
