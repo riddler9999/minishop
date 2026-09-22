@@ -75,21 +75,24 @@ domain/  ←  core/ , shared/  ←  features/*  ←  data/  ←  app/
 
 ### Commercial / Plan Layer
 
-- `src/domain/plan.ts` — plan resolution rule (**fail-closed**: မသိရင် `starter`)
-- `src/shared/lib/brand.ts`
-- `src/features/billing/plan.tsx`
-- `src/features/billing/PlanGate.tsx`
-- `src/features/shop/pages/Settings.tsx`
-- `src/features/shop/sellerShop.ts`
+Current domain truth ကို `CONTEXT.md` မှာထားတယ်။ `PROJECT.md` ရဲ့ အောက်ပိုင်း decision log က historical/superseded state ပါဝင်နိုင်တယ်။
 
-Plans:
+- `src/domain/plan.ts` — plan resolution rule (**fail-closed**: မသိရင် `free_trial`)
+- `src/domain/subscription.ts` — current plan prices + paid-onboarding payment config
+- `src/domain/entitlement.ts` — order quota / Extra Orders consumption rules
+- `src/features/billing/plan.tsx` — seller-console feature presentation
+- `src/features/billing/api.ts` — live entitlement read model
 
-- `starter`
-- `business`
+Current plans:
 
-Plan ကို seller က သူ့ဘာသာပြောင်းလို့မရဘူး။ Plan change က platform owner / billing action ဖြစ်ရမယ်။
+- `free_trial` — 0 Ks, 20 lifetime orders, max 10 products
+- `starter` — 30,000 Ks/cycle, 60 orders/cycle
+- `business` — 60,000 Ks/cycle, 150 orders/cycle
+- Extra Orders — 500 Ks/order, purchased balance never expires
 
-Business-only UI features တွေထဲမှာ promotions, township shipping zones, last-5 payment verification, dashboard analytics, logo/branding နဲ့ integration hooks ပါတယ်။ Downgrade လုပ်ရင် data မဖျက်ဘူး။ UI မှာ feature ကို lock/hide + upsell ပဲလုပ်တယ်။ Upgrade ပြန်လုပ်ရင် data ပြန်ပေါ်ရမယ်။
+Plan ကို seller က သူ့ဘာသာပြောင်းလို့မရဘူး။ Paid activation/renewal က `shops.plan` တစ်ခုတည်းကိုပြောင်းတာမဟုတ်ဘဲ `shop_entitlements` ကိုပါ တစ်ပြိုင်နက်တည်း reconcile လုပ်ရမယ်။
+
+Township shipping နဲ့ last-5 buyer payment verification က core features ဖြစ်တယ်။ Business-only UI features တွေက promotions, advanced dashboard, branding/Store Design နဲ့ integrations ဖြစ်တယ်။ Downgrade လုပ်ရင် data မဖျက်ဘူး။
 
 ## Authentication & Onboarding
 
