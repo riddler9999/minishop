@@ -139,11 +139,22 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `0010_shop_application_gate.sql` (`shop_applications` table + private `payment-proofs` storage
   bucket — paid onboarding gate; seller chooses a plan and uploads transfer proof, then the
   platform owner manually approves before onboarding; owner-scoped RLS + platform-managed
-  `status` trigger; see `PROJECT.md` D55).
-  **`0001`–`0007`, `0009` and `0010` are applied to the live project; `0008` is pending — not yet applied.**
-  **`0001`–`0007` and `0009` are applied to the live project; `0008` is pending — not yet applied
-  (needs owner go-ahead; fails if duplicate `owner_id` rows exist — run the migration's
-  duplicate-detection query first).**
+  `status` trigger; see `PROJECT.md` D55), `0011_payment_proof_auto_plan.sql` +
+  `0012_shop_application_transaction_id.sql` (a **separate, parallel** payment-proof
+  OCR/auto-verification path — `payment_proofs` table + `activate_plan_from_verified_payment()`
+  RPC + `shop_applications.transaction_id`; note it hardcodes the OLD 50000/80000 prices and sets
+  `shops.plan` WITHOUT touching `shop_entitlements`, so it does not yet integrate with the pricing-V1
+  entitlement system below — see `PROJECT.md` D57 for the reconciliation needed), and
+  `0016_entitlements_and_pricing.sql`
+  (**Pricing V1, D56** — the `free_trial` tier; `shop_entitlements` (monthly quota + permanent
+  purchased balance + subscription cycle), append-only `entitlement_ledger`, `order_pack_purchases`;
+  `orders.idempotency_key`; `place_order()` consumes ONE entitlement per order — monthly-first then
+  purchased — atomically + idempotently, locking the entitlement row `FOR UPDATE`; free-trial
+  10-product limit; township shipping un-gated to core; owner-only `admin_*` entitlement RPCs
+  granted only to `service_role`).
+  **`0001`–`0007`, `0009` and `0010` are applied to the live project; `0008` and `0011`–`0013` are
+  pending — not yet applied** (need owner go-ahead; `0008` fails if duplicate `owner_id` rows exist — run
+  the migration's duplicate-detection query first).
 - **Security model** (`supabase/README.md`): buyers are anonymous and never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
   server-side from `products` (client-sent prices are ignored) and validates stock/shop state
@@ -152,8 +163,9 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches
   amount + last-5 in the admin console. There is no slip upload (`uploadSlip()` is a deliberate
   no-op — in-app WebView file pickers are unreliable).
-- **DB error copy:** the typed exceptions `0007`/`0010` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
-  `business_plan_required`, `plan_is_platform_managed`, `application_status_is_platform_managed`, …) map to Burmese UI copy in
+- **DB error copy:** the typed exceptions `0007`/`0010`/`0011`/`0013` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
+  `business_plan_required`, `plan_is_platform_managed`, `application_status_is_platform_managed`,
+  `order_quota_exhausted`, `subscription_inactive`, `product_limit_reached`, `extra_orders_not_available`, …) map to Burmese UI copy in
   `src/domain/dbError.ts` — the single source of truth (`DB_ERROR_MESSAGES` + `mapDbError()`),
   mirroring the `orderStatus.ts` pattern. Feature `api/` modules call `mapDbError(error.message,
   fallback)` at their boundary (checkout `place_order`, orders `lookup_order`, shop settings,
@@ -166,20 +178,40 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   project — see `PROJECT.md` Stack section for the project ref. Only the anon key belongs in
   frontend code; RLS is the actual enforcement boundary, not the frontend.
 
-### Plan gating (Starter vs Business)
+### Plan gating + order entitlements (Free Trial / Starter / Business — Pricing V1, D56)
 
-- `src/domain/plan.ts` holds the resolution rule (`normalizePlan`, `resolvePlanValue`) and
-  **fails closed**: anything unknown, missing or malformed resolves to `starter`. Resolution
-  order: `shop.plan` DB column → `VITE_DEFAULT_PLAN` env → `starter`.
-- `src/features/billing/plan.tsx` (note: `.tsx`, exports a JSX provider) is the UI gating layer.
-  `usePlan()` only works inside `PlanProvider`, which wraps only the admin console
-  (`AdminConsole`) — `Login`/`Onboarding` render outside it and must use `@/shared/lib/brand`
-  constants instead.
-- Gating is **no longer frontend-only**: `0007_production_hardening.sql` enforces the same rules in
-  the database (`business_plan_required`, `plan_is_platform_managed`), so the UI layer decides what
-  to *render* while the DB decides what is *allowed*. Plan stays read-only in the seller UI — a
-  seller must never be able to self-upgrade. Gating hides + upsells (`features/billing/PlanGate.tsx`)
-  but never deletes data — a downgraded shop's promo/zone data reappears on upgrade.
+- **Three tiers.** `src/domain/plan.ts` (`Plan = 'free_trial' | 'starter' | 'business'`) holds the
+  resolution rule (`normalizePlan`, `resolvePlanValue`) and **fails closed to `free_trial`** (the
+  least-privileged tier — smallest quota, no paid features/add-ons). Resolution order: `shop.plan`
+  DB column → `VITE_DEFAULT_PLAN` env → `free_trial`. New shops default to `free_trial`; the actual
+  plan is derived in the `shops` insert trigger (0013) from the seller's platform-approved
+  application, so a seller still can never pick a higher tier directly.
+- **Feature gating** (`src/features/billing/plan.tsx`, `.tsx` JSX provider; `usePlan()` only inside
+  `PlanProvider`, which wraps only `AdminConsole`). Business-only: promotions, advanced dashboard,
+  branding/logo/Store Design, integrations. **Township shipping and payment verification are now
+  CORE on every plan** (the old `advancedShipping`/Business gates were removed — D56). Gating hides
+  + upsells (`features/billing/PlanGate.tsx`) but never deletes data.
+- **Order entitlements are the real pricing mechanic** (`src/domain/entitlement.ts` — the single
+  source of truth, mirrored verbatim by `place_order()` in 0013). FOUR concepts kept separate,
+  never collapsed into one number: subscription state/cycle, monthly quota (Free 20 lifetime /
+  Starter 60 / Business 150), permanent purchased Extra Orders balance (500 Ks/order, never
+  expires), and the payments + append-only ledger. A valid order consumes ONE entitlement
+  immediately (**monthly quota first, then purchased**), atomically + idempotently
+  (`orders.idempotency_key`), the entitlement row locked `FOR UPDATE` for concurrency. Seller status
+  changes never affect billing; cancellation never auto-refunds. Free trial: 10-product cap
+  (server-enforced), cannot buy/consume Extra Orders.
+- **Manual prepaid billing.** Activation, renewal, upgrade, downgrade and Extra-Orders credit are
+  owner-only `admin_*` SECURITY DEFINER RPCs (granted to `service_role`), run from the Supabase
+  dashboard after the owner verifies a transfer screenshot — matching the D4–D6/D55 manual-payment
+  philosophy (no in-app super-admin). Sellers submit Extra-Orders purchase requests
+  (`order_pack_purchases`) via the admin Billing page. Plan stays read-only in the seller UI —
+  enforced by the DB (`plan_is_platform_managed`), so a seller can never self-upgrade.
+- **Mid-cycle upgrade (Starter→Business) rule** (`admin_upgrade_plan`): the monthly cap is raised to
+  150 but the orders already consumed this cycle are PRESERVED (`monthly_used` unchanged) — no fresh
+  150 — so nobody can burn 60 Starter orders then pay the difference for a full new allotment. The
+  seller pays the price difference for the remaining cycle. See `PROJECT.md` D56.
+- **Downgrade** (`admin_schedule_downgrade`) takes effect at the NEXT renewal (`pending_plan`),
+  never deletes Business data — only lowers the cap once applied.
 
 ### Other conventions
 
