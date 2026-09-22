@@ -10,6 +10,20 @@ in-app WebView (no native app, no bot/messaging API — this is **not** a sales 
 `PROJECT.md` for full product context, decision log (D1–D51), open tasks, and status — read it
 before making architectural changes; it is the project's memory, not just a README.
 
+## Agent skills
+
+### Issue tracker
+
+Engineering work is tracked in GitHub Issues for `riddler9999/minishop`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix` vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a single-context domain model: read root `CONTEXT.md` and relevant ADRs under `docs/adr/` before architectural changes. See `docs/agents/domain.md`.
+
 ## Session communication preference (standing, until this project is done)
 
 - Reply to the user in Burmese (မြန်မာဘာသာ) throughout the session. This is about the chat
