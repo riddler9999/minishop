@@ -24,6 +24,13 @@ export type DbErrorCode =
   | 'application_status_is_platform_managed'
   | 'application_owner_is_immutable'
   | 'application_already_approved'
+  // Payment-proof verification (0011)
+  | 'transaction_id_required'
+  | 'unsupported_plan_amount'
+  | 'receiver_name_mismatch'
+  | 'verification_confidence_too_low'
+  | 'payment_proof_not_found'
+  | 'duplicate_transaction_id'
   // place_order() validation
   | 'invalid_payment_method'
   | 'invalid_cart'
@@ -53,6 +60,12 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   application_owner_is_immutable: 'လျှောက်လွှာ ပိုင်ရှင်ကို ပြောင်းလဲ၍မရပါ။',
   application_already_approved:
     'သင့်လျှောက်လွှာကို အတည်ပြုပြီးဖြစ်ပါသည် — ဆိုင်ဖွင့်ရန် ဆက်လက်လုပ်ဆောင်ပါ။',
+  transaction_id_required: 'ငွေလွှဲ Transaction ID မတွေ့ပါ — ငွေလွှဲအထောက်အထားကို ပြန်စစ်ပါ။',
+  unsupported_plan_amount: 'ငွေလွှဲပမာဏသည် ရွေးထားသော Plan ဈေးနှုန်းနှင့် မကိုက်ညီပါ။',
+  receiver_name_mismatch: 'ငွေလက်ခံသူအမည် မကိုက်ညီပါ — ငွေလွှဲအထောက်အထားကို ပြန်စစ်ပါ။',
+  verification_confidence_too_low: 'ငွေလွှဲအထောက်အထားကို အလိုအလျောက် အတည်ပြုရန် မသေချာသေးပါ — လူကိုယ်တိုင် စစ်ဆေးရန် လိုအပ်ပါသည်။',
+  payment_proof_not_found: 'ငွေလွှဲအထောက်အထား ရှာမတွေ့ပါ — ပြန်တင်ပြီး ထပ်ကြိုးစားပါ။',
+  duplicate_transaction_id: 'ဒီ Transaction ID ကို အသုံးပြုပြီးဖြစ်ပါသည်။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
   invalid_cart: 'Shopping Cart အချက်အလက် မမှန်ပါ။',
   invalid_customer: 'ဝယ်ယူသူ အချက်အလက် (အမည် / ဖုန်း / လိပ်စာ) မမှန်ပါ။',
