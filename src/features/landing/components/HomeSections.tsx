@@ -1,4 +1,4 @@
-import {ArrowRight, Check, CreditCard, LayoutDashboard, Link2, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, ShoppingBag, Smartphone, Truck} from 'lucide-react';
+import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, ShoppingBag, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
 const channels = ['Facebook', 'TikTok', 'Telegram'];
