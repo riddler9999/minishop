@@ -16,6 +16,8 @@
 
 import {type FontPairingId, DEFAULT_FONT_PAIRING, isFontPairingId} from './fontPairing.ts';
 
+export type ThemePresetId = 'minimal' | 'fashion' | 'dark-luxury' | 'fresh-market' | 'modern-shop';
+
 /** A hex colour string, e.g. `#e11d48`. */
 export type HexColor = string;
 
@@ -59,6 +61,8 @@ export interface ProductTheme {
 }
 
 export interface StorefrontTheme {
+  /** Visual preset selected by the seller; individual fields remain editable overrides. */
+  presetId: ThemePresetId;
   /** Latin display/body font pairing for storefront headings and copy (see `domain/fontPairing`). */
   fontPairing: FontPairingId;
   /** Accent colour for the Homepage hero + its call-to-action buttons. */
@@ -76,6 +80,7 @@ export interface StorefrontTheme {
 // inherits the app's global color/spacing tokens rather than some frozen
 // snapshot — a seller who wants the original system-font look picks `minimal`.
 export const DEFAULT_THEME: StorefrontTheme = {
+  presetId: 'fashion',
   fontPairing: DEFAULT_FONT_PAIRING,
   accentColor: '#e11d48',
   announcement: {
@@ -103,6 +108,23 @@ export const DEFAULT_THEME: StorefrontTheme = {
     buyNowLabel: 'ဝယ်မည်',
   },
 };
+
+export const THEME_PRESETS: Record<ThemePresetId, {label: string; description: string; theme: StorefrontTheme}> = {
+  minimal: {label: 'Minimal', description: 'သန့်ရှင်းပြီး product ကို အဓိကထားတဲ့ ဆိုင်ပုံစံ', theme: {...DEFAULT_THEME, presetId: 'minimal', fontPairing: 'minimal', accentColor: '#111827'}},
+  fashion: {label: 'Fashion', description: 'အဝတ်အစား၊ Beauty နဲ့ Lifestyle ဆိုင်များအတွက်', theme: {...DEFAULT_THEME, presetId: 'fashion', fontPairing: 'boutique', accentColor: '#e11d48'}},
+  'dark-luxury': {label: 'Dark Luxury', description: 'Premium နဲ့ luxury product များအတွက်', theme: {...DEFAULT_THEME, presetId: 'dark-luxury', fontPairing: 'classic', accentColor: '#b7791f', announcement: {...DEFAULT_THEME.announcement, enabled: true, text: 'Premium Collection'}}},
+  'fresh-market': {label: 'Fresh Market', description: 'Food၊ Grocery နဲ့ local product ဆိုင်များအတွက်', theme: {...DEFAULT_THEME, presetId: 'fresh-market', fontPairing: 'minimal', accentColor: '#15803d', home: {...DEFAULT_THEME.home, heroHeadline: 'လတ်ဆတ်တဲ့ ပစ္စည်းတွေကို လွယ်လွယ်ကူကူ မှာယူပါ။', featuredTitle: 'ဒီနေ့ ရရှိနိုင်သော ပစ္စည်းများ'}}},
+  'modern-shop': {label: 'Modern Shop', description: 'Electronics နဲ့ general retail အတွက် modern ပုံစံ', theme: {...DEFAULT_THEME, presetId: 'modern-shop', fontPairing: 'minimal', accentColor: '#2563eb', home: {...DEFAULT_THEME.home, heroHeadline: 'လိုချင်တဲ့ ပစ္စည်းကို မြန်မြန်ရှာ၊ လွယ်လွယ်မှာပါ။', featuredTitle: 'လူကြိုက်များသော ပစ္စည်းများ'}}},
+};
+
+export function isThemePresetId(value: unknown): value is ThemePresetId {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(THEME_PRESETS, value);
+}
+
+export function themeFromPreset(id: ThemePresetId, current?: StorefrontTheme): StorefrontTheme {
+  const preset = THEME_PRESETS[id].theme;
+  return {...preset, home: {...preset.home, heroImageUrl: current?.home.heroImageUrl ?? preset.home.heroImageUrl}};
+}
 
 // ---- field validators (each falls back to `fallback` on any bad input) -------
 
@@ -157,6 +179,7 @@ export function normalizeTheme(raw: unknown): StorefrontTheme {
   const category = isObject(raw.category) ? raw.category : {};
   const product = isObject(raw.product) ? raw.product : {};
   return {
+    presetId: isThemePresetId(raw.presetId) ? raw.presetId : d.presetId,
     fontPairing: isFontPairingId(raw.fontPairing) ? raw.fontPairing : d.fontPairing,
     accentColor: hexColor(raw.accentColor, d.accentColor),
     announcement: {
