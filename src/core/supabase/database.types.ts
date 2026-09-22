@@ -24,6 +24,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      shop_applications: {
+        Row: {
+          amount: number
+          created_at: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail: string | null
+          plan: string
+          review_note: string | null
+          reviewed_at: string | null
+          screenshot_path: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail?: string | null
+          plan: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          owner_id?: string
+          payment_method?: string
+          payment_ref_tail?: string | null
+          plan?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ninjavan_rates: {
         Row: { id: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label: string; is_active: boolean; created_at: string }
         Insert: { id?: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label?: string; is_active?: boolean; created_at?: string }
@@ -306,6 +350,7 @@ export type Database = {
           phone: string | null
           plan: string
           slug: string
+          theme: Json
           updated_at: string
         }
         Insert: {
@@ -322,6 +367,7 @@ export type Database = {
           phone?: string | null
           plan?: string
           slug: string
+          theme?: Json
           updated_at?: string
         }
         Update: {
@@ -331,11 +377,14 @@ export type Database = {
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          origin_region?: string | null
+          origin_township?: string | null
           name?: string
           owner_id?: string
           phone?: string | null
           plan?: string
           slug?: string
+          theme?: Json
           updated_at?: string
         }
         Relationships: []
