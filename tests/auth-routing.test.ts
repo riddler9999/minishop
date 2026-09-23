@@ -13,7 +13,7 @@ describe('signup plan routing contract', () => {
     assert.match(landingSource, /`\/admin\/subscribe\?plan=\$\{plan\}`/);
     assert.match(loginSource, /signUp\(email, password, from\)/);
     assert.match(authSource, /allowed = \['\/admin', '\/admin\/subscribe', '\/admin\/onboarding'\]/);
-    assert.match(subscribeSource, /requestedPlan === 'free_trial'/);
+    assert.match(subscribeSource, /requestedPlan=\{searchParams\.get\('plan'\)\}/);
     assert.match(subscribeSource, /plan:\s*'free_trial'/);
     assert.match(subscribeSource, /submitApplication\(userId/);
     assert.match(subscribeSource, /onSubmitted\(\)/);
