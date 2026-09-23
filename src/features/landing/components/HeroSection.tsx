@@ -15,7 +15,7 @@ export default function HeroSection() {
         </Link>
         <div className="landing-topbar-actions">
           <Link className="landing-text-link" to="/demo">Demo Store</Link>
-          <Link className="landing-topbar-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
+          <Link className="landing-topbar-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခုပဲ စတင်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
         </div>
       </div>
 
@@ -27,7 +27,7 @@ export default function HeroSection() {
           ကြည့်လို့လွယ်၊ Order တင်လို့လွယ်တဲ့ Store Link တစ်ခုဖန်တီးပါ။
         </p>
         <div className="landing-hero-buttons">
-          <Link className="landing-primary-cta" to="/admin/onboarding">အခုပဲ စတင်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
+          <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခုပဲ စတင်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
           <Link className="landing-demo-cta" to="/demo">Demo Store ကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
         </div>
         <div className="landing-proof-row" aria-label="MiniShop setup benefits">

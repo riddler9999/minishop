@@ -10,7 +10,7 @@ export default function AdminLogin() {
   const {signIn, signUp, signInWithGoogle, verifyEmailOtp, resendSignupCode} = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>(() => new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -19,7 +19,10 @@ export default function AdminLogin() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const from = (location.state as {from?: string} | null)?.from || '/admin';
+  const queryFrom = new URLSearchParams(location.search).get('from');
+  const stateFrom = (location.state as {from?: string} | null)?.from;
+  const requestedFrom = queryFrom || stateFrom || '/admin';
+  const from = requestedFrom.startsWith('/') && !requestedFrom.startsWith('//') ? requestedFrom : '/admin';
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -62,7 +65,7 @@ export default function AdminLogin() {
       return;
     }
 
-    const {error, needsEmailConfirmation} = await signUp(email, password);
+    const {error, needsEmailConfirmation} = await signUp(email, password, from);
     setBusy(false);
 
     if (error) return setErr(error);
@@ -81,7 +84,7 @@ export default function AdminLogin() {
     setErr('');
     setNotice('');
     setBusy(true);
-    const {error} = await signInWithGoogle();
+    const {error} = await signInWithGoogle(from);
     if (error) {
       setBusy(false);
       setErr(error);

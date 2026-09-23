@@ -2,6 +2,7 @@ import HeroSection from '../components/HeroSection';
 import {
   DashboardFinalCTA,
   MyanmarCheckout,
+  PricingSection,
   SellEverywhere,
   StopSellingThroughChat,
   ThemeShowcase,
@@ -19,6 +20,7 @@ export default function Landing() {
         <SellEverywhere />
         <MyanmarCheckout />
         <ThemeShowcase />
+        <PricingSection />
         <DashboardFinalCTA />
         <footer className="landing-footer">
           <strong>MiniShop</strong>
