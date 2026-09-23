@@ -10,9 +10,10 @@ const onboardingSource = readFileSync(new URL('../src/features/auth/pages/Onboar
 
 describe('signup plan routing contract', () => {
   it('preserves Free Trial through signup into the subscribe gate', () => {
-    assert.match(landingSource, /\/admin\/subscribe\?plan=free_trial/);
+    assert.match(landingSource, /`\/admin\/subscribe\?plan=\$\{plan\}`/);
     assert.match(loginSource, /signUp\(email, password, from\)/);
     assert.match(authSource, /allowed = \['\/admin', '\/admin\/subscribe', '\/admin\/onboarding'\]/);
+    assert.match(subscribeSource, /requestedPlan === 'free_trial'/);
     assert.match(subscribeSource, /plan:\s*'free_trial'/);
     assert.match(subscribeSource, /submitApplication\(userId/);
     assert.match(subscribeSource, /onSubmitted\(\)/);
