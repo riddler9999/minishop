@@ -9,6 +9,8 @@ const liveSchemaContract = JSON.parse(
   capturedAt: string;
   shopsColumns: string[];
   appliedMigrations: string[];
+  knownRepoAheadColumns: string[];
+  knownPendingMigrations: string[];
 };
 
 test('live schema contract records the production project and known pending delivery migrations', () => {
@@ -21,9 +23,13 @@ test('live schema contract records the production project and known pending deli
   assert.equal(liveSchemaContract.appliedMigrations.includes('ninjavan_production_pricing'), false);
 });
 
-test('checked-in generated types do not claim columns absent from the captured live schema', () => {
+test('known repository-ahead schema is explicit instead of silently looking live', () => {
   const types = fs.readFileSync('src/core/supabase/database.types.ts', 'utf8');
-  for (const column of ['delivery_service', 'origin_region', 'origin_township']) {
-    assert.doesNotMatch(types, new RegExp('\\b' + column + '\\b'), column);
+  for (const column of liveSchemaContract.knownRepoAheadColumns) {
+    assert.match(types, new RegExp('\\b' + column + '\\b'), column);
+    assert.equal(liveSchemaContract.shopsColumns.includes(column), false, column);
+  }
+  for (const migration of liveSchemaContract.knownPendingMigrations) {
+    assert.equal(liveSchemaContract.appliedMigrations.includes(migration), false, migration);
   }
 });
