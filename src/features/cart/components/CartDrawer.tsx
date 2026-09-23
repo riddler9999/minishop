@@ -49,11 +49,11 @@ export default function CartDrawer() {
       />
       {/* Panel */}
       <aside
-        className={`fixed right-0 top-0 z-50 flex h-full w-[90%] max-w-md flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          drawerOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-x-0 bottom-0 z-50 flex max-h-[86dvh] w-full flex-col rounded-t-[28px] bg-white shadow-[0_-24px_70px_rgba(15,23,42,0.18)] transition-transform duration-300 ease-out sm:inset-y-0 sm:left-auto sm:right-0 sm:h-full sm:max-h-none sm:w-[90%] sm:max-w-md sm:rounded-none ${
+          drawerOpen ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:translate-y-0 sm:translate-x-full'
         }`}
         aria-hidden={!drawerOpen}>
-        <header className="flex items-center justify-between border-b border-rose-100 px-5 py-4">
+        <header className="flex items-center justify-between border-b border-rose-100 px-5 py-4 pt-5">
           <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
             <ShoppingBag className="h-5 w-5" /> ဈေးခြင်းတောင်း
             {count > 0 && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-[#e11d48]">{count}</span>}
@@ -77,8 +77,8 @@ export default function CartDrawer() {
           <>
             <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {items.map((it) => (
-                <div key={it.id} className="flex gap-3 rounded-xl border border-rose-100 bg-white p-2.5">
-                  <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-rose-50">
+                <div key={it.id} className="flex gap-3 rounded-2xl bg-[#faf8f9] p-2.5">
+                  <div className="h-20 w-16 shrink-0 overflow-hidden rounded-xl bg-rose-50">
                     {it.image ? (
                       <img src={it.image} alt={it.name} className="h-full w-full object-cover" />
                     ) : (
@@ -94,7 +94,7 @@ export default function CartDrawer() {
                     </div>
                     <span className="mt-0.5 text-sm font-bold text-[#e11d48]">{ks(it.price)}</span>
                     <div className="mt-auto flex items-center justify-between">
-                      <div className="flex items-center rounded-full border border-rose-100">
+                      <div className="flex items-center rounded-xl border border-rose-100 bg-white">
                         <button onClick={() => setQty(it.id, it.qty - 1)} className="grid h-8 w-8 place-items-center text-[#e11d48]"><Minus className="h-3.5 w-3.5" /></button>
                         <span className="w-7 text-center text-sm font-semibold">{it.qty}</span>
                         <button onClick={() => setQty(it.id, it.qty + 1)} className="grid h-8 w-8 place-items-center text-[#e11d48]"><Plus className="h-3.5 w-3.5" /></button>
@@ -106,14 +106,14 @@ export default function CartDrawer() {
               ))}
             </div>
 
-            <footer className="border-t border-rose-100 bg-white px-5 py-4">
+            <footer className="border-t border-rose-100 bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="my font-semibold text-slate-900">စုစုပေါင်း</span>
                 <span className="text-xl font-bold text-[#e11d48]">{ks(subtotal)}</span>
               </div>
               <button
                 onClick={() => go('/checkout')}
-                className="w-full rounded-xl bg-[#e11d48] px-6 py-3 font-bold text-white transition hover:bg-[#be123c]">
+                className="w-full min-h-12 rounded-2xl bg-[#e11d48] px-6 py-3 font-bold text-white transition hover:bg-[#be123c]">
                 Order တင်မယ်
               </button>
             </footer>
