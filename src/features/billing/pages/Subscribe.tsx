@@ -6,7 +6,7 @@
 // and self-guards below, mirroring Onboarding.tsx.
 
 import {useEffect, useRef, useState} from 'react';
-import {Navigate} from 'react-router-dom';
+import {Navigate, useSearchParams} from 'react-router-dom';
 import {Check, Clock, Copy, ShieldAlert, Store, Upload, XCircle} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {APP_INITIAL} from '@/shared/lib/brand';
@@ -49,6 +49,7 @@ function formatKs(n: number): string {
 
 export default function Subscribe() {
   const {loading: authLoading, session, user} = useAdminAuth();
+  const [searchParams] = useSearchParams();
 
   const [checking, setChecking] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -111,6 +112,7 @@ export default function Subscribe() {
       userId={user!.id}
       previous={application?.status === 'rejected' ? application : null}
       onSubmitted={() => setRetry((n) => n + 1)}
+      requestedPlan={searchParams.get('plan')}
     />
   );
 }
@@ -154,12 +156,19 @@ function SubscribeForm({
   userId,
   previous,
   onSubmitted,
+  requestedPlan,
 }: {
   userId: string;
   previous: ShopApplication | null;
   onSubmitted: () => void;
+  requestedPlan: string | null;
 }) {
-  const [plan, setPlan] = useState<Plan>((previous?.plan as Plan) === 'starter' ? 'starter' : 'business');
+  const initialPaidPlan: Plan = requestedPlan === 'starter' || requestedPlan === 'business'
+    ? requestedPlan
+    : (previous?.plan as Plan) === 'starter'
+      ? 'starter'
+      : 'business';
+  const [plan, setPlan] = useState<Plan>(initialPaidPlan);
   const [method, setMethod] = useState<SubscriptionPaymentMethod>(
     (previous?.paymentMethod as SubscriptionPaymentMethod) ?? 'kpay',
   );
@@ -265,7 +274,8 @@ function SubscribeForm({
     <Shell
       title="Plan ရွေးချယ်ပြီး ဆိုင်စတင်ရန်"
       subtitle="Plan ရွေး → ငွေလွှဲ → Screenshot တင် → အတည်ပြုပြီးမှ ဆိုင်ဖွင့်နိုင်သည်">
-      {/* Free Trial — no payment, start immediately */}
+      {/* Free Trial — no payment, start immediately. The query string only preserves intent;
+          the DB-backed application gate still authorizes onboarding. */}
       <div className="mb-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -277,6 +287,7 @@ function SubscribeForm({
         <button
           type="button"
           onClick={startFreeTrial}
+          autoFocus={requestedPlan === 'free_trial'}
           disabled={startingFree}
           className="my mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50">
           <Store className="h-4 w-4" /> {startingFree ? 'စတင်နေသည်…' : 'အခမဲ့ ချက်ချင်း စတင်ရန်'}
