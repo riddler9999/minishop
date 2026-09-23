@@ -87,19 +87,33 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     return {error: error ? mapAuthError(error.message) : null};
   };
   const verifyEmailOtp = async (email: string, token: string): Promise<AuthResult> => {
-    const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {error} = await sb.auth.verifyOtp({email: email.trim(), token: token.trim(), type: 'signup'}); return {error: error ? mapAuthError(error.message) : null};
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {error} = await sb.auth.verifyOtp({email: email.trim(), token: token.trim(), type: 'signup'});
+    return {error: error ? mapAuthError(error.message) : null};
   };
   const resendSignupCode = async (email: string): Promise<AuthResult> => {
-    const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {error} = await sb.auth.resend({type: 'signup', email: email.trim()}); return {error: error ? mapAuthError(error.message) : null};
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {error} = await sb.auth.resend({type: 'signup', email: email.trim()});
+    return {error: error ? mapAuthError(error.message) : null};
   };
   const signOut = async () => {
     const sb = getSupabase();
     if (sb) await sb.auth.signOut();
   };
   const value = useMemo<AdminAuthValue>(
-    () => ({loading, session, user: session?.user ?? null, signUp, signIn, signInWithGoogle, verifyEmailOtp, resendSignupCode, signOut}),
+    () => ({
+      loading,
+      session,
+      user: session?.user ?? null,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      verifyEmailOtp,
+      resendSignupCode,
+      signOut,
+    }),
     [loading, session],
   );
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
