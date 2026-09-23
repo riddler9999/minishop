@@ -24,10 +24,16 @@ function validBody(overrides: Record<string, unknown> = {}) {
 function responseRecorder() {
   const state: {status?: number; body?: unknown} = {};
   const res = {
-    status(code: number) { state.status = code; return res; },
-    json(body: unknown) { state.body = body; return res; },
+    statusCode: 200,
     setHeader() { return res; },
-    end(body?: unknown) { state.body = body; return res; },
+    end(body?: string) {
+      state.status = res.statusCode;
+      if (body !== undefined) {
+        try { state.body = JSON.parse(body); }
+        catch { state.body = body; }
+      }
+      return res;
+    },
   };
   return {res, state};
 }
