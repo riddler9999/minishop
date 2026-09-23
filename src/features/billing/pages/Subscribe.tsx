@@ -287,7 +287,6 @@ function SubscribeForm({
         <button
           type="button"
           onClick={startFreeTrial}
-          autoFocus={requestedPlan === 'free_trial'}
           disabled={startingFree}
           className="my mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50">
           <Store className="h-4 w-4" /> {startingFree ? 'စတင်နေသည်…' : 'အခမဲ့ ချက်ချင်း စတင်ရန်'}
