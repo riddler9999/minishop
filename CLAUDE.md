@@ -167,7 +167,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches
   amount + last-5 in the admin console. There is no slip upload (`uploadSlip()` is a deliberate
   no-op — in-app WebView file pickers are unreliable).
-- **DB error copy:** the typed exceptions `0007`/`0010`/`0011`/`0013` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
+- **DB error copy:** the typed exceptions `0007`/`0010`/`0011`/`0016`/`0017` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
   `business_plan_required`, `plan_is_platform_managed`, `application_status_is_platform_managed`,
   `order_quota_exhausted`, `subscription_inactive`, `product_limit_reached`, `extra_orders_not_available`, …) map to Burmese UI copy in
   `src/domain/dbError.ts` — the single source of truth (`DB_ERROR_MESSAGES` + `mapDbError()`),
@@ -188,7 +188,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   resolution rule (`normalizePlan`, `resolvePlanValue`) and **fails closed to `free_trial`** (the
   least-privileged tier — smallest quota, no paid features/add-ons). Resolution order: `shop.plan`
   DB column → `VITE_DEFAULT_PLAN` env → `free_trial`. New shops default to `free_trial`; the actual
-  plan is derived in the `shops` insert trigger (0013) from the seller's platform-approved
+  plan is derived in the `shops` insert trigger (0016) from the seller's platform-approved
   application, so a seller still can never pick a higher tier directly.
 - **Feature gating** (`src/features/billing/plan.tsx`, `.tsx` JSX provider; `usePlan()` only inside
   `PlanProvider`, which wraps only `AdminConsole`). Business-only: promotions, advanced dashboard,
@@ -196,7 +196,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   CORE on every plan** (the old `advancedShipping`/Business gates were removed — D56). Gating hides
   + upsells (`features/billing/PlanGate.tsx`) but never deletes data.
 - **Order entitlements are the real pricing mechanic** (`src/domain/entitlement.ts` — the single
-  source of truth, mirrored verbatim by `place_order()` in 0013). FOUR concepts kept separate,
+  source of truth, mirrored verbatim by `place_order()` in 0016). FOUR concepts kept separate,
   never collapsed into one number: subscription state/cycle, monthly quota (Free 20 lifetime /
   Starter 60 / Business 150), permanent purchased Extra Orders balance (500 Ks/order, never
   expires), and the payments + append-only ledger. A valid order consumes ONE entitlement
@@ -204,6 +204,8 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   (`orders.idempotency_key`), the entitlement row locked `FOR UPDATE` for concurrency. Seller status
   changes never affect billing; cancellation never auto-refunds. Free trial: 10-product cap
   (server-enforced), cannot buy/consume Extra Orders.
+- **Anonymous abuse limiting is database-distributed.** `private.api_rate_limits` + `private.enforce_rate_limit()` (0007) are the source of truth for `place_order()` and `lookup_order()`; Vercel handlers must not add process-local `Map` counters.
+- **Payment-proof storage seam.** `src/features/billing/paymentProofStorage.ts` owns proof validation and the upload → DB persist → rollback/old-object cleanup invariant for both plan applications and Extra Orders.
 - **Manual prepaid billing.** Activation, renewal, upgrade, downgrade and Extra-Orders credit are
   owner-only `admin_*` SECURITY DEFINER RPCs (granted to `service_role`), run from the Supabase
   dashboard after the owner verifies a transfer screenshot — matching the D4–D6/D55 manual-payment

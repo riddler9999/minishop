@@ -1,4 +1,4 @@
-// ---- Extra Orders (add-on) purchase — submit + payment-proof upload ---------
+// ---- Extra Orders (add-on) purchase submission -------------------------------
 // Post-onboarding manual-payment flow, mirroring the plan-application flow: the
 // seller transfers 500 Ks/order to the platform, uploads a screenshot, and
 // submits a purchase request. The platform owner credits it from the Supabase
@@ -15,10 +15,6 @@ import {mapDbError} from '@/domain/dbError';
 import {extraOrdersPriceKs} from '@/domain/entitlement';
 import type {SubscriptionPaymentMethod} from '@/domain/subscription';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
-import {uploadPaymentProof, deletePaymentProof, validatePaymentProof} from '@/features/billing/application';
-
-export {uploadPaymentProof, deletePaymentProof, validatePaymentProof};
-
 export interface OrderPackPurchase {
   id: string;
   shopId: string;
@@ -81,7 +77,7 @@ export interface SubmitOrderPackInput {
  * Submit an Extra-Orders purchase request. The `amount` is derived from the
  * flat unit price (never trusted from the client for enforcement — the owner
  * verifies the real transfer against the screenshot). The DB trigger
- * (protect_order_pack_purchase, 0013) blocks the insert with
+ * (protect_order_pack_purchase, 0016) blocks the insert with
  * `extra_orders_not_available` when the shop is not on a paid plan.
  */
 export async function submitOrderPackPurchase(input: SubmitOrderPackInput): Promise<OrderPackPurchase> {

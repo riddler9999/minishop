@@ -71,7 +71,7 @@ export interface EntitlementState {
 export type ConsumeSource = 'monthly' | 'purchased' | null;
 
 /**
- * The single consumption rule, mirrored verbatim in `place_order()` (0013):
+ * The single consumption rule, mirrored verbatim in `place_order()` (0016):
  *   - an inactive (cancelled/lapsed) paid subscription consumes NOTHING
  *   - otherwise the monthly quota is drawn down FIRST
  *   - only once the monthly quota is exhausted is the purchased balance used,

@@ -2,4 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-test('checkout gateway sends sanitized product ids and quantities, not client prices',()=>{ const s=fs.readFileSync('api/checkout.ts','utf8'); assert.match(s,/product_id: clean\(i\?\.id/); assert.match(s,/p_items: items/); assert.doesNotMatch(s,/p_price|shippingFee/); });
+test('checkout gateway sends sanitized product ids and quantities, not client prices', () => {
+  const input = fs.readFileSync('api/checkout-input.ts', 'utf8');
+  const gateway = fs.readFileSync('api/checkout.ts', 'utf8');
+  assert.match(input, /product_id:\s*clean\(item\?\.id/);
+  assert.match(input, /qty:\s*Math\.min/);
+  assert.match(gateway, /p_items:\s*input\.items/);
+  assert.doesNotMatch(gateway, /p_price|shippingFee/);
+});

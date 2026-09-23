@@ -10,13 +10,14 @@ import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
 import EntitlementSummary from '@/features/billing/components/EntitlementSummary';
 import {
-  deletePaymentProof,
   listOrderPackPurchases,
   submitOrderPackPurchase,
-  uploadPaymentProof,
-  validatePaymentProof,
   type OrderPackPurchase,
 } from '@/features/billing/orderPacks';
+import {
+  persistWithPaymentProof,
+  validatePaymentProof,
+} from '@/features/billing/paymentProofStorage';
 import {
   EXTRA_ORDER_PRESETS,
   EXTRA_ORDER_UNIT_PRICE_KS,
@@ -123,20 +124,22 @@ function ExtraOrdersPanel() {
     }
     setErr('');
     setSaving(true);
-    let uploadedPath: string | null = null;
     try {
-      uploadedPath = (await uploadPaymentProof(user.id, file)).path;
-      await submitOrderPackPurchase({
+      await persistWithPaymentProof({
         userId: user.id,
-        qty,
-        paymentMethod: method,
-        paymentRefTail: refClean || null,
-        screenshotPath: uploadedPath,
+        file,
+        persist: (screenshotPath) =>
+          submitOrderPackPurchase({
+            userId: user.id,
+            qty,
+            paymentMethod: method,
+            paymentRefTail: refClean || null,
+            screenshotPath,
+          }),
       });
       setDone(true);
       setFile(null);
     } catch (e: any) {
-      if (uploadedPath) await deletePaymentProof(uploadedPath).catch(() => {});
       setErr(e?.message || 'တင်သွင်း၍မရပါ — ပြန်ကြိုးစားပါ။');
     } finally {
       setSaving(false);

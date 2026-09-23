@@ -1,4 +1,4 @@
-// ---- Seller's plan application — lookup + submit + payment-proof upload ------
+// ---- Seller's plan application — lookup + submit -----------------------------
 // Kept at the feature top level (not under api/) for the same reason as
 // features/shop/sellerShop.ts: it is needed BEFORE a shop row exists, by the
 // pre-shop route guards (RequireAdmin, Onboarding) and the Subscribe page — so
@@ -8,7 +8,6 @@
 // pre-onboarding concern, never a storefront read.
 
 import {requireSupabase} from '@/core/supabase/client';
-import {PAYMENT_PROOFS_BUCKET, safeFileExt} from '@/core/storage/buckets';
 import type {TablesInsert} from '@/core/supabase/database.types';
 import {mapDbError} from '@/domain/dbError';
 import type {Plan} from '@/domain/plan';
@@ -26,7 +25,7 @@ export interface ShopApplication {
   paymentMethod: string;
   paymentRefTail: string | null;
   transactionId: string | null;
-  screenshotPath: string;
+  screenshotPath: string | null;
   amount: number;
   status: ApplicationStatus;
   reviewNote: string | null;
@@ -41,7 +40,7 @@ type ApplicationRow = {
   payment_method: string;
   payment_ref_tail: string | null;
   transaction_id: string | null;
-  screenshot_path: string;
+  screenshot_path: string | null;
   amount: number;
   status: string;
   review_note: string | null;
@@ -86,48 +85,6 @@ export async function getMyApplication(userId: string): Promise<ShopApplication 
   return data ? mapApplication(data as ApplicationRow) : null;
 }
 
-// ---- Payment-proof upload (private bucket, owner-scoped path) ----------------
-// Accepts PNG / WebP / JPEG (banking-app screenshots are commonly JPG), ≤5MB —
-// matching the payment-proofs bucket's mime + size limits in 0010. No PNG→WebP
-// conversion (unlike storefront media): a proof is captured, not curated.
-const PROOF_MIME = new Set(['image/png', 'image/webp', 'image/jpeg']);
-const PROOF_EXT = new Set(['png', 'webp', 'jpg', 'jpeg']);
-export const MAX_PROOF_BYTES = 5 * 1024 * 1024;
-
-/** Returns a Burmese error message, or null if the screenshot is acceptable. */
-export function validatePaymentProof(file: File): string | null {
-  const ext = safeFileExt(file.name);
-  if (!PROOF_MIME.has(file.type) && !PROOF_EXT.has(ext)) {
-    return 'ပုံဖိုင် (PNG / JPG / WebP) သာ တင်နိုင်ပါသည်။';
-  }
-  if (file.size > MAX_PROOF_BYTES) {
-    return `ပုံဖိုင် အရွယ်အစား ${Math.round(MAX_PROOF_BYTES / 1024 / 1024)}MB ထက် မကျော်ရပါ။`;
-  }
-  return null;
-}
-
-/**
- * Upload a transfer screenshot to payment-proofs/<owner_id>/… and return its
- * storage path. The FIRST path segment is the owner id the storage RLS policy
- * checks. Follows the upload-before-write invariant (PROJECT.md): the caller
- * uploads first, then submits the application row; on submit failure the caller
- * deletes this object via deletePaymentProof().
- */
-export async function uploadPaymentProof(userId: string, file: File): Promise<{path: string}> {
-  const sb = requireSupabase();
-  const path = `${userId}/proof-${Date.now()}.${safeFileExt(file.name)}`;
-  const {error} = await sb.storage
-    .from(PAYMENT_PROOFS_BUCKET)
-    .upload(path, file, {upsert: true, contentType: file.type || undefined});
-  if (error) throw new Error(error.message);
-  return {path};
-}
-
-export async function deletePaymentProof(path: string): Promise<void> {
-  const sb = requireSupabase();
-  await sb.storage.from(PAYMENT_PROOFS_BUCKET).remove([path]);
-}
-
 export interface SubmitApplicationInput {
   plan: Plan;
   paymentMethod: SubscriptionPaymentMethod;
@@ -142,7 +99,7 @@ export interface SubmitApplicationInput {
  * Insert (first apply) or update (resubmit a rejected application) the seller's
  * application. For a paid plan `status` stays 'pending' until the owner
  * approves (the trigger rejects any seller-set 'approved'/'rejected'); a
- * free-trial application is AUTO-APPROVED by the trigger (0013), so the seller
+ * free-trial application is AUTO-APPROVED by the trigger (0016), so the seller
  * proceeds straight to onboarding. Upsert on the owner_id PK covers both paths.
  */
 export async function submitApplication(
