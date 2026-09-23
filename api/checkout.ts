@@ -1,5 +1,5 @@
 import {createClient} from '@supabase/supabase-js';
-import {mapDbError} from '../src/domain/dbError.js';
+import {mapDbError} from '../src/domain/dbError.ts';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
