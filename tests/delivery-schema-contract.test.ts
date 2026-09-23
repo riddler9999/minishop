@@ -18,7 +18,7 @@ test('delivery foundation migration defines the schema required by runtime consu
 test('historical Ninja Van migration cannot be applied blindly after entitlement migration', () => {
   assert.match(m14, /create or replace function public\.place_order\([\s\S]*?p_items jsonb[\s\S]*?\) returns jsonb/);
   assert.doesNotMatch(m14, /p_idempotency_key uuid/);
-  assert.match(m16, /p_idempotency_key uuid default gen_random_uuid\(\)/);
+  assert.match(m16, /p_idempotency_key uuid default null/);
   assert.match(reconciliation, /would regress .*place_order.*10-argument.*older 9-argument/s);
 });
 
