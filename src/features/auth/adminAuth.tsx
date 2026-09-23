@@ -22,9 +22,9 @@ interface AdminAuthValue {
   loading: boolean;
   session: Session | null;
   user: User | null;
-  signUp: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string, redirectPath?: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
-  signInWithGoogle: () => Promise<AuthResult>;
+  signInWithGoogle: (redirectPath?: string) => Promise<AuthResult>;
   /** Confirms a fresh signup via the 6-digit code from the "Confirm signup"
    *  email, instead of the clickable link — see verifyEmailOtp() below for why. */
   verifyEmailOtp: (email: string, token: string) => Promise<AuthResult>;
@@ -49,6 +49,10 @@ function mapAuthError(message: string): string {
   return message;
 }
 
+function safeRedirectPath(path?: string): string {
+  return path && path.startsWith('/') && !path.startsWith('//') ? path : '/admin';
+}
+
 export function AdminAuthProvider({children}: {children: React.ReactNode}) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
@@ -69,7 +73,7 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string): Promise<AuthResult> => {
+  const signUp = async (email: string, password: string, redirectPath?: string): Promise<AuthResult> => {
     const sb = getSupabase();
     if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
     // emailRedirectTo still targets onboarding for whoever clicks the link in
@@ -86,7 +90,7 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     const {data, error} = await sb.auth.signUp({
       email: email.trim(),
       password,
-      options: {emailRedirectTo: `${window.location.origin}/admin/onboarding`},
+      options: {emailRedirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`},
     });
     if (error) return {error: mapAuthError(error.message)};
     // Session is null when the project requires email confirmation before login.
@@ -100,12 +104,12 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     return {error: error ? mapAuthError(error.message) : null};
   };
 
-  const signInWithGoogle = async (): Promise<AuthResult> => {
+  const signInWithGoogle = async (redirectPath?: string): Promise<AuthResult> => {
     const sb = getSupabase();
     if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
     const {error} = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: {redirectTo: `${window.location.origin}/admin`},
+      options: {redirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`},
     });
     return {error: error ? mapAuthError(error.message) : null};
   };

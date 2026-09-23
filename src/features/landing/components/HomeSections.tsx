@@ -1,5 +1,8 @@
 import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, ShoppingBag, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
+import {PLAN_PRICE_KS} from '@/domain/subscription';
+import {EXTRA_ORDER_UNIT_PRICE_KS, FREE_TRIAL_PRODUCT_LIMIT, PLAN_MONTHLY_QUOTA} from '@/domain/entitlement';
+import type {Plan} from '@/domain/plan';
 
 const channels = ['Facebook', 'TikTok', 'Telegram'];
 
@@ -16,6 +19,72 @@ const themes = [
   {name: 'Food', tone: 'theme-food'},
   {name: 'Bold', tone: 'theme-bold'},
 ];
+
+const pricingPlans: Array<{
+  plan: Plan;
+  name: string;
+  eyebrow: string;
+  priceSuffix: string;
+  description: string;
+  features: string[];
+  cta: string;
+}> = [
+  {
+    plan: 'free_trial',
+    name: 'Free Trial',
+    eyebrow: 'စမ်းသုံးကြည့်ဖို့',
+    priceSuffix: '',
+    description: 'ငွေမချေဘဲ ဆိုင်ဖွင့်ပြီး MiniShop flow ကို လက်တွေ့စမ်းကြည့်နိုင်ပါတယ်။',
+    features: [
+      `Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ)`,
+      `Product ${FREE_TRIAL_PRODUCT_LIMIT} ခုအထိ`,
+      'Core ecommerce features',
+      'Credit Card မလို',
+    ],
+    cta: 'အခမဲ့စတင်မယ်',
+  },
+  {
+    plan: 'starter',
+    name: 'Starter',
+    eyebrow: 'ပုံမှန်ရောင်းချနေတဲ့ဆိုင်များ',
+    priceSuffix: '/ လ',
+    description: 'လစဉ် Order volume မများသေးတဲ့ seller တွေအတွက် အခြေခံ operation ကိုအပြည့်သုံးနိုင်ပါတယ်။',
+    features: [
+      `Order ${PLAN_MONTHLY_QUOTA.starter} ခု / လ`,
+      'Core ecommerce features အားလုံး',
+      `Extra Orders = ${EXTRA_ORDER_UNIT_PRICE_KS.toLocaleString()} Ks / order`,
+      'Purchased Extra Orders မ expire ပါ',
+    ],
+    cta: 'Starter ရွေးမယ်',
+  },
+  {
+    plan: 'business',
+    name: 'Business',
+    eyebrow: 'Order volume ပိုများတဲ့ဆိုင်များ',
+    priceSuffix: '/ လ',
+    description: 'Order volume တက်လာတဲ့ seller တွေအတွက် quota ပိုများပြီး advanced operations ကိုအသုံးပြုနိုင်ပါတယ်။',
+    features: [
+      `Order ${PLAN_MONTHLY_QUOTA.business} ခု / လ`,
+      'Starter features အားလုံး',
+      'Advanced operations / features',
+      'Purchased Extra Orders မ expire ပါ',
+    ],
+    cta: 'Business ရွေးမယ်',
+  },
+];
+
+function formatKs(amount: number) {
+  return amount === 0 ? '0 Ks' : `${amount.toLocaleString()} Ks`;
+}
+
+function signupHref(plan?: Plan) {
+  const destination = plan === 'free_trial'
+    ? '/admin/onboarding?plan=free_trial'
+    : plan
+      ? `/admin/subscribe?plan=${plan}`
+      : '/admin/subscribe';
+  return `/admin/login?mode=signup&from=${encodeURIComponent(destination)}`;
+}
 
 export function StopSellingThroughChat() {
   return (
@@ -145,6 +214,40 @@ export function ThemeShowcase() {
   );
 }
 
+export function PricingSection() {
+  return (
+    <section className="landing-pricing-section" aria-labelledby="pricing-title">
+      <div className="landing-section-head landing-pricing-head">
+        <span className="landing-section-pill">SIMPLE PRICING</span>
+        <h2 id="pricing-title">ကိုယ့်ဆိုင်ရဲ့ Order Volume နဲ့ကိုက်တဲ့ Plan ကိုရွေးပါ</h2>
+        <p>Free Trial နဲ့စမ်းသုံးပြီးနောက် လိုအပ်သလို Starter သို့မဟုတ် Business ကိုရွေးနိုင်ပါတယ်။ Paid plan နှစ်ခုလုံးမှာ Extra Orders ကို ဝယ်ထားရင် balance မ expire ပါ။</p>
+      </div>
+      <div className="landing-pricing-grid">
+        {pricingPlans.map((item) => (
+          <article key={item.plan} className={'landing-pricing-card landing-pricing-card-' + item.plan}>
+            <div className="landing-pricing-card-top">
+              <span className="landing-pricing-eyebrow">{item.eyebrow}</span>
+              <h3>{item.name}</h3>
+              <div className="landing-pricing-price">
+                <strong>{formatKs(PLAN_PRICE_KS[item.plan])}</strong>
+                {item.priceSuffix && <span>{item.priceSuffix}</span>}
+              </div>
+              <p>{item.description}</p>
+            </div>
+            <div className="landing-pricing-features">
+              {item.features.map((feature) => <span key={feature}><Check size={16}/>{feature}</span>)}
+            </div>
+            <Link className={item.plan === 'free_trial' ? 'landing-primary-cta landing-pricing-cta' : 'landing-demo-cta landing-pricing-cta'} to={signupHref(item.plan)}>
+              {item.cta} <ArrowRight size={17}/>
+            </Link>
+          </article>
+        ))}
+      </div>
+      <p className="landing-pricing-note">Upgrade လုပ်ရင် cycle အသစ်စပြီး unused subscription value ကို credit အဖြစ်တွက်ပေးမယ်။ Downgrade က next billing cycle မှ စတင်မယ်။</p>
+    </section>
+  );
+}
+
 export function DashboardFinalCTA() {
   return (
     <section className="landing-dashboard-section" aria-labelledby="dashboard-title">
@@ -164,7 +267,7 @@ export function DashboardFinalCTA() {
           {['Product Management', 'Order Management', 'Delivery Settings', 'Theme Customization'].map((item) => <span key={item}><Check size={16}/>{item}</span>)}
         </div>
         <div className="landing-final-actions">
-          <Link className="landing-primary-cta" to="/admin/onboarding">ကိုယ့် Online Store စဖွင့်မယ် <ArrowRight size={18}/></Link>
+          <Link className="landing-primary-cta" to={signupHref()}>ကိုယ့် Online Store စဖွင့်မယ် <ArrowRight size={18}/></Link>
           <Link className="landing-demo-cta" to="/demo">Demo Store ကြည့်မယ်</Link>
         </div>
         <small className="landing-final-note">အခမဲ့စတင်နိုင်သည် · Credit Card မလို</small>
