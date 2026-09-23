@@ -1,10 +1,10 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapDbError} from '../src/domain/dbError.ts';
-import {supabaseEnv} from './_env.js';
-import {sendJson} from './_http.js';
-import {clean} from './_validation.js';
-import {normalizeCheckoutInput} from './checkout-input.js';
-import {forwardedClientIp} from './_client-ip.js';
+import {supabaseEnv} from './_env.ts';
+import {sendJson} from './_http.ts';
+import {clean} from './_validation.ts';
+import {normalizeCheckoutInput} from './checkout-input.ts';
+import {forwardedClientIp} from './_client-ip.ts';
 
 type CheckoutDeps = {
   createClient: typeof createClient;
