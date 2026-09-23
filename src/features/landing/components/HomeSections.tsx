@@ -78,11 +78,9 @@ function formatKs(amount: number) {
 }
 
 function signupHref(plan?: Plan) {
-  const destination = plan === 'free_trial'
-    ? '/admin/onboarding?plan=free_trial'
-    : plan
-      ? `/admin/subscribe?plan=${plan}`
-      : '/admin/subscribe';
+  const destination = plan
+    ? `/admin/subscribe?plan=${plan}`
+    : '/admin/subscribe';
   return `/admin/login?mode=signup&from=${encodeURIComponent(destination)}`;
 }
 
@@ -243,7 +241,7 @@ export function PricingSection() {
           </article>
         ))}
       </div>
-      <p className="landing-pricing-note">Upgrade လုပ်ရင် cycle အသစ်စပြီး unused subscription value ကို credit အဖြစ်တွက်ပေးမယ်။ Downgrade က next billing cycle မှ စတင်မယ်။</p>
+      <p className="landing-pricing-note">Plan ပြောင်းလဲမှုနှင့် billing အခြေအနေကို seller dashboard မှာ စစ်ဆေးနိုင်ပါတယ်။</p>
     </section>
   );
 }
