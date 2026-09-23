@@ -3,9 +3,14 @@ import {createContext, useContext, useEffect, useMemo, useState} from 'react';
 import type {Session, User} from '@supabase/supabase-js';
 import {getSupabase, isSupabaseConfigured} from '@/core/supabase/client';
 
-interface AuthResult { error: string | null; needsEmailConfirmation?: boolean; }
+interface AuthResult {
+  error: string | null;
+  needsEmailConfirmation?: boolean;
+}
 interface AdminAuthValue {
-  loading: boolean; session: Session | null; user: User | null;
+  loading: boolean;
+  session: Session | null;
+  user: User | null;
   signUp: (email: string, password: string, redirectPath?: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signInWithGoogle: (redirectPath?: string) => Promise<AuthResult>;
@@ -38,26 +43,47 @@ function safeRedirectPath(path?: string): string {
 }
 
 export function AdminAuthProvider({children}: {children: React.ReactNode}) {
-  const [loading, setLoading] = useState(true); const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
   useEffect(() => {
-    const sb = getSupabase(); if (!sb) { setLoading(false); return; }
-    sb.auth.getSession().then(({data}) => { setSession(data.session); setLoading(false); });
-    const {data: {subscription}} = sb.auth.onAuthStateChange((_event, next) => setSession(next));
+    const sb = getSupabase();
+    if (!sb) {
+      setLoading(false);
+      return;
+    }
+    sb.auth.getSession().then(({data}) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    const {
+      data: {subscription},
+    } = sb.auth.onAuthStateChange((_event, next) => setSession(next));
     return () => subscription.unsubscribe();
   }, []);
   const signUp = async (email: string, password: string, redirectPath?: string): Promise<AuthResult> => {
-    const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {data, error} = await sb.auth.signUp({email: email.trim(), password, options: {emailRedirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`}});
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {data, error} = await sb.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {emailRedirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`},
+    });
     if (error) return {error: mapAuthError(error.message)};
     return {error: null, needsEmailConfirmation: !data.session};
   };
   const signIn = async (email: string, password: string): Promise<AuthResult> => {
-    const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {error} = await sb.auth.signInWithPassword({email: email.trim(), password}); return {error: error ? mapAuthError(error.message) : null};
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {error} = await sb.auth.signInWithPassword({email: email.trim(), password});
+    return {error: error ? mapAuthError(error.message) : null};
   };
   const signInWithGoogle = async (redirectPath?: string): Promise<AuthResult> => {
-    const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
-    const {error} = await sb.auth.signInWithOAuth({provider: 'google', options: {redirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`}});
+    const sb = getSupabase();
+    if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
+    const {error} = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {redirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`},
+    });
     return {error: error ? mapAuthError(error.message) : null};
   };
   const verifyEmailOtp = async (email: string, token: string): Promise<AuthResult> => {
@@ -68,9 +94,19 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     const sb = getSupabase(); if (!sb) return {error: 'Supabase configure မလုပ်ရသေးပါ။'};
     const {error} = await sb.auth.resend({type: 'signup', email: email.trim()}); return {error: error ? mapAuthError(error.message) : null};
   };
-  const signOut = async () => { const sb = getSupabase(); if (sb) await sb.auth.signOut(); };
-  const value = useMemo<AdminAuthValue>(() => ({loading, session, user: session?.user ?? null, signUp, signIn, signInWithGoogle, verifyEmailOtp, resendSignupCode, signOut}), [loading, session]);
+  const signOut = async () => {
+    const sb = getSupabase();
+    if (sb) await sb.auth.signOut();
+  };
+  const value = useMemo<AdminAuthValue>(
+    () => ({loading, session, user: session?.user ?? null, signUp, signIn, signInWithGoogle, verifyEmailOtp, resendSignupCode, signOut}),
+    [loading, session],
+  );
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }
-export function useAdminAuth(): AdminAuthValue { const ctx = useContext(AdminAuthContext); if (!ctx) throw new Error('useAdminAuth must be used inside <AdminAuthProvider>'); return ctx; }
+export function useAdminAuth(): AdminAuthValue {
+  const ctx = useContext(AdminAuthContext);
+  if (!ctx) throw new Error('useAdminAuth must be used inside <AdminAuthProvider>');
+  return ctx;
+}
 export {isSupabaseConfigured};
