@@ -164,11 +164,11 @@ Sources: [EasySell Pricing](https://easysellapp.com/pages/pricing) ·
 | KBZPay/Wave/COD + **payment verification** | Payment = core; decided ≠ differentiator | ~0 (manual) |
 | **Township shipping** | Decided core; core of Myanmar delivery | ~0 |
 | **Unlimited products** (or high soft cap) | Catalog gating hurts success; rows are cheap | negligible |
-| Store branding (logo/name) | Tenant identity | ~0 |
+| Store branding (logo/name) | Tenant identity; core on every plan | ~0 |
 | Basic promotions + coupons | Baseline selling | ~0 |
 | Buyer order notifications | Part of order flow | low |
 | Basic inventory + low-stock **display** | Prevents overselling | ~0 |
-| Basic sales report + basic analytics | Can't operate blind | low |
+| Basic + advanced analytics/dashboard | Current product decision: core on every plan | low |
 | CSV order export | Data ownership; lock-in breaks trust | ~0 |
 
 #### Tier 2 — GROWTH
@@ -184,8 +184,8 @@ Sources: [EasySell Pricing](https://easysellapp.com/pages/pricing) ·
 
 | Feature | Tier | Why |
 |---|---|---|
-| Advanced / customer / product analytics | Business | Value-add (D50 English-only dashboard) |
-| Advanced dashboard | Business | Value-add |
+| Advanced / customer / product analytics | All plans | Current product decision: analytics is core |
+| Advanced dashboard | All plans | Current product decision: analytics is core |
 | Bulk import / bulk edit | Business | Power feature, low cost |
 | Low-stock **alerts** (notify) | Business | Uses notification infra (display is core) |
 | Staff accounts / roles / multiple admins | Business (+ per-seat add-on) | Real value, meter per seat |
@@ -287,7 +287,7 @@ orders to be attractive at the crossover.
   volume discount).
 - Business extra orders: **400 MMK/order**.
 - Crossover ~120 orders/mo makes upgrade rational without forcing it.
-- **Non-capacity value that justifies Business:** remove branding, advanced analytics, 2 staff seats,
+- **Non-capacity value that justifies Business:** staff seats, 2 staff seats,
   Telegram/email notifications, promo scheduling, bulk import/edit, webhooks/n8n, 1 custom domain, priority
   support. This lets a low-volume but feature-hungry seller choose Business on capability, not volume.
 
@@ -433,7 +433,7 @@ toward C's "15/mo forever" — subject to pilot data (D8).
 1. **Before tiers:** lock the billable-order definition and the subscription collection mechanic — both
    define the whole model more than tier prices do.
 2. **Fix the codebase mismatch:** move township shipping + payment verification from Business-gated to Core.
-3. **Adopt Hybrid (C): capacity primary, features secondary.** Gate only remove-branding / analytics /
+3. **Adopt Hybrid (C): capacity primary, features secondary.** Gate only staff / integrations / support /
    staff / integrations / support (value + cost); never essential commerce.
 4. **Default to Balanced (B)**; tune the free tier toward "15/mo forever"; Business = 60,000 / 150 orders
    (crossover-derived).
