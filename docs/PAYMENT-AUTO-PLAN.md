@@ -6,7 +6,7 @@ Flow:
 3. n8n uses a vision model to extract: `amount`, `transaction_id`, `date`, `time`, `sender_name`, `receiver_name`, plus confidence.
 4. n8n calls the server-side activation RPC/API. Do not update `shops.plan` directly from the browser or workflow; activation must reconcile `shops.plan` and `shop_entitlements` together.
 5. The RPC validates untrusted extraction and persists the result:
-   - valid receiver + supported amount (30,000 Starter / 60,000 Business) + unique transaction ID + confidence >= 0.92 → `approved` and activate Starter/Business through the entitlement-aware subscription path
+   - valid receiver + supported amount (29,000 Starter / 79,000 Business) + unique transaction ID + confidence >= 0.92 → `approved` and activate Starter/Business through the entitlement-aware subscription path
    - missing transaction ID or confidence < 0.92 → `manual_review`, no plan activation
    - unsupported amount, receiver mismatch, or duplicate transaction ID → `rejected`, no plan activation
 6. `rejection_reason` stores the deterministic reason code so operations can review failures without relying on workflow logs.
