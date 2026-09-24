@@ -256,24 +256,53 @@ export default function ProductDetail() {
       <button onClick={() => nav(-1)} className="mb-4 inline-flex min-h-10 items-center gap-1.5 px-1 text-sm font-semibold transition" style={{color: visual.muted}}><ArrowLeft className="h-4 w-4" /> နောက်သို့</button>
       <div className={detail.grid}>
         <div>
-          <div className={detail.image}>
-            {product.images[active] ? <img src={product.images[active]} alt={product.name} className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-ink-soft"><ImageOff className="h-10 w-10" /></div>}
+          <div className={`relative ${detail.image}`}>
+            {product.images[active] ? <img src={product.images[active]} alt={product.name} className="h-full w-full object-contain p-2" /> : <div className="grid h-full w-full place-items-center text-ink-soft"><ImageOff className="h-10 w-10" /></div>}
+            {product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActive((index) => (index - 1 + product.images.length) % product.images.length)}
+                  aria-label="ယခင်ပုံ"
+                  className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
+                  style={{backgroundColor: visual.surface, borderColor: visual.border, color: visual.text}}>
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActive((index) => (index + 1) % product.images.length)}
+                  aria-label="နောက်ပုံ"
+                  className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
+                  style={{backgroundColor: visual.surface, borderColor: visual.border, color: visual.text}}>
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
           </div>
-          {product.images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{product.images.map((im, i) => <button key={i} onClick={() => setActive(i)} className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#faf8f9] ${i === active ? 'border-[#e11d48]' : 'border-transparent'}`}><img src={im} alt="" className="h-full w-full object-cover" /></button>)}</div>}
+          {product.images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{product.images.map((im, i) => <button key={i} onClick={() => setActive(i)} className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#faf8f9] ${i === active ? 'border-[#e11d48]' : 'border-transparent'}`}><img src={im} alt="" className="h-full w-full object-contain p-1" /></button>)}</div>}
         </div>
 
         <div className="md:pt-2">
-          {product.category && <p className={`inline-flex px-3 py-1 text-xs font-semibold ${detail.chip}`}>{product.category}</p>}
-          <h1 className={`my mt-3 font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${detail.title}`}>{product.name}</h1>
+          <h1 className={`my font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${detail.title}`}>{product.name}</h1>
           <div className={`mt-3 flex items-center gap-3 px-4 py-3 ${detail.priceBox}`}><span className="font-sans text-xl font-bold sm:text-2xl" style={{color: visual.accent}}>{ks(price)}</span>{hasPromo && <span className="text-sm line-through opacity-55 sm:text-base">{ks(product.price)}</span>}</div>
 
+          <div className="mt-5">
+            <p className="my mb-2 text-sm font-semibold" style={{color: visual.text}}>အရေအတွက်</p>
+            <div className={`flex w-fit items-center ${detail.qty}`}><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Plus className="h-4 w-4" /></button></div>
+          </div>
+
+          {product.description && (
+            <div className="mt-5">
+              <h2 className="my text-sm font-semibold" style={{color: visual.text}}>ပစ္စည်းအကြောင်း</h2>
+              <p className="my mt-2 whitespace-pre-line text-sm leading-relaxed" style={{color: visual.muted}}>{product.description}</p>
+            </div>
+          )}
+
           <div className="my mt-5 flex flex-wrap items-center gap-3 text-sm">
+            {product.category && <span className={`px-3 py-2 ${detail.chip}`}>{product.category}</span>}
             {product.size && <span className={`px-3 py-2 ${detail.chip}`}>Size — {product.size}</span>}
             {product.color && <span className={`inline-flex items-center gap-2 px-3 py-2 ${detail.chip}`}><span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: colorHex ?? '#d1d5db'}} aria-hidden="true" /><span>{product.color}</span></span>}
           </div>
-          {product.description && <p className="my mt-5 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>}
-
-          <div className="mt-7 flex items-center"><div className={`flex items-center ${detail.qty}`}><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Plus className="h-4 w-4" /></button></div></div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <button disabled={!product.inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.secondary}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
