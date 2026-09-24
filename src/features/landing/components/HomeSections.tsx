@@ -1,7 +1,7 @@
 import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, ShoppingBag, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {PLAN_PRICE_KS} from '@/domain/subscription';
-import {EXTRA_ORDER_UNIT_PRICE_KS, FREE_TRIAL_PRODUCT_LIMIT, PLAN_MONTHLY_QUOTA} from '@/domain/entitlement';
+import {EXTRA_ORDER_UNIT_PRICE_KS, PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
 import type {Plan} from '@/domain/plan';
 
 const channels = ['Facebook', 'TikTok', 'Telegram'];
@@ -37,7 +37,7 @@ const pricingPlans: Array<{
     description: 'ငွေမချေဘဲ ဆိုင်ဖွင့်ပြီး MiniShop flow ကို လက်တွေ့စမ်းကြည့်နိုင်ပါတယ်။',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ)`,
-      `Product ${FREE_TRIAL_PRODUCT_LIMIT} ခုအထိ`,
+      `Product ${PLAN_PRODUCT_LIMIT.free_trial} ခုအထိ`,
       'Core ecommerce features',
       'Credit Card မလို',
     ],
@@ -51,9 +51,9 @@ const pricingPlans: Array<{
     description: 'လစဉ် Order volume မများသေးတဲ့ seller တွေအတွက် အခြေခံ operation ကိုအပြည့်သုံးနိုင်ပါတယ်။',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.starter} ခု / လ`,
-      'Core ecommerce features အားလုံး',
+      `Product ${PLAN_PRODUCT_LIMIT.starter} ခုအထိ`,
+      'ရောင်းဖို့လိုတဲ့ Core features အားလုံး',
       `Extra Orders = ${EXTRA_ORDER_UNIT_PRICE_KS.toLocaleString()} Ks / order`,
-      'Purchased Extra Orders မ expire ပါ',
     ],
     cta: 'Starter ရွေးမယ်',
   },
@@ -62,12 +62,12 @@ const pricingPlans: Array<{
     name: 'Business',
     eyebrow: 'Order volume ပိုများတဲ့ဆိုင်များ',
     priceSuffix: '/ လ',
-    description: 'Order volume တက်လာတဲ့ seller တွေအတွက် quota ပိုများပြီး advanced operations ကိုအသုံးပြုနိုင်ပါတယ်။',
+    description: 'ရောင်းအားများလာတဲ့အခါ လူနည်းနည်းနဲ့ ပိုမြန်မြန် run နိုင်ဖို့ scale နဲ့ productivity ကိုပေးပါတယ်။',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.business} ခု / လ`,
-      'Starter features အားလုံး',
-      'Advanced operations / features',
-      'Purchased Extra Orders မ expire ပါ',
+      `Product ${PLAN_PRODUCT_LIMIT.business} ခုအထိ`,
+      'Starter selling features အားလုံး',
+      'Productivity / automation capabilities',
     ],
     cta: 'Business ရွေးမယ်',
   },
