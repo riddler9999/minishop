@@ -116,6 +116,23 @@ test('compact home product cards match the reference with a cart icon action', a
   assert.match(source, /ဝယ်မည်/);
 });
 
+
+test('root demo storefront uses the purple reference design without replacing tenant storefront styling', async () => {
+  const home = await readHome();
+  const card = await readFile(productCardPath, 'utf8');
+  const layout = await readFile(layoutPath, 'utf8');
+  const detail = await readFile(new URL('../src/features/catalog/pages/ProductDetail.tsx', import.meta.url), 'utf8');
+
+  assert.match(home, /if \(!slug\)/);
+  assert.match(home, /DemoReferenceHome/);
+  assert.match(home, /variant="demo-purple"/);
+  assert.match(home, /#eee6ff/i);
+  assert.match(card, /demo-purple/);
+  assert.match(card, /#6d28d9/i);
+  assert.match(layout, /const isDemo = !shop/);
+  assert.match(detail, /const isDemo = !slug/);
+});
+
 test('cart drawer checkout and admin onboarding contain no legacy brown cream or gold theme tokens', async () => {
   const sources = await Promise.all([
     readFile(cartDrawerPath, 'utf8'),
