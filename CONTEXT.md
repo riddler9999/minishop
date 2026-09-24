@@ -25,7 +25,7 @@ MiniShop is a multi-tenant SaaS storefront for Myanmar online sellers. A seller 
 - Paid plan activation/renewal must update both `shops.plan` and `shop_entitlements`; changing `shops.plan` alone is invalid.
 - Consumption order is monthly/lifetime quota first, then purchased balance.
 - Seller-controlled Order status changes and cancellation do not refund entitlement automatically.
-- Township shipping and last-5 buyer payment verification are core features; Business-only UI capabilities are promotions, advanced dashboard, branding/Store Design, and integrations.
+- Township shipping, last-5 buyer payment verification, and Store Design are core features; Business-only UI capabilities are promotions, advanced dashboard, logo/extended branding, and integrations.
 
 ## Security and consistency invariants
 
