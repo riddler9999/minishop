@@ -47,8 +47,8 @@ export const catalogAdminApi = {
       .eq('shop_id', shopId)
       .select()
       .maybeSingle();
-    // A promo edit on a non-business shop trips business_plan_required (0007);
-    // map it so the seller sees the upsell, not a raw "not found".
+    // DB errors are mapped at this boundary. Basic promotion editing is a core
+    // selling capability under ADR 0002 and is not Business-gated.
     if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ရှာမတွေ့ပါ'));
     return {product: mapProduct(data)};
   },
