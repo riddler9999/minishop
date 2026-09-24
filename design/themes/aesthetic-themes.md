@@ -58,8 +58,9 @@ The five supported theme families are intentionally visually distinct across she
 - `getThemeVisual()` exposes non-persisted visual/layout metadata.
 - Theme selection must change layout composition, not only colors.
 - Existing seller overrides (hero image, copy, accent color, typography) remain editable.
-- Public storefronts must apply the selected theme through Home, catalog, product detail and shell.
-- Store Design live preview must show the actual selected layout family.
+- Public storefronts must apply the selected theme through Home, catalog, product detail, cart drawer, checkout, order confirmation, order tracking and shell.
+- Transactional semantics stay stable: success/error/status colors preserve their meaning even when the surrounding shape, surface, border, density and CTA treatment follow the theme.
+- Store Design live preview must show the actual selected layout family, including checkout.
 - Do not create product-niche-labelled themes.
 
 ## Legacy compatibility
