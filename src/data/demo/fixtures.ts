@@ -75,6 +75,15 @@ const SEEDS: DemoSeed[] = [
 const PRODUCT_PHOTOS: Record<number, string> = {
   0: '/demo/classic-white-shirt.png',
   1: '/demo/floral-blouse-pink.png',
+  2: '/demo/file_00000000079c820797dc012775230856.png',
+  3: '/demo/file_00000000a42481f5b2ba35ba5d0f1f73.png',
+  4: '/demo/file_00000000d7888211949a8b167a659bd3.png',
+  5: '/demo/file_00000000eb9481f8b1599e3efcccea5e.png',
+  7: '/demo/file_00000000bd588230a18a8990158c5904.png',
+  8: '/demo/file_00000000e91881f48a450ef00b260d45.png',
+  9: '/demo/file_00000000baf88211920b2f9b2b8a5a38.png',
+  10: '/demo/file_0000000065548206a93c8bc40de39d28.png',
+  11: '/demo/file_000000009a24820dafdc839bc0bced2e.png',
 };
 
 export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
