@@ -32,13 +32,15 @@ test('buyer home keeps real tenant catalog and navigation contracts', async () =
   assert.match(source, /encodeURIComponent/);
 });
 
-test('buyer home keeps the simplified discovery flow without cart shortcuts', async () => {
+test('buyer home keeps search-assisted discovery without cart shortcuts', async () => {
   const source = await readHome();
 
   assert.match(source, /to="\/products"/);
   assert.match(source, /\/products\?category=/);
+  assert.match(source, /useShopNavigate/);
+  assert.match(source, /nav\(`\/products/);
+  assert.match(source, /encodeURIComponent\(value\.trim\(\)\)/);
   assert.equal(source.includes("to: '/cart'"), false);
-  assert.equal(source.includes('useShopNavigate'), false);
 });
 
 test('buyer storefront uses Burmese fashion copy and removes jewellery presentation', async () => {
@@ -108,8 +110,8 @@ test('cart is drawer-only and the standalone cart page is removed', async () => 
 test('product cards use compact stacked buyer actions', async () => {
   const source = await readFile(productCardPath, 'utf8');
 
-  assert.match(source, /flex flex-col gap-1\.5 pt-3/);
-  assert.match(source, /min-h-8/);
+  assert.match(source, /flex flex-col gap-1\.5 pt-2\.5/);
+  assert.match(source, /min-h-9/);
   assert.match(source, /ခြင်းထဲထည့်မည်/);
   assert.match(source, /ဝယ်မည်/);
   assert.equal(source.includes('grid grid-cols-2 gap-2 pt-4'), false);
