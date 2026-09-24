@@ -1,47 +1,50 @@
 // ---- DOMAIN: storefront theme (Store Design) --------------------------------
-// The seller-editable customization blob for the buyer storefront — copy,
-// section toggles, a hero image and an accent colour for the Homepage, Category
-// page and Product page. Purely COSMETIC: it decides what the storefront
-// renders, never what the backend allows (RLS + the 0007 triggers remain the
-// security boundary). Stored as `shops.theme` (jsonb, migration 0009).
+// Seller-editable storefront customization. Theme presets describe visual
+// aesthetics, not product niches: any merchant can pick any preset regardless of
+// what they sell. The preset controls layout + visual language while individual
+// copy/colour fields remain editable overrides.
 //
-// This is a pure leaf module (no React, no I/O, no other layer), mirroring the
-// fail-safe philosophy of `plan.ts` and `orderStatus.ts`: `normalizeTheme()`
-// takes an untrusted value of ANY shape (a raw jsonb blob, `null`, a partial
-// object written by an older app version, or garbage) and always returns a
-// complete, valid `StorefrontTheme`. A missing/unknown/malformed field falls
-// back to its default, so the storefront can never render a broken page — and
-// so a shop with no theme (or before migration 0009 is applied) simply shows
-// the original hardcoded copy.
+// This module is pure domain code. Theme data is cosmetic only; authorization,
+// RLS, validation and commerce rules live elsewhere.
 
 import {type FontPairingId, DEFAULT_FONT_PAIRING, isFontPairingId} from './fontPairing.ts';
 
-export type ThemePresetId = 'minimal' | 'fashion' | 'dark-luxury' | 'fresh-market' | 'modern-shop';
+export type ThemePresetId =
+  | 'clean-minimal'
+  | 'street-bold'
+  | 'soft-elegant'
+  | 'grid-catalog'
+  | 'dark-modern';
 
-/** A hex colour string, e.g. `#e11d48`. */
+export type ThemeLayoutStyle = 'editorial' | 'poster' | 'boutique' | 'catalog' | 'tech';
+
+export interface ThemeVisualProfile {
+  layout: ThemeLayoutStyle;
+  canvas: string;
+  surface: string;
+  text: string;
+  muted: string;
+  border: string;
+  accent: string;
+  accentText: string;
+  radius: 'none' | 'soft' | 'rounded' | 'compact';
+  productGrid: 'editorial-2' | 'bold-2' | 'boutique-2' | 'dense-3' | 'tech-2';
+  hero: 'split' | 'poster' | 'centered' | 'utility' | 'glass';
+}
+
 export type HexColor = string;
 
 export interface AnnouncementTheme {
-  /** Show the announcement bar across every storefront page. */
   enabled: boolean;
-  /** The bar's text (empty ⇒ bar is hidden even when `enabled`). */
   text: string;
 }
 
 export interface HomeTheme {
-  /** Render the hero band at the top of the Homepage. */
   heroEnabled: boolean;
   heroHeadline: string;
   heroSubtext: string;
-  /** Label of the hero's call-to-action button. */
   heroCtaLabel: string;
-  /**
-   * A custom hero image URL (else the first product image is used). Stored as
-   * the raw Supabase public URL; the storefront rewrites it to the first-party
-   * `/api/storefront/shop-logos/…` proxy path at read time (see shopResolver).
-   */
   heroImageUrl: string | null;
-  /** Render the horizontal category rail below the hero. */
   categoriesEnabled: boolean;
   featuredTitle: string;
   featuredSubtitle: string;
@@ -49,23 +52,18 @@ export interface HomeTheme {
 
 export interface CategoryTheme {
   heading: string;
-  /** Show the search box on the Category (products) page. */
   searchEnabled: boolean;
 }
 
 export interface ProductTheme {
-  /** Show the "related products" rail on the Product detail page. */
   relatedEnabled: boolean;
   addToCartLabel: string;
   buyNowLabel: string;
 }
 
 export interface StorefrontTheme {
-  /** Visual preset selected by the seller; individual fields remain editable overrides. */
   presetId: ThemePresetId;
-  /** Latin display/body font pairing for storefront headings and copy (see `domain/fontPairing`). */
   fontPairing: FontPairingId;
-  /** Accent colour for the Homepage hero + its call-to-action buttons. */
   accentColor: HexColor;
   announcement: AnnouncementTheme;
   home: HomeTheme;
@@ -73,30 +71,34 @@ export interface StorefrontTheme {
   product: ProductTheme;
 }
 
-// Defaults deliberately mirror the storefront's ORIGINAL hardcoded copy, so a
-// shop that has never opened Store Design (theme = {}) looks exactly as before.
-// `fontPairing` is the one exception: it follows the app-wide typography
-// baseline (see PROJECT.md D54), the same way an unopened shop already
-// inherits the app's global color/spacing tokens rather than some frozen
-// snapshot — a seller who wants the original system-font look picks `minimal`.
+export interface ThemePresetDefinition {
+  label: string;
+  shortLabel: string;
+  description: string;
+  bestFor: string;
+  visual: ThemeVisualProfile;
+  theme: StorefrontTheme;
+}
+
 export const DEFAULT_THEME: StorefrontTheme = {
-  presetId: 'fashion',
+  // Soft Elegant is the closest migration target to the previous fashion-first
+  // default, avoiding an abrupt visual jump for shops that never saved a preset.
+  presetId: 'soft-elegant',
   fontPairing: DEFAULT_FONT_PAIRING,
-  accentColor: '#e11d48',
+  accentColor: '#b56b7a',
   announcement: {
     enabled: false,
     text: '',
   },
   home: {
     heroEnabled: true,
-    heroHeadline: 'ကိုယ်နှစ်သက်မယ့် ဖက်ရှင်ကို ရှာဖွေလိုက်ပါ။',
-    heroSubtext:
-      'ဒီဆိုင်ရဲ့ နောက်ဆုံးရောက် ဖက်ရှင်ပစ္စည်းတွေကို တစ်နေရာတည်းမှာ လွယ်လွယ်ကူကူ ကြည့်နိုင်ပါတယ်။',
+    heroHeadline: 'ကိုယ့်ဆိုင်ရဲ့ အကောင်းဆုံးပစ္စည်းတွေကို လှလှပပ ရွေးချယ်ပါ။',
+    heroSubtext: 'Brand ရဲ့ mood ကို မပျက်စေဘဲ ပစ္စည်းတွေကို ရှင်းရှင်းလင်းလင်း ကြည့်နိုင်ပါတယ်။',
     heroCtaLabel: 'ပစ္စည်းများကြည့်ရန်',
     heroImageUrl: null,
     categoriesEnabled: true,
-    featuredTitle: 'အသစ်ရောက် ပစ္စည်းများ',
-    featuredSubtitle: 'ဆိုင်မှာ လက်ရှိရရှိနိုင်တဲ့ နောက်ဆုံးပေါ်ပစ္စည်းများ။',
+    featuredTitle: 'ရွေးချယ်ထားသော ပစ္စည်းများ',
+    featuredSubtitle: 'ဆိုင်မှာ လက်ရှိရရှိနိုင်တဲ့ ပစ္စည်းများ။',
   },
   category: {
     heading: 'ပစ္စည်းများ',
@@ -109,24 +111,234 @@ export const DEFAULT_THEME: StorefrontTheme = {
   },
 };
 
-export const THEME_PRESETS: Record<ThemePresetId, {label: string; description: string; theme: StorefrontTheme}> = {
-  minimal: {label: 'Minimal', description: 'သန့်ရှင်းပြီး product ကို အဓိကထားတဲ့ ဆိုင်ပုံစံ', theme: {...DEFAULT_THEME, presetId: 'minimal', fontPairing: 'minimal', accentColor: '#111827'}},
-  fashion: {label: 'Fashion', description: 'အဝတ်အစား၊ Beauty နဲ့ Lifestyle ဆိုင်များအတွက်', theme: {...DEFAULT_THEME, presetId: 'fashion', fontPairing: 'boutique', accentColor: '#e11d48'}},
-  'dark-luxury': {label: 'Dark Luxury', description: 'Premium နဲ့ luxury product များအတွက်', theme: {...DEFAULT_THEME, presetId: 'dark-luxury', fontPairing: 'classic', accentColor: '#b7791f', announcement: {...DEFAULT_THEME.announcement, enabled: true, text: 'Premium Collection'}}},
-  'fresh-market': {label: 'Fresh Market', description: 'Food၊ Grocery နဲ့ local product ဆိုင်များအတွက်', theme: {...DEFAULT_THEME, presetId: 'fresh-market', fontPairing: 'minimal', accentColor: '#15803d', home: {...DEFAULT_THEME.home, heroHeadline: 'လတ်ဆတ်တဲ့ ပစ္စည်းတွေကို လွယ်လွယ်ကူကူ မှာယူပါ။', featuredTitle: 'ဒီနေ့ ရရှိနိုင်သော ပစ္စည်းများ'}}},
-  'modern-shop': {label: 'Modern Shop', description: 'Electronics နဲ့ general retail အတွက် modern ပုံစံ', theme: {...DEFAULT_THEME, presetId: 'modern-shop', fontPairing: 'minimal', accentColor: '#2563eb', home: {...DEFAULT_THEME.home, heroHeadline: 'လိုချင်တဲ့ ပစ္စည်းကို မြန်မြန်ရှာ၊ လွယ်လွယ်မှာပါ။', featuredTitle: 'လူကြိုက်များသော ပစ္စည်းများ'}}},
+type ThemePresetOverrides = Omit<Partial<StorefrontTheme>, 'announcement' | 'home' | 'category' | 'product'> & {
+  announcement?: Partial<AnnouncementTheme>;
+  home?: Partial<HomeTheme>;
+  category?: Partial<CategoryTheme>;
+  product?: Partial<ProductTheme>;
 };
+
+function preset(
+  id: ThemePresetId,
+  partial: ThemePresetOverrides,
+  meta: Omit<ThemePresetDefinition, 'theme'>,
+): ThemePresetDefinition {
+  return {
+    ...meta,
+    theme: {
+      ...DEFAULT_THEME,
+      ...partial,
+      presetId: id,
+      announcement: {...DEFAULT_THEME.announcement, ...(partial.announcement ?? {})},
+      home: {...DEFAULT_THEME.home, ...(partial.home ?? {})},
+      category: {...DEFAULT_THEME.category, ...(partial.category ?? {})},
+      product: {...DEFAULT_THEME.product, ...(partial.product ?? {})},
+    },
+  };
+}
+
+export const THEME_PRESETS: Record<ThemePresetId, ThemePresetDefinition> = {
+  'clean-minimal': preset(
+    'clean-minimal',
+    {
+      fontPairing: 'minimal',
+      accentColor: '#111111',
+      home: {
+        heroHeadline: 'Less noise. More product.',
+        heroSubtext: 'ပစ္စည်းပုံနဲ့ အရေးကြီးတဲ့အချက်အလက်တွေကိုပဲ ထင်းထင်းရှင်းရှင်း ပြပါ။',
+        featuredTitle: 'Featured',
+        featuredSubtitle: 'Curated essentials from the store.',
+      },
+    },
+    {
+      label: 'Clean & Minimal',
+      shortLabel: 'Minimal',
+      description: 'အဖြူ/အနက်၊ whitespace များများ၊ product-first editorial storefront.',
+      bestFor: 'Brand တိုင်းအတွက် — ရိုးရှင်းပြီး premium ဖြစ်ချင်တဲ့ဆိုင်',
+      visual: {
+        layout: 'editorial',
+        canvas: '#ffffff',
+        surface: '#ffffff',
+        text: '#111111',
+        muted: '#6b7280',
+        border: '#e5e7eb',
+        accent: '#111111',
+        accentText: '#ffffff',
+        radius: 'none',
+        productGrid: 'editorial-2',
+        hero: 'split',
+      },
+    },
+  ),
+  'street-bold': preset(
+    'street-bold',
+    {
+      fontPairing: 'minimal',
+      accentColor: '#ff4d00',
+      announcement: {enabled: true, text: 'DROP LIVE — SHOP NOW'},
+      home: {
+        heroHeadline: 'MAKE IT LOUD.',
+        heroSubtext: 'High contrast, oversized type, bold promo energy.',
+        featuredTitle: 'LATEST DROP',
+        featuredSubtitle: 'Fresh pieces. Limited attention span.',
+      },
+    },
+    {
+      label: 'Street & Bold',
+      shortLabel: 'Bold',
+      description: 'High contrast၊ oversized type၊ poster-style composition နဲ့ aggressive CTA.',
+      bestFor: 'ထင်းလင်းချင်တဲ့ brand တိုင်း — youth, sport, creator-led stores',
+      visual: {
+        layout: 'poster',
+        canvas: '#f2ff00',
+        surface: '#111111',
+        text: '#111111',
+        muted: '#3f3f46',
+        border: '#111111',
+        accent: '#ff4d00',
+        accentText: '#ffffff',
+        radius: 'none',
+        productGrid: 'bold-2',
+        hero: 'poster',
+      },
+    },
+  ),
+  'soft-elegant': preset(
+    'soft-elegant',
+    {
+      fontPairing: 'boutique',
+      accentColor: '#b56b7a',
+      home: {
+        heroHeadline: 'Thoughtfully chosen, beautifully presented.',
+        heroSubtext: 'နူးညံ့တဲ့ pastel tone နဲ့ premium boutique feeling ကို အဓိကထားတဲ့ storefront.',
+        featuredTitle: 'Our Edit',
+        featuredSubtitle: 'A softer way to discover what you love.',
+      },
+    },
+    {
+      label: 'Soft & Elegant',
+      shortLabel: 'Elegant',
+      description: 'Pastel palette၊ rounded surfaces၊ centered boutique composition.',
+      bestFor: 'နူးညံ့ပြီး refined ဖြစ်ချင်တဲ့ brand တိုင်း',
+      visual: {
+        layout: 'boutique',
+        canvas: '#f8f1ec',
+        surface: '#fffaf7',
+        text: '#4a3337',
+        muted: '#8a7378',
+        border: '#eadbd5',
+        accent: '#b56b7a',
+        accentText: '#ffffff',
+        radius: 'rounded',
+        productGrid: 'boutique-2',
+        hero: 'centered',
+      },
+    },
+  ),
+  'grid-catalog': preset(
+    'grid-catalog',
+    {
+      fontPairing: 'minimal',
+      accentColor: '#0f6fff',
+      home: {
+        heroHeadline: 'ရှာမယ်။ နှိုင်းမယ်။ မြန်မြန်ရွေးမယ်။',
+        heroSubtext: 'SKU များများကို screen တစ်ခုတည်းမှာ အမြန် browse လုပ်ဖို့ optimize လုပ်ထားတယ်။',
+        featuredTitle: 'ပစ္စည်းအားလုံး',
+        featuredSubtitle: 'အများကြီးကို မြန်မြန်ကြည့်၊ filter လုပ်၊ ရွေးချယ်ပါ။',
+      },
+    },
+    {
+      label: 'Grid & Catalog',
+      shortLabel: 'Catalog',
+      description: 'Dense grid၊ utility controls၊ quick scanning အတွက် marketplace-inspired layout.',
+      bestFor: 'SKU များတဲ့ဆိုင်တိုင်း — general retail, catalog-heavy stores',
+      visual: {
+        layout: 'catalog',
+        canvas: '#f5f7fb',
+        surface: '#ffffff',
+        text: '#111827',
+        muted: '#667085',
+        border: '#dbe2ea',
+        accent: '#0f6fff',
+        accentText: '#ffffff',
+        radius: 'compact',
+        productGrid: 'dense-3',
+        hero: 'utility',
+      },
+    },
+  ),
+  'dark-modern': preset(
+    'dark-modern',
+    {
+      fontPairing: 'minimal',
+      accentColor: '#73fbd3',
+      announcement: {enabled: true, text: 'NEW RELEASES AVAILABLE'},
+      home: {
+        heroHeadline: 'Built for the next scroll.',
+        heroSubtext: 'Dark surfaces, luminous accents and a tech-forward product experience.',
+        featuredTitle: 'Featured Systems',
+        featuredSubtitle: 'Modern picks with a high-contrast presentation.',
+      },
+    },
+    {
+      label: 'Dark Modern',
+      shortLabel: 'Dark',
+      description: 'Full dark UI၊ neon accent၊ glass panels နဲ့ futuristic layout language.',
+      bestFor: 'Modern / premium / tech-forward ဖြစ်ချင်တဲ့ brand တိုင်း',
+      visual: {
+        layout: 'tech',
+        canvas: '#09090b',
+        surface: '#151518',
+        text: '#f8fafc',
+        muted: '#a1a1aa',
+        border: '#2a2a30',
+        accent: '#73fbd3',
+        accentText: '#08110e',
+        radius: 'soft',
+        productGrid: 'tech-2',
+        hero: 'glass',
+      },
+    },
+  ),
+};
+
+const LEGACY_PRESET_MAP: Record<string, ThemePresetId> = {
+  minimal: 'clean-minimal',
+  fashion: 'soft-elegant',
+  'dark-luxury': 'dark-modern',
+  'fresh-market': 'grid-catalog',
+  'modern-shop': 'street-bold',
+};
+
+export function resolveThemePresetId(value: unknown): ThemePresetId | null {
+  if (typeof value !== 'string') return null;
+  if (Object.prototype.hasOwnProperty.call(THEME_PRESETS, value)) return value as ThemePresetId;
+  return LEGACY_PRESET_MAP[value] ?? null;
+}
 
 export function isThemePresetId(value: unknown): value is ThemePresetId {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(THEME_PRESETS, value);
 }
 
-export function themeFromPreset(id: ThemePresetId, current?: StorefrontTheme): StorefrontTheme {
-  const preset = THEME_PRESETS[id].theme;
-  return {...preset, home: {...preset.home, heroImageUrl: current?.home.heroImageUrl ?? preset.home.heroImageUrl}};
+export function getThemePreset(id: ThemePresetId): ThemePresetDefinition {
+  return THEME_PRESETS[id];
 }
 
-// ---- field validators (each falls back to `fallback` on any bad input) -------
+export function getThemeVisual(theme: Pick<StorefrontTheme, 'presetId' | 'accentColor'>): ThemeVisualProfile {
+  const base = THEME_PRESETS[theme.presetId].visual;
+  return {...base, accent: theme.accentColor};
+}
+
+export function themeFromPreset(id: ThemePresetId, current?: StorefrontTheme): StorefrontTheme {
+  const presetTheme = THEME_PRESETS[id].theme;
+  return {
+    ...presetTheme,
+    home: {
+      ...presetTheme.home,
+      heroImageUrl: current?.home.heroImageUrl ?? presetTheme.home.heroImageUrl,
+    },
+  };
+}
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -136,13 +348,6 @@ function bool(v: unknown, fallback: boolean): boolean {
   return typeof v === 'boolean' ? v : fallback;
 }
 
-/**
- * A free-text field. `allowEmpty` decides whether a seller may blank it out
- * (headlines/subtexts ⇒ true, so clearing hides the copy) or whether an empty
- * value snaps back to the default (button labels/headings ⇒ false, so a button
- * is never label-less). Length is clamped so a pathological value can't blow up
- * the layout.
- */
 function text(v: unknown, fallback: string, max: number, allowEmpty: boolean): string {
   if (typeof v !== 'string') return fallback;
   const trimmed = v.trim().slice(0, max);
@@ -160,17 +365,10 @@ function imageUrl(v: unknown, fallback: string | null): string | null {
   if (typeof v !== 'string') return fallback;
   const trimmed = v.trim();
   if (!trimmed) return null;
-  // Only accept same-origin (/api/…, /storage/…) or http(s) URLs — never a
-  // javascript:/data: string that could smuggle a payload into an <img src>.
   if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')) return trimmed.slice(0, 2048);
   return fallback;
 }
 
-/**
- * Coerce any untrusted value into a complete, valid `StorefrontTheme`. Never
- * throws; unknown keys are ignored and every missing/invalid field falls back
- * to `DEFAULT_THEME`.
- */
 export function normalizeTheme(raw: unknown): StorefrontTheme {
   if (!isObject(raw)) return DEFAULT_THEME;
   const d = DEFAULT_THEME;
@@ -178,10 +376,11 @@ export function normalizeTheme(raw: unknown): StorefrontTheme {
   const home = isObject(raw.home) ? raw.home : {};
   const category = isObject(raw.category) ? raw.category : {};
   const product = isObject(raw.product) ? raw.product : {};
+  const presetId = resolveThemePresetId(raw.presetId) ?? d.presetId;
   return {
-    presetId: isThemePresetId(raw.presetId) ? raw.presetId : d.presetId,
+    presetId,
     fontPairing: isFontPairingId(raw.fontPairing) ? raw.fontPairing : d.fontPairing,
-    accentColor: hexColor(raw.accentColor, d.accentColor),
+    accentColor: hexColor(raw.accentColor, THEME_PRESETS[presetId].theme.accentColor),
     announcement: {
       enabled: bool(announcement.enabled, d.announcement.enabled),
       text: text(announcement.text, d.announcement.text, 200, true),

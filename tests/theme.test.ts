@@ -85,7 +85,7 @@ describe('normalizeTheme — fail-safe coercion', () => {
   });
 
   it('ships exactly five valid storefront presets', () => {
-    assert.deepEqual(Object.keys(THEME_PRESETS).sort(), ['dark-luxury', 'fashion', 'fresh-market', 'minimal', 'modern-shop']);
+    assert.deepEqual(Object.keys(THEME_PRESETS).sort(), ['clean-minimal', 'dark-modern', 'grid-catalog', 'soft-elegant', 'street-bold']);
     for (const [id, preset] of Object.entries(THEME_PRESETS)) {
       assert.equal(preset.theme.presetId, id);
       assert.deepEqual(normalizeTheme(preset.theme), preset.theme);
@@ -94,10 +94,18 @@ describe('normalizeTheme — fail-safe coercion', () => {
 
   it('applies a preset while preserving an existing hero image', () => {
     const current = normalizeTheme({home: {heroImageUrl: 'https://cdn.example/hero.webp'}});
-    const next = themeFromPreset('dark-luxury', current);
-    assert.equal(next.presetId, 'dark-luxury');
+    const next = themeFromPreset('dark-modern', current);
+    assert.equal(next.presetId, 'dark-modern');
     assert.equal(next.home.heroImageUrl, current.home.heroImageUrl);
-    assert.equal(next.accentColor, THEME_PRESETS['dark-luxury'].theme.accentColor);
+    assert.equal(next.accentColor, THEME_PRESETS['dark-modern'].theme.accentColor);
+  });
+
+  it('migrates legacy preset ids to the new aesthetic families', () => {
+    assert.equal(normalizeTheme({presetId: 'minimal'}).presetId, 'clean-minimal');
+    assert.equal(normalizeTheme({presetId: 'fashion'}).presetId, 'soft-elegant');
+    assert.equal(normalizeTheme({presetId: 'dark-luxury'}).presetId, 'dark-modern');
+    assert.equal(normalizeTheme({presetId: 'fresh-market'}).presetId, 'grid-catalog');
+    assert.equal(normalizeTheme({presetId: 'modern-shop'}).presetId, 'street-bold');
   });
 
   it('falls back to the default preset id for unknown persisted values', () => {

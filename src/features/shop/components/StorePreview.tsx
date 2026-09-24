@@ -1,19 +1,15 @@
 // ---- SHOP: Store Design live preview ----------------------------------------
-// A self-contained, phone-framed mock of the buyer storefront driven by the
-// DRAFT theme — the "canvas" half of the Shopify-style editor. It deliberately
-// re-implements a compact version of the storefront layout (rather than
-// embedding the real pages) so the preview updates instantly from local state,
-// needs no tenant routing/data-source wiring, and can never mutate real data.
-// The seller's real products/categories are passed in so it feels like their
-// shop.
+// Phone-sized, side-effect-free preview of the selected aesthetic. This preview
+// intentionally mirrors the five layout families instead of showing five color
+// swatches on the same structure.
 
-import {ArrowRight, ImageOff, Search, ShoppingBag} from 'lucide-react';
+import {ImageOff, Search, ShoppingBag} from 'lucide-react';
 import type {Product} from '@/domain/product';
-import type {StorefrontTheme} from '@/domain/theme';
+import {getThemeVisual, type StorefrontTheme, type ThemePresetId} from '@/domain/theme';
 import {FONT_PAIRINGS} from '@/domain/fontPairing';
 import {ks} from '@/shared/lib/format';
 
-export type PreviewPage = 'home' | 'category' | 'product';
+export type PreviewPage = 'home' | 'category' | 'product' | 'checkout';
 
 interface PreviewProps {
   theme: StorefrontTheme;
@@ -28,73 +24,121 @@ function productImage(p: Product | undefined): string | null {
   return p ? p.images[0] ?? p.image ?? null : null;
 }
 
+const GRID: Record<ThemePresetId, string> = {
+  'clean-minimal': 'grid grid-cols-2 gap-x-2 gap-y-4',
+  'street-bold': 'grid grid-cols-2 gap-2',
+  'soft-elegant': 'grid grid-cols-2 gap-2.5',
+  'grid-catalog': 'grid grid-cols-3 gap-1.5',
+  'dark-modern': 'grid grid-cols-2 gap-2',
+};
+
 function MiniProductCard({product, theme}: {product: Product; theme: StorefrontTheme}) {
   const img = productImage(product);
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
+  const id = theme.presetId;
+  const imageClass =
+    id === 'clean-minimal' ? 'aspect-[4/5] bg-zinc-100' :
+    id === 'street-bold' ? 'aspect-square border-b-2 border-black bg-white' :
+    id === 'soft-elegant' ? 'aspect-[4/5] bg-[#f2e7e1]' :
+    id === 'grid-catalog' ? 'aspect-square bg-[#f3f6fa]' :
+    'aspect-square bg-[#0f0f12]';
+  const cardClass =
+    id === 'clean-minimal' ? 'bg-white' :
+    id === 'street-bold' ? 'border-2 border-black bg-[#f2ff00]' :
+    id === 'soft-elegant' ? 'overflow-hidden rounded-2xl border border-[#eadbd5] bg-[#fffaf7]' :
+    id === 'grid-catalog' ? 'overflow-hidden rounded-md border border-[#dbe2ea] bg-white' :
+    'overflow-hidden rounded-xl border border-[#2a2a30] bg-[#151518]';
+  const titleColor = id === 'dark-modern' ? '#f8fafc' : id === 'soft-elegant' ? '#4a3337' : '#111111';
+  const priceColor =
+    id === 'street-bold' ? '#111111' :
+    id === 'soft-elegant' ? '#8d5360' :
+    id === 'grid-catalog' ? '#0f6fff' :
+    id === 'dark-modern' ? '#73fbd3' :
+    '#111111';
+
   return (
-    <div className="overflow-hidden rounded-xl border border-rose-100 bg-white">
-      <div className="aspect-square bg-rose-50">
-        {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-rose-200"><ImageOff className="h-6 w-6" /></div>}
+    <div className={cardClass}>
+      <div className={imageClass}>
+        {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center opacity-35"><ImageOff className="h-5 w-5" /></div>}
       </div>
-      <div className="p-2">
-        <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="truncate text-[11px] font-medium text-slate-700">{product.name}</p>
-        <p className="text-[11px] font-bold text-slate-900">{ks(price)}</p>
+      <div className={id === 'clean-minimal' ? 'pt-1.5' : id === 'grid-catalog' ? 'p-1.5' : 'p-2'}>
+        <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display, color: titleColor}} className={id === 'grid-catalog' ? 'truncate text-[8px] font-medium' : 'truncate text-[10px] font-semibold'}>{product.name}</p>
+        <p style={{color: priceColor}} className={id === 'grid-catalog' ? 'mt-0.5 text-[8px] font-extrabold' : 'mt-0.5 text-[9px] font-bold'}>{ks(price)}</p>
       </div>
     </div>
   );
 }
 
-function PreviewHeader({shopName, logoUrl}: {shopName: string; logoUrl: string | null}) {
+function PreviewHeader({theme, shopName, logoUrl}: {theme: StorefrontTheme; shopName: string; logoUrl: string | null}) {
+  const visual = getThemeVisual(theme);
+  const id = theme.presetId;
+  if (id === 'street-bold') {
+    return <div className="flex items-center justify-between border-b-2 border-black bg-black px-3 py-2 text-white"><b className="text-xs uppercase">{shopName}</b><span className="text-[8px] font-black text-[#f2ff00]">MENU / CART</span></div>;
+  }
+  if (id === 'grid-catalog') {
+    return <div className="border-b border-[#dbe2ea] bg-white px-2.5 py-2"><div className="flex items-center gap-2 rounded-md border border-[#dbe2ea] bg-[#f5f7fb] px-2 py-1.5"><Search className="h-3 w-3 text-[#0f6fff]" /><span className="text-[8px] text-[#667085]">Search products</span></div></div>;
+  }
   return (
-    <div className="flex items-center justify-between border-b border-rose-100 px-3 py-2.5">
-      <span className="grid h-7 w-7 place-items-center rounded-full text-slate-500">☰</span>
-      <span className="flex items-center gap-1.5 truncate text-sm font-bold text-slate-900">
-        {logoUrl ? <img src={logoUrl} alt="" className="h-5 w-5 rounded-full object-cover" /> : <ShoppingBag className="h-4 w-4 text-rose-500" />}
-        <span className="max-w-[140px] truncate">{shopName}</span>
+    <div className="flex items-center justify-between px-3 py-2.5" style={{backgroundColor: visual.surface, borderBottom: `1px solid ${visual.border}`}}>
+      <span className="text-[9px]" style={{color: visual.muted}}>☰</span>
+      <span className="flex items-center gap-1.5 truncate text-[11px] font-bold" style={{color: visual.text}}>
+        {logoUrl ? <img src={logoUrl} alt="" className="h-4 w-4 object-cover" style={{borderRadius: id === 'clean-minimal' ? 0 : 999}} /> : <ShoppingBag className="h-3.5 w-3.5" style={{color: visual.accent}} />}
+        <span className="max-w-[145px] truncate">{shopName}</span>
       </span>
-      <ShoppingBag className="h-4 w-4 text-slate-500" />
+      <ShoppingBag className="h-3.5 w-3.5" style={{color: visual.muted}} />
     </div>
   );
 }
 
-function HomePreview({theme, products, categories, shopName, logoUrl}: Omit<PreviewProps, 'page'>) {
-  const hero = productImage(products[0]);
-  const heroImg = theme.home.heroImageUrl ?? hero;
+function ThemeHero({theme, products, shopName}: {theme: StorefrontTheme; products: Product[]; shopName: string}) {
+  const image = theme.home.heroImageUrl ?? productImage(products[0]);
+  const id = theme.presetId;
+
+  if (id === 'clean-minimal') {
+    return <div className="grid min-h-[170px] grid-cols-2 bg-white"><div className="flex flex-col justify-center p-3"><span className="text-[7px] uppercase tracking-[0.18em] text-zinc-500">Selected</span><b className="mt-2 text-[15px] leading-[1.05] text-black">{theme.home.heroHeadline}</b><span className="mt-3 w-fit border-b border-black pb-0.5 text-[8px] font-semibold">{theme.home.heroCtaLabel}</span></div><div className="bg-zinc-100">{image && <img src={image} alt="" className="h-full w-full object-cover" />}</div></div>;
+  }
+
+  if (id === 'street-bold') {
+    return <div className="relative min-h-[180px] overflow-hidden border-b-2 border-black bg-black">{image && <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45" />}<div className="absolute inset-0 bg-gradient-to-r from-black to-transparent" /><div className="relative flex min-h-[180px] flex-col justify-end p-3"><span className="w-fit border border-white bg-[#ff4d00] px-1.5 py-0.5 text-[7px] font-black text-white">NEW DROP</span><b className="mt-2 text-[24px] font-black uppercase leading-[0.82] tracking-[-0.05em] text-white">{theme.home.heroHeadline}</b><span className="mt-3 w-fit border border-white bg-[#ff4d00] px-2 py-1 text-[8px] font-black text-white">SHOP NOW</span></div></div>;
+  }
+
+  if (id === 'soft-elegant') {
+    return <div className="m-3 overflow-hidden rounded-2xl bg-[#fffaf7] p-2 text-center"><div className="overflow-hidden rounded-xl bg-[#eadbd5]">{image && <img src={image} alt="" className="h-28 w-full object-cover" />}</div><p className="mt-2 font-display text-[7px] italic text-[#a8717d]">{shopName}</p><b className="font-display mt-1 block text-[14px] leading-tight text-[#4a3337]">{theme.home.heroHeadline}</b><span className="mt-2 inline-flex rounded-full bg-[#b56b7a] px-2.5 py-1 text-[8px] font-semibold text-white">{theme.home.heroCtaLabel}</span></div>;
+  }
+
+  if (id === 'grid-catalog') {
+    return <div className="m-2.5 grid grid-cols-[1fr_auto] gap-2 rounded-md border border-[#dbe2ea] bg-white p-2.5"><div><span className="text-[7px] font-bold uppercase text-[#0f6fff]">Browse fast</span><b className="mt-1 block text-[12px] leading-tight text-[#111827]">{theme.home.heroHeadline}</b></div><span className="self-center rounded bg-[#0f6fff] px-2 py-1 text-[7px] font-bold text-white">View</span></div>;
+  }
+
+  return <div className="relative m-3 min-h-[180px] overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#111114]">{image && <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />}<div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_30%,rgba(115,251,211,.22),transparent_35%),linear-gradient(90deg,#09090b,transparent)]" /><div className="relative flex min-h-[180px] flex-col justify-end p-3"><span className="w-fit rounded-full border border-[#73fbd3]/40 bg-[#73fbd3]/10 px-2 py-0.5 text-[7px] text-[#73fbd3]">MODERN MODE</span><b className="mt-2 text-[19px] font-black leading-[0.95] text-white">{theme.home.heroHeadline}</b><span className="mt-3 w-fit rounded-lg bg-[#73fbd3] px-2.5 py-1 text-[8px] font-bold text-[#08110e]">{theme.home.heroCtaLabel}</span></div></div>;
+}
+
+function CategoryRail({theme, categories}: {theme: StorefrontTheme; categories: string[]}) {
+  if (!theme.home.categoriesEnabled || categories.length === 0) return null;
+  const id = theme.presetId;
+  const chip =
+    id === 'clean-minimal' ? 'border-b border-zinc-300 text-zinc-600' :
+    id === 'street-bold' ? 'border-2 border-black bg-[#f2ff00] font-black uppercase text-black' :
+    id === 'soft-elegant' ? 'rounded-full border border-[#decac5] bg-[#fffaf7] text-[#76565d]' :
+    id === 'grid-catalog' ? 'rounded-md border border-[#dbe2ea] bg-white text-[#475467]' :
+    'rounded-lg border border-[#2a2a30] bg-[#151518] text-[#c9c9d0]';
+  return <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-3 py-2.5">{categories.slice(0, 6).map((c) => <span key={c} className={`shrink-0 px-2 py-1 text-[7px] font-semibold ${chip}`}>{c}</span>)}</div>;
+}
+
+function HomePreview({theme, products, categories, shopName}: Omit<PreviewProps, 'page' | 'logoUrl'>) {
+  const visual = getThemeVisual(theme);
   return (
-    <div>
-      {theme.home.heroEnabled && (
-        <div className="m-3 overflow-hidden rounded-2xl bg-[#fff0f6]">
-          <div className="grid grid-cols-2">
-            <div className="flex flex-col justify-center p-3">
-              <p className="text-[10px] font-semibold" style={{color: theme.accentColor}}>{shopName}</p>
-              <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="mt-1 text-sm font-bold leading-tight text-slate-950 line-clamp-3">{theme.home.heroHeadline}</p>
-              {theme.home.heroSubtext && <p className="mt-1.5 text-[10px] leading-snug text-slate-600 line-clamp-3">{theme.home.heroSubtext}</p>}
-              <span style={{backgroundColor: theme.accentColor}} className="mt-2.5 inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white">{theme.home.heroCtaLabel} <ArrowRight className="h-2.5 w-2.5" /></span>
-            </div>
-            <div className="min-h-[120px] bg-gradient-to-br from-[#fbcfe8] to-[#fff0f6]">
-              {heroImg ? <img src={heroImg} alt="" className="h-full w-full object-cover" /> : logoUrl ? <div className="grid h-full place-items-center"><img src={logoUrl} alt="" className="h-12 w-12 rounded-full bg-white object-contain p-1.5" /></div> : null}
-            </div>
-          </div>
+    <div style={{backgroundColor: visual.canvas, color: visual.text}}>
+      {theme.home.heroEnabled && <ThemeHero theme={theme} products={products} shopName={shopName} />}
+      <CategoryRail theme={theme} categories={categories} />
+      <div className="px-3 pb-4 pt-2">
+        <div className={theme.presetId === 'soft-elegant' ? 'mb-2 text-center' : 'mb-2'}>
+          <p className={theme.presetId === 'street-bold' ? 'text-[15px] font-black uppercase' : 'text-[12px] font-bold'}>{theme.home.featuredTitle}</p>
+          {theme.home.featuredSubtitle && theme.presetId !== 'grid-catalog' && <p className="text-[7px]" style={{color: visual.muted}}>{theme.home.featuredSubtitle}</p>}
         </div>
-      )}
-
-      {theme.home.categoriesEnabled && categories.length > 0 && (
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-1">
-          {categories.slice(0, 6).map((c) => (
-            <div key={c} className="flex shrink-0 flex-col items-center gap-1">
-              <span className="grid h-9 w-9 place-items-center rounded-xl border border-rose-100 bg-[#fff7fa] text-[10px]" style={{color: theme.accentColor}}>◆</span>
-              <span className="max-w-[52px] truncate text-[9px] text-slate-600">{c}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="px-3 py-3">
-        <p className="text-sm font-bold text-slate-950">{theme.home.featuredTitle}</p>
-        {theme.home.featuredSubtitle && <p className="mb-2 text-[10px] text-slate-500">{theme.home.featuredSubtitle}</p>}
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {products.slice(0, 4).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}
-          {products.length === 0 && <p className="col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-6 text-center text-[10px] text-slate-500">ပစ္စည်းမတင်ရသေးပါ။</p>}
+        <div className={GRID[theme.presetId]}>
+          {products.slice(0, theme.presetId === 'grid-catalog' ? 6 : 4).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}
+          {products.length === 0 && <p className="col-span-full py-6 text-center text-[8px]" style={{color: visual.muted}}>ပစ္စည်းမတင်ရသေးပါ။</p>}
         </div>
       </div>
     </div>
@@ -102,63 +146,101 @@ function HomePreview({theme, products, categories, shopName, logoUrl}: Omit<Prev
 }
 
 function CategoryPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName' | 'logoUrl' | 'categories'>) {
+  const visual = getThemeVisual(theme);
   return (
-    <div className="px-3 py-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-bold text-slate-900">{theme.category.heading}</p>
-        {theme.category.searchEnabled && (
-          <span className="flex items-center gap-1 rounded-full border border-rose-200 px-2 py-1 text-[9px] text-slate-400"><Search className="h-3 w-3" style={{color: theme.accentColor}} /> ရှာရန်…</span>
-        )}
+    <div className="px-3 py-3" style={{backgroundColor: visual.canvas, color: visual.text}}>
+      <div className={theme.presetId === 'street-bold' ? 'mb-2 border-b-2 border-black pb-2' : 'mb-2'}>
+        <p className={theme.presetId === 'street-bold' ? 'text-[15px] font-black uppercase' : 'text-[12px] font-bold'}>{theme.category.heading}</p>
+        {theme.category.searchEnabled && <span className="mt-2 flex items-center gap-1 border px-2 py-1.5 text-[7px]" style={{borderColor: visual.border, backgroundColor: visual.surface, color: visual.muted}}><Search className="h-2.5 w-2.5" style={{color: visual.accent}} /> Search</span>}
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        {products.slice(0, 6).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}
-        {products.length === 0 && <p className="col-span-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-6 text-center text-[10px] text-slate-500">ပစ္စည်းမတင်ရသေးပါ။</p>}
-      </div>
+      <div className={GRID[theme.presetId]}>{products.slice(0, theme.presetId === 'grid-catalog' ? 9 : 6).map((p) => <MiniProductCard key={p.id} product={p} theme={theme} />)}</div>
     </div>
   );
 }
 
 function ProductPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName' | 'logoUrl' | 'categories'>) {
+  const visual = getThemeVisual(theme);
   const p = products[0];
   const img = productImage(p);
   const price = p && p.isPromotion && p.promoPrice ? p.promoPrice : p?.price ?? 0;
+  const id = theme.presetId;
+  const imageClass =
+    id === 'street-bold' ? 'aspect-square border-2 border-black bg-white' :
+    id === 'clean-minimal' ? 'aspect-[4/5] bg-zinc-100' :
+    id === 'soft-elegant' ? 'aspect-[4/5] rounded-2xl bg-[#eadbd5]' :
+    id === 'grid-catalog' ? 'aspect-square rounded-md bg-[#f3f6fa]' :
+    'aspect-square rounded-2xl border border-[#2a2a30] bg-[#0f0f12]';
   return (
-    <div className="px-3 py-3">
-      <div className="aspect-square overflow-hidden rounded-xl border border-rose-100 bg-rose-50">
-        {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-rose-200"><ImageOff className="h-8 w-8" /></div>}
+    <div className="px-3 py-3" style={{backgroundColor: visual.canvas, color: visual.text}}>
+      <div className={imageClass}>{img ? <img src={img} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center opacity-35"><ImageOff className="h-7 w-7" /></div>}</div>
+      <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className={id === 'street-bold' ? 'mt-2 text-[15px] font-black uppercase leading-tight' : 'mt-2 text-[13px] font-bold'}>{p?.name ?? 'ပစ္စည်းအမည်'}</p>
+      <p className="mt-0.5 text-[11px] font-bold" style={{color: visual.accent}}>{ks(price)}</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <span className="border py-1.5 text-center text-[8px] font-semibold" style={{borderColor: visual.accent, color: visual.accent, borderRadius: id === 'soft-elegant' ? 999 : id === 'clean-minimal' || id === 'street-bold' ? 0 : 8}}>{theme.product.addToCartLabel}</span>
+        <span className="py-1.5 text-center text-[8px] font-semibold" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: id === 'soft-elegant' ? 999 : id === 'clean-minimal' || id === 'street-bold' ? 0 : 8}}>{theme.product.buyNowLabel}</span>
       </div>
-      <p style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].display}} className="mt-2 text-sm font-bold text-slate-900">{p?.name ?? 'ပစ္စည်းအမည်'}</p>
-      <p className="text-xs font-bold text-slate-700">{ks(price)}</p>
-      <div className="mt-3 flex gap-2">
-        <span className="flex-1 rounded-full border border-slate-300 py-1.5 text-center text-[10px] font-semibold text-slate-700">{theme.product.addToCartLabel}</span>
-        <span style={{backgroundColor: theme.accentColor}} className="flex-1 rounded-full py-1.5 text-center text-[10px] font-semibold text-white">{theme.product.buyNowLabel}</span>
+    </div>
+  );
+}
+
+function CheckoutPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName' | 'logoUrl' | 'categories'>) {
+  const visual = getThemeVisual(theme);
+  const id = theme.presetId;
+  const hard = id === 'street-bold' || id === 'clean-minimal';
+  const compact = id === 'grid-catalog';
+  const soft = id === 'soft-elegant';
+  const radius = hard ? 0 : compact ? 6 : soft ? 16 : 10;
+  const borderWidth = id === 'street-bold' ? 2 : 1;
+  const panelShadow = id === 'street-bold' ? '4px 4px 0 #111' : soft ? '0 10px 24px rgba(95,70,74,.08)' : id === 'dark-modern' ? '0 16px 30px rgba(0,0,0,.25)' : 'none';
+  const first = products[0];
+  const image = productImage(first);
+
+  return (
+    <div className="space-y-2.5 px-3 py-3" style={{backgroundColor: visual.canvas, color: visual.text}}>
+      <div>
+        <p className="text-[7px] font-bold uppercase tracking-[0.16em]" style={{color: visual.accent}}>Checkout</p>
+        <p className={id === 'street-bold' ? 'mt-1 text-[16px] font-black uppercase' : 'mt-1 text-[14px] font-bold'}>Order တင်မယ်</p>
       </div>
-      {theme.product.relatedEnabled && (
-        <div className="mt-4">
-          <p className="mb-2 text-xs font-bold text-slate-800">ဆင်တူ ပစ္စည်းများ</p>
-          <div className="grid grid-cols-2 gap-2">
-            {products.slice(1, 3).map((rp) => <MiniProductCard key={rp.id} product={rp} theme={theme} />)}
+      <div className={compact ? 'grid gap-2' : 'space-y-2'}>
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold"><span className="grid h-4 w-4 place-items-center text-[7px]" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : radius}}>၁</span> ပို့ဆောင်မည့် လိပ်စာ</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {['အမည်', 'ဖုန်းနံပါတ်', 'တိုင်း / ပြည်နယ်', 'မြို့နယ်'].map((label) => <div key={label} className="px-2 py-1.5 text-[7px]" style={{backgroundColor: id === 'dark-modern' ? '#101014' : visual.canvas, border: `1px solid ${visual.border}`, borderRadius: hard ? 0 : Math.max(3, radius - 3), color: visual.muted}}>{label}</div>)}
           </div>
         </div>
-      )}
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold"><span className="grid h-4 w-4 place-items-center text-[7px]" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : radius}}>၂</span> ငွေပေးချေမှု</div>
+          <div className="grid grid-cols-3 gap-1">
+            {['COD', 'KBZPay', 'WavePay'].map((label, index) => <div key={label} className="px-1 py-1.5 text-center text-[6px] font-semibold" style={{border: `1px solid ${index === 0 ? visual.accent : visual.border}`, backgroundColor: index === 0 ? visual.accent : visual.surface, color: index === 0 ? visual.accentText : visual.muted, borderRadius: hard ? 0 : Math.max(3, radius - 3)}}>{label}</div>)}
+          </div>
+        </div>
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <p className="text-[9px] font-bold">အော်ဒါ အကျဉ်း</p>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-8 w-7 overflow-hidden" style={{backgroundColor: visual.canvas, borderRadius: hard ? 0 : 4}}>{image && <img src={image} alt="" className="h-full w-full object-cover" />}</div>
+            <span className="flex-1 truncate text-[7px]" style={{color: visual.muted}}>{first?.name ?? 'ပစ္စည်းအမည်'} ×1</span>
+            <span className="text-[7px] font-bold">{ks(first?.price ?? 0)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t pt-2 text-[8px]" style={{borderColor: visual.border}}><b>စုစုပေါင်း</b><b style={{color: visual.accent}}>{ks(first?.price ?? 0)}</b></div>
+          <div className="mt-2 py-2 text-center text-[8px] font-bold" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : Math.max(3, radius - 3)}}>အော်ဒါတင်မည်</div>
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function StorePreview({theme, page, products, categories, shopName, logoUrl}: PreviewProps) {
   const announcement = theme.announcement.enabled && theme.announcement.text.trim();
+  const visual = getThemeVisual(theme);
   return (
-    <div style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].body}} className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[6px] border-slate-900 bg-white shadow-xl">
+    <div style={{fontFamily: FONT_PAIRINGS[theme.fontPairing].body, backgroundColor: visual.canvas}} className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border-[6px] border-slate-900 shadow-xl">
       <div className="max-h-[640px] overflow-y-auto">
-        {announcement && (
-          <div style={{backgroundColor: theme.accentColor}} className="px-3 py-1.5 text-center text-[10px] font-semibold text-white">
-            {theme.announcement.text}
-          </div>
-        )}
-        <PreviewHeader shopName={shopName} logoUrl={logoUrl} />
-        {page === 'home' && <HomePreview theme={theme} products={products} categories={categories} shopName={shopName} logoUrl={logoUrl} />}
+        {announcement && <div style={{backgroundColor: visual.accent, color: visual.accentText}} className="px-3 py-1.5 text-center text-[9px] font-semibold">{theme.announcement.text}</div>}
+        <PreviewHeader theme={theme} shopName={shopName} logoUrl={logoUrl} />
+        {page === 'home' && <HomePreview theme={theme} products={products} categories={categories} shopName={shopName} />}
         {page === 'category' && <CategoryPreview theme={theme} products={products} />}
         {page === 'product' && <ProductPreview theme={theme} products={products} />}
+        {page === 'checkout' && <CheckoutPreview theme={theme} products={products} />}
       </div>
     </div>
   );

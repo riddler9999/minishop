@@ -49,13 +49,13 @@ export default function OrderLookup() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
+    <div className="commerce-page mx-auto max-w-2xl px-4 py-10">
       <div className="text-center">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-cream-100 text-brand-700">
+        <div className="commerce-icon-well mx-auto grid h-14 w-14 place-items-center rounded-full">
           <Package className="h-6 w-6" />
         </div>
-        <h1 className="my mt-3 font-display text-2xl font-bold text-brand-800">Order စစ်ဆေးရန်</h1>
-        <p className="my mt-1 text-sm text-ink-soft">Order တင်စဉ်က ဖုန်းနံပါတ် နှင့် Order နံပါတ်ဖြင့် ရှာပါ။</p>
+        <h1 className="commerce-title my mt-3 font-display text-2xl font-bold">Order စစ်ဆေးရန်</h1>
+        <p className="commerce-muted my mt-1 text-sm">Order တင်စဉ်က ဖုန်းနံပါတ် နှင့် Order နံပါတ်ဖြင့် ရှာပါ။</p>
       </div>
 
       <form onSubmit={search} className="mx-auto mt-6 flex max-w-md flex-col gap-2">
@@ -65,48 +65,48 @@ export default function OrderLookup() {
           placeholder="ဖုန်းနံပါတ် — 09…"
           aria-label="ဖုန်းနံပါတ်"
           inputMode="tel"
-          className="my w-full rounded-full border border-cream-200 bg-white px-5 py-3 text-sm outline-none focus:border-brand-400"
+          className="commerce-input my w-full px-5 py-3 text-sm outline-none"
         />
         <input
           value={orderNo}
           onChange={(e) => setOrderNo(e.target.value)}
           placeholder="Order နံပါတ်"
           aria-label="Order နံပါတ်"
-          className="my w-full rounded-full border border-cream-200 bg-white px-5 py-3 text-sm outline-none focus:border-brand-400"
+          className="commerce-input my w-full px-5 py-3 text-sm outline-none"
         />
         <button
           disabled={!phone.trim() || !orderNo.trim()}
-          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-cream-100 hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50">
+          className="commerce-primary inline-flex items-center justify-center gap-1.5 px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50">
           <Search className="h-4 w-4" /> ရှာ
         </button>
       </form>
 
-      {err && <div className="mx-auto mt-4 max-w-md rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-700">{err}</div>}
-      {loading && <p className="my mt-6 text-center text-ink-soft">ရှာဖွေနေသည်…</p>}
+      {err && <div className="commerce-error mx-auto mt-4 max-w-md rounded-xl border p-3 text-sm">{err}</div>}
+      {loading && <p className="commerce-muted my mt-6 text-center">ရှာဖွေနေသည်…</p>}
 
       {orders !== null && !loading && (
         <div className="mt-6 space-y-3">
-          {orders.length === 0 && <p className="my text-center text-ink-soft">ဤဖုန်းနံပါတ်ဖြင့် Order မတွေ့ပါ။</p>}
+          {orders.length === 0 && <p className="commerce-muted my text-center">ဤဖုန်းနံပါတ်ဖြင့် Order မတွေ့ပါ။</p>}
           {orders.map((o) => {
             const st = statusMeta(o.status);
             return (
-              <div key={o.order_id} className="rounded-2xl border border-cream-200 bg-white p-4">
+              <div key={o.order_id} className="commerce-order-card p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-display font-bold text-brand-700">{o.order_id}</span>
+                  <span className="commerce-price font-display font-bold">{o.order_id}</span>
                   <span className={`my rounded-full px-3 py-1 text-xs font-semibold ${st.cls}`}>{st.label}</span>
                 </div>
-                <p className="my mt-1 text-xs text-ink-soft">{new Date(o.created_at).toLocaleString('en-GB')}</p>
+                <p className="commerce-muted my mt-1 text-xs">{new Date(o.created_at).toLocaleString('en-GB')}</p>
                 <div className="my mt-3 space-y-1 text-sm">
                   {(o.items || []).map((it, i) => (
-                    <div key={i} className="flex justify-between text-ink-soft">
+                    <div key={i} className="commerce-muted flex justify-between">
                       <span className="truncate">{it.name} ×{it.qty}</span>
                       <span>{ks(it.price * it.qty)}</span>
                     </div>
                   ))}
                 </div>
-                <div className="my mt-3 flex justify-between border-t border-cream-200 pt-3 text-sm">
-                  <span className="text-ink-soft">စုစုပေါင်း (ပို့ခ {ks(o.delivery_fee)})</span>
-                  <span className="font-bold text-brand-700">{ks(o.grand_total)}</span>
+                <div className="commerce-divider my mt-3 flex justify-between border-t pt-3 text-sm">
+                  <span className="commerce-muted">စုစုပေါင်း (ပို့ခ {ks(o.delivery_fee)})</span>
+                  <span className="commerce-price font-bold">{ks(o.grand_total)}</span>
                 </div>
               </div>
             );

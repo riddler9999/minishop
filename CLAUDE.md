@@ -229,3 +229,10 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
 - Keep personal Claude plugin settings out of the repository, and don't vendor further third-party skills without the owner's explicit go-ahead (see `PROJECT.md` D51/D53). Committed under `.claude/skills/`: the project-specific `supabase-migration/SKILL.md`, plus the vendored `ui-ux-pro-max` skill bundle (`ui-ux-pro-max/`, `banner-design/`, `brand/`, `design/`, `design-system/`, `slides/`, `ui-styling/` — MIT-licensed, from `nextlevelbuilder/ui-ux-pro-max-skill`, D53).
 - Path alias `@/*` → `src/*` (see `tsconfig.json` / `vite.config.ts`). Use it for every
   cross-module import; `./` only for siblings inside the same folder.
+
+
+## Storefront aesthetic theme architecture
+
+Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
+
+Do not add a new preset that merely recolors the same layout. A distinct preset must materially change composition/density/card language. Keep compatibility for persisted legacy IDs in `normalizeTheme()`. See `design/themes/aesthetic-themes.md`.
