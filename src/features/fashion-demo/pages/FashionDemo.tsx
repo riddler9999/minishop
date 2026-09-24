@@ -1,12 +1,16 @@
 import {useEffect, useMemo, useState} from 'react';
-import {ArrowLeft, Heart, ImageOff, Minus, Plus, Search, ShoppingBag, Trash2} from 'lucide-react';
-import {Route, Routes, useNavigate, useParams} from 'react-router-dom';
+import {ArrowLeft, Grid2X2, Heart, Home, ImageOff, Menu, Minus, PackageSearch, Plus, Search, ShoppingBag, Trash2, X} from 'lucide-react';
+import {Route, Routes, useLocation, useNavigate, useParams} from 'react-router-dom';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {useCart} from '@/features/cart/state';
-import Checkout from '@/features/checkout/pages/Checkout';
 import {setShopSlug} from '@/features/tenancy/shopContext';
 import {ks} from '@/shared/lib/format';
+import FashionProducts from './FashionProducts';
+import FashionCheckoutPage from './FashionCheckout';
+import FashionOrderSuccess from './FashionOrderSuccess';
+import FashionOrderLookup from './FashionOrderLookup';
+import FashionPolicy from './FashionPolicy';
 
 const PINK = '#f43f70';
 
@@ -35,7 +39,63 @@ function FashionHeader() {
 }
 
 function FashionShell({children}: {children: React.ReactNode}) {
-  return <div className="min-h-screen bg-[#fff9fb] text-slate-950"><FashionHeader />{children}</div>;
+  const nav = useNavigate();
+  const {pathname} = useLocation();
+  const {count} = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const active = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+
+  return (
+    <div className="min-h-screen bg-[#fff9fb] pb-[72px] text-slate-950 md:pb-0">
+      <FashionHeader />
+      {children}
+
+      <footer className="hidden border-t border-[#f2dde5] bg-white md:block">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-7">
+          <div><p className="font-display text-lg font-black">MiniShop Fashion</p><p className="my mt-1 text-xs text-slate-500">Fashion Demo Store</p></div>
+          <div className="flex flex-wrap items-center gap-5 text-xs font-semibold text-[#745765]">
+            <button type="button" onClick={() => nav('/fashion-demo/products')}>Products</button>
+            <button type="button" onClick={() => nav('/fashion-demo/orders')}>Track Order</button>
+            <button type="button" onClick={() => nav('/fashion-demo/shipping-policy')}>Shipping</button>
+            <button type="button" onClick={() => nav('/fashion-demo/refund-policy')}>Refund</button>
+            <button type="button" onClick={() => nav('/fashion-demo/privacy-policy')}>Privacy</button>
+          </div>
+        </div>
+      </footer>
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 border-t border-[#f2dde5] bg-white/98 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(88,52,64,0.08)] backdrop-blur md:hidden" aria-label="Fashion demo mobile navigation">
+        <button type="button" onClick={() => nav('/fashion-demo')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${pathname === '/fashion-demo' ? 'text-[#f43f70]' : 'text-slate-500'}`}><Home className="h-5 w-5" /><span>Home</span></button>
+        <button type="button" onClick={() => nav('/fashion-demo/products')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/fashion-demo/products') ? 'text-[#f43f70]' : 'text-slate-500'}`}><Grid2X2 className="h-5 w-5" /><span>Shop</span></button>
+        <button type="button" onClick={() => nav('/fashion-demo/cart')} className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/fashion-demo/cart') ? 'text-[#f43f70]' : 'text-slate-500'}`}><ShoppingBag className="h-5 w-5" /><span>Cart</span>{count > 0 && <span className="absolute right-[24%] top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#f43f70] px-1 text-[9px] font-bold text-white">{count}</span>}</button>
+        <button type="button" onClick={() => nav('/fashion-demo/orders')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/fashion-demo/orders') ? 'text-[#f43f70]' : 'text-slate-500'}`}><PackageSearch className="h-5 w-5" /><span>Orders</span></button>
+        <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500"><Menu className="h-5 w-5" /><span>Menu</span></button>
+      </nav>
+
+      {menuOpen && (
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Fashion store menu">
+          <button type="button" aria-label="Close menu" className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]" onClick={() => setMenuOpen(false)} />
+          <aside className="relative flex h-full w-[84%] max-w-[360px] flex-col bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#f2dde5] pb-5">
+              <div><p className="font-display text-xl font-black">MiniShop Fashion</p><p className="my mt-1 text-xs font-semibold text-[#f43f70]">Demo Store</p></div>
+              <button type="button" onClick={() => setMenuOpen(false)} className="grid h-11 w-11 place-items-center rounded-full bg-[#fff6f9]" aria-label="Close menu"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="mt-5 flex flex-col">
+              {[
+                ['/fashion-demo', 'Home'],
+                ['/fashion-demo/products', 'Shop All'],
+                ['/fashion-demo/orders', 'Track Order'],
+                ['/fashion-demo/shipping-policy', 'Shipping Policy'],
+                ['/fashion-demo/refund-policy', 'Refund Policy'],
+                ['/fashion-demo/privacy-policy', 'Privacy Policy'],
+                ['/fashion-demo/terms-of-service', 'Terms of Service'],
+              ].map(([to, label]) => <button type="button" key={to} onClick={() => {setMenuOpen(false); nav(to);}} className="min-h-12 border-b border-[#f5e7ec] text-left text-sm font-semibold text-[#3e2b33]">{label}</button>)}
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function DemoProductCard({product}: {product: Product}) {
@@ -126,7 +186,7 @@ function FashionHome() {
             <span className="text-[9px] font-black uppercase tracking-[0.24em] text-[#c92b59]">New collection</span>
             <h1 className="mt-1.5 font-display text-[28px] font-black leading-[1.03] tracking-[-0.045em] text-[#251820] sm:text-4xl">Soft looks.<br />Big mood.</h1>
             <p className="my mt-2 text-[11px] leading-5 text-[#755963] sm:text-sm">နေ့စဉ်ဝတ်စုံအတွက် သက်တောင့်သက်သာနဲ့ ခေတ်မီတဲ့ fashion picks.</p>
-            <button type="button" onClick={() => nav('/fashion-demo')} className="mt-3 min-h-10 w-fit rounded-full bg-[#f43f70] px-4 text-[11px] font-bold text-white shadow-[0_8px_20px_rgba(244,63,112,0.24)]">Shop New</button>
+            <button type="button" onClick={() => nav('/fashion-demo/products')} className="mt-3 min-h-10 w-fit rounded-full bg-[#f43f70] px-4 text-[11px] font-bold text-white shadow-[0_8px_20px_rgba(244,63,112,0.24)]">Shop New</button>
           </div>
         </section>
 
@@ -140,7 +200,7 @@ function FashionHome() {
 
         <div className="mt-5 flex items-end justify-between">
           <div><h2 className="font-display text-xl font-black tracking-[-0.03em]">Popular picks</h2><p className="my mt-1 text-xs text-slate-500">Fashion Demo Collection</p></div>
-          <span className="text-xs font-bold text-[#f43f70]">View all</span>
+          <button type="button" onClick={() => nav('/fashion-demo/products')} className="min-h-10 text-xs font-bold text-[#f43f70]">View all</button>
         </div>
 
         {error && <div className="my mt-4 rounded-2xl border border-rose-100 bg-white p-4 text-sm text-slate-600">{error}</div>}
@@ -256,18 +316,21 @@ function FashionCart() {
   );
 }
 
-function FashionCheckout() {
-  return <FashionShell><div className="[&>div]:pt-5"><Checkout /></div></FashionShell>;
-}
-
 export default function FashionDemo() {
   setShopSlug(null);
   return (
     <Routes>
       <Route index element={<FashionHome />} />
+      <Route path="products" element={<FashionShell><FashionProducts /></FashionShell>} />
       <Route path="products/:id" element={<FashionProductDetail />} />
       <Route path="cart" element={<FashionCart />} />
-      <Route path="checkout" element={<FashionCheckout />} />
+      <Route path="checkout" element={<FashionShell><FashionCheckoutPage /></FashionShell>} />
+      <Route path="order/:orderId" element={<FashionShell><FashionOrderSuccess /></FashionShell>} />
+      <Route path="orders" element={<FashionShell><FashionOrderLookup /></FashionShell>} />
+      <Route path="shipping-policy" element={<FashionShell><FashionPolicy title="ပို့ဆောင်သည့်ပုံစံ" /></FashionShell>} />
+      <Route path="refund-policy" element={<FashionShell><FashionPolicy title="Refund Policy" /></FashionShell>} />
+      <Route path="privacy-policy" element={<FashionShell><FashionPolicy title="Privacy Policy" /></FashionShell>} />
+      <Route path="terms-of-service" element={<FashionShell><FashionPolicy title="Terms of Service" /></FashionShell>} />
       <Route path="*" element={<FashionHome />} />
     </Routes>
   );
