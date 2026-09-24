@@ -1,16 +1,13 @@
 // ---- DEMO DATA -------------------------------------------------------------
 // This is a DEMO storefront. No backend / no database. All products, merchant
 // accounts and orders are fake, client-side data so the store can be deployed
-// as a pure static site (Vercel) with no secrets. Product imagery is rendered
-// as self-contained, brand-styled `data:` SVG placeholders. The demo must not
-// depend on any external image host: a third-party host (loremflickr) proved
-// unreliable in production and broke every product photo. Inline `data:` images
-// always render, need no network round-trip, and require no CSP host allowance.
+// as a pure static site (Vercel) with no secrets. Uploaded first-party product
+// photos are used where available; remaining products keep self-contained SVG
+// placeholders so the demo never depends on an external image host.
 
 import type {Product} from '@/domain/product';
 import type {MerchantAccount} from '@/domain/shop';
 
-// Per-category placeholder palette — soft brand tints, one distinct hue per group.
 const CATEGORY_THEME: Record<string, {bg: string; deep: string; accent: string}> = {
   'အင်္ကျီ': {bg: '#ffe4ec', deep: '#fbb6ce', accent: '#e11d48'},
   'ဂါဝန်': {bg: '#f3e8ff', deep: '#d8b4fe', accent: '#9333ea'},
@@ -19,15 +16,11 @@ const CATEGORY_THEME: Record<string, {bg: string; deep: string; accent: string}>
 };
 const FALLBACK_THEME = {bg: '#fff0f6', deep: '#fbcfe8', accent: '#e11d48'};
 
-// The Latin part of "မြန်မာ — English Name". SVG <text> rendered inside an <img>
-// cannot rely on a Myanmar webfont being present, so card labels stay Latin.
 const latinLabel = (name: string): string => {
   const parts = name.split('—');
   return (parts[1] ?? parts[0]).trim();
 };
 
-// A self-contained product-photo placeholder as a `data:` URI. `variant` rotates
-// the gradient per gallery image so a single product's images look distinct.
 const img = (name: string, category: string, variant: number): string => {
   const t = CATEGORY_THEME[category] ?? FALLBACK_THEME;
   const label = latinLabel(name);
@@ -59,156 +52,35 @@ interface DemoSeed {
   price: number;
   promoPrice?: number;
   stock: number;
-  keyword: string; // garment descriptor (documents the item; not a network dependency)
-  locks: number[]; // one entry per gallery image — its length sets the image count
+  keyword: string;
+  locks: number[];
   description: string;
 }
 
 const SEEDS: DemoSeed[] = [
-  {
-    name: 'ရှပ်အင်္ကျီ — Classic White Shirt',
-    category: 'အင်္ကျီ',
-    color: 'အဖြူ',
-    size: 'M',
-    price: 22000,
-    promoPrice: 17500,
-    stock: 14,
-    keyword: 'shirt',
-    locks: [101, 102],
-    description: 'နမူနာ (Demo) ရှပ်အင်္ကျီ။ ရုံးဝတ် / နေ့စဉ်ဝတ် သင့်တော်သည်။\nဤစတိုးသည် သရုပ်ပြ (demo) စတိုးဖြစ်ပြီး အမှန်တကယ် ရောင်းချခြင်း မဟုတ်ပါ။',
-  },
-  {
-    name: 'ဘလောက်စ်အင်္ကျီ — Floral Blouse',
-    category: 'အင်္ကျီ',
-    color: 'ပန်းရောင်',
-    size: 'S',
-    price: 19500,
-    stock: 10,
-    keyword: 'blouse',
-    locks: [111, 112],
-    description: 'နမူနာ (Demo) ပန်းပွင့်ပုံစံ ဘလောက်စ်အင်္ကျီ။ ပေါ့ပါးပြီး လှပသည်။',
-  },
-  {
-    name: 'တီရှပ် — Cotton Tee',
-    category: 'အင်္ကျီ',
-    color: 'မီးခိုး',
-    size: 'L',
-    price: 12000,
-    promoPrice: 8900,
-    stock: 25,
-    keyword: 'tshirt',
-    locks: [121, 122],
-    description: 'နမူနာ (Demo) ချည်သားတီရှပ်။ လေဝင်လေထွက်ကောင်းသည်။',
-  },
-  {
-    name: 'ဂါဝန် — Summer Dress',
-    category: 'ဂါဝန်',
-    color: 'ကောင်းကင်ပြာ',
-    size: 'M',
-    price: 28000,
-    promoPrice: 22000,
-    stock: 12,
-    keyword: 'dress',
-    locks: [131, 132, 133],
-    description: 'နမူနာ (Demo) နွေရာသီ ဂါဝန်။ နေ့လယ်ခင်း ထွက်ဝတ်ရန် သင့်တော်သည်။',
-  },
-  {
-    name: 'ည ဝတ်ဂါဝန် — Evening Gown',
-    category: 'ဂါဝန်',
-    color: 'ခရမ်း',
-    size: 'Free',
-    price: 45000,
-    stock: 5,
-    keyword: 'gown',
-    locks: [141, 142],
-    description: 'နမူနာ (Demo) ည ဝတ်ဂါဝန်။ အထူးအခမ်းအနားများအတွက်။',
-  },
-  {
-    name: 'စကတ် — Pleated Skirt',
-    category: 'စကတ် & ဘောင်းဘီ',
-    color: 'အနက်',
-    size: 'M',
-    price: 18000,
-    promoPrice: 14500,
-    stock: 9,
-    keyword: 'skirt',
-    locks: [151, 152],
-    description: 'နမူနာ (Demo) အခေါက်လိုက် စကတ်။ ရုံး / ကျောင်း ဝတ်ဆင်ရန်။',
-  },
-  {
-    name: 'ဂျင်းဘောင်းဘီ — Denim Jeans',
-    category: 'စကတ် & ဘောင်းဘီ',
-    color: 'ပြာ',
-    size: '30',
-    price: 26000,
-    stock: 16,
-    keyword: 'jeans',
-    locks: [161, 162],
-    description: 'နမူနာ (Demo) ဂျင်းဘောင်းဘီ။ ခံနိုင်ရည်ရှိပြီး ခေတ်မီသည်။',
-  },
-  {
-    name: 'အနွေးထည် — Knit Sweater',
-    category: 'အနွေးထည်',
-    color: 'အညို',
-    size: 'L',
-    price: 24000,
-    promoPrice: 19000,
-    stock: 11,
-    keyword: 'sweater',
-    locks: [171, 172],
-    description: 'နမူနာ (Demo) ရက်ကန်း အနွေးထည်။ ဆောင်းရာသီအတွက် နွေးထွေးသည်။',
-  },
-  {
-    name: 'ဂျင်းဂျာကင် — Denim Jacket',
-    category: 'အနွေးထည်',
-    color: 'ပြာရင့်',
-    size: 'M',
-    price: 32000,
-    stock: 7,
-    keyword: 'denim,jacket',
-    locks: [181, 182],
-    description: 'နမူနာ (Demo) ဂျင်းဂျာကင်။ ဘယ်အဝတ်နဲ့မဆို လိုက်ဖက်သည်။',
-  },
-  {
-    name: 'ဟူးဒီ — Cozy Hoodie',
-    category: 'အနွေးထည်',
-    color: 'မီးခိုးရင့်',
-    size: 'XL',
-    price: 21000,
-    promoPrice: 16500,
-    stock: 0,
-    keyword: 'hoodie',
-    locks: [191, 192],
-    description: 'နမူနာ (Demo) ဟူးဒီ။ ယခုအခါ ကုန်သွားပြီ (demo out-of-stock)။',
-  },
-  {
-    name: 'ကုတ်အင်္ကျီ — Wool Coat',
-    category: 'အနွေးထည်',
-    color: 'အနက်ညို',
-    size: 'M',
-    price: 52000,
-    stock: 4,
-    keyword: 'coat',
-    locks: [201, 202, 203],
-    description: 'နမူနာ (Demo) သိုးမွှေး ကုတ်အင်္ကျီ။ အေးသောရာသီအတွက်။',
-  },
-  {
-    name: 'လင်နင်ရှပ်အင်္ကျီ — Linen Shirt',
-    category: 'အင်္ကျီ',
-    color: 'ခရင်မ်',
-    size: 'L',
-    price: 20000,
-    promoPrice: 15900,
-    stock: 18,
-    keyword: 'linen,shirt',
-    locks: [211, 212],
-    description: 'နမူနာ (Demo) လင်နင်ရှပ်အင်္ကျီ။ ပူသောရာသီအတွက် ပေါ့ပါးသည်။',
-  },
+  {name:'ရှပ်အင်္ကျီ — Classic White Shirt',category:'အင်္ကျီ',color:'အဖြူ',size:'M',price:22000,promoPrice:17500,stock:14,keyword:'shirt',locks:[101,102],description:'နမူနာ (Demo) ရှပ်အင်္ကျီ။ ရုံးဝတ် / နေ့စဉ်ဝတ် သင့်တော်သည်။\nဤစတိုးသည် သရုပ်ပြ (demo) စတိုးဖြစ်ပြီး အမှန်တကယ် ရောင်းချခြင်း မဟုတ်ပါ။'},
+  {name:'ဘလောက်စ်အင်္ကျီ — Floral Blouse',category:'အင်္ကျီ',color:'ပန်းရောင်',size:'S',price:19500,stock:10,keyword:'blouse',locks:[111,112],description:'နမူနာ (Demo) ပန်းပွင့်ပုံစံ ဘလောက်စ်အင်္ကျီ။ ပေါ့ပါးပြီး လှပသည်။'},
+  {name:'တီရှပ် — Cotton Tee',category:'အင်္ကျီ',color:'မီးခိုး',size:'L',price:12000,promoPrice:8900,stock:25,keyword:'tshirt',locks:[121,122],description:'နမူနာ (Demo) ချည်သားတီရှပ်။ လေဝင်လေထွက်ကောင်းသည်။'},
+  {name:'ဂါဝန် — Summer Dress',category:'ဂါဝန်',color:'ကောင်းကင်ပြာ',size:'M',price:28000,promoPrice:22000,stock:12,keyword:'dress',locks:[131,132,133],description:'နမူနာ (Demo) နွေရာသီ ဂါဝန်။ နေ့လယ်ခင်း ထွက်ဝတ်ရန် သင့်တော်သည်။'},
+  {name:'ည ဝတ်ဂါဝန် — Evening Gown',category:'ဂါဝန်',color:'ခရမ်း',size:'Free',price:45000,stock:5,keyword:'gown',locks:[141,142],description:'နမူနာ (Demo) ည ဝတ်ဂါဝန်။ အထူးအခမ်းအနားများအတွက်။'},
+  {name:'စကတ် — Pleated Skirt',category:'စကတ် & ဘောင်းဘီ',color:'အနက်',size:'M',price:18000,promoPrice:14500,stock:9,keyword:'skirt',locks:[151,152],description:'နမူနာ (Demo) အခေါက်လိုက် စကတ်။ ရုံး / ကျောင်း ဝတ်ဆင်ရန်။'},
+  {name:'ဂျင်းဘောင်းဘီ — Denim Jeans',category:'စကတ် & ဘောင်းဘီ',color:'ပြာ',size:'30',price:26000,stock:16,keyword:'jeans',locks:[161,162],description:'နမူနာ (Demo) ဂျင်းဘောင်းဘီ။ ခံနိုင်ရည်ရှိပြီး ခေတ်မီသည်။'},
+  {name:'အနွေးထည် — Knit Sweater',category:'အနွေးထည်',color:'အညို',size:'L',price:24000,promoPrice:19000,stock:11,keyword:'sweater',locks:[171,172],description:'နမူနာ (Demo) ရက်ကန်း အနွေးထည်။ ဆောင်းရာသီအတွက် နွေးထွေးသည်။'},
+  {name:'ဂျင်းဂျာကင် — Denim Jacket',category:'အနွေးထည်',color:'ပြာရင့်',size:'M',price:32000,stock:7,keyword:'denim,jacket',locks:[181,182],description:'နမူနာ (Demo) ဂျင်းဂျာကင်။ ဘယ်အဝတ်နဲ့မဆို လိုက်ဖက်သည်။'},
+  {name:'ဟူးဒီ — Cozy Hoodie',category:'အနွေးထည်',color:'မီးခိုးရင့်',size:'XL',price:21000,promoPrice:16500,stock:0,keyword:'hoodie',locks:[191,192],description:'နမူနာ (Demo) ဟူးဒီ။ ယခုအခါ ကုန်သွားပြီ (demo out-of-stock)။'},
+  {name:'ကုတ်အင်္ကျီ — Wool Coat',category:'အနွေးထည်',color:'အနက်ညို',size:'M',price:52000,stock:4,keyword:'coat',locks:[201,202,203],description:'နမူနာ (Demo) သိုးမွှေး ကုတ်အင်္ကျီ။ အေးသောရာသီအတွက်။'},
+  {name:'လင်နင်ရှပ်အင်္ကျီ — Linen Shirt',category:'အင်္ကျီ',color:'ခရင်မ်',size:'L',price:20000,promoPrice:15900,stock:18,keyword:'linen,shirt',locks:[211,212],description:'နမူနာ (Demo) လင်နင်ရှပ်အင်္ကျီ။ ပူသောရာသီအတွက် ပေါ့ပါးသည်။'},
 ];
 
-// Build full Product objects (matches the api.ts Product shape 1:1).
+const PRODUCT_PHOTOS: Record<number, string> = {
+  0: '/demo/classic-white-shirt.png',
+  1: '/demo/floral-blouse-pink.png',
+};
+
 export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
-  const images = s.locks.map((_lock, variant) => img(s.name, s.category, variant));
+  const placeholderImages = s.locks.map((_lock, variant) => img(s.name, s.category, variant));
+  const uploadedPhoto = PRODUCT_PHOTOS[i];
+  const images = uploadedPhoto ? [uploadedPhoto, ...placeholderImages.slice(1)] : placeholderImages;
   const isPromotion = s.promoPrice != null;
   const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
   return {
