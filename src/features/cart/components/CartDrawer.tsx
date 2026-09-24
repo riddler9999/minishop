@@ -67,7 +67,7 @@ export default function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="commerce-success-icon grid h-16 w-16 place-items-center rounded-full">
+            <div className="commerce-icon-well grid h-16 w-16 place-items-center rounded-full">
               <ShoppingBag className="h-7 w-7" />
             </div>
             <p className="commerce-muted my">ခြင်း ဗလာဖြစ်နေပါသည်</p>
