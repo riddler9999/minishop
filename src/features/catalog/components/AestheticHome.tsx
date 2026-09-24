@@ -1,4 +1,4 @@
-import {ArrowRight, Search, ShoppingBag} from 'lucide-react';
+import {ArrowRight, Search} from 'lucide-react';
 import type {Product} from '@/domain/product';
 import type {StorefrontTheme, ThemePresetId} from '@/domain/theme';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
