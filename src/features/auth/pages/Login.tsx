@@ -104,7 +104,7 @@ export default function AdminLogin() {
   const isConfirm = mode === 'confirm';
 
   return (
-    <main className="min-h-screen bg-[#fffafb] text-slate-900">
+    <main className="platform-shell min-h-screen bg-[var(--minishop-canvas)] text-[var(--minishop-ink)]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-slate-950">
@@ -113,7 +113,7 @@ export default function AdminLogin() {
           </Link>
 
           <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ff4f8b] font-display text-sm font-bold text-white shadow-sm">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-500 font-display text-sm font-bold text-white shadow-sm">
               {APP_INITIAL}
             </span>
             <span>{APP_NAME}</span>
@@ -122,7 +122,7 @@ export default function AdminLogin() {
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
           <section className="hidden max-w-xl lg:block">
-            <span className="inline-flex rounded-full border border-pink-100 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#e13f78] shadow-sm">
+            <span className="inline-flex rounded-full border border-brand-100 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 shadow-sm">
               Seller admin
             </span>
             <h1 className="mt-6 max-w-lg font-display text-5xl font-bold leading-[1.04] tracking-[-0.04em] text-slate-950">
@@ -134,8 +134,8 @@ export default function AdminLogin() {
 
             <div className="mt-9 grid max-w-lg grid-cols-3 gap-3">
               {['Products', 'Orders', 'Store settings'].map((item) => (
-                <div key={item} className="rounded-2xl border border-pink-100 bg-white p-4 shadow-[0_12px_40px_rgba(236,72,153,0.06)]">
-                  <div className="mb-3 h-2 w-10 rounded-full bg-pink-100" />
+                <div key={item} className="rounded-2xl border border-brand-100 bg-white p-4 shadow-[0_12px_40px_rgba(15,29,49,0.06)]">
+                  <div className="mb-3 h-2 w-10 rounded-full bg-brand-100" />
                   <p className="text-sm font-semibold text-slate-800">{item}</p>
                 </div>
               ))}
@@ -143,13 +143,13 @@ export default function AdminLogin() {
           </section>
 
           <section className="mx-auto w-full max-w-md">
-            <div className="rounded-[28px] border border-pink-100 bg-white p-5 shadow-[0_24px_70px_rgba(236,72,153,0.10)] sm:p-8">
+            <div className="rounded-[28px] border border-brand-100 bg-white p-5 shadow-[0_24px_70px_rgba(15,29,49,0.10)] sm:p-8">
               <div className="mb-7">
-                <p className="text-sm font-semibold text-[#e13f78]">
+                <p className="text-sm font-semibold text-brand-600">
                   {isConfirm ? 'Verify your email' : mode === 'login' ? 'Welcome back' : 'Create seller account'}
                 </p>
                 <h2 className="mt-2 font-display text-3xl font-bold tracking-[-0.03em] text-slate-950">
-                  {isConfirm ? 'Enter verification code' : mode === 'login' ? 'Sign in to MiniShop' : 'Start your MiniShop'}
+                  {isConfirm ? 'Enter verification code' : mode === 'login' ? 'Sign in to MiniShop MM' : 'Start your MiniShop MM'}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {isConfirm
@@ -203,7 +203,7 @@ export default function AdminLogin() {
               <form onSubmit={submit} className="space-y-4">
                 {isConfirm ? (
                   <>
-                    <div className="rounded-2xl border border-pink-100 bg-pink-50/60 p-4">
+                    <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
                       <p className="text-sm leading-6 text-slate-600">
                         Code sent to <span className="font-semibold text-slate-900">{email}</span>
                       </p>
@@ -211,7 +211,7 @@ export default function AdminLogin() {
 
                     <label className="block">
                       <span className="mb-2 block text-sm font-semibold text-slate-800">Verification code</span>
-                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-[#ff4f8b] focus-within:ring-4 focus-within:ring-pink-100">
+                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
                         <KeyRound className="h-4 w-4 text-slate-400" />
                         <input
                           type="text"
@@ -229,7 +229,7 @@ export default function AdminLogin() {
                   <>
                     <label className="block">
                       <span className="mb-2 block text-sm font-semibold text-slate-800">Email</span>
-                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-[#ff4f8b] focus-within:ring-4 focus-within:ring-pink-100">
+                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
                         <Mail className="h-4 w-4 text-slate-400" />
                         <input
                           type="email"
@@ -244,7 +244,7 @@ export default function AdminLogin() {
 
                     <label className="block">
                       <span className="mb-2 block text-sm font-semibold text-slate-800">Password</span>
-                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-[#ff4f8b] focus-within:ring-4 focus-within:ring-pink-100">
+                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
                         <Lock className="h-4 w-4 text-slate-400" />
                         <input
                           type={showPassword ? 'text' : 'password'}
@@ -288,7 +288,7 @@ export default function AdminLogin() {
 
                 <button
                   disabled={busy}
-                  className="mt-2 w-full rounded-2xl bg-[#ff4f8b] px-4 py-3.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(255,79,139,0.22)] transition hover:bg-[#ee3f7d] disabled:cursor-not-allowed disabled:opacity-50">
+                  className="mt-2 w-full rounded-2xl bg-brand-500 px-4 py-3.5 text-sm font-bold text-white shadow-[0_12px_30px_rgba(236,31,98,0.20)] transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
                   {busy
                     ? 'Please wait…'
                     : mode === 'login'
@@ -303,7 +303,7 @@ export default function AdminLogin() {
                     type="button"
                     disabled={busy}
                     onClick={resend}
-                    className="w-full rounded-2xl px-4 py-2 text-center text-sm font-semibold text-[#e13f78] transition hover:bg-pink-50 disabled:opacity-50">
+                    className="w-full rounded-2xl px-4 py-2 text-center text-sm font-semibold text-brand-600 transition hover:bg-brand-50 disabled:opacity-50">
                     Send a new code
                   </button>
                 )}

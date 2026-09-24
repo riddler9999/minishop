@@ -7,11 +7,11 @@
 // @/features/tenancy/shopResolver.ts and the storefront <Layout>); these are the fallback for
 // the root demo shop and the seller-facing admin console.
 
-export const APP_NAME = 'Mini Shop';
-export const APP_TAGLINE = 'Myanmar Online Shop';
+export const APP_NAME = 'MiniShop MM';
+export const APP_TAGLINE = 'One Place to Sell Everywhere.';
 
 // Short initial used by the square logo tiles when no shop logo is available.
-export const APP_INITIAL = 'M';
+export const APP_INITIAL = 'm';
 
 /** First grapheme of a shop name, for the fallback logo tile. ASCII-uppercased
  *  so Latin names look right; Myanmar/other scripts pass through unchanged. */
