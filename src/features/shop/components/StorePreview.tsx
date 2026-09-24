@@ -198,14 +198,13 @@ function CheckoutPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopNam
   return (
     <div className="space-y-2.5 px-3 py-3" style={{backgroundColor: visual.canvas, color: visual.text}}>
       <div>
-        <p className="text-[7px] font-bold uppercase tracking-[0.16em]" style={{color: visual.accent}}>Checkout</p>
-        <p className={id === 'street-bold' ? 'mt-1 text-[16px] font-black uppercase' : 'mt-1 text-[14px] font-bold'}>Order တင်မယ်</p>
+        <p className={id === 'street-bold' ? 'text-[16px] font-black uppercase' : 'text-[14px] font-bold'}>Order တင်မယ်</p>
       </div>
       <div className={compact ? 'grid gap-2' : 'space-y-2'}>
         <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
           <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold"><span className="grid h-4 w-4 place-items-center text-[7px]" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : radius}}>၁</span> ပို့ဆောင်မည့် လိပ်စာ</div>
           <div className="grid grid-cols-2 gap-1.5">
-            {['အမည်', 'ဖုန်းနံပါတ်', 'တိုင်း / ပြည်နယ်', 'မြို့နယ်'].map((label) => <div key={label} className="px-2 py-1.5 text-[7px]" style={{backgroundColor: id === 'dark-modern' ? '#101014' : visual.canvas, border: `1px solid ${visual.border}`, borderRadius: hard ? 0 : Math.max(3, radius - 3), color: visual.muted}}>{label}</div>)}
+            {['လက်ခံမည့်သူအမည်', 'ဖုန်းနံပါတ်', 'လိပ်စာ', 'တိုင်း / ပြည်နယ်', 'မြို့နယ်'].map((label) => <div key={label} className="px-2 py-1.5 text-[7px]" style={{backgroundColor: id === 'dark-modern' ? '#101014' : visual.canvas, border: `1px solid ${visual.border}`, borderRadius: hard ? 0 : Math.max(3, radius - 3), color: visual.muted}}>{label}</div>)}
           </div>
         </div>
         <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
