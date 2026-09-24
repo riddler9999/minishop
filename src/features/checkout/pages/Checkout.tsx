@@ -145,16 +145,16 @@ export default function Checkout() {
 
   const label = 'mb-1.5 block text-sm font-semibold text-slate-950';
   const input =
-    'w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#e11d48]';
+    'w-full min-h-12 rounded-2xl border border-[#f0dce4] bg-[#fffdfd] px-4 py-3 text-sm outline-none transition focus:border-[#e11d48] focus:ring-2 focus:ring-[#e11d48]/10';
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="mb-6 font-display text-2xl font-bold text-slate-950">Order တင်မယ်</h1>
+    <div className="mx-auto max-w-6xl px-4 pb-12 pt-5 sm:px-6 sm:pt-8">
+      <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e11d48]">Checkout</p><h1 className="mt-1 font-display text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">Order တင်မယ်</h1><p className="my mt-1 text-sm text-slate-500">ပို့ဆောင်ရန်အချက်အလက်နဲ့ ငွေပေးချေမှုကို အောက်မှာဖြည့်ပါ။</p></div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] lg:gap-8">
+        <div className="space-y-5">
           {/* 1. Delivery info */}
-          <section className="rounded-2xl border border-rose-100 bg-white p-5">
+          <section className="rounded-[24px] border border-[#f3e5ea] bg-white p-5 shadow-[0_14px_38px_rgba(88,52,64,0.07)]">
             <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-950">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e11d48] text-xs text-white">၁</span>
               ပို့ဆောင်မည့် လိပ်စာ
@@ -219,7 +219,7 @@ export default function Checkout() {
           </section>
 
           {/* 2. Payment */}
-          <section className="rounded-2xl border border-rose-100 bg-white p-5">
+          <section className="rounded-[24px] border border-[#f3e5ea] bg-white p-5 shadow-[0_14px_38px_rgba(88,52,64,0.07)]">
             <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-950">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e11d48] text-xs text-white">၂</span>
               ငွေပေးချေမှု
@@ -231,14 +231,14 @@ export default function Checkout() {
                 <button
                   key={m.key}
                   onClick={() => setMethod(m.key)}
-                  className={cx('rounded-xl border-2 p-3 text-left transition', method === m.key ? 'border-[#e11d48] bg-rose-50' : 'border-rose-100 bg-white')}>
+                  className={cx('min-h-20 rounded-2xl border-2 p-3 text-left transition', method === m.key ? 'border-[#e11d48] bg-[#fff0f6] shadow-sm' : 'border-[#f0e3e8] bg-white hover:border-rose-200')}>
                   <span className="my block text-sm font-semibold text-slate-950">{m.label}</span>
                   <span className="my text-xs text-slate-500">{m.sub}</span>
                 </button>
               ))}
             </div>
 
-            <div className="my mt-4 rounded-xl border border-dashed border-rose-200 bg-rose-50 px-4 py-3">
+            <div className="my mt-4 rounded-2xl border border-dashed border-rose-200 bg-[#fff5f8] px-4 py-3">
               <span className="text-xs text-slate-500">{method === 'cod' ? 'အိမ်ရောက်မှ ပေးရမည့် ငွေ' : 'အခု လွှဲရမည့် ငွေ'}</span>
               <div className="font-display text-2xl font-bold text-[#e11d48]">{fee != null ? ks(grandTotal) : '—'}</div>
             </div>
@@ -247,7 +247,7 @@ export default function Checkout() {
               <>
                 <div className="mt-3 space-y-2">
                   {providerAccounts.map((a) => (
-                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-xl border border-rose-100 bg-rose-50/40 px-4 py-3">
+                    <div key={a.phone + a.accountName} className="flex items-center justify-between gap-2 rounded-2xl border border-rose-100 bg-[#fffafb] px-4 py-3">
                       <div className="min-w-0">
                         <p className="my truncate text-sm font-semibold text-slate-950">{a.accountName}</p>
                         <p className="font-display text-base font-bold tracking-wide text-[#e11d48]">{a.phone}</p>
@@ -284,7 +284,7 @@ export default function Checkout() {
 
         {/* Summary rail */}
         <div className="h-fit space-y-4 lg:sticky lg:top-20">
-          <div className="rounded-2xl border border-rose-100 bg-white p-5">
+          <div className="rounded-[24px] border border-[#f3e5ea] bg-white p-5 shadow-[0_14px_38px_rgba(88,52,64,0.07)]">
             <h2 className="font-display text-lg font-bold text-slate-950">အော်ဒါ အကျဉ်း</h2>
             <div className="my mt-3 max-h-56 space-y-2 overflow-y-auto">
               {items.map((it) => (
@@ -312,7 +312,7 @@ export default function Checkout() {
           <button
             disabled={!ready || submitting}
             onClick={submit}
-            className="w-full rounded-full bg-[#e11d48] px-6 py-4 font-bold text-white shadow-lg transition hover:bg-[#be123c] disabled:cursor-not-allowed disabled:opacity-50">
+            className="w-full min-h-14 rounded-2xl bg-[#e11d48] px-6 py-4 font-bold text-white shadow-[0_14px_32px_rgba(225,29,72,0.24)] transition hover:bg-[#be123c] disabled:cursor-not-allowed disabled:opacity-50">
             {submitting ? (
               <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> တင်နေသည်…</span>
             ) : (
