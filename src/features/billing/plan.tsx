@@ -39,19 +39,22 @@ export interface PlanFeatures {
   paymentVerification: boolean;
   /** Analytics/KPI depth on the dashboard (low stock, revenue breakdown). */
   advancedDashboard: boolean;
-  /** Shop logo + extended branding in settings + Store Design. */
+  /** Storefront theme editor (Store Design). Available on every plan. */
+  storeDesign: boolean;
+  /** Shop logo + extended branding in settings. */
   branding: boolean;
   /** Integration-ready hooks surface (webhooks/exports placeholder). */
   integrations: boolean;
 }
 
-// Free trial and Starter share the same (core) feature set; they differ only in
-// order quota and Extra-Orders eligibility (see domain/entitlement.ts), never in
-// which UI capabilities render.
+// Free trial and Starter share the same core feature set. Store Design is core
+// on every plan; logo/extended branding remains Business-only. They still differ
+// in order quota and Extra-Orders eligibility (see domain/entitlement.ts).
 const CORE: PlanFeatures = {
   promotions: false,
   paymentVerification: true,
   advancedDashboard: false,
+  storeDesign: true,
   branding: false,
   integrations: false,
 };
@@ -60,6 +63,7 @@ const BUSINESS: PlanFeatures = {
   promotions: true,
   paymentVerification: true,
   advancedDashboard: true,
+  storeDesign: true,
   branding: true,
   integrations: true,
 };
