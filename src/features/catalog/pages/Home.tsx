@@ -174,6 +174,93 @@ function Benefits() {
   );
 }
 
+
+function DemoReferenceHome({products, categories, loading, error}: {products: Product[]; categories: string[]; loading: boolean; error: string}) {
+  const nav = useShopNavigate();
+  const [query, setQuery] = useState('');
+  const heroProduct = products[0] ?? null;
+  const visibleCategories = categories.slice(0, 4);
+
+  return (
+    <div className="min-h-screen bg-[#eee6ff] px-3 pb-10 pt-3 sm:px-5 md:px-8 md:pt-6">
+      <section className="mx-auto max-w-7xl">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            nav(`/products${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`);
+          }}
+          className="flex items-center gap-3">
+          <div className="flex min-h-12 flex-1 items-center gap-3 rounded-full bg-white/90 px-4 shadow-[0_12px_34px_rgba(72,35,122,0.10)] backdrop-blur">
+            <Search className="h-5 w-5 text-[#2b1a47]" strokeWidth={2} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label="ပစ္စည်းရှာရန်"
+              placeholder="Search"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[#2b1a47] outline-none placeholder:text-[#6f6285]"
+            />
+          </div>
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#4c1d95] text-sm font-black text-white shadow-[0_10px_28px_rgba(76,29,149,0.30)]">M</div>
+        </form>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[0.82fr_1.18fr]">
+          <div className="relative min-h-[390px] overflow-hidden rounded-[32px] bg-[radial-gradient(circle_at_78%_8%,#7c3aed_0%,#5b21b6_35%,#2e1065_100%)] p-6 text-white shadow-[0_24px_60px_rgba(59,21,105,0.22)] sm:min-h-[430px] md:p-8">
+            <div className="relative z-20 inline-flex rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-[#3b176c] shadow-sm">New arrivals ✦</div>
+            {heroProduct?.image && (
+              <img
+                src={heroProduct.image}
+                alt={heroProduct.name}
+                className="absolute right-[-10%] top-[9%] z-10 h-[58%] w-[72%] rotate-[-8deg] object-contain drop-shadow-[0_30px_36px_rgba(0,0,0,0.22)]"
+              />
+            )}
+            <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#2e1065] via-[#2e1065]/88 to-transparent px-6 pb-7 pt-28 md:px-8">
+              <p className="text-xs font-semibold tracking-[0.22em] text-white/70">• MiniShop •</p>
+              <h1 className="mt-2 max-w-[280px] text-[42px] font-black leading-[0.96] tracking-[-0.055em] sm:text-[52px]">Feel every style.</h1>
+              <p className="mt-3 text-sm leading-6 text-white/72">New looks. Soft mood. Easy shopping.</p>
+              <ShopLink to="/products" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-extrabold text-[#5b21b6] shadow-lg transition hover:-translate-y-0.5">
+                Shop now <ArrowRight className="h-4 w-4" />
+              </ShopLink>
+            </div>
+          </div>
+
+          <div className="rounded-[32px] bg-[#f7f1ff] p-4 shadow-[0_24px_60px_rgba(72,35,122,0.10)] sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.20em] text-[#725ca3]">Featured drop</p>
+                <h2 className="mt-1 text-4xl font-black leading-[0.98] tracking-[-0.055em] text-[#1f1436] sm:text-5xl">New<br />arrivals</h2>
+              </div>
+              <button type="button" aria-label="Filter products" className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#3d2d59] shadow-sm">
+                <span className="text-xl leading-none">≡</span>
+              </button>
+            </div>
+
+            <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-1">
+              <ShopLink to="/products" className="shrink-0 rounded-full bg-[#4c1d95] px-5 py-2.5 text-xs font-bold text-white">All</ShopLink>
+              {visibleCategories.map((category) => (
+                <ShopLink key={category} to={`/products?category=${encodeURIComponent(category)}`} className="shrink-0 rounded-full border border-[#bba8df] bg-[#f8f4ff] px-5 py-2.5 text-xs font-bold text-[#46325f]">
+                  {category}
+                </ShopLink>
+              ))}
+            </div>
+
+            {error && <div className="mt-5 rounded-2xl border border-[#dacaf5] bg-white/70 p-4 text-sm text-[#4d3a68]">{error}</div>}
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+              {loading
+                ? Array.from({length: 6}).map((_, index) => <ProductCardSkeleton key={index} compact />)
+                : products.slice(0, 6).map((product) => <ProductCard key={product.id} product={product} variant="demo-purple" />)}
+            </div>
+
+            <ShopLink to="/products" className="mx-auto mt-5 flex min-h-12 w-fit items-center gap-3 rounded-full bg-[#351263] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(53,18,99,0.24)]">
+              <ShoppingBag className="h-4 w-4" />
+              Browse all
+            </ShopLink>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -203,6 +290,10 @@ export default function Home() {
   }, [slug]);
 
   const visibleProducts = products ?? [];
+  if (!slug) {
+    return <DemoReferenceHome products={visibleProducts} categories={categories} loading={products === null && !error} error={error} />;
+  }
+
   return (
     <div className="bg-white">
       <SearchStrip />
