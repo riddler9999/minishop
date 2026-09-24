@@ -1,14 +1,24 @@
 # MiniShop — Fashion Demo Store
 
-Status: isolated demo experience. It does not replace the tenant storefront.
+Status: isolated full buyer-store demo. It does not replace or restyle the production storefront.
 
-## Route
+## Route inventory
 - `/fashion-demo` — Home
+- `/fashion-demo/products` — Product listing / category / search
 - `/fashion-demo/products/:id` — Product Detail
 - `/fashion-demo/cart` — Cart
 - `/fashion-demo/checkout` — Checkout
+- `/fashion-demo/order/:orderId` — Order Success
+- `/fashion-demo/orders` — Order Tracking / Lookup
+- `/fashion-demo/shipping-policy` — Shipping Policy
+- `/fashion-demo/refund-policy` — Refund Policy
+- `/fashion-demo/privacy-policy` — Privacy Policy
+- `/fashion-demo/terms-of-service` — Terms of Service
 
-The demo clears the active shop slug and uses the existing storefront data source and cart/checkout business logic. Production routes under `/demo/*` and `/s/:slug/*` are unchanged.
+The Fashion Demo clears the active tenant slug and uses the existing storefront data APIs, cart state, server-side shipping contract, order placement API, idempotency contract and secure order-lookup contract. Production routes under `/demo/*` and `/s/:slug/*` remain unchanged.
+
+## Store experience
+The demo includes a dedicated fashion header, mobile bottom navigation, desktop footer, mobile menu, search, horizontal category filters, responsive product listing, product detail, cart, isolated checkout, confirmation, order tracking, policy screens, loading states, empty states and error states.
 
 ## Visual system
 - Canvas: `#fff9fb`
@@ -19,22 +29,22 @@ The demo clears the active shop slug and uses the existing storefront data sourc
 - Ink: `#18131a`
 - Muted: `#765b66`
 - Spacing: 4 / 8 / 12 / 16 / 24 / 32
-- Radius: 11 / 14 / 18 / 24 / 26
+- Radius: 11 / 14 / 18 / 20 / 24 / 26
 - Product cards: image-first, 2-column at 375–414px, subtle rose shadow
 - Secondary CTA: outlined pink
 - Primary CTA: solid pink
-- Touch target baseline: 44px where controls are primary/navigation controls
+- Primary navigation/touch controls: 44px minimum where practical
 
 ## Responsive behavior
-The home grid starts at 2 columns, expands to 3 at small/tablet widths and 4 at large desktop widths. Product detail moves to a two-column layout at medium widths. Checkout retains the production checkout behavior and responsive form layout while inheriting the Fashion Demo shell.
+Home and product listing start at 2 columns on 375–414px, expand to 3 columns at small/tablet widths and 4 at large desktop widths. Product Detail becomes two columns at medium widths. Checkout becomes a content + sticky-summary layout at large widths. Mobile uses a persistent five-item navigation bar; desktop uses a restrained footer/navigation expansion.
 
 ## Figma
 File: **MiniShop — Fashion Demo Store**
 
-High-fidelity frames:
-1. Home — 390px
-2. Product Detail — 390px
-3. Cart — 390px
-4. Checkout — 390px
+Created high-fidelity 390px frames for:
+1. Home
+2. Product Detail
+3. Cart
+4. Checkout
 
-The Figma file also contains a compact Fashion Demo design-system frame with primary/outline button components and category chip component.
+The file also contains a compact Fashion Demo design-system frame with primary/outline button components and a category-chip component. Home received a screenshot-based visual refinement pass. Further Figma read/screenshot QA is currently limited by the connected Starter-plan MCP quota, so no additional Figma screenshot claim should be made until that quota is available again.
