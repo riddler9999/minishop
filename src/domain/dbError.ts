@@ -50,6 +50,7 @@ export type DbErrorCode =
   | 'duplicate_order_limit'
   | 'ninjavan_origin_missing'
   | 'ninjavan_route_unavailable'
+  | 'ninjavan_rates_missing'
   | 'invalid_cart_item'
   | 'invalid_quantity'
   | 'product_unavailable'
@@ -98,6 +99,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   duplicate_order_limit: 'ဒီ Order ကို ထပ်တင်ထားပြီးဖြစ်နိုင်ပါတယ်။',
   ninjavan_origin_missing: 'ဆိုင်၏ Ninja Van ပို့မည့်နေရာ မသတ်မှတ်ရသေးပါ။',
   ninjavan_route_unavailable: 'ဒီနေရာအတွက် Ninja Van ပို့ခ မရရှိသေးပါ — အခြားပို့ဆောင်မှုကို ရွေးပါ။',
+  ninjavan_rates_missing: 'Ninja Van ပို့ခဒေတာ မရရှိသေးပါ — Platform Admin ကိုဆက်သွယ်ပါ။',
   invalid_cart_item: 'ခြင်းထဲက ပစ္စည်း အချက်အလက် မမှန်ပါ။',
   invalid_quantity: 'ပစ္စည်း အရေအတွက် မမှန်ပါ။',
   product_unavailable: 'ပစ္စည်းအချို့ မရရှိတော့ပါ — refresh လုပ်ပြီး ပြန်စမ်းကြည့်ပါ။',
