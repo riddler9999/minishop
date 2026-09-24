@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Grid2X2, Home, Menu, PackageSearch, Search, ShoppingBag, X} from 'lucide-react';
+import {Grid2X2, Home, Menu, PackageSearch, Search, ShoppingBag, UserRound, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
@@ -98,23 +98,25 @@ export default function Layout({children, drawerFooterAction}: {children: React.
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : 'bg-white'}`} style={fontPairingStyle(theme.fontPairing)}>
       <AnnouncementBar />
-      <header className={`sticky top-0 z-40 backdrop-blur-xl ${isDemo ? 'border-b border-white/35 bg-[#eee6ff]/92' : 'border-b border-rose-100/70 bg-white/95'}`}>
-        <div className="mx-auto flex h-[78px] w-full max-w-[1440px] items-center gap-3 px-4 sm:h-[88px] sm:px-6 lg:px-8">
-          <Brand />
-          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
-            <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className={`grid h-11 w-11 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 ${isDemo ? 'text-[#2f1b4e] hover:bg-white/70 focus-visible:ring-[#6d28d9]' : 'text-slate-900 hover:bg-[#fff0f5] focus-visible:ring-[#e11d48]'}`}>
-              <Search className="h-[22px] w-[22px]" strokeWidth={1.8} />
-            </ShopLink>
-            <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className={`relative grid h-11 w-11 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 ${isDemo ? 'text-[#2f1b4e] hover:bg-white/70 focus-visible:ring-[#6d28d9]' : 'text-slate-900 hover:bg-[#fff0f5] focus-visible:ring-[#e11d48]'}`}>
-              <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.8} />
-              {count > 0 && <span className="absolute right-0 top-0 grid h-[19px] min-w-[19px] place-items-center rounded-full bg-[#ff3b72] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
-            </button>
-            <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
-              <Menu className="h-[22px] w-[22px]" strokeWidth={1.8} />
-            </button>
+      {!isDemo && (
+        <header className="sticky top-0 z-40 border-b border-rose-100/70 bg-white/95 backdrop-blur-xl">
+          <div className="mx-auto flex h-[78px] w-full max-w-[1440px] items-center gap-3 px-4 sm:h-[88px] sm:px-6 lg:px-8">
+            <Brand />
+            <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+              <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+                <Search className="h-[22px] w-[22px]" strokeWidth={1.8} />
+              </ShopLink>
+              <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className="relative grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+                <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                {count > 0 && <span className="absolute right-0 top-0 grid h-[19px] min-w-[19px] place-items-center rounded-full bg-[#ff3b72] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
+              </button>
+              <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+                <Menu className="h-[22px] w-[22px]" strokeWidth={1.8} />
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main className="flex-1">{children}</main>
 
@@ -131,24 +133,47 @@ export default function Layout({children, drawerFooterAction}: {children: React.
         </div>
       </footer>
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden ${isDemo ? 'border-t border-white/60 bg-[#fbf8ff]/96 shadow-[0_-14px_36px_rgba(76,29,149,0.12)]' : 'border-t border-rose-100 bg-white/98 shadow-[0_-10px_30px_rgba(88,52,64,0.08)]'}`} aria-label="Mobile navigation">
-        <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? (isDemo ? 'text-[#6d28d9]' : 'text-[#e11d48]') : 'text-slate-500'}`}>
-          <Home className="h-5 w-5" /><span>Home</span>
-        </ShopLink>
-        <ShopLink to="/products" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/products') ? (isDemo ? 'text-[#6d28d9]' : 'text-[#e11d48]') : 'text-slate-500'}`}>
-          <Grid2X2 className="h-5 w-5" /><span>Categories</span>
-        </ShopLink>
-        <button type="button" onClick={openDrawer} className="relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
-          <ShoppingBag className="h-5 w-5" /><span>Cart</span>
-          {count > 0 && <span className="absolute right-[24%] top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#ff3b72] px-1 text-[9px] font-bold text-white">{count}</span>}
-        </button>
-        <ShopLink to="/orders" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/orders') ? (isDemo ? 'text-[#6d28d9]' : 'text-[#e11d48]') : 'text-slate-500'}`}>
-          <PackageSearch className="h-5 w-5" /><span>Orders</span>
-        </ShopLink>
-        <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
-          <Menu className="h-5 w-5" /><span>Menu</span>
-        </button>
-      </nav>
+      {isDemo ? (
+        <nav className="fixed inset-x-4 bottom-3 z-40 mx-auto grid h-[70px] max-w-[390px] grid-cols-4 rounded-[26px] border border-white/70 bg-[#fbf8ff]/96 px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-2 shadow-[0_18px_48px_rgba(76,29,149,0.18)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+          <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? 'text-[#6d28d9]' : 'text-[#6f6280]'}`}>
+            <span className={`grid h-8 w-8 place-items-center rounded-full ${active('/') ? 'bg-[#efe5ff]' : ''}`}><Home className="h-[19px] w-[19px]" strokeWidth={2.1} /></span>
+            <span>Home</span>
+          </ShopLink>
+          <ShopLink to="/products" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/products') ? 'text-[#6d28d9]' : 'text-[#6f6280]'}`}>
+            <span className={`grid h-8 w-8 place-items-center rounded-full ${active('/products') ? 'bg-[#efe5ff]' : ''}`}><Grid2X2 className="h-[19px] w-[19px]" strokeWidth={2.1} /></span>
+            <span>Category</span>
+          </ShopLink>
+          <button type="button" onClick={openDrawer} className="relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-[#6f6280]">
+            <span className="relative grid h-8 w-8 place-items-center rounded-full"><ShoppingBag className="h-[20px] w-[20px]" strokeWidth={2.1} />
+              {count > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#6d28d9] px-1 text-[8px] font-bold text-white ring-2 ring-[#fbf8ff]">{count}</span>}
+            </span>
+            <span>Cart</span>
+          </button>
+          <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-[#6f6280]">
+            <span className="grid h-8 w-8 place-items-center rounded-full"><UserRound className="h-[20px] w-[20px]" strokeWidth={2.1} /></span>
+            <span>Profile</span>
+          </button>
+        </nav>
+      ) : (
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 border-t border-rose-100 bg-white/98 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(88,52,64,0.08)] backdrop-blur md:hidden" aria-label="Mobile navigation">
+          <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+            <Home className="h-5 w-5" /><span>Home</span>
+          </ShopLink>
+          <ShopLink to="/products" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/products') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+            <Grid2X2 className="h-5 w-5" /><span>Categories</span>
+          </ShopLink>
+          <button type="button" onClick={openDrawer} className="relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
+            <ShoppingBag className="h-5 w-5" /><span>Cart</span>
+            {count > 0 && <span className="absolute right-[24%] top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#ff3b72] px-1 text-[9px] font-bold text-white">{count}</span>}
+          </button>
+          <ShopLink to="/orders" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/orders') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+            <PackageSearch className="h-5 w-5" /><span>Orders</span>
+          </ShopLink>
+          <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
+            <Menu className="h-5 w-5" /><span>Menu</span>
+          </button>
+        </nav>
+      )}
 
       <CartDrawer />
 
