@@ -6,25 +6,7 @@ import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
-
-type PayMethod = 'cod' | 'kpay' | 'wave';
-
-// A v4-ish UUID for the order idempotency key. Uses crypto.randomUUID when the
-// (in-app WebView) runtime provides it, with a safe fallback otherwise.
-function newIdempotencyKey(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
-    const r = (Math.random() * 16) | 0;
-    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
-
-const METHODS: {key: PayMethod; label: string; sub: string}[] = [
-  {key: 'cod', label: 'Cash on Delivery', sub: 'အိမ်ရောက် ငွေချေ'},
-  {key: 'kpay', label: 'KBZPay', sub: 'ငွေကြိုရှင်း'},
-  {key: 'wave', label: 'WavePay', sub: 'ငွေကြိုရှင်း'},
-];
+import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, resolveShippingFee, type PayMethod} from '@/features/checkout/checkoutLogic';
 
 export default function Checkout() {
   const {items, subtotal, clear} = useCart();
@@ -79,22 +61,15 @@ export default function Checkout() {
   }, [slug, live, shipReload]);
 
   const townships = useMemo(() => townshipsOf(region), [region]);
-  const fee = useMemo(() => {
-    if (!region || !township) return null;
-    if (live) {
-      if (!shipCfg) return null; // still loading the shop's zones
-      const z = shipCfg.zones.find((x) => x.region === region && x.township === township);
-      return z ? z.fee : shipCfg.defaultFee;
-    }
-    return shippingFee(region, township) ?? 0;
-  }, [region, township, live, shipCfg]);
+  const demoFee = useMemo(() => shippingFee(region, township), [region, township]);
+  const fee = useMemo(
+    () => resolveShippingFee({region, township, live, shippingConfig: shipCfg, demoFee}),
+    [region, township, live, shipCfg, demoFee],
+  );
   const grandTotal = subtotal + (fee ?? 0);
-  const isOnline = method === 'kpay' || method === 'wave';
-  const providerAccounts = accounts.filter((a) => a.provider === method);
-
-  const refTailValid = !isOnline || refTail.length === 5;
-  const ready =
-    name.trim() && phone.trim().length >= 6 && street.trim() && region && township && fee != null && items.length > 0 && refTailValid;
+  const online = isOnlinePayment(method);
+  const providerAccounts = paymentAccounts(accounts, method);
+  const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
 
   const copy = async (text: string, key: string) => {
     try {
@@ -120,7 +95,7 @@ export default function Checkout() {
         items: items.map((i) => ({id: i.id, qty: i.qty})),
         paymentMethod: method,
         shippingFee: fee ?? 0,
-        paymentRefTail: isOnline ? refTail.trim() : undefined,
+        paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
       idempotencyKey.current = '';
@@ -227,7 +202,7 @@ export default function Checkout() {
 
             <p className="my mb-2 text-sm font-semibold text-slate-950">ငွေပေးချေမှုနည်းလမ်း ရွေးပါ</p>
             <div className="grid gap-3 sm:grid-cols-3">
-              {METHODS.map((m) => (
+              {PAYMENT_METHODS.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setMethod(m.key)}

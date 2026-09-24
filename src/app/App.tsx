@@ -13,6 +13,7 @@ import AdminShipping from '@/features/shipping/pages/AdminShipping';
 import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
 import Landing from '@/features/landing/pages/Landing';
+import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
 import AdminConsole from './routes/AdminConsole';
 import RequireAdmin from './routes/RequireAdmin';
 import ShopRoute, {RootStorefront} from './routes/ShopRoute';
@@ -23,6 +24,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
+        <Route path="/fashion-demo/*" element={<FashionDemo />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/admin/subscribe" element={<Subscribe />} />
