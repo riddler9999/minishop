@@ -5,6 +5,7 @@ import type {Product} from '@/domain/product';
 import type {StorefrontTheme} from '@/domain/theme';
 import {getCachedShopInfo, getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
+import AestheticHome from '@/features/catalog/components/AestheticHome';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
 
@@ -290,13 +291,12 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-white">
-      <SearchStrip />
-      {theme.home.heroEnabled && <Hero product={visibleProducts[0] ?? null} theme={theme} />}
-      {theme.home.categoriesEnabled && <CategoryRail categories={categories} accent={theme.accentColor} />}
-      <ProductSection products={visibleProducts} loading={products === null && !error} error={error} theme={theme} />
-      <LifestyleBanner />
-      <Benefits />
-    </div>
+    <AestheticHome
+      products={visibleProducts}
+      categories={categories}
+      loading={products === null && !error}
+      error={error}
+      theme={theme}
+    />
   );
 }
