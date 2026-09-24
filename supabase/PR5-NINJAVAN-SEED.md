@@ -17,4 +17,4 @@ Safety properties:
 Source limitation:
 The route values are the existing repository dataset labelled `Supplied Ninja Van Myanmar coverage chart`. This PR does not independently re-verify that external source.
 
-Production is not changed by this PR.
+Production application completed on 2026-09-25. The approved 11-route Yangon matrix was inserted/upserted and post-verified with 11 active rows.
