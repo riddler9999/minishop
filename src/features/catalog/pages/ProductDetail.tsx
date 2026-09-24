@@ -22,6 +22,7 @@ export default function ProductDetail() {
   const slug = useShopSlugParam();
   const {add} = useCart();
   const theme = getStorefrontTheme();
+  const isDemo = !slug;
   const [product, setProduct] = useState<Product | null>(null);
   const [err, setErr] = useState('');
   const [active, setActive] = useState(0);
@@ -52,20 +53,20 @@ export default function ProductDetail() {
   const buyNow = () => {add(product, qty); shopNav('/checkout');};
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
-      <button onClick={() => nav(-1)} className="mb-4 inline-flex min-h-10 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-slate-500 transition hover:text-[#e11d48]"><ArrowLeft className="h-4 w-4" /> နောက်သို့</button>
+    <div className={`mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 ${isDemo ? 'min-h-screen bg-[#eee6ff]' : ''}`}>
+      <button onClick={() => nav(-1)} className={`mb-4 inline-flex min-h-10 items-center gap-1.5 rounded-full px-1 text-sm font-semibold transition ${isDemo ? 'text-[#59466f] hover:text-[#6d28d9]' : 'text-slate-500 hover:text-[#e11d48]'}`}><ArrowLeft className="h-4 w-4" /> နောက်သို့</button>
       <div className="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:gap-10">
         <div>
-          <div className="aspect-[4/4.7] overflow-hidden rounded-[28px] bg-[#f7f4f5] shadow-[0_18px_50px_rgba(88,52,64,0.10)] sm:aspect-4/5">
+          <div className={`aspect-[4/4.7] overflow-hidden sm:aspect-4/5 ${isDemo ? 'rounded-[34px] bg-[#cdb7f7] shadow-[0_24px_60px_rgba(76,29,149,0.20)]' : 'rounded-[28px] bg-[#f7f4f5] shadow-[0_18px_50px_rgba(88,52,64,0.10)]'}`}>
             {product.images[active] ? <img src={product.images[active]} alt={product.name} className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-ink-soft"><ImageOff className="h-10 w-10" /></div>}
           </div>
           {product.images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{product.images.map((im, i) => <button key={i} onClick={() => setActive(i)} className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#faf8f9] ${i === active ? 'border-[#e11d48]' : 'border-transparent'}`}><img src={im} alt="" className="h-full w-full object-cover" /></button>)}</div>}
         </div>
 
         <div className="md:pt-2">
-          {product.category && <p className="inline-flex rounded-full bg-[#fff0f6] px-3 py-1 text-xs font-semibold text-[#be123c]">{product.category}</p>}
-          <h1 className="my mt-3 font-display text-2xl font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-4xl">{product.name}</h1>
-          <div className="mt-3 flex items-center gap-3 rounded-2xl bg-[#faf8f9] px-4 py-3"><span className="font-sans text-xl font-bold text-[#e11d48] sm:text-2xl">{ks(price)}</span>{hasPromo && <span className="text-sm text-ink-soft line-through sm:text-base">{ks(product.price)}</span>}</div>
+          {product.category && <p className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${isDemo ? 'bg-white/70 text-[#5b21b6]' : 'bg-[#fff0f6] text-[#be123c]'}`}>{product.category}</p>}
+          <h1 className={`my mt-3 font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${isDemo ? 'text-[#21133f]' : 'text-slate-950'}`}>{product.name}</h1>
+          <div className={`mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 ${isDemo ? 'bg-white/70 shadow-[0_10px_28px_rgba(76,29,149,0.08)]' : 'bg-[#faf8f9]'}`}><span className={`font-sans text-xl font-bold sm:text-2xl ${isDemo ? 'text-[#3b176c]' : 'text-[#e11d48]'}`}>{ks(price)}</span>{hasPromo && <span className="text-sm text-ink-soft line-through sm:text-base">{ks(product.price)}</span>}</div>
 
           <div className="my mt-5 flex flex-wrap items-center gap-3 text-sm">
             {product.size && <span className="rounded-xl bg-[#faf8f9] px-3 py-2">Size — {product.size}</span>}
@@ -76,8 +77,8 @@ export default function ProductDetail() {
           <div className="mt-7 flex items-center"><div className="flex items-center rounded-xl border border-rose-100 bg-white shadow-sm"><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Plus className="h-4 w-4" /></button></div></div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-[#e11d48] bg-white px-6 py-3 font-semibold text-[#e11d48] transition hover:bg-[#fff0f6] disabled:cursor-not-allowed disabled:opacity-50">{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
-            <button disabled={!product.inStock} onClick={buyNow} className="min-h-12 flex-1 rounded-2xl bg-[#e11d48] px-6 py-3 font-semibold text-white shadow-[0_12px_30px_rgba(225,29,72,0.22)] transition hover:bg-[#be123c] disabled:cursor-not-allowed disabled:opacity-50">{theme.product.buyNowLabel}</button>
+            <button disabled={!product.inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${isDemo ? 'border border-[#6d28d9] text-[#6d28d9] hover:bg-[#f5efff]' : 'border border-[#e11d48] text-[#e11d48] hover:bg-[#fff0f6]'}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
+            <button disabled={!product.inStock} onClick={buyNow} className={`min-h-12 flex-1 rounded-2xl px-6 py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${isDemo ? 'bg-[#6d28d9] shadow-[0_12px_30px_rgba(109,40,217,0.30)] hover:bg-[#5b21b6]' : 'bg-[#e11d48] shadow-[0_12px_30px_rgba(225,29,72,0.22)] hover:bg-[#be123c]'}`}>{theme.product.buyNowLabel}</button>
           </div>
         </div>
       </div>
