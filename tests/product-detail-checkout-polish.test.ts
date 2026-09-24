@@ -7,12 +7,13 @@ const checkoutPath = new URL('../src/features/checkout/pages/Checkout.tsx', impo
 const cardPath = new URL('../src/features/catalog/components/ProductCard.tsx', import.meta.url);
 const fixturesPath = new URL('../src/data/demo/fixtures.ts', import.meta.url);
 const previewPath = new URL('../src/features/shop/components/StorePreview.tsx', import.meta.url);
+const merchandisingPath = new URL('../src/features/demo/merchandising.ts', import.meta.url);
 
 test('demo best selling is explicitly curated instead of inferred from promotions', async () => {
-  const fixtures = await readFile(fixturesPath, 'utf8');
+  const merchandising = await readFile(merchandisingPath, 'utf8');
 
-  assert.match(fixtures, /export const DEMO_BEST_SELLING_IDS/);
-  assert.match(fixtures, /demo-\d+/);
+  assert.match(merchandising, /export const DEMO_BEST_SELLING_IDS/);
+  assert.match(merchandising, /demo-\d+/);
 });
 
 test('product detail shows full gallery with arrows and requested content hierarchy', async () => {
