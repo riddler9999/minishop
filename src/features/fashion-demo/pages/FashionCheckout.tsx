@@ -84,7 +84,9 @@ export default function FashionCheckout() {
       await navigator.clipboard.writeText(text);
       setCopied(key);
       setTimeout(() => setCopied(''), 1500);
-    } catch {}
+    } catch {
+      // Clipboard access can be blocked inside embedded WebViews.
+    }
   };
 
   const submit = async () => {
