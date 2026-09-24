@@ -28,5 +28,6 @@ describe('Final pricing payment activation contract', () => {
     assert.match(paymentDoc, /Business: 79,000 Ks/);
     assert.doesNotMatch(paymentDoc, /Starter: 30,000 Ks/);
     assert.doesNotMatch(paymentDoc, /Business: 60,000 Ks/);
+    assert.doesNotMatch(paymentDoc, /30,000 Starter \/ 60,000 Business/);
   });
 });
