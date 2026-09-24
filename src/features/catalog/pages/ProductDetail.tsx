@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {ArrowLeft, Check, Heart, ImageOff, Minus, MoreHorizontal, Plus, ShoppingBag} from 'lucide-react';
+import {ArrowLeft, Check, ChevronLeft, ChevronRight, ImageOff, Minus, Plus, ShoppingBag} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {useCart} from '@/features/cart/state';
@@ -31,6 +31,7 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [related, setRelated] = useState<Product[]>([]);
+  const [bestSelling, setBestSelling] = useState<Product[]>([]);
 
   useEffect(() => {
     let alive = true; setProduct(null); setErr(''); setActive(0); setQty(1);
@@ -45,6 +46,18 @@ export default function ProductDetail() {
     return () => {alive = false;};
   }, [product?.id, product?.category]);
 
+  useEffect(() => {
+    if (!isDemo || !product) return;
+    let alive = true;
+    setBestSelling([]);
+    api.products({scope: 'active', featured: true, limit: 8})
+      .then((r) => {
+        if (alive) setBestSelling(r.products.filter((p) => p.id !== product.id).slice(0, 8));
+      })
+      .catch(() => {});
+    return () => {alive = false;};
+  }, [isDemo, product?.id]);
+
   if (err) return <div className="mx-auto max-w-3xl px-4 py-16 text-center"><p className="my text-ink-soft">{err}</p><ShopLink to="/products" className="mt-4 inline-block font-semibold text-brand-700">← ပစ္စည်းများသို့</ShopLink></div>;
   if (!product) return <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 md:grid-cols-2"><div className="aspect-4/5 animate-pulse rounded-2xl bg-cream-100" /><div className="space-y-4"><div className="h-6 w-2/3 animate-pulse rounded bg-cream-100" /><div className="h-8 w-1/3 animate-pulse rounded bg-cream-100" /></div></div>;
 
@@ -57,68 +70,92 @@ export default function ProductDetail() {
   const visual = getThemeVisual(theme);
 
   if (isDemo) {
+    const imageCount = product.images.length;
+    const goPreviousImage = () => setActive((index) => (index - 1 + imageCount) % imageCount);
+    const goNextImage = () => setActive((index) => (index + 1) % imageCount);
+
     return (
-      <div className="min-h-screen bg-[#cdb7f7] pb-28">
+      <div className="min-h-screen bg-[#cdb7f7] pb-32">
         <div className="mx-auto max-w-[430px]">
-          <div className="relative min-h-[420px] overflow-hidden px-4 pt-4">
-            <div className="relative z-20 flex items-center justify-between">
-              <button onClick={() => nav(-1)} aria-label="နောက်သို့" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] shadow-[0_8px_22px_rgba(76,29,149,0.10)] backdrop-blur">
+          <div className="px-4 pt-4">
+            <div className="mb-3">
+              <button onClick={() => nav(-1)} aria-label="နောက်သို့" className="grid h-11 w-11 place-items-center rounded-full bg-white/78 text-[#2c1a48] shadow-[0_8px_22px_rgba(76,29,149,0.10)] backdrop-blur">
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div className="flex gap-2">
-                <button type="button" aria-label="နှစ်သက်မှု" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
-                  <Heart className="h-5 w-5" />
-                </button>
-                <button type="button" aria-label="More" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
-                  <MoreHorizontal className="h-5 w-5" />
-                </button>
-              </div>
             </div>
 
-            <div className="absolute inset-x-6 bottom-5 top-16 overflow-hidden rounded-[34px] bg-[radial-gradient(circle_at_50%_45%,#eadfff_0%,#d8c8fa_56%,#c2aaf2_100%)]">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[34px] bg-[radial-gradient(circle_at_50%_45%,#eadfff_0%,#d8c8fa_56%,#c2aaf2_100%)] shadow-[0_20px_46px_rgba(76,29,149,0.12)]">
               {product.images[active] ? (
-                <img src={product.images[active]} alt={product.name} className="h-full w-full object-contain p-6 drop-shadow-[0_28px_30px_rgba(76,29,149,0.18)]" />
+                <img
+                  src={product.images[active]}
+                  alt={`${product.name} — ပုံ ${active + 1}`}
+                  className="h-full w-full object-contain p-2 drop-shadow-[0_24px_28px_rgba(76,29,149,0.16)]"
+                />
               ) : (
                 <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-10 w-10" /></div>
               )}
+
+              {imageCount > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goPreviousImage}
+                    aria-label="ယခင်ပုံ"
+                    className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/88 text-[#3a1268] shadow-[0_8px_22px_rgba(76,29,149,0.18)] backdrop-blur">
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNextImage}
+                    aria-label="နောက်ပုံ"
+                    className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/88 text-[#3a1268] shadow-[0_8px_22px_rgba(76,29,149,0.18)] backdrop-blur">
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
             </div>
+
+            {imageCount > 1 && (
+              <div className="no-scrollbar flex justify-center gap-2 overflow-x-auto px-4 py-4">
+                {product.images.map((im, i) => (
+                  <button key={i} onClick={() => setActive(i)} className={`h-2.5 w-2.5 shrink-0 rounded-full transition ${i === active ? 'bg-[#6d28d9]' : 'bg-white/75'}`} aria-label={`ပုံ ${i + 1}`}>
+                    <span className="sr-only">{im}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-
-          {product.images.length > 1 && (
-            <div className="no-scrollbar flex justify-center gap-2 overflow-x-auto px-4 pb-3">
-              {product.images.map((im, i) => (
-                <button key={i} onClick={() => setActive(i)} className={`h-2.5 w-2.5 shrink-0 rounded-full transition ${i === active ? 'bg-[#6d28d9]' : 'bg-white/75'}`} aria-label={`ပုံ ${i + 1}`}>
-                  <span className="sr-only">{im}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {(product.color || product.size) && (
-            <div className="flex flex-wrap items-center gap-3 px-4 pb-4 pt-2">
-              {product.color && <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]"><span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />{product.color}</span>}
-              {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]">Size · {product.size}</span>}
-            </div>
-          )}
 
           <div className="rounded-t-[34px] bg-[#fbf8ff] px-5 pb-8 pt-6 shadow-[0_-18px_42px_rgba(76,29,149,0.10)]">
             <h1 className="font-display text-[30px] font-black leading-tight tracking-[-0.04em] text-[#21133f]">{product.name}</h1>
-            {product.description && <p className="my mt-3 line-clamp-3 text-sm leading-6 text-[#76698a]">{product.description}</p>}
 
-            <div className="mt-5 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7a9f]">Price</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="font-sans text-[27px] font-black tracking-[-0.03em] text-[#21133f]">{ks(price)}</span>
-                  {hasPromo && <span className="text-xs text-[#988ca7] line-through">{ks(product.price)}</span>}
-                </div>
-              </div>
-              <div className="flex items-center rounded-[16px] border border-[#dfd1f5] bg-white">
+            <div className="mt-3 flex items-center gap-2">
+              <span className="font-sans text-[29px] font-black tracking-[-0.03em] text-[#21133f]">{ks(price)}</span>
+              {hasPromo && <span className="text-sm text-[#988ca7] line-through">{ks(product.price)}</span>}
+            </div>
+
+            <div className="mt-5">
+              <p className="my mb-2 text-sm font-bold text-[#49365f]">အရေအတွက်</p>
+              <div className="flex w-fit items-center rounded-[16px] border border-[#dfd1f5] bg-white">
                 <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Minus className="h-4 w-4" /></button>
-                <span className="w-8 text-center text-sm font-bold text-[#2b1a47]">{qty}</span>
+                <span className="w-9 text-center text-sm font-bold text-[#2b1a47]">{qty}</span>
                 <button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
+
+            {product.description && (
+              <div className="mt-5">
+                <h2 className="my text-sm font-bold text-[#49365f]">ပစ္စည်းအကြောင်း</h2>
+                <p className="my mt-2 whitespace-pre-line text-sm leading-7 text-[#76698a]">{product.description}</p>
+              </div>
+            )}
+
+            {(product.color || product.size) && (
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                {product.color && <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]"><span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />{product.color}</span>}
+                {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]">Size · {product.size}</span>}
+              </div>
+            )}
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#6d28d9] bg-white px-4 py-3 text-sm font-bold text-[#6d28d9] transition hover:bg-[#f3ecff] disabled:opacity-50">
@@ -129,6 +166,23 @@ export default function ProductDetail() {
               </button>
             </div>
           </div>
+
+          {bestSelling.length > 0 && (
+            <section className="px-4 pb-8 pt-7">
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#6d28d9]">Popular picks</p>
+                  <h2 className="font-display mt-1 text-2xl font-black tracking-[-0.035em] text-[#21133f]">Best Selling</h2>
+                </div>
+                <ShopLink to="/products" className="text-xs font-bold text-[#5b21b6]">View all</ShopLink>
+              </div>
+              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4">
+                {bestSelling.map((p) => (
+                  <ProductCard key={p.id} product={p} variant="demo-purple" className="w-[58vw] max-w-[230px] shrink-0 snap-start" />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     );
