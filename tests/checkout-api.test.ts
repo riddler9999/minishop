@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {createCheckoutHandler, type CheckoutHandlerDeps} from '../api/checkout-handler.ts';
+import {createCheckoutHandler} from '../api/checkout.ts';
 import {normalizeCheckoutInput} from '../api/checkout-input.ts';
-import {forwardedClientIp} from '../api/_client-ip.ts';
 
 function validBody(overrides: Record<string, unknown> = {}) {
   return {
@@ -39,29 +38,16 @@ function responseRecorder() {
   return {res, state};
 }
 
-function testSendJson(res: any, status: number, body: unknown) {
-  res.statusCode = status;
-  res.end(JSON.stringify(body));
-}
-
 function handlerWithRpc(rpc: (name: string, args: any) => Promise<any>) {
   let clientOptions: any;
-  const deps: CheckoutHandlerDeps = {
+  const handler = createCheckoutHandler({
     env: () => ({url: 'https://example.supabase.co', key: 'anon'}),
     createClient: ((_url: string, _key: string, options: any) => {
       clientOptions = options;
       return {rpc} as any;
     }) as any,
-    sendJson: testSendJson,
-    clean: (value: unknown, max = 200) => String(value ?? '').trim().slice(0, max),
-    normalizeCheckoutInput,
-    forwardedClientIp,
-    mapDbError: (_message: string, fallback: string) => fallback,
-  };
-  return {
-    handler: createCheckoutHandler(deps),
-    getClientOptions: () => clientOptions,
-  };
+  });
+  return {handler, getClientOptions: () => clientOptions};
 }
 
 describe('checkout API regression contract', () => {
