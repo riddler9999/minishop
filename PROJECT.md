@@ -745,7 +745,7 @@ A theme must materially change layout composition (hero, catalog density, produc
 
 ### D60 — FINAL Pricing & Packaging Contract
 **Date:** 2026-09-25  
-**Status:** CONFIRMED — supersedes conflicting commercial/package decisions in D56/D57 and exploratory pricing docs.
+**Status:** PRE-PRODUCTION / PRODUCTION HARDENING
 
 Paid plans:
 - Starter — 29,000 Ks/month; 60 created Orders/cycle; 100 total Products.
