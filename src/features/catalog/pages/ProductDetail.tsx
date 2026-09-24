@@ -7,6 +7,7 @@ import {useCart} from '@/features/cart/state';
 import {ks} from '@/shared/lib/format';
 import ProductCard from '@/features/catalog/components/ProductCard';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
+import {getThemeVisual} from '@/domain/theme';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
 
@@ -52,6 +53,8 @@ export default function ProductDetail() {
   const colorHex = product.color ? COLOR_MAP[product.color.trim().toLowerCase()] ?? '#d1d5db' : null;
   const doAdd = () => {add(product, qty); setAdded(true); setTimeout(() => setAdded(false), 1500);};
   const buyNow = () => {add(product, qty); shopNav('/checkout');};
+
+  const visual = getThemeVisual(theme);
 
   if (isDemo) {
     return (
@@ -131,42 +134,105 @@ export default function ProductDetail() {
     );
   }
 
+  const detail = {
+    'clean-minimal': {
+      shell: 'mx-auto max-w-[1320px] px-4 pb-14 pt-6 sm:px-8 sm:pt-10',
+      grid: 'grid gap-8 md:grid-cols-[1.15fr_0.85fr] md:gap-14',
+      image: 'aspect-[4/5] overflow-hidden bg-[#f4f4f4]',
+      title: 'text-black',
+      priceBox: 'border-y border-zinc-200 bg-white',
+      chip: 'border border-zinc-300 bg-white text-zinc-700 rounded-none',
+      qty: 'border border-black bg-white rounded-none',
+      related: 'text-black',
+      secondary: 'border border-black bg-white text-black rounded-none',
+      primary: 'bg-black text-white rounded-none',
+    },
+    'street-bold': {
+      shell: 'mx-auto max-w-[1320px] px-4 pb-14 pt-6 sm:px-8 sm:pt-10',
+      grid: 'grid gap-6 md:grid-cols-[0.9fr_1.1fr] md:gap-10',
+      image: 'aspect-square overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0_#111]',
+      title: 'text-black uppercase',
+      priceBox: 'border-4 border-black bg-[#f2ff00] shadow-[5px_5px_0_#111]',
+      chip: 'border-2 border-black bg-white text-black rounded-none',
+      qty: 'border-2 border-black bg-white rounded-none',
+      related: 'text-black uppercase',
+      secondary: 'border-2 border-black bg-white text-black rounded-none shadow-[4px_4px_0_#111]',
+      primary: 'border-2 border-black bg-[#ff4d00] text-white rounded-none shadow-[4px_4px_0_#111]',
+    },
+    'soft-elegant': {
+      shell: 'mx-auto max-w-6xl px-4 pb-14 pt-6 sm:px-8 sm:pt-10',
+      grid: 'grid gap-7 md:grid-cols-2 md:gap-12',
+      image: 'aspect-[4/5] overflow-hidden rounded-[34px] bg-[#eadbd5] shadow-[0_24px_60px_rgba(95,70,74,0.10)]',
+      title: 'text-[#4a3337]',
+      priceBox: 'rounded-2xl bg-[#fffaf7]',
+      chip: 'border border-[#decac5] bg-[#fffaf7] text-[#76565d] rounded-full',
+      qty: 'border border-[#decac5] bg-[#fffaf7] rounded-2xl',
+      related: 'text-[#4a3337]',
+      secondary: 'border border-[#b56b7a] bg-[#fffaf7] text-[#8d5360] rounded-2xl',
+      primary: 'bg-[#b56b7a] text-white rounded-2xl',
+    },
+    'grid-catalog': {
+      shell: 'mx-auto max-w-[1180px] px-3 pb-12 pt-4 sm:px-6 sm:pt-6',
+      grid: 'grid gap-5 rounded-xl border border-[#dbe2ea] bg-white p-3 sm:p-5 md:grid-cols-[0.8fr_1.2fr] md:gap-8',
+      image: 'aspect-square overflow-hidden rounded-lg bg-[#f3f6fa]',
+      title: 'text-[#111827]',
+      priceBox: 'rounded-lg border border-[#dbe2ea] bg-[#f8fafc]',
+      chip: 'border border-[#dbe2ea] bg-white text-[#475467] rounded-md',
+      qty: 'border border-[#dbe2ea] bg-white rounded-md',
+      related: 'text-[#111827]',
+      secondary: 'border border-[#0f6fff] bg-white text-[#0f6fff] rounded-md',
+      primary: 'bg-[#0f6fff] text-white rounded-md',
+    },
+    'dark-modern': {
+      shell: 'mx-auto max-w-[1320px] px-4 pb-14 pt-6 sm:px-8 sm:pt-10',
+      grid: 'grid gap-7 md:grid-cols-[1.05fr_0.95fr] md:gap-12',
+      image: 'aspect-[4/5] overflow-hidden rounded-[24px] border border-[#2a2a30] bg-[#0f0f12] shadow-[0_30px_80px_rgba(0,0,0,0.30)]',
+      title: 'text-[#f8fafc]',
+      priceBox: 'rounded-xl border border-[#2a2a30] bg-[#151518]',
+      chip: 'border border-[#2a2a30] bg-[#151518] text-[#c9c9d0] rounded-lg',
+      qty: 'border border-[#2a2a30] bg-[#151518] text-[#f8fafc] rounded-xl',
+      related: 'text-[#f8fafc]',
+      secondary: 'border border-[#73fbd3]/60 bg-[#151518] text-[#73fbd3] rounded-xl',
+      primary: 'bg-[#73fbd3] text-[#08110e] rounded-xl',
+    },
+  }[theme.presetId];
+
   return (
-    <div className={`mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 ${isDemo ? 'min-h-screen bg-[#eee6ff]' : ''}`}>
-      <button onClick={() => nav(-1)} className={`mb-4 inline-flex min-h-10 items-center gap-1.5 rounded-full px-1 text-sm font-semibold transition ${isDemo ? 'text-[#59466f] hover:text-[#6d28d9]' : 'text-slate-500 hover:text-[#e11d48]'}`}><ArrowLeft className="h-4 w-4" /> နောက်သို့</button>
-      <div className="grid gap-6 md:grid-cols-[1.05fr_0.95fr] md:gap-10">
+    <div className={detail.shell}>
+      <button onClick={() => nav(-1)} className="mb-4 inline-flex min-h-10 items-center gap-1.5 px-1 text-sm font-semibold transition" style={{color: visual.muted}}><ArrowLeft className="h-4 w-4" /> နောက်သို့</button>
+      <div className={detail.grid}>
         <div>
-          <div className={`aspect-[4/4.7] overflow-hidden sm:aspect-4/5 ${isDemo ? 'rounded-[34px] bg-[#cdb7f7] shadow-[0_24px_60px_rgba(76,29,149,0.20)]' : 'rounded-[28px] bg-[#f7f4f5] shadow-[0_18px_50px_rgba(88,52,64,0.10)]'}`}>
+          <div className={detail.image}>
             {product.images[active] ? <img src={product.images[active]} alt={product.name} className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-ink-soft"><ImageOff className="h-10 w-10" /></div>}
           </div>
           {product.images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{product.images.map((im, i) => <button key={i} onClick={() => setActive(i)} className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#faf8f9] ${i === active ? 'border-[#e11d48]' : 'border-transparent'}`}><img src={im} alt="" className="h-full w-full object-cover" /></button>)}</div>}
         </div>
 
         <div className="md:pt-2">
-          {product.category && <p className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${isDemo ? 'bg-white/70 text-[#5b21b6]' : 'bg-[#fff0f6] text-[#be123c]'}`}>{product.category}</p>}
-          <h1 className={`my mt-3 font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${isDemo ? 'text-[#21133f]' : 'text-slate-950'}`}>{product.name}</h1>
-          <div className={`mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 ${isDemo ? 'bg-white/70 shadow-[0_10px_28px_rgba(76,29,149,0.08)]' : 'bg-[#faf8f9]'}`}><span className={`font-sans text-xl font-bold sm:text-2xl ${isDemo ? 'text-[#3b176c]' : 'text-[#e11d48]'}`}>{ks(price)}</span>{hasPromo && <span className="text-sm text-ink-soft line-through sm:text-base">{ks(product.price)}</span>}</div>
+          {product.category && <p className={`inline-flex px-3 py-1 text-xs font-semibold ${detail.chip}`}>{product.category}</p>}
+          <h1 className={`my mt-3 font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${detail.title}`}>{product.name}</h1>
+          <div className={`mt-3 flex items-center gap-3 px-4 py-3 ${detail.priceBox}`}><span className="font-sans text-xl font-bold sm:text-2xl" style={{color: visual.accent}}>{ks(price)}</span>{hasPromo && <span className="text-sm line-through opacity-55 sm:text-base">{ks(product.price)}</span>}</div>
 
           <div className="my mt-5 flex flex-wrap items-center gap-3 text-sm">
-            {product.size && <span className="rounded-xl bg-[#faf8f9] px-3 py-2">Size — {product.size}</span>}
-            {product.color && <span className="inline-flex items-center gap-2 rounded-xl border border-rose-100 bg-white px-3 py-2"><span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: colorHex ?? '#d1d5db'}} aria-hidden="true" /><span>{product.color}</span></span>}
+            {product.size && <span className={`px-3 py-2 ${detail.chip}`}>Size — {product.size}</span>}
+            {product.color && <span className={`inline-flex items-center gap-2 px-3 py-2 ${detail.chip}`}><span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: colorHex ?? '#d1d5db'}} aria-hidden="true" /><span>{product.color}</span></span>}
           </div>
           {product.description && <p className="my mt-5 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{product.description}</p>}
 
-          <div className="mt-7 flex items-center"><div className="flex items-center rounded-xl border border-rose-100 bg-white shadow-sm"><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-brand-700"><Plus className="h-4 w-4" /></button></div></div>
+          <div className="mt-7 flex items-center"><div className={`flex items-center ${detail.qty}`}><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Plus className="h-4 w-4" /></button></div></div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button disabled={!product.inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${isDemo ? 'border border-[#6d28d9] text-[#6d28d9] hover:bg-[#f5efff]' : 'border border-[#e11d48] text-[#e11d48] hover:bg-[#fff0f6]'}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
-            <button disabled={!product.inStock} onClick={buyNow} className={`min-h-12 flex-1 rounded-2xl px-6 py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${isDemo ? 'bg-[#6d28d9] shadow-[0_12px_30px_rgba(109,40,217,0.30)] hover:bg-[#5b21b6]' : 'bg-[#e11d48] shadow-[0_12px_30px_rgba(225,29,72,0.22)] hover:bg-[#be123c]'}`}>{theme.product.buyNowLabel}</button>
+            <button disabled={!product.inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.secondary}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
+            <button disabled={!product.inStock} onClick={buyNow} className={`min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.primary}`}>{theme.product.buyNowLabel}</button>
           </div>
         </div>
       </div>
 
       {theme.product.relatedEnabled && related.length > 0 && (
         <section className="mt-14 overflow-hidden">
-          <h2 className="mb-5 font-display text-xl font-bold text-brand-800 sm:text-2xl">ဆင်တူ ပစ္စည်းများ</h2>
+          <h2 className={`mb-5 font-display text-xl font-bold sm:text-2xl ${detail.related}`}>ဆင်တူ ပစ္စည်းများ</h2>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 sm:mx-0 sm:px-0">
-            {related.map((p) => <ProductCard key={p.id} product={p} variant="compact" className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />)}
+            {related.map((p) => <ProductCard key={p.id} product={p} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />)}
           </div>
         </section>
       )}
