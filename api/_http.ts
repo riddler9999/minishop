@@ -1,4 +1,4 @@
-import {secure} from './_security.ts';
+import {secure} from './_security.js';
 
 export function sendJson(res: any, status: number, body: unknown, cache = false) {
   secure(res);
