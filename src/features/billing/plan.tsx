@@ -30,32 +30,32 @@ export type {Plan};
 //     gate any more), so it is intentionally absent from this interface.
 //   - Payment verification (last-5 matching) is NOT a plan differentiator — it is
 //     available on every plan.
-//   - The remaining Business-only gates are the genuinely advanced operational
-//     features that were already implemented.
+//   - Store branding, Store Design, and analytics are CORE on every plan.
+//   - Promotions and integrations remain plan differentiators.
 export interface PlanFeatures {
   /** Promotion pricing on products + the storefront "featured" carousel. */
   promotions: boolean;
   /** Last-5-digit payment-verification workflow in order management. */
   paymentVerification: boolean;
-  /** Analytics/KPI depth on the dashboard (low stock, revenue breakdown). */
+  /** Analytics/KPI depth on the dashboard (low stock, revenue breakdown). Core on every plan. */
   advancedDashboard: boolean;
   /** Storefront theme editor (Store Design). Available on every plan. */
   storeDesign: boolean;
-  /** Shop logo + extended branding in settings. */
+  /** Shop logo + extended branding in settings. Core on every plan. */
   branding: boolean;
   /** Integration-ready hooks surface (webhooks/exports placeholder). */
   integrations: boolean;
 }
 
-// Free trial and Starter share the same core feature set. Store Design is core
-// on every plan; logo/extended branding remains Business-only. They still differ
-// in order quota and Extra-Orders eligibility (see domain/entitlement.ts).
+// Free trial and Starter share the same core seller-facing feature set for
+// branding, Store Design, and analytics. They still differ from paid plans in
+// order quota/Extra-Orders eligibility, while promotions/integrations remain gated.
 const CORE: PlanFeatures = {
   promotions: false,
   paymentVerification: true,
-  advancedDashboard: false,
+  advancedDashboard: true,
   storeDesign: true,
-  branding: false,
+  branding: true,
   integrations: false,
 };
 
