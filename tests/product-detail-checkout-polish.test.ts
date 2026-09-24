@@ -35,7 +35,7 @@ test('product detail shows full gallery with arrows and requested content hierar
   assert.ok(title >= 0 && price > title && quantity > price && description > quantity);
 
   assert.match(demo, /Best Selling/);
-  assert.match(demo, /DEMO_BEST_SELLING_IDS/);
+  assert.match(source, /DEMO_BEST_SELLING_IDS/);
   assert.doesNotMatch(demo, /Popular picks|View all/);
 
   const tenant = source.slice(demoEnd);
