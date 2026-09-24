@@ -14,6 +14,7 @@ import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
 import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
+import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
 import AdminConsole from './routes/AdminConsole';
 import RequireAdmin from './routes/RequireAdmin';
 import ShopRoute, {RootStorefront} from './routes/ShopRoute';
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/fashion-demo/*" element={<FashionDemo />} />
+        <Route path="/furniture-demo/*" element={<FurnitureDemo />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/superadmin" element={<SuperAdminDashboard />} />
         <Route path="/admin/subscribe" element={<Subscribe />} />
