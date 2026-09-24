@@ -71,19 +71,18 @@ test('landing stylesheet does not leak generic nav or grid selectors into storef
   assert.equal(/(^|})\.grid\{/.test(css), false, 'landing .grid must not override Tailwind grid utility');
 });
 
-test('buyer shell keeps the responsive header and no mobile bottom navigation', async () => {
+test('buyer shell matches the reference-style header and mobile bottom navigation', async () => {
   const source = await readFile(layoutPath, 'utf8');
 
-  assert.match(source, /grid-cols-\[48px_minmax\(0,1fr\)_48px\]/);
-  assert.match(source, /sm:grid-cols-\[112px_minmax\(0,1fr\)_112px\]/);
-  assert.match(source, /lg:grid-cols-\[180px_minmax\(0,1fr\)_180px\]/);
-  assert.match(source, /overflow-x-clip/);
+  assert.match(source, /h-\[78px\]/);
+  assert.match(source, /Mobile navigation/);
+  assert.match(source, /grid-cols-5/);
+  assert.match(source, />Home</);
+  assert.match(source, />Categories</);
+  assert.match(source, />Cart</);
+  assert.match(source, />Orders</);
+  assert.match(source, />Menu</);
   assert.match(source, /<CartDrawer \/>/);
-
-  assert.equal(source.includes('pb-[calc(68px+env(safe-area-inset-bottom))]'), false);
-  assert.equal(source.includes('h-[calc(68px+env(safe-area-inset-bottom))]'), false);
-  assert.equal(source.includes('grid-cols-3 grid-rows-1'), false);
-  assert.equal(source.includes('h-[68px]'), false);
 });
 
 test('storefront exposes privacy and terms routes and footer links', async () => {
@@ -107,14 +106,14 @@ test('cart is drawer-only and the standalone cart page is removed', async () => 
   await assert.rejects(readFile(cartPagePath, 'utf8'));
 });
 
-test('product cards use compact stacked buyer actions', async () => {
+test('compact home product cards match the reference with a cart icon action', async () => {
   const source = await readFile(productCardPath, 'utf8');
 
-  assert.match(source, /flex flex-col gap-1\.5 pt-2\.5/);
-  assert.match(source, /min-h-9/);
-  assert.match(source, /ခြင်းထဲထည့်မည်/);
+  assert.match(source, /aspect-\[0\.86\]/);
+  assert.match(source, /aria-label="ခြင်းထဲထည့်မည်"/);
+  assert.match(source, /Heart/);
+  assert.match(source, /grid h-8 w-8/);
   assert.match(source, /ဝယ်မည်/);
-  assert.equal(source.includes('grid grid-cols-2 gap-2 pt-4'), false);
 });
 
 test('cart drawer checkout and admin onboarding contain no legacy brown cream or gold theme tokens', async () => {
