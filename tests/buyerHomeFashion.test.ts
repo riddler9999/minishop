@@ -185,3 +185,18 @@ test('demo cart and checkout are scoped by the demo theme without changing tenan
   assert.match(checkout, /api\.createOrder/);
   assert.match(checkout, /idempotencyKey/);
 });
+
+
+test('demo storefront uses fluid responsive layout instead of a phone-only fixed canvas', async () => {
+  const home = await readHome();
+  const layout = await readFile(layoutPath, 'utf8');
+
+  assert.match(home, /max-w-6xl/);
+  assert.match(home, /max-w-5xl/);
+  assert.match(home, /md:grid-cols-3/);
+  assert.match(home, /lg:grid-cols-4/);
+  assert.match(home, /clamp\(/);
+  assert.match(layout, /min-h-\[100dvh\]/);
+  assert.match(layout, /safe-area-inset-bottom/);
+  assert.match(layout, /max-w-\[430px\]/);
+});
