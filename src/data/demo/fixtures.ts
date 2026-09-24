@@ -70,7 +70,7 @@ const SEEDS: DemoSeed[] = [
   {name:'ဟူးဒီ — Cozy Hoodie',category:'အနွေးထည်',color:'မီးခိုးရင့်',size:'XL',price:21000,promoPrice:16500,stock:0,keyword:'hoodie',locks:[191,192],description:'အေးမြတဲ့နေ့တွေမှာ သက်တောင့်သက်သာဝတ်နိုင်တဲ့ မီးခိုးရင့် Cozy Hoodie ဖြစ်ပါတယ်။\nRelaxed fit နဲ့ soft-touch feel ကြောင့် casual day၊ ခရီးသွားချိန်နဲ့ အိမ်နားနေချိန်တွေမှာ လွယ်ကူစွာဝတ်ဆင်နိုင်ပါတယ်။ လက်ရှိ demo stock ကုန်နေပါတယ်။'},
   {name:'ကုတ်အင်္ကျီ — Wool Coat',category:'အနွေးထည်',color:'အနက်ညို',size:'M',price:52000,stock:4,keyword:'coat',locks:[201,202,203],description:'အနက်ညိုရောင်နဲ့ refined outerwear look ပေးတဲ့ Wool Coat ဖြစ်ပါတယ်။\nနွေးထွေးတဲ့ wool-like texture နဲ့ structured silhouette ကြောင့် အေးတဲ့ရာသီ၊ business outfit နဲ့ formal layering အတွက် သင့်တော်ပါတယ်။'},
   {name:'လင်နင်ရှပ်အင်္ကျီ — Linen Shirt',category:'အင်္ကျီ',color:'ခရင်မ်',size:'L',price:20000,promoPrice:15900,stock:18,keyword:'linen,shirt',locks:[211,212],description:'ခရင်မ်ရောင် natural tone နဲ့ ပေါ့ပါးတဲ့ Linen Shirt ဖြစ်ပါတယ်။\nလေဝင်လေထွက်ကောင်းတဲ့ linen-style feel ကြောင့် ပူတဲ့ရာသီနဲ့ ခရီးသွား outfit တွေအတွက် သင့်တော်ပြီး shorts၊ chino နဲ့ denim တို့နဲ့ လွယ်ကူစွာတွဲဝတ်နိုင်ပါတယ်။'},
-]
+];
 
 const PRODUCT_PHOTOS: Record<number, string> = {
   0: '/demo/fashion/classic-white-shirt.png',
