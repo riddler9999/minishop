@@ -22,7 +22,7 @@ import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/cor
 import {cx} from '@/shared/lib/format';
 import StorePreview, {type PreviewPage} from '@/features/shop/components/StorePreview';
 
-type Section = 'themes' | 'global' | 'home' | 'category' | 'product';
+type Section = 'themes' | 'global' | 'home' | 'category' | 'product' | 'checkout';
 
 const SECTIONS: {id: Section; label: string; preview: PreviewPage}[] = [
   {id: 'themes', label: 'Themes', preview: 'home'},
@@ -30,6 +30,7 @@ const SECTIONS: {id: Section; label: string; preview: PreviewPage}[] = [
   {id: 'home', label: 'ပင်မစာမျက်နှာ', preview: 'home'},
   {id: 'category', label: 'ပစ္စည်းစာရင်း', preview: 'category'},
   {id: 'product', label: 'ပစ္စည်းအသေးစိတ်', preview: 'product'},
+  {id: 'checkout', label: 'Checkout', preview: 'checkout'},
 ];
 
 export default function StoreDesign() {
@@ -334,6 +335,15 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
                 <Toggle label="ဆင်တူ ပစ္စည်းများ ပြရန်" checked={draft.product.relatedEnabled} onChange={(v) => patchProduct({relatedEnabled: v})} />
                 <TextField label="“ခြင်းထဲထည့်” ခလုတ် စာသား" value={draft.product.addToCartLabel} onChange={(v) => patchProduct({addToCartLabel: v})} maxLength={40} />
                 <TextField label="“ဝယ်မည်” ခလုတ် စာသား" value={draft.product.buyNowLabel} onChange={(v) => patchProduct({buyNowLabel: v})} maxLength={40} />
+              </div>
+            )}
+
+            {section === 'checkout' && (
+              <div className="space-y-3">
+                <h2 className="my text-base font-bold text-ink">Checkout Theme Preview</h2>
+                <p className="my text-sm leading-6 text-ink-soft">
+                  Checkout၊ Cart Drawer၊ Order Success နဲ့ Order Tracking တို့သည် ရွေးထားသော Store Theme ၏ color၊ border၊ radius၊ density နဲ့ CTA language ကို အလိုအလျောက် လိုက်နာသည်။ Payment နဲ့ order logic ကို theme က မပြောင်းပါ။
+                </p>
               </div>
             )}
           </div>
