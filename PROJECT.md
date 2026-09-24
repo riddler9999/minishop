@@ -731,3 +731,11 @@ Pilot Ready လို့သတ်မှတ်ဖို့ အနည်းဆု�
 - [ ] One real seller ready for pilot
 
 ဒီ checklist မပြည့်သေးရင် "production complete" လို့မသတ်မှတ်ရ။
+
+
+### D59 — Storefront themes are aesthetic families, not product niches
+**Date:** 2026-09-24
+
+MiniShop exposes exactly five storefront design families: Clean & Minimal, Street & Bold, Soft & Elegant, Grid & Catalog, and Dark Modern. Theme choice is category-neutral; any seller can use any theme regardless of merchandise.
+
+A theme must materially change layout composition (hero, catalog density, product-card language and product-detail presentation), not only accent color or typography. `shops.theme.presetId` remains the persisted selector; no production database migration is required. Legacy preset IDs normalize to the closest new family so existing shops fail safely.
