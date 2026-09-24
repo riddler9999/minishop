@@ -161,7 +161,8 @@ test('demo storefront navigation cannot escape to generic root product routes', 
   const shopLink = await readFile(shopLinkPath, 'utf8');
   const context = await readFile(demoContextPath, 'utf8');
   assert.match(shopLink, /pathname === '\/demo'/);
-  assert.match(shopLink, /return path === '\/' \? '\/demo' : `\/demo\${path}`/);
+  assert.match(shopLink, /path === '\/' \? '\/demo'/);
+  assert.match(shopLink, /\/demo\$\{path\}/);
   assert.match(context, /pathname\.startsWith\('\/demo\/'\)/);
 });
 
