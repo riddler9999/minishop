@@ -1,162 +1,553 @@
-# Mini Shop — Design System
+# MiniShop MM — Brand & Design System
 
-Source of truth for the visual language across the buyer storefront (`/s/<slug>`) and the
-seller admin console (`/admin`). Grounded in the current implementation
-(`src/index.css`, `src/shared/lib/brand.ts`, `src/features/*/components/` + `src/shared/ui/`) plus the reference mockup that
-prompted this doc (`docs/design/` is not used — this repo keeps design docs at `design/`,
-parallel to `PROJECT.md`).
+> **Status: CONFIRMED — Brand Foundation v1**
+>
+> Brand: **MiniShop MM**  
+> Tagline: **One Place to Sell Everywhere.**  
+> Positioning: **Myanmar-first social commerce platform**
 
-Read `CLAUDE.md` and `PROJECT.md` first if you haven't — this file assumes that context
-(data-layer switch, shop-slug tenancy, plan gating) and does not repeat it.
+This document is the source of truth for the MiniShop MM brand identity and product visual language. It governs the MiniShop platform surfaces (marketing, authentication, onboarding, seller admin, pricing and MiniShop-owned communication) while preserving tenant ownership of public storefront branding.
 
-> **Status note:** the reference mockup shows some screens and admin nav items that do not
-> exist in the codebase yet (marked **Proposed** below). This doc records the target design
-> language for all of them, but treat the "Proposed" items as backlog, not shipped behavior —
-> check `src/features/*/pages/` and `src/features/admin/components/AdminLayout.tsx` before assuming a screen exists.
+Read `CLAUDE.md` and `PROJECT.md` for product architecture, tenancy, plan gating, security and implementation decisions. Product truth always wins over decorative design.
 
 ---
 
-## 1. Design principles
+## 1. Brand foundation
 
-1. **TikTok in-app WebView first.** No native app chrome, no assumption of persistent storage
-   (see `shopContext.ts`) or a reliable file picker (`uploadSlip()` is a no-op — see
-   `supabase/README.md`). Every screen must work one-handed, on a mid-range Android, inside a
-   host app's embedded browser.
-2. **Localized copy, English code.** Buyer storefront copy remains Burmese-first. Seller-facing screens follow their recorded product decision; the Admin analytics dashboard is English-only per D50. (`.my` in `index.css` remains available where Burmese script is used.)
-   Mockups and design docs may use English placeholders for speed. Shipped UI must follow the language decision recorded for that surface. See `orderStatus.ts` for canonical status labels; do not invent parallel status semantics.
-3. **Product-neutral chrome, tenant-specific storefront.** `src/shared/lib/brand.ts` names the SaaS
-   product itself (fallback logo/name for the demo shop and admin chrome); a real tenant's
-   storefront shows the seller's own shop name/logo via `resolveShop()`, not these constants.
-   Never hardcode "Mini Shop" branding inside a tenant-facing storefront component.
-4. **Plan gating hides, never deletes.** Anything gated by `usePlan()` /
-   `<PlanGate>` must degrade to an upsell, not a dead end — a downgraded shop's data must
-   still exist and reappear on upgrade (`CLAUDE.md` "Plan gating" section).
-5. **Mobile-first, then scale up.** Build the 375–414px layout first; treat tablet/desktop as
-   a progressive enhancement of the same component, not a separate design.
+### 1.1 Core promise
 
----
+MiniShop MM gives a seller **one place to manage a shop and sell to customers coming from the places/channels where the seller already has an audience**.
 
-## 2. Design tokens (current implementation)
+The brand idea is intentionally broader than a single social network.
 
-Defined in `src/index.css` under `@theme` (Tailwind v4, no `tailwind.config.js`). Token
-*names* are inherited from an earlier maroon theme this app was cloned from — only the
-*values* changed, so components never needed a class rewrite. Keep that naming stable; add
-new roles rather than repurposing `brand`/`cream`/`gold`/`ink` for something unrelated.
+**Primary tagline**
 
-| Role | Token | Value | Use |
-|---|---|---|---|
-| Brand (primary) | `--color-brand-500` | `#fe2c55` | Primary CTA, active nav, price accents |
-| Brand range | `--color-brand-{50…900}` | pink/magenta ramp | Hover/active/disabled states, badges |
-| Surface | `--color-cream-{50,100,200}` | cool porcelain whites | Page background, card fills, dividers |
-| Accent | `--color-gold-{400,500,600}` | cyan (`#25f4ee` at 500) | Secondary accents, COD status badge |
-| Text (primary) | `--color-ink` | `#1c2033` | Body text, headings |
-| Text (muted) | `--color-ink-soft` | `#5b6178` | Secondary text, placeholders, cancelled state |
+> **One Place to Sell Everywhere.**
 
-Typography:
+The tagline is a brand promise, not a claim that MiniShop currently performs native catalog/order synchronization with every social network. Marketing copy must describe actual integrations accurately.
 
-| Role | Token | Stack |
-|---|---|---|
-| Display | `--font-display` | Space Grotesk → Padauk → system-ui |
-| Myanmar body | `--font-myanmar` | Padauk → Noto Sans Myanmar → system-ui (`body` default) |
-| Latin body | `--font-sans` | Inter → Padauk → system-ui |
+### 1.2 Positioning
 
-Shared interaction patterns already in `index.css`: `.card-lift` (hover translate + shadow,
-used by `ProductCard`), `.fade-up` (mount-in animation), `.no-scrollbar` (horizontal
-carousels). Reuse these utility classes before adding new ones.
+**Category:** Social commerce platform  
+**Primary market:** Myanmar sellers and SMEs  
+**Primary value:** One manageable online shop that can be shared across social channels  
+**Experience goal:** Make running a real online store feel simple, approachable and credible.
+
+### 1.3 Personality
+
+MiniShop MM is:
+
+- **Simple** — understandable without ecommerce or technical expertise.
+- **Friendly** — approachable, human and practical.
+- **Confident** — clear hierarchy and decisive actions without visual noise.
+- **Trustworthy** — commerce, payment and order surfaces prioritize clarity over decoration.
+- **Local-first** — Myanmar language and real local selling behavior are first-class concerns.
+- **Merchant-first** — MiniShop frames the seller; it does not compete with the seller's brand.
+
+Avoid a fashion-only, beauty-only, childish, crypto, neon-tech or generic enterprise-SaaS identity.
 
 ---
 
-### Admin analytics surface
+## 2. Brand architecture
 
-The seller dashboard uses a mobile-first analytics treatment: pale cool-gray canvas, white cards,
-pink/cyan/violet/orange semantic icon chips, large compact metrics, one simple 7-day trend chart,
-and bottom navigation on narrow screens. This is intentionally denser and more app-like than the
-buyer storefront. Keep one-handed touch targets at 44px+, avoid decorative motion, and keep charts
-secondary to actionable order/stock lists. Admin analytics dashboard copy is English-only (D50). Shipping is intentionally absent from the redesigned admin navigation.
+MiniShop has two deliberately separate visual layers.
 
-## 3. Screen inventory
+### 2.1 MiniShop platform brand
 
-### 3.1 Storefront (buyer-facing, mounted under both `/*` demo and `/s/:slug/*` — see
-`CLAUDE.md` "Shop slug" section for why routes are relative)
+Use the MiniShop MM identity strongly on:
 
-| Screen | Component | Status |
-|---|---|---|
-| Home | `src/features/catalog/pages/Home.tsx` | Shipped |
-| Product listing | `src/features/catalog/pages/Products.tsx` | Shipped |
-| Product detail | `src/features/catalog/pages/ProductDetail.tsx` | Shipped |
-| Cart (drawer only) | `src/features/cart/components/CartDrawer.tsx` | Shipped |
-| Checkout | `src/features/checkout/pages/Checkout.tsx` | Shipped |
-| Order success | `src/features/checkout/pages/OrderSuccess.tsx` | Shipped |
-| Order lookup (order no. + phone) | `src/features/orders/pages/OrderLookup.tsx` | Shipped |
-| Explore / video feed | — | **Proposed.** Buyers are anonymous with no session (§ "Security model" in `CLAUDE.md`) — a persistent "For You" feed needs either a stateless per-visit ranking or a rethink of that constraint. Needs a decision entry in `PROJECT.md` before building. |
-| "My Orders" (list view) | — | **Proposed, and in tension with the security model.** `lookup_order()` requires `(shop_slug, order_no, phone)` together *by design*, specifically to stop buyer order-history enumeration (`CLAUDE.md`). A "My Orders" list implies a persistent identity the anonymous-buyer model doesn't have today. Do not build this as a simple list without re-reading that constraint and getting an explicit decision — it's the kind of change that needs a `PROJECT.md` entry (would be D34+), not a silent addition. |
+- marketing / landing pages
+- login and signup
+- seller onboarding
+- seller admin console
+- pricing / plan surfaces
+- MiniShop-owned social media and campaigns
+- transactional/product communication where MiniShop is the sender
 
-### 3.2 Admin console (`/admin/*`, real Supabase auth required — no offline fallback)
+### 2.2 Merchant storefront brand
 
-| Screen | Component | Status |
-|---|---|---|
-| Overview / dashboard | `src/features/admin/pages/Dashboard.tsx` | Shipped |
-| Products | `src/features/catalog/pages/AdminProducts.tsx` | Shipped |
-| Orders (list + detail, payment verification) | `src/features/orders/pages/AdminOrders.tsx` | Shipped |
-| Shipping zones | `src/features/shipping/pages/AdminShipping.tsx` | Shipped (Business plan / advanced-shipping gated; intentionally not linked from redesigned admin navigation per D50) |
-| Settings | `src/features/shop/pages/Settings.tsx` | Shipped |
-| Login / Onboarding | `src/features/auth/pages/Login.tsx`, `Onboarding.tsx` | Shipped |
-| Customers (dedicated list) | — | **Proposed.** Not in `AdminLayout`'s nav today. |
-| Marketing | — | **Proposed.** Not in `AdminLayout`'s nav today. |
+Public tenant storefronts (`/s/:slug/...`) belong visually to the merchant.
 
-Current redesigned admin nav (`src/features/admin/components/AdminLayout.tsx`, English labels per D50): Home · Products · Orders · Settings. Shipping is intentionally not linked from this navigation. New nav items must follow the screen-specific language decision, use one `lucide-react` icon, and preserve applicable plan gating.
+A real tenant storefront should prioritize:
 
-Payment verification (Orders detail: payment slip view, Verify/Reject) must stay aligned
-with the manual-verification model in `CLAUDE.md` — last-5-digits matching, no slip upload
-pipeline. Don't design a screen that implies automatic payment confirmation.
+- seller shop name
+- seller logo
+- seller-selected accent/theme
+- seller product imagery
+- seller-selected storefront typography where supported
+
+Do **not** force MiniShop Pink or the MiniShop wordmark into tenant components unless a product requirement explicitly calls for platform attribution.
+
+**Principle:**
+
+> **MiniShop owns the platform. The seller owns the storefront.**
+
+The demo storefront may use MiniShop fallback identity, but that must not become a tenant-branding dependency.
 
 ---
 
-## 4. Store themes
+## 3. Logo & wordmark
 
-The public storefront (`Home`, `Products`, `ProductDetail`, `Cart`, `Checkout`) currently
-ships one fixed buyer visual direction — white, blush-pink surfaces, hot-pink actions, and tenant product imagery. Shared admin tokens remain defined in §2. A seller-selectable
-**store theme** (so a food seller doesn't look like a fashion seller) is a **proposed**
-feature; per-theme specs live in `design/themes/`:
+### 3.1 Primary identity
 
-- `design/themes/minimal.md` — Minimal (Default): the current white/blush-pink look.
-- `design/themes/bold.md` — Bold: dark/high-contrast variant of the same brand palette.
-- `design/themes/classic-shop.md` — Classic Shop: warm, food/grocery-oriented palette.
+Primary written brand name:
 
-If this gets built, follow the existing `shop.plan` pattern (`CLAUDE.md` "Plan gating"
-section) rather than inventing a new mechanism: a `shop.theme` DB column, resolved
-frontend-only (RLS unaffected), defaulting to Minimal. That needs its own migration +
-`database.types.ts` regen + a `PROJECT.md` decision entry — out of scope for this doc, which
-only records the target visual language.
+> **MiniShop MM**
+
+Preferred visual treatment is a friendly, bold wordmark with `Mini` emphasized in MiniShop Pink, `Shop` in MiniShop Ink, and `MM` in MiniShop Pink when rendered on a light neutral surface.
+
+The wordmark should feel compact, modern and approachable. Avoid literal shopping-cart, shopping-bag and generic storefront clip-art as the primary logo.
+
+### 3.2 App / social mark
+
+Use a compact lowercase **`m`** monogram as the standalone mark.
+
+Primary applications:
+
+- favicon
+- social profile avatar
+- app/PWA icon
+- small admin identity mark
+- compact watermark where appropriate
+
+The mark uses a rounded-square container and simple geometric lowercase `m` construction. At very small sizes, clarity beats detail.
+
+### 3.3 Logo variants
+
+Required variants:
+
+1. Full-color wordmark on light surface
+2. White/reversed wordmark on MiniShop Pink
+3. White/reversed wordmark on MiniShop Ink
+4. MiniShop Pink `m` mark on light surface
+5. White `m` mark on MiniShop Pink
+6. Single-color monochrome version for constrained production
+
+### 3.4 Tagline lockup
+
+The tagline may appear below the wordmark when space permits:
+
+> **One Place to Sell Everywhere.**
+
+Do not force the tagline into small navigation headers, favicons, avatars or compact mobile app bars.
+
+### 3.5 Clear space and minimum size
+
+Use the `m` mark's internal stem width as the conceptual clear-space unit `x`. Keep at least `1x` clear space around the logo lockup.
+
+Guidance:
+
+- standalone digital mark: minimum ~16 px only when visually tested
+- full wordmark: target minimum ~80 px width
+- tagline lockup: use only where the tagline remains comfortably readable
+
+Never stretch, skew, outline, rotate, recolor arbitrarily or add effects to the logo.
 
 ---
 
-## 5. Component patterns to reuse
+## 4. Color system
 
-- `ProductCard` (`src/features/catalog/components/ProductCard.tsx`) — the only place that should render a
-  product tile; don't hand-roll another one. Navigates via `<ShopLink>`, never a bare
-  react-router `Link` (`CLAUDE.md` "Shop slug" section explains why relative links break here).
-- `CartDrawer` — slide-over cart, not a route change; keep cart mutations optimistic against
-  `src/features/cart/state.tsx`.
-- `AdminLayout` — the only admin chrome; nav array at the top of the file is the single
-  source of truth for admin nav items and their icons.
-- `PlanGate` — wrap any Business-only admin feature in this rather than branching on
-  `usePlan()` ad hoc, so upsell copy stays consistent.
-- Status badges — always read color/label from `orderStatus.ts`'s `ORDER_STATUS` /
-  `statusMeta()`, never hardcode a status string or color class inline.
+### 4.1 Core brand colors
+
+| Role | Name | Value | Use |
+|---|---|---:|---|
+| Primary | MiniShop Pink | `#EC1F62` | Logo accent, primary CTA, selected states, key brand moments |
+| Ink | MiniShop Ink | `#0F1D31` | Headings, high-emphasis text, dark brand surfaces |
+| Muted | Slate | `#6E788A` | Secondary text, metadata, placeholders |
+| Border | Silver | `#D7DEE9` | Dividers, input/card borders |
+| Canvas | Canvas | `#F7F9FC` | Application background |
+| Surface | White | `#FFFFFF` | Cards, forms, overlays |
+| Brand Soft | Pink Soft | `#FFF1F6` | Selected/brand-tinted surfaces; use sparingly |
+
+### 4.2 Pink ramp
+
+Use the existing semantic `brand` ramp as the implementation family, converging around:
+
+| Token | Value |
+|---|---:|
+| `brand-50` | `#FFF1F6` |
+| `brand-100` | `#FFE1EC` |
+| `brand-200` | `#FFC2D6` |
+| `brand-300` | `#FF91B5` |
+| `brand-400` | `#F9578D` |
+| `brand-500` | `#EC1F62` |
+| `brand-600` | `#D61251` |
+| `brand-700` | `#AD0F40` |
+| `brand-800` | `#7F1035` |
+| `brand-900` | `#4D0A22` |
+
+### 4.3 Semantic colors
+
+Semantic colors are functional, not additional brand signatures.
+
+- **Success:** green
+- **Warning:** amber/orange
+- **Error:** red
+- **Info:** blue
+
+Never use color alone to communicate status. Pair color with text and/or iconography.
+
+### 4.4 Color behavior
+
+MiniShop Pink is a **brand signal**, not the page environment.
+
+Good uses:
+
+- primary action
+- selected navigation state
+- key brand mark
+- promotional emphasis
+- important commerce highlight
+
+Avoid:
+
+- making every card pink
+- large pink application backgrounds without purpose
+- pink body copy
+- decorative pink competing with product imagery
+- combining MiniShop Pink with cyan in a way that imitates another social platform's identity
 
 ---
 
-## 6. Accessibility
+## 5. Typography
 
-- Contrast: brand-500 (`#fe2c55`) on `cream-50`/white passes AA for large text/UI components;
-  verify body-text-sized usage against WCAG 2.2 AA (4.5:1) before shipping, especially for the
-  Bold (dark) theme's text-on-dark combinations.
-- Touch targets: minimum 44×44px, per the mobile-first / one-handed-WebView principle above —
-  this matters more here than on a general website since there is no mouse fallback.
-  `useModalA11y.ts` already handles focus trapping for modals/drawers — reuse it for any new
-  overlay rather than re-implementing focus management.
-- Reduced motion: respect `prefers-reduced-motion` for `.fade-up`/`.card-lift`-style
-  animations before adding a new motion-heavy pattern.
+### 5.1 Platform typography
 
-Third-party UI/UX and accessibility skills are not vendored in this repository. Install or load them from the developer environment when needed. The only committed project-specific skill is `.claude/skills/supabase-migration/SKILL.md`.
+MiniShop platform UI uses a neutral, highly readable sans-serif system.
+
+**Latin:** `Inter`  
+**Myanmar:** `Noto Sans Myanmar` with appropriate system fallbacks
+
+Recommended platform stack:
+
+```css
+--font-sans: 'Inter', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+--font-myanmar: 'Noto Sans Myanmar', 'Myanmar Text', system-ui, sans-serif;
+--font-display: var(--font-sans);
+```
+
+### 5.2 Weight hierarchy
+
+- Regular — 400
+- Medium — 500
+- Semibold — 600
+- Bold — 700
+
+Prefer weight, size and whitespace over decorative type effects.
+
+### 5.3 Myanmar typography
+
+Myanmar copy must remain comfortably readable on mid-range Android devices and embedded WebViews.
+
+- allow more line-height than Latin text
+- avoid excessively tight tracking
+- avoid all-caps-style visual treatments for Myanmar
+- test real Burmese copy, not only English placeholders
+- do not sacrifice readability to match Latin line boxes exactly
+
+### 5.4 Merchant theme typography
+
+Merchant storefront typography is independent from the MiniShop platform identity.
+
+Existing/potential curated storefront pairings such as Boutique, Classic and Minimal may use display faces such as Calistoga or Cormorant. Those fonts must not redefine the MiniShop platform brand.
+
+---
+
+## 6. Graphic language — Shop Blocks
+
+The recurring MiniShop graphic idea is **Shop Blocks**.
+
+Concept:
+
+> Small products and commerce blocks come together into one shop, then connect outward to the places where customers already are.
+
+### 6.1 Building blocks
+
+Use:
+
+- rounded product-card rectangles
+- modular grids
+- compact storefront/shop forms
+- subtle connecting paths
+- product tiles
+- UI fragments
+- controlled circular social/channel nodes when context requires them
+
+### 6.2 Composition
+
+Preferred visual story:
+
+**Products → One MiniShop → Customers / channels**
+
+or
+
+**Many selling touchpoints → One managed shop**
+
+The composition should communicate centralization and distribution without implying unsupported native integrations.
+
+### 6.3 Photography
+
+When photography is used:
+
+- prefer authentic seller/customer/product context
+- keep backgrounds simple
+- allow the product or person to remain the focal point
+- use Pink/Ink framing elements rather than aggressive full-image color filters
+
+### 6.4 Social platform logos
+
+Third-party social logos are contextual channel indicators, not MiniShop brand assets.
+
+- use official/recognizable treatments when permitted
+- never combine them into the MiniShop logo
+- never make another platform's color system the MiniShop palette
+- do not imply an integration that the product does not actually provide
+
+---
+
+## 7. UI design tokens
+
+MiniShop platform UI should feel clean, fast and quietly premium rather than decorative.
+
+### 7.1 Spacing
+
+Base unit: **4 px**
+
+Primary spacing scale:
+
+`4 / 8 / 12 / 16 / 24 / 32 / 48 / 64`
+
+### 7.2 Radius
+
+| Role | Radius |
+|---|---:|
+| Small controls/chips | `8px` |
+| Inputs/buttons | `12px` |
+| Cards | `16px` |
+| Large panels/modals | `16–20px` |
+| Pills | `999px` |
+
+Do not make every element pill-shaped.
+
+### 7.3 Borders
+
+Default application border:
+
+```css
+border: 1px solid #D7DEE9;
+```
+
+Prefer borders and surface contrast before heavy shadows.
+
+### 7.4 Shadows
+
+Use restrained elevation:
+
+- `sm` — controls / subtle lifted states
+- `md` — floating cards / dropdowns
+- `lg` — modal / drawer only when separation requires it
+
+Avoid large diffuse fashion-style shadows in dense admin UI.
+
+### 7.5 Buttons
+
+**Primary** — MiniShop Pink fill, high-contrast text  
+**Secondary** — white/neutral surface + border  
+**Ghost** — transparent, used for low-priority actions  
+**Danger** — semantic red; do not reuse brand pink as destructive color
+
+Minimum touch target: **44 × 44 px**.
+
+### 7.6 Inputs
+
+- neutral white surface
+- clear border
+- visible focus state
+- 12 px radius
+- explicit labels where meaning is not obvious
+- error text near the affected field
+
+### 7.7 Icons
+
+Use a consistent vector icon family such as the existing `lucide-react` system.
+
+- outline icons by default
+- consistent stroke weight
+- never use emoji as structural/navigation icons
+- icons support labels; they do not replace unclear language
+
+### 7.8 Motion
+
+Normal UI transitions: approximately **150–220 ms**.
+
+Motion should explain state or hierarchy, not decorate routine commerce tasks. Respect `prefers-reduced-motion`.
+
+---
+
+## 8. Surface modes
+
+### 8.1 Seller admin — Operate
+
+The admin console is task-first.
+
+Use:
+
+- Canvas background
+- white cards
+- Ink headings
+- Slate secondary copy
+- Pink primary/selected states
+- semantic colors only for semantic meaning
+- compact metrics and actionable lists
+
+Avoid fashion/editorial typography in the admin shell.
+
+### 8.2 Authentication / onboarding — Persuade + Operate
+
+These surfaces may carry stronger MiniShop branding than the admin dashboard, but form completion remains the priority.
+
+Use the wordmark, Shop Blocks and Pink Soft surfaces strategically. Keep the primary path obvious.
+
+### 8.3 Merchant storefront — Merchant-owned
+
+Storefront design is theme-driven and merchant-first. MiniShop platform tokens must not silently override seller-selected theme choices.
+
+The Fashion Demo is a **store theme/demo experience**, not the MiniShop platform identity.
+
+---
+
+## 9. Social media brand kit
+
+MiniShop-owned social media uses the platform brand, not an individual merchant theme.
+
+### 9.1 Required assets
+
+- profile avatar — `m` mark
+- Facebook/page cover
+- square feed post
+- portrait feed/post format
+- TikTok/Reels cover
+- feature announcement
+- product update
+- educational/knowledge post
+- promotion / campaign template
+
+### 9.2 Template grammar
+
+Every template should be recognizable without requiring a giant logo.
+
+Recurring ingredients:
+
+- MiniShop Pink
+- MiniShop Ink
+- neutral Canvas/White
+- bold Inter hierarchy
+- Shop Blocks
+- small `m` mark or wordmark
+- generous whitespace
+
+### 9.3 Content hierarchy
+
+Typical social card:
+
+1. short headline
+2. one visual idea
+3. optional one-line support
+4. restrained brand mark
+5. CTA only when needed
+
+Avoid filling posts with UI screenshots, social logos and marketing copy simultaneously.
+
+### 9.4 Suggested campaign language
+
+The master tagline remains:
+
+> **One Place to Sell Everywhere.**
+
+Supporting messages may express product value without replacing the master tagline, for example:
+
+- Manage your shop in one place.
+- Products. Customers. Orders. One place.
+- Turn social attention into real orders.
+- Build your online shop once and share it where your customers are.
+
+Any feature-specific statement must match current product capability.
+
+---
+
+## 10. Accessibility & responsive rules
+
+- Design mobile-first from approximately 375–414 px.
+- Minimum interactive target: 44 × 44 px.
+- Verify normal-size text contrast to WCAG 2.2 AA (4.5:1 minimum where applicable).
+- Never communicate state using color alone.
+- Maintain visible keyboard focus states.
+- Reuse existing modal/drawer focus management rather than creating parallel behavior.
+- Respect `prefers-reduced-motion`.
+- Test Burmese copy for wrapping and vertical rhythm.
+- Treat mid-range Android and embedded social WebViews as first-class environments.
+
+---
+
+## 11. Existing component rules
+
+These architecture constraints remain in force:
+
+- `ProductCard` is the shared product-tile implementation; do not create competing product cards without a deliberate architecture decision.
+- Storefront navigation must preserve shop-slug routing and use the existing shop-aware navigation mechanism.
+- `CartDrawer` remains the shared cart drawer behavior unless the product architecture changes explicitly.
+- `AdminLayout` remains the admin chrome source of truth.
+- `PlanGate` remains the standard plan-gating surface.
+- Order status labels/colors come from the canonical order-status domain mapping rather than per-screen hardcoding.
+
+Design changes must not weaken routing, RLS, authorization, plan gating, validation, payment semantics or other product contracts documented elsewhere.
+
+---
+
+## 12. Implementation migration note
+
+This document defines the **confirmed target brand system**. Existing code may still contain earlier visual decisions.
+
+Known migration work includes:
+
+1. reconcile legacy/documented color values with the confirmed MiniShop Pink `#EC1F62`
+2. separate MiniShop platform typography from merchant storefront font pairings
+3. replace temporary initial/square identity treatments with approved logo assets once production logo files exist
+4. migrate misleading legacy semantic token names (`cream`, `gold`) toward clearer roles only through a safe compatibility plan — do not break existing components merely to rename tokens
+5. ensure Fashion Demo styling stays isolated from production tenant storefronts and platform chrome
+6. audit MiniShop-owned surfaces for Pink overuse and accessibility
+
+Do not treat this document update alone as evidence that those code migrations are complete.
+
+---
+
+## 13. Brand checklist
+
+Before shipping a new MiniShop-owned surface, verify:
+
+- [ ] Is this a MiniShop platform surface or a merchant-owned storefront?
+- [ ] Is MiniShop MM naming used consistently where platform branding is appropriate?
+- [ ] Is the tagline exactly `One Place to Sell Everywhere.` when the master tagline is shown?
+- [ ] Is MiniShop Pink used as a signal rather than flooding the UI?
+- [ ] Does platform typography use neutral sans-serif rather than a merchant/fashion display face?
+- [ ] Does the design use the approved spacing/radius/icon language?
+- [ ] Are third-party social logos contextual rather than part of the MiniShop logo?
+- [ ] Are integration/feature claims factually supported?
+- [ ] Does Burmese copy remain readable and natural?
+- [ ] Are touch targets, contrast, focus and reduced motion handled?
+- [ ] Does the seller's storefront remain visually owned by the seller?
+
+---
+
+## 14. Confirmed identity summary
+
+**Brand:** MiniShop MM  
+**Tagline:** One Place to Sell Everywhere.  
+**Category:** Myanmar-first social commerce platform  
+**Personality:** Simple · Friendly · Confident · Trustworthy · Local-first · Merchant-first  
+**Primary:** MiniShop Pink `#EC1F62`  
+**Ink:** `#0F1D31`  
+**Platform type:** Inter + Noto Sans Myanmar  
+**Graphic language:** Shop Blocks  
+**UI:** Neutral canvas + white surfaces + restrained pink + semantic status colors  
+**Core principle:** **MiniShop owns the platform. The seller owns the storefront.**
