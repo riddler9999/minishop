@@ -16,16 +16,22 @@ MiniShop is a multi-tenant SaaS storefront for Myanmar online sellers. A seller 
 - **Payment Proof** — screenshot-derived evidence used for platform-plan payment verification. OCR/vision extraction is untrusted until deterministic server-side checks pass.
 - **Delivery Service** — Shop-selected delivery mode. Delivery price is resolved server-side during checkout.
 
-## Current commercial rules
+## Current commercial rules — FINAL (ADR 0002)
 
-- Free Trial: 0 Ks, 20 billable Orders lifetime, maximum 10 Products.
-- Starter: 30,000 Ks per prepaid cycle, 60 Orders per cycle.
-- Business: 60,000 Ks per prepaid cycle, 150 Orders per cycle.
-- Extra Orders: 500 Ks/order, purchased balance never expires.
+This section is canonical. Historical decisions and migrations may contain older numbers; migration `0021_final_pricing_packaging_reconciliation.sql` supersedes those runtime rules when applied.
+
+- Free Trial remains unchanged: 0 Ks, 20 created Orders lifetime, maximum 10 total Products.
+- Starter: **29,000 Ks/month**, **60 created Orders/cycle**, **100 total Products**.
+- Business: **79,000 Ks/month**, **200 created Orders/cycle**, **500 total Products**.
+- Total Products means every catalog row: Active + Draft + Archived all count. Archiving does not free a slot; permanent deletion does.
+- Extra Orders remain 500 Ks/order and purchased balance never expires under the current add-on contract.
+- A valid Order is billable when checkout successfully creates it and generates an Order No. One created Order consumes one entitlement immediately.
+- Reject / Cancel / buyer no-show / RTO / later refund do **not** restore quota. Only a verified MiniShop/system duplicate or platform error may be corrected administratively.
 - Paid plan activation/renewal must update both `shops.plan` and `shop_entitlements`; changing `shops.plan` alone is invalid.
-- Consumption order is monthly/lifetime quota first, then purchased balance.
-- Seller-controlled Order status changes and cancellation do not refund entitlement automatically.
-- Township shipping, last-5 buyer payment verification, Store Branding, Store Design, and Analytics are core features on every plan; promotions and integrations remain plan-gated capabilities.
+- Consumption order is cycle quota first, then purchased Extra Orders.
+- Selling/conversion features are not withheld to force an upgrade: storefront, checkout, shipping, payment verification, Store Branding, Store Design, basic Promotions, and basic Analytics are Core.
+- Business differentiates through scale and operational leverage: higher capacity plus staff/workflow, bulk operations, advanced reporting, automation/integrations, and priority operations as those capabilities ship.
+- Business-only paid Add-ons are separate purchases, not bundled into 79,000 Ks. Candidate add-ons include ChatGPT Operator, AI analytics, automation packs, custom integrations, extra staff seats, and premium messaging.
 
 ## Security and consistency invariants
 
