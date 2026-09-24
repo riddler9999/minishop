@@ -738,4 +738,4 @@ Pilot Ready လို့သတ်မှတ်ဖို့ အနည်းဆု�
 
 MiniShop exposes exactly five storefront design families: Clean & Minimal, Street & Bold, Soft & Elegant, Grid & Catalog, and Dark Modern. Theme choice is category-neutral; any seller can use any theme regardless of merchandise.
 
-A theme must materially change layout composition (hero, catalog density, product-card language and product-detail presentation), not only accent color or typography. `shops.theme.presetId` remains the persisted selector; no production database migration is required. Legacy preset IDs normalize to the closest new family so existing shops fail safely.
+A theme must materially change layout composition (hero, catalog density, product-card language, product-detail presentation and commerce surfaces), not only accent color or typography. The selected aesthetic continues through Cart Drawer → Checkout → Order Success → Order Tracking, while payment/order behaviour and semantic status colors remain unchanged. `shops.theme.presetId` remains the persisted selector; no production database migration is required. Legacy preset IDs normalize to the closest new family so existing shops fail safely.
