@@ -213,6 +213,10 @@ textarea {
   --commerce-border: #eadbd5;
   --commerce-accent: #b56b7a;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #f3e7e2;
+  --commerce-focus: rgba(181, 107, 122, 0.16);
+  --commerce-danger-soft: #fff1f2;
+  --commerce-danger-border: #fecdd3;
   --commerce-danger: #dc2626;
   --commerce-radius: 24px;
   --commerce-radius-sm: 14px;
@@ -231,6 +235,8 @@ textarea {
   --commerce-border: #d4d4d8;
   --commerce-accent: #111111;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #f4f4f4;
+  --commerce-focus: rgba(17, 17, 17, 0.14);
   --commerce-radius: 0px;
   --commerce-radius-sm: 0px;
   --commerce-border-width: 1px;
@@ -246,6 +252,8 @@ textarea {
   --commerce-border: #111111;
   --commerce-accent: #ff4d00;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #fff0e8;
+  --commerce-focus: rgba(255, 77, 0, 0.20);
   --commerce-radius: 0px;
   --commerce-radius-sm: 0px;
   --commerce-border-width: 2px;
@@ -262,6 +270,8 @@ textarea {
   --commerce-border: #eadbd5;
   --commerce-accent: #b56b7a;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #f3e7e2;
+  --commerce-focus: rgba(181, 107, 122, 0.16);
   --commerce-radius: 26px;
   --commerce-radius-sm: 16px;
   --commerce-shadow: 0 18px 48px rgba(95, 70, 74, 0.09);
@@ -276,6 +286,8 @@ textarea {
   --commerce-border: #dbe2ea;
   --commerce-accent: #0f6fff;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #edf5ff;
+  --commerce-focus: rgba(15, 111, 255, 0.16);
   --commerce-radius: 10px;
   --commerce-radius-sm: 7px;
   --commerce-shadow: none;
@@ -292,6 +304,10 @@ textarea {
   --commerce-border: #2a2a30;
   --commerce-accent: #73fbd3;
   --commerce-accent-contrast: #08110e;
+  --commerce-accent-soft: #10231e;
+  --commerce-focus: rgba(115, 251, 211, 0.18);
+  --commerce-danger-soft: #2b1218;
+  --commerce-danger-border: #7f1d2d;
   --commerce-danger: #fb7185;
   --commerce-radius: 18px;
   --commerce-radius-sm: 11px;
@@ -307,6 +323,8 @@ textarea {
   --commerce-border: #d9c8f2;
   --commerce-accent: #6d28d9;
   --commerce-accent-contrast: #ffffff;
+  --commerce-accent-soft: #efe5ff;
+  --commerce-focus: rgba(109, 40, 217, 0.16);
   --commerce-radius: 24px;
   --commerce-radius-sm: 14px;
   --commerce-shadow: 0 18px 48px rgba(76, 29, 149, 0.12);
@@ -369,7 +387,7 @@ textarea {
 
 .commerce-input:focus {
   border-color: var(--commerce-accent) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--commerce-accent) 16%, transparent) !important;
+  box-shadow: 0 0 0 3px var(--commerce-focus) !important;
 }
 
 .commerce-choice {
@@ -381,7 +399,7 @@ textarea {
 
 .commerce-choice-active {
   border-color: var(--commerce-accent) !important;
-  background: color-mix(in srgb, var(--commerce-accent) 10%, var(--commerce-surface)) !important;
+  background: var(--commerce-accent-soft) !important;
   box-shadow: var(--commerce-control-shadow) !important;
 }
 
@@ -422,8 +440,8 @@ textarea {
 }
 
 .commerce-error {
-  border-color: color-mix(in srgb, var(--commerce-danger) 45%, var(--commerce-border)) !important;
-  background: color-mix(in srgb, var(--commerce-danger) 8%, var(--commerce-surface)) !important;
+  border-color: var(--commerce-danger-border) !important;
+  background: var(--commerce-danger-soft) !important;
   color: var(--commerce-danger) !important;
 }
 
@@ -433,7 +451,7 @@ textarea {
 }
 
 .commerce-success-icon {
-  background: color-mix(in srgb, var(--commerce-accent) 14%, var(--commerce-surface)) !important;
+  background: var(--commerce-accent-soft) !important;
   color: var(--commerce-accent) !important;
 }
 
