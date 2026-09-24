@@ -9,7 +9,7 @@ import {getThemeVisual, type StorefrontTheme, type ThemePresetId} from '@/domain
 import {FONT_PAIRINGS} from '@/domain/fontPairing';
 import {ks} from '@/shared/lib/format';
 
-export type PreviewPage = 'home' | 'category' | 'product';
+export type PreviewPage = 'home' | 'category' | 'product' | 'checkout';
 
 interface PreviewProps {
   theme: StorefrontTheme;
@@ -183,6 +183,52 @@ function ProductPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName
   );
 }
 
+function CheckoutPreview({theme, products}: Omit<PreviewProps, 'page' | 'shopName' | 'logoUrl' | 'categories'>) {
+  const visual = getThemeVisual(theme);
+  const id = theme.presetId;
+  const hard = id === 'street-bold' || id === 'clean-minimal';
+  const compact = id === 'grid-catalog';
+  const soft = id === 'soft-elegant';
+  const radius = hard ? 0 : compact ? 6 : soft ? 16 : 10;
+  const borderWidth = id === 'street-bold' ? 2 : 1;
+  const panelShadow = id === 'street-bold' ? '4px 4px 0 #111' : soft ? '0 10px 24px rgba(95,70,74,.08)' : id === 'dark-modern' ? '0 16px 30px rgba(0,0,0,.25)' : 'none';
+  const first = products[0];
+  const image = productImage(first);
+
+  return (
+    <div className="space-y-2.5 px-3 py-3" style={{backgroundColor: visual.canvas, color: visual.text}}>
+      <div>
+        <p className="text-[7px] font-bold uppercase tracking-[0.16em]" style={{color: visual.accent}}>Checkout</p>
+        <p className={id === 'street-bold' ? 'mt-1 text-[16px] font-black uppercase' : 'mt-1 text-[14px] font-bold'}>Order တင်မယ်</p>
+      </div>
+      <div className={compact ? 'grid gap-2' : 'space-y-2'}>
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold"><span className="grid h-4 w-4 place-items-center text-[7px]" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : radius}}>၁</span> ပို့ဆောင်မည့် လိပ်စာ</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {['အမည်', 'ဖုန်းနံပါတ်', 'တိုင်း / ပြည်နယ်', 'မြို့နယ်'].map((label) => <div key={label} className="px-2 py-1.5 text-[7px]" style={{backgroundColor: id === 'dark-modern' ? '#101014' : visual.canvas, border: `1px solid ${visual.border}`, borderRadius: hard ? 0 : Math.max(3, radius - 3), color: visual.muted}}>{label}</div>)}
+          </div>
+        </div>
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <div className="mb-2 flex items-center gap-1.5 text-[9px] font-bold"><span className="grid h-4 w-4 place-items-center text-[7px]" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : radius}}>၂</span> ငွေပေးချေမှု</div>
+          <div className="grid grid-cols-3 gap-1">
+            {['COD', 'KBZPay', 'WavePay'].map((label, index) => <div key={label} className="px-1 py-1.5 text-center text-[6px] font-semibold" style={{border: `1px solid ${index === 0 ? visual.accent : visual.border}`, backgroundColor: index === 0 ? visual.accent : visual.surface, color: index === 0 ? visual.accentText : visual.muted, borderRadius: hard ? 0 : Math.max(3, radius - 3)}}>{label}</div>)}
+          </div>
+        </div>
+        <div className="p-2.5" style={{backgroundColor: visual.surface, border: `${borderWidth}px solid ${visual.border}`, borderRadius: radius, boxShadow: panelShadow}}>
+          <p className="text-[9px] font-bold">အော်ဒါ အကျဉ်း</p>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-8 w-7 overflow-hidden" style={{backgroundColor: visual.canvas, borderRadius: hard ? 0 : 4}}>{image && <img src={image} alt="" className="h-full w-full object-cover" />}</div>
+            <span className="flex-1 truncate text-[7px]" style={{color: visual.muted}}>{first?.name ?? 'ပစ္စည်းအမည်'} ×1</span>
+            <span className="text-[7px] font-bold">{ks(first?.price ?? 0)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t pt-2 text-[8px]" style={{borderColor: visual.border}}><b>စုစုပေါင်း</b><b style={{color: visual.accent}}>{ks(first?.price ?? 0)}</b></div>
+          <div className="mt-2 py-2 text-center text-[8px] font-bold" style={{backgroundColor: visual.accent, color: visual.accentText, borderRadius: hard ? 0 : Math.max(3, radius - 3)}}>အော်ဒါတင်မည်</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function StorePreview({theme, page, products, categories, shopName, logoUrl}: PreviewProps) {
   const announcement = theme.announcement.enabled && theme.announcement.text.trim();
   const visual = getThemeVisual(theme);
@@ -194,6 +240,7 @@ export default function StorePreview({theme, page, products, categories, shopNam
         {page === 'home' && <HomePreview theme={theme} products={products} categories={categories} shopName={shopName} />}
         {page === 'category' && <CategoryPreview theme={theme} products={products} />}
         {page === 'product' && <ProductPreview theme={theme} products={products} />}
+        {page === 'checkout' && <CheckoutPreview theme={theme} products={products} />}
       </div>
     </div>
   );
