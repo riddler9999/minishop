@@ -339,7 +339,7 @@ function UpgradePanel() {
         <Sparkles className="h-5 w-5 text-pink-500" /> Plan upgrade
       </h2>
       <p className="mt-1 text-sm text-slate-500">
-        Free Trial တွင် Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ) နှင့် ပစ္စည်း ${PLAN_PRODUCT_LIMIT.free_trial} ခုအထိသာ ရပါသည်။ ပိုမိုလက်ခံနိုင်ရန် upgrade လုပ်ပါ။
+        Free Trial တွင် Order ၂၀ (တစ်သက်တာ) နှင့် ပစ္စည်း ၁၀ ခုအထိသာ ရပါသည်။ ပိုမိုလက်ခံနိုင်ရန် upgrade လုပ်ပါ။
       </p>
 
       <div className="mt-4 grid gap-3">
