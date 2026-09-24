@@ -160,3 +160,20 @@ only records the target visual language.
   animations before adding a new motion-heavy pattern.
 
 Third-party UI/UX and accessibility skills are not vendored in this repository. Install or load them from the developer environment when needed. The only committed project-specific skill is `.claude/skills/supabase-migration/SKILL.md`.
+
+
+---
+
+## 7. Isolated Demo Store
+
+The public product demo is mounted at `/demo/*` and is intentionally a distinct presentation layer from real tenant storefronts at `/s/:slug/*`.
+
+- Demo route identity is URL-derived by `src/features/demo/DemoStoreContext.tsx`; do not infer it from a missing shop/slug.
+- Storefront navigation must use `ShopLink` / `useShopNavigate`. While the current URL is under `/demo`, these helpers preserve the `/demo` route base for nested browsing, cart, checkout, order confirmation, and order lookup.
+- Demo visual tokens are scoped under `[data-demo-store]` in `src/index.css`; they must never restyle a tenant storefront.
+- Demo-specific product tiles use the `demo-purple` ProductCard variant and intentionally omit listing-card quick-add controls.
+- The demo has a dedicated `/demo/cart` page in addition to the shared cart drawer. Tenant storefronts remain drawer-first.
+- Demo UI may present product color/size only when those values exist in product data. Do not synthesize variants or merchandising claims.
+- Business logic remains shared: cart state, checkout validation, order creation, idempotency, shipping, payment, inventory, and tenant data contracts are not forked by the demo theme.
+
+Visual direction: soft lavender canvas, dark-purple primary actions, lilac product surfaces, light-lavender/white cards, large radii, pill controls, restrained purple shadows, product-first hierarchy, and a floating four-item mobile navigation.
