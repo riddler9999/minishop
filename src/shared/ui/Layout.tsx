@@ -48,7 +48,6 @@ const DRAWER_NAV = [
 
 function AnnouncementBar() {
   const theme = getStorefrontTheme();
-  const isDemo = !shop;
   const {enabled, text} = theme.announcement;
   if (!enabled || !text.trim()) return null;
   return (
@@ -66,6 +65,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
   const shop = getCachedShopInfo();
   const shopName = shop?.name ?? APP_NAME;
   const theme = getStorefrontTheme();
+  const isDemo = !shop;
 
   useEffect(() => {
     setMenuOpen(false);
