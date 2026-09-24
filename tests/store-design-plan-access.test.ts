@@ -13,7 +13,10 @@ test('Store Design is enabled for free trial, starter, and business', () => {
   assert.match(design, /features\.storeDesign/);
 });
 
-test('logo and extended branding remain Business-only', () => {
-  assert.match(plan, /branding: false/);
+test('branding, Store Design, and analytics are enabled in the core plan feature set', () => {
+  assert.match(plan, /advancedDashboard: true/);
+  assert.match(plan, /storeDesign: true/);
   assert.match(plan, /branding: true/);
+  assert.doesNotMatch(plan, /advancedDashboard: false/);
+  assert.doesNotMatch(plan, /branding: false/);
 });
