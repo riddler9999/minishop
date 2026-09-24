@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Search, Pencil, Plus, X, Check, EyeOff, Eye, Upload} from 'lucide-react';
+import {Search, Pencil, Plus, X, Check, EyeOff, Eye, Upload, Trash2} from 'lucide-react';
 import {PRODUCT_IMAGES_BUCKET} from '@/core/storage/buckets';
 import {adminApi} from '@/data/dataSource';
 import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
@@ -22,11 +22,13 @@ function ProductModal({
   product,
   onClose,
   onSaved,
+  onDeleted,
 }: {
   mode: 'create' | 'edit';
   product?: Product;
   onClose: () => void;
   onSaved: (p: Product) => void;
+  onDeleted?: (product: Product) => void;
 }) {
   const {features} = usePlan();
   const isEdit = mode === 'edit';
@@ -57,6 +59,7 @@ function ProductModal({
   );
   const [hidden, setHidden] = useState(product ? product.status !== 'active' : false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState('');
 
   // Cancel (onClose) never uploads anything, so the only cleanup a staged
@@ -179,6 +182,33 @@ function ProductModal({
       await Promise.all(newlyUploaded.map(({path}) => adminApi.deleteProductImage(path).catch(() => {})));
       setErr(e.message || 'သိမ်း၍ မရပါ။');
       setSaving(false);
+    }
+  };
+
+  const removeProduct = async () => {
+    if (!product || !onDeleted) return;
+    const confirmed = window.confirm(
+      `"${product.name}" ကို အပြီးဖျက်မလား? ဖျက်ပြီးရင် Product slot တစ်ခု ပြန်လွတ်ပါမယ်။`,
+    );
+    if (!confirmed) return;
+
+    setErr('');
+    setDeleting(true);
+    try {
+      // Delete the DB row first so a storage failure can never leave a live
+      // product pointing at missing images. order_items keep name/price snapshots
+      // and product_id becomes NULL via ON DELETE SET NULL.
+      await adminApi.deleteProduct(product.id);
+      await Promise.all(
+        product.images.map((url) => {
+          const path = deriveStoragePath(url, PRODUCT_IMAGES_BUCKET);
+          return path ? adminApi.deleteProductImage(path).catch(() => {}) : Promise.resolve();
+        }),
+      );
+      onDeleted(product);
+    } catch (e: any) {
+      setErr(e.message || 'ပစ္စည်း ဖျက်၍မရပါ။');
+      setDeleting(false);
     }
   };
 
@@ -319,12 +349,20 @@ function ProductModal({
         </div>
 
         <div className="flex gap-2 border-t border-cream-200 p-4">
-          <button onClick={onClose} className="my flex-1 rounded-xl border border-cream-200 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100">
+          {isEdit && product && (
+            <button
+              onClick={removeProduct}
+              disabled={saving || deleting}
+              className="my inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">
+              <Trash2 className="h-4 w-4" /> {deleting ? 'ဖျက်နေသည်…' : 'ဖျက်ရန်'}
+            </button>
+          )}
+          <button onClick={onClose} disabled={deleting} className="my flex-1 rounded-xl border border-cream-200 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100 disabled:opacity-50">
             မလုပ်တော့ပါ
           </button>
           <button
             onClick={save}
-            disabled={saving}
+            disabled={saving || deleting}
             className="my flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-500 py-2.5 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50">
             <Check className="h-4 w-4" /> {saving ? 'သိမ်းနေသည်…' : isEdit ? 'သိမ်းရန်' : 'ထည့်ရန်'}
           </button>
@@ -371,6 +409,11 @@ export default function AdminProducts() {
   const onCreated = (created: Product) => {
     setProducts((prev) => [created, ...prev]);
     setCreating(false);
+  };
+
+  const onDeleted = (product: Product) => {
+    setProducts((prev) => prev.filter((p) => p.id !== product.id));
+    setEditing(null);
   };
 
   return (
@@ -495,7 +538,7 @@ export default function AdminProducts() {
         )}
       </div>
 
-      {editing && <ProductModal mode="edit" product={editing} onClose={() => setEditing(null)} onSaved={onEdited} />}
+      {editing && <ProductModal mode="edit" product={editing} onClose={() => setEditing(null)} onSaved={onEdited} onDeleted={onDeleted} />}
       {creating && <ProductModal mode="create" onClose={() => setCreating(false)} onSaved={onCreated} />}
     </div>
   );
