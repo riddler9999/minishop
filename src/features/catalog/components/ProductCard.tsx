@@ -50,19 +50,9 @@ export default function ProductCard({product, variant = 'default', className}: {
           <ShopLink to={to} className="font-display line-clamp-1 text-[12px] font-bold leading-snug text-[#21133f] transition hover:text-[#6d28d9] sm:text-sm">
             {product.name}
           </ShopLink>
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <span className="block truncate font-sans text-[12px] font-black text-[#24133f] sm:text-sm">{ks(price)}</span>
-              {hasPromo && <span className="block truncate text-[9px] text-[#7c6f98] line-through">{ks(product.price)}</span>}
-            </div>
-            <button
-              type="button"
-              disabled={!product.inStock}
-              aria-label="ခြင်းထဲထည့်မည်"
-              onClick={quickAdd}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#6d28d9] text-white shadow-[0_8px_18px_rgba(109,40,217,0.28)] transition hover:bg-[#5b21b6] disabled:cursor-not-allowed disabled:bg-[#b8a4db]">
-              <ShoppingBag className="h-4 w-4" />
-            </button>
+          <div className="mt-1.5 min-w-0">
+            <span className="block truncate font-sans text-[12px] font-black text-[#24133f] sm:text-sm">{ks(price)}</span>
+            {hasPromo && <span className="block truncate text-[9px] text-[#7c6f98] line-through">{ks(product.price)}</span>}
           </div>
         </div>
       </article>
