@@ -13,6 +13,11 @@ function Card({product}: {product: Product}) {
   const nav = useNavigate();
   const {add} = useCart();
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
+  const buyNow = () => {
+    if (!product.inStock) return;
+    add(product);
+    nav('/fashion-demo/checkout');
+  };
   return (
     <article className="overflow-hidden rounded-[18px] bg-white shadow-[0_10px_28px_rgba(88,52,64,0.09)]">
       <button type="button" onClick={() => nav(`/fashion-demo/products/${encodeURIComponent(product.id)}`)} className="block w-full bg-[#f8eef3] text-left">
@@ -22,8 +27,8 @@ function Card({product}: {product: Product}) {
         <p className="my line-clamp-2 min-h-9 text-xs font-semibold">{product.name}</p>
         <p className="mt-1 text-sm font-extrabold text-[#f43f70]">{ks(price)}</p>
         <div className="mt-2 grid gap-1.5">
-          <button type="button" onClick={() => add(product)} className="min-h-9 rounded-xl border border-[#f43f70] text-[10px] font-bold text-[#e33565]">ခြင်းထဲထည့်မည်</button>
-          <button type="button" onClick={() => {add(product); nav('/fashion-demo/checkout');}} className="min-h-9 rounded-xl bg-[#f43f70] text-[10px] font-bold text-white">ဝယ်မည်</button>
+          <button type="button" disabled={!product.inStock} onClick={() => product.inStock && add(product)} className="min-h-9 rounded-xl border border-[#f43f70] text-[10px] font-bold text-[#e33565] disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400">ခြင်းထဲထည့်မည်</button>
+          <button type="button" disabled={!product.inStock} onClick={buyNow} className="min-h-9 rounded-xl bg-[#f43f70] text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">ဝယ်မည်</button>
         </div>
       </div>
     </article>
