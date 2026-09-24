@@ -157,9 +157,13 @@ declare
   v_limit integer;
 begin
   if auth.uid() is not null then
+    -- Serialize concurrent product creates for the same shop. Without this
+    -- row lock, two BEFORE INSERT triggers can both observe count=N and both
+    -- pass the cap check. The lock is held until the surrounding transaction ends.
     select plan into v_plan
     from public.shops
-    where id = new.shop_id and owner_id = (select auth.uid());
+    where id = new.shop_id and owner_id = (select auth.uid())
+    for update;
 
     v_limit := case v_plan
       when 'business' then 500
