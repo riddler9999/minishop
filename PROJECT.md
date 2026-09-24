@@ -354,7 +354,7 @@ invariant (unsaved upload ကို replace/save-fail/unmount မှာ cleanup�
 အဖြစ်တည်ရှိတယ်။ `database.types.ts` ရဲ့ `shops` block က live schema (`theme: Json`) နဲ့ တိတိကျကျ
 sync ဖြစ်နေတာ regenerate output နဲ့တိုက်စစ်ပြီးဖြစ်တယ် (ကျန် generator drift ကို မထည့်ဘဲ hand-maintained
 version ကို ထားတယ် — CLAUDE.md type-maintenance standing rule အတိုင်း)။ `tests/theme.test.ts` က
-normalizeTheme contract ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကတော့ pending ဆက်ဖြစ်တယ် —
+normalizeTheme contract ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကို 2026-09-25 Production မှာ duplicate-owner preflight = 0 အပြီး apply လုပ်ပြီးပြီ —
 ဒီ migration က မထိ။)
 
 ### D49 — Shop တစ်ဆိုင် per Owner ကို DB Invariant အဖြစ် Enforce လုပ်တယ်
@@ -363,7 +363,7 @@ Seller signup flow ကို audit လုပ်ရာမှာ latent lockout ri
 
 **ဆုံးဖြတ်ချက်:** migration `0008_shop_owner_unique.sql` နဲ့ `unique(owner_id)` constraint (`shops_owner_unique`) ထည့်ပြီး DB level မှာ invariant ကို enforce လုပ်တယ်။ Unique constraint က ကိုယ်ပိုင် unique index တစ်ခု ဆောက်ပေးတာမို့ အရင်ရှိပြီးသား non-unique `shops_owner_idx` က redundant ဖြစ်သွားတယ် — အဲဒါကို migration ထဲမှာပဲ `drop index` လုပ်တယ်။ `createOwnShop()` က owner-collision (23505) တိုင်းမှာ owner ရဲ့ ဆိုင်ကို အရင်ရှာ → ရှိရင် idempotent recover (double-submit လုပ်သူကို သူ့ dashboard သို့ပို့) → မရှိမှသာ slug collision ဟု သတ်မှတ်တယ်။ `RequireAdmin`/`Onboarding` ကလည်း transient fetch error နဲ့ "no shop" ကို ခွဲ (error မှာ retry screen ပြ၊ redirect မလုပ်)။ `slugify` က slice ပြီးမှ hyphen trim (trailing `-` fail ရှောင်ရန်)။ ဒီ behaviour တွေအားလုံးကို `tests/sellerShop.test.ts` နဲ့ `tests/slug.test.ts` မှာ regression test နဲ့ ချုပ်ထားတယ်။
 
-**Pending:** `0008` ကို live project သို့ **မ apply ရသေးပါ** — owner go-ahead လိုအပ်ပြီး duplicate `owner_id` row ရှိရင် constraint add မအောင်မြင်။ Apply မလုပ်ခင် operator က migration ထဲက read-only duplicate-detection query ကို run ပြီး duplicate မရှိကြောင်း အရင်စစ်ရမယ် (`0001`–`0007` applied; `0008` pending)။ (PR #28)
+**Production update (2026-09-25):** `0008` apply မလုပ်ခင် duplicate `owner_id` preflight ကို run လုပ်ပြီး zero rows confirm လုပ်ခဲ့တယ်။ `shops_owner_unique` ကို Production မှာ apply လုပ်ပြီး redundant `shops_owner_idx` ကို migration အတိုင်းဖယ်ထားပြီးပြီ။
 
 ### D48 — DB Typed Error တွေကို Domain Catalog တစ်ခုတည်းက Burmese အဖြစ် Map လုပ်တယ်
 
@@ -609,7 +609,7 @@ delete write အောင်မြင်မှသာ)။ Lookup fail (network/RL
 `database.types.ts` ရဲ့ `shop_applications` block က regenerate output နဲ့ 1:1 sync; security advisor မှာ
 new table အတွက် RLS/policy warning မရှိ။ DB error code ၃ ခု (`application_status_is_platform_managed`,
 `application_owner_is_immutable`, `application_already_approved`) ကို `dbError.ts` catalog ထဲထည့်ပြီး
-`tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` က pending ဆက်ဖြစ် —
+`tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` ကို 2026-09-25 Production မှာ apply လုပ်ပြီးပြီ —
 ဒီ migration က မထိ။)
 
 ### D56 — SUPERSEDED BY D60 — Pricing V1: Free Trial တီးယာ + Auditable Order Entitlement Model
@@ -672,7 +672,7 @@ order (retry = order တစ်ခုတည်း, consume ၁ ကြိမ်), 
 `tests/entitlement.test.ts`, migration invariant တွေကို `tests/entitlementMigration.test.ts` က guard လုပ်တယ်။
 `npm run check` — lint + test (332 pass) + build အားလုံး green။
 
-**Applied (2026-09-23):** `0016_entitlements_and_pricing` ကို live project (`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး entitlement tables/indexes/functions ကို runtime မှာ verify လုပ်ထားတယ်။ Existing shops အားလုံးမှာ entitlement row ရှိပြီး `shops.plan ↔ shop_entitlements.plan` drift = 0။ `0008_shop_owner_unique` က pending ဆက်ဖြစ်။
+**Applied (2026-09-23):** `0016_entitlements_and_pricing` ကို live project (`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး entitlement tables/indexes/functions ကို runtime မှာ verify လုပ်ထားတယ်။ Existing shops အားလုံးမှာ entitlement row ရှိပြီး `shops.plan ↔ shop_entitlements.plan` drift = 0။ `0008_shop_owner_unique` ကို 2026-09-25 Production မှာ apply လုပ်ပြီးပြီ။
 
 ### D57 — HISTORICAL / SUPERSEDED BY D60 — Pricing V1 (0016) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
 
