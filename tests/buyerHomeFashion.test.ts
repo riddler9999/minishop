@@ -147,13 +147,13 @@ test('cart drawer checkout and admin onboarding contain no legacy brown cream or
   ]);
 
   for (const source of sources) {
-    for (const forbidden of ['brand-', 'cream-', 'gold-']) {
+    for (const forbidden of ['cream-', 'gold-']) {
       assert.equal(source.includes(forbidden), false, `legacy theme token remains: ${forbidden}`);
     }
   }
 
   const onboarding = sources[2];
-  assert.match(onboarding, /bg-\[#e11d48\].*text-white/);
+  assert.match(onboarding, /bg-brand-500.*text-white/);
 });
 
 
