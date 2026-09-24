@@ -124,7 +124,7 @@ export default function Checkout() {
 
   return (
     <div className="commerce-page mx-auto max-w-6xl px-4 pb-12 pt-5 sm:px-6 sm:pt-8">
-      <div className="mb-6"><p className="commerce-kicker text-xs font-semibold uppercase tracking-[0.18em]">Checkout</p><h1 className="commerce-title mt-1 font-display text-2xl font-bold tracking-[-0.03em] sm:text-3xl">Order တင်မယ်</h1><p className="commerce-muted my mt-1 text-sm">ပို့ဆောင်ရန်အချက်အလက်နဲ့ ငွေပေးချေမှုကို အောက်မှာဖြည့်ပါ။</p></div>
+      <div className="mb-6"><h1 className="commerce-title font-display text-2xl font-bold tracking-[-0.03em] sm:text-3xl">Order တင်မယ်</h1></div>
 
       <div className="commerce-checkout-grid grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)] lg:gap-8">
         <div className="space-y-5">
@@ -136,16 +136,16 @@ export default function Checkout() {
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="checkout-name" className={label}>အမည် <span className="commerce-accent">*</span></label>
-                <input id="checkout-name" className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="အမည်ရေးပါ" />
+                <label htmlFor="checkout-name" className={label}>လက်ခံမည့်သူအမည် <span className="commerce-accent">*</span></label>
+                <input id="checkout-name" className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="လက်ခံမည့်သူအမည်" />
               </div>
               <div>
                 <label htmlFor="checkout-phone" className={label}>ဖုန်းနံပါတ် <span className="commerce-accent">*</span></label>
                 <input id="checkout-phone" className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09…" inputMode="tel" />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="checkout-street" className={label}>လမ်းအမည် / အိမ်အမှတ် <span className="commerce-accent">*</span></label>
-                <input id="checkout-street" className={input} value={street} onChange={(e) => setStreet(e.target.value)} placeholder="ဥပမာ — မြသီတာလမ်း၊ အမှတ် ၁၂၃" />
+                <label htmlFor="checkout-street" className={label}>လိပ်စာ <span className="commerce-accent">*</span></label>
+                <input id="checkout-street" className={input} value={street} onChange={(e) => setStreet(e.target.value)} placeholder="ဥပမာ ၁၂၃၊ ပြည်လမ်း..." />
               </div>
               <div>
                 <label htmlFor="checkout-region" className={label}>တိုင်း / ပြည်နယ် <span className="commerce-accent">*</span></label>
@@ -200,7 +200,6 @@ export default function Checkout() {
               ငွေပေးချေမှု
             </h2>
 
-            <p className="commerce-label my mb-2 text-sm font-semibold">ငွေပေးချေမှုနည်းလမ်း ရွေးပါ</p>
             <div className="grid gap-3 sm:grid-cols-3">
               {PAYMENT_METHODS.map((m) => (
                 <button
