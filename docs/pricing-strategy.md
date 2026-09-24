@@ -287,7 +287,7 @@ orders to be attractive at the crossover.
   volume discount).
 - Business extra orders: **400 MMK/order**.
 - Crossover ~120 orders/mo makes upgrade rational without forcing it.
-- **Non-capacity value that justifies Business:** staff seats, 2 staff seats,
+- **Non-capacity value that justifies Business:** 2 staff seats,
   Telegram/email notifications, promo scheduling, bulk import/edit, webhooks/n8n, 1 custom domain, priority
   support. This lets a low-volume but feature-hungry seller choose Business on capability, not volume.
 
@@ -433,8 +433,7 @@ toward C's "15/mo forever" — subject to pilot data (D8).
 1. **Before tiers:** lock the billable-order definition and the subscription collection mechanic — both
    define the whole model more than tier prices do.
 2. **Fix the codebase mismatch:** move township shipping + payment verification from Business-gated to Core.
-3. **Adopt Hybrid (C): capacity primary, features secondary.** Gate only staff / integrations / support /
-   staff / integrations / support (value + cost); never essential commerce.
+3. **Adopt Hybrid (C): capacity primary, features secondary.** Gate only staff / integrations / support (value + cost); never essential commerce.
 4. **Default to Balanced (B)**; tune the free tier toward "15/mo forever"; Business = 60,000 / 150 orders
    (crossover-derived).
 5. **Keep 500 MMK/order** as the target-segment anchor; Business's 400 effective is the volume discount;
