@@ -24,7 +24,7 @@ Required webhook payload from app:
 Expected verified extraction:
 ```json
 {
-  "amount": 60000,
+  "amount": 79000,
   "transaction_id": "string",
   "date": "YYYY-MM-DD",
   "time": "HH:mm:ss",
@@ -43,7 +43,7 @@ Security notes:
 
 ## Current pricing contract
 
-- Starter: 30,000 Ks
-- Business: 60,000 Ks
-- The historical 50,000/80,000 amounts in migration 0011 are superseded by migration 0017.
+- Starter: 29,000 Ks
+- Business: 79,000 Ks
+- The historical 50,000/80,000 amounts in migration 0011 and 30,000/60,000 amounts in migration 0017 are superseded by migration 0021.
 - Never edit an already-applied migration to change runtime truth; add a later reconciliation migration instead.
