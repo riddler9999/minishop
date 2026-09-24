@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Menu, Search, ShoppingBag, X} from 'lucide-react';
+import {Grid2X2, Home, Menu, PackageSearch, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
@@ -9,15 +9,6 @@ import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
 import CartDrawer from '@/features/cart/components/CartDrawer';
 
-/**
- * CSS custom properties, scoped to the storefront root, that carry the shop's
- * chosen font pairing. `font-display`/`font-sans` (Tailwind utilities backed by
- * these same variable names, see index.css) already appear throughout the
- * storefront and buyer flows (Products, ProductDetail, Checkout, OrderLookup,
- * OrderSuccess), so overriding the variables here — plus recomputing this
- * wrapper's own `font-family` so descendants without an explicit class inherit
- * it too — retints the whole buyer experience without touching every page.
- */
 function fontPairingStyle(fontPairing: keyof typeof FONT_PAIRINGS): React.CSSProperties {
   const pairing = FONT_PAIRINGS[fontPairing];
   return {
@@ -33,14 +24,17 @@ function Brand() {
   const logoUrl = shop?.logoUrl;
 
   return (
-    <ShopLink to="/" className="flex min-w-0 max-w-full flex-col items-center justify-center overflow-hidden px-2 text-center">
+    <ShopLink to="/" className="flex min-w-0 items-center gap-2 overflow-hidden">
       {logoUrl ? (
-        <img src={logoUrl} alt="" className="mb-1 h-8 w-8 rounded-full object-cover ring-2 ring-[#fbcfe8]" />
+        <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-2xl object-cover ring-2 ring-[#fbcfe8]" />
       ) : (
-        <ShoppingBag className="mb-1 h-5 w-5 text-[#e11d48]" strokeWidth={1.6} aria-hidden="true" />
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border-2 border-[#e11d48] text-[#e11d48]">
+          <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
+        </span>
       )}
-      <span className="font-display w-full max-w-[180px] truncate text-[18px] font-bold leading-none tracking-[-0.02em] text-slate-950 sm:max-w-[260px] sm:text-[22px]">
-        {name}
+      <span className="min-w-0">
+        <span className="font-display block truncate text-[20px] font-black leading-none tracking-[-0.03em] text-[#e11d48] sm:text-[24px]">{name}</span>
+        <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:block">Wear Your Story</span>
       </span>
     </ShopLink>
   );
@@ -52,8 +46,6 @@ const DRAWER_NAV = [
   {to: '/refund-policy', label: 'Refund Policy'},
 ];
 
-// Storefront-wide announcement bar (Store Design). Hidden unless the seller has
-// both enabled it and given it text.
 function AnnouncementBar() {
   const theme = getStorefrontTheme();
   const {enabled, text} = theme.announcement;
@@ -91,7 +83,6 @@ export default function Layout({children, drawerFooterAction}: {children: React.
     };
   }, [shopName]);
 
-
   useEffect(() => {
     if (!menuOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -101,33 +92,32 @@ export default function Layout({children, drawerFooterAction}: {children: React.
     };
   }, [menuOpen]);
 
+  const active = (target: string) => target === '/' ? pathname.endsWith('/') : pathname.includes(target);
+
   return (
-    <div className="flex min-h-screen flex-col overflow-x-clip bg-white" style={fontPairingStyle(theme.fontPairing)}>
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-white pb-[72px] md:pb-0" style={fontPairingStyle(theme.fontPairing)}>
       <AnnouncementBar />
-      <header className="sticky top-0 z-40 border-b border-rose-100 bg-white/95 backdrop-blur-xl">
-        <div className="mx-auto grid h-[82px] w-full max-w-[1440px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 px-3 sm:h-[96px] sm:grid-cols-[112px_minmax(0,1fr)_112px] sm:px-6 lg:grid-cols-[180px_minmax(0,1fr)_180px] lg:px-8">
-          <div className="flex items-center justify-start">
-            <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className="grid h-11 w-11 place-items-center rounded-full text-[#261a12] transition hover:bg-[#f3eadf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
-              <Menu className="h-7 w-7" strokeWidth={1.5} />
-            </button>
-          </div>
+      <header className="sticky top-0 z-40 border-b border-rose-100/70 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-[78px] w-full max-w-[1440px] items-center gap-3 px-4 sm:h-[88px] sm:px-6 lg:px-8">
           <Brand />
-          <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
-            <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="hidden h-11 w-11 place-items-center rounded-full text-[#271b12] transition hover:bg-[#f3eadf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] sm:grid">
-              <Search className="h-[22px] w-[22px]" strokeWidth={1.7} />
+          <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+            <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+              <Search className="h-[22px] w-[22px]" strokeWidth={1.8} />
             </ShopLink>
-            <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className="relative grid h-11 w-11 place-items-center rounded-full text-[#271b12] transition hover:bg-[#f3eadf] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
-              <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.7} />
-              {count > 0 && <span className="absolute right-0 top-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[#e11d48] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
+            <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className="relative grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+              <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.8} />
+              {count > 0 && <span className="absolute right-0 top-0 grid h-[19px] min-w-[19px] place-items-center rounded-full bg-[#ff3b72] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
             </button>
-            <ShopLink to="/products" className="hidden min-h-11 items-center rounded-full bg-[#e11d48] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#be123c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48] focus-visible:ring-offset-2 lg:inline-flex">ပစ္စည်းများကြည့်ရန်</ShopLink>
+            <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+              <Menu className="h-[22px] w-[22px]" strokeWidth={1.8} />
+            </button>
           </div>
         </div>
       </header>
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-rose-100 bg-slate-950 text-white">
+      <footer className="hidden border-t border-rose-100 bg-slate-950 text-white md:block">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
           <div><p className="text-xl font-bold">{shopName}</p><p className="mt-1 text-xs text-rose-200">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/65 sm:justify-start">
@@ -140,6 +130,25 @@ export default function Layout({children, drawerFooterAction}: {children: React.
         </div>
       </footer>
 
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 border-t border-rose-100 bg-white/98 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(88,52,64,0.08)] backdrop-blur md:hidden" aria-label="Mobile navigation">
+        <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+          <Home className="h-5 w-5" /><span>Home</span>
+        </ShopLink>
+        <ShopLink to="/products" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/products') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+          <Grid2X2 className="h-5 w-5" /><span>Categories</span>
+        </ShopLink>
+        <button type="button" onClick={openDrawer} className="relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
+          <ShoppingBag className="h-5 w-5" /><span>Cart</span>
+          {count > 0 && <span className="absolute right-[24%] top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#ff3b72] px-1 text-[9px] font-bold text-white">{count}</span>}
+        </button>
+        <ShopLink to="/orders" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/orders') ? 'text-[#e11d48]' : 'text-slate-500'}`}>
+          <PackageSearch className="h-5 w-5" /><span>Orders</span>
+        </ShopLink>
+        <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-500">
+          <Menu className="h-5 w-5" /><span>Menu</span>
+        </button>
+      </nav>
+
       <CartDrawer />
 
       {menuOpen && (
@@ -148,7 +157,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
           <aside className="relative flex h-full w-[84%] max-w-[390px] flex-col bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-rose-100 pb-5">
               <div><p className="text-2xl font-bold text-slate-950">{shopName}</p><p className="mt-1 text-xs font-medium text-[#e11d48]">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
-              <button type="button" aria-label="မီနူးပိတ်ရန်" onClick={() => setMenuOpen(false)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-[#f3eadf]"><X className="h-6 w-6" /></button>
+              <button type="button" aria-label="မီနူးပိတ်ရန်" onClick={() => setMenuOpen(false)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-[#fff0f5]"><X className="h-6 w-6" /></button>
             </div>
             <nav className="mt-7 flex flex-col">
               <ShopLink to="/" className="border-b border-rose-100 py-4 text-base font-semibold text-slate-900 transition hover:text-[#e11d48]">
