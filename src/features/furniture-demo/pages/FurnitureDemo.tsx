@@ -201,7 +201,7 @@ function SearchField({
   placeholder?: string;
 }) {
   return (
-    <div className="flex min-h-13 items-center gap-3 rounded-[18px] border border-[#e8e1d8] bg-[#fffdf9] px-4 shadow-[0_4px_18px_rgba(76,59,43,0.04)] focus-within:border-[#b47d55] focus-within:ring-2 focus-within:ring-[#a66b3f]/10">
+    <div className="flex min-h-[52px] items-center gap-3 rounded-[18px] border border-[#e8e1d8] bg-[#fffdf9] px-4 shadow-[0_4px_18px_rgba(76,59,43,0.04)] focus-within:border-[#b47d55] focus-within:ring-2 focus-within:ring-[#a66b3f]/10">
       <Search className="h-5 w-5 shrink-0 text-[#77756f]" strokeWidth={1.7} />
       <input
         value={value}
@@ -222,6 +222,7 @@ function SearchField({
 function ProductCard({product}: {product: Product}) {
   const nav = useNavigate();
   const {add} = useCart();
+  const [favorite, setFavorite] = useState(false);
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
   const oldPrice = product.isPromotion && product.promoPrice ? product.price : null;
 
@@ -235,9 +236,14 @@ function ProductCard({product}: {product: Product}) {
           <img src={product.image ?? ''} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />
         </div>
         {oldPrice && <span className="absolute left-2.5 top-2.5 rounded-full bg-[#a66b3f] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white">Sale</span>}
-        <span className="absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-white/94 text-[#343633] shadow-sm">
-          <Heart className="h-4 w-4" strokeWidth={1.8} />
-        </span>
+        <button
+          type="button"
+          onClick={(event) => { event.stopPropagation(); setFavorite((value) => !value); }}
+          className={`absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-white/94 shadow-sm transition ${favorite ? 'text-[#9a6239]' : 'text-[#343633]'}`}
+          aria-label={favorite ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+          aria-pressed={favorite}>
+          <Heart className="h-4 w-4" strokeWidth={1.8} fill={favorite ? 'currentColor' : 'none'} />
+        </button>
       </button>
       <div className="p-3.5">
         <button type="button" onClick={() => nav(`/furniture-demo/products/${encodeURIComponent(product.id)}`)} className="line-clamp-2 min-h-[40px] text-left text-[13px] font-bold leading-5 text-[#1d201e] sm:text-sm">
@@ -420,6 +426,7 @@ function FurnitureProductDetail() {
   const product = furnitureProduct(id);
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [favorite, setFavorite] = useState(false);
 
   if (!product) {
     return (
@@ -449,8 +456,13 @@ function FurnitureProductDetail() {
           <div>
             <div className="relative aspect-[1.02] overflow-hidden rounded-[26px] bg-[#ebe5de]">
               {images[activeImage] && <img src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />}
-              <button type="button" className="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-white/94 text-[#343633] shadow-sm" aria-label="Add to wishlist">
-                <Heart className="h-5 w-5" strokeWidth={1.8} />
+              <button
+                type="button"
+                onClick={() => setFavorite((value) => !value)}
+                className={`absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full bg-white/94 shadow-sm transition ${favorite ? 'text-[#9a6239]' : 'text-[#343633]'}`}
+                aria-label={favorite ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-pressed={favorite}>
+                <Heart className="h-5 w-5" strokeWidth={1.8} fill={favorite ? 'currentColor' : 'none'} />
               </button>
             </div>
             {images.length > 1 && (
@@ -488,8 +500,8 @@ function FurnitureProductDetail() {
               </div>
             </div>
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              <button type="button" onClick={addCurrent} className="min-h-13 rounded-[15px] border border-[#a66b3f] bg-transparent px-5 text-sm font-bold text-[#8c572f] transition hover:bg-[#f1e7dc]">Add to Cart</button>
-              <button type="button" onClick={() => {addCurrent(); nav('/furniture-demo/checkout');}} className="min-h-13 rounded-[15px] bg-[#252d27] px-5 text-sm font-bold text-white transition hover:bg-[#151a16]">Buy Now</button>
+              <button type="button" onClick={addCurrent} className="min-h-[52px] rounded-[15px] border border-[#a66b3f] bg-transparent px-5 text-sm font-bold text-[#8c572f] transition hover:bg-[#f1e7dc]">Add to Cart</button>
+              <button type="button" onClick={() => {addCurrent(); nav('/furniture-demo/checkout');}} className="min-h-[52px] rounded-[15px] bg-[#252d27] px-5 text-sm font-bold text-white transition hover:bg-[#151a16]">Buy Now</button>
             </div>
             <div className="mt-5 flex items-center gap-2 text-xs text-[#6f706b]"><Truck className="h-4 w-4 text-[#7d8874]" /> Yangon delivery from 15,000 MMK · free over 1,500,000 MMK</div>
           </div>
@@ -625,7 +637,7 @@ function FurnitureCheckout() {
                 ['cod', 'Cash on Delivery', 'Pay when furniture arrives.'],
                 ['kpay', 'KBZPay', 'Demo mobile-payment option.'],
               ].map(([value, label, description]) => (
-                <label key={value} className={`cursor-pointer rounded-[16px] border p-4 ${paymentMethod === value ? 'border-[#a66b3f] bg-[#f4ebe2]' : 'border-[#e3dbd2] bg-white'}`}>
+                <label key={value} className={`cursor-pointer rounded-[16px] border p-4 focus-within:ring-2 focus-within:ring-[#a66b3f] focus-within:ring-offset-2 ${paymentMethod === value ? 'border-[#a66b3f] bg-[#f4ebe2]' : 'border-[#e3dbd2] bg-white'}`}>
                   <input type="radio" name="payment" value={value} checked={paymentMethod === value} onChange={() => setPaymentMethod(value as 'cod' | 'kpay')} className="sr-only" />
                   <span className="block text-sm font-bold">{label}</span>
                   <span className="mt-1 block text-[11px] leading-5 text-[#77756f]">{description}</span>
