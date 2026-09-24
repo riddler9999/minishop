@@ -3,7 +3,7 @@
 // intentionally mirrors the five layout families instead of showing five color
 // swatches on the same structure.
 
-import {ArrowRight, ImageOff, Search, ShoppingBag} from 'lucide-react';
+import {ImageOff, Search, ShoppingBag} from 'lucide-react';
 import type {Product} from '@/domain/product';
 import {getThemeVisual, type StorefrontTheme, type ThemePresetId} from '@/domain/theme';
 import {FONT_PAIRINGS} from '@/domain/fontPairing';
@@ -91,7 +91,6 @@ function PreviewHeader({theme, shopName, logoUrl}: {theme: StorefrontTheme; shop
 }
 
 function ThemeHero({theme, products, shopName}: {theme: StorefrontTheme; products: Product[]; shopName: string}) {
-  const visual = getThemeVisual(theme);
   const image = theme.home.heroImageUrl ?? productImage(products[0]);
   const id = theme.presetId;
 
