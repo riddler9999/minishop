@@ -41,9 +41,6 @@ export default function ProductCard({product, variant = 'default', className}: {
             <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-7 w-7" /></div>
           )}
           {hasPromo && off > 0 && <span className="absolute left-2 top-2 rounded-full bg-white/92 px-2 py-1 text-[9px] font-extrabold text-[#5b21b6]">-{off}%</span>}
-          <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/80 text-[#4c1d95] shadow-sm backdrop-blur">
-            <Heart className="h-4 w-4" />
-          </span>
           {!product.inStock && <span className="absolute inset-x-3 bottom-3 rounded-full bg-[#24133f]/80 px-2 py-1 text-center text-[9px] font-semibold text-white">Sold out</span>}
         </ShopLink>
         <div className="px-3 pb-3 pt-2.5">
