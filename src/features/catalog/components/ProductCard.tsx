@@ -33,21 +33,21 @@ export default function ProductCard({product, variant = 'default', className}: {
 
   if (variant === 'demo-purple') {
     return (
-      <article className={cx('group min-w-0 rounded-[24px] bg-[#d9c4ff] p-2.5 shadow-[0_14px_32px_rgba(76,29,149,0.12)]', className)}>
-        <ShopLink to={to} className="relative block aspect-square overflow-hidden rounded-[18px] bg-[#cdb7f7]">
+      <article className={cx('group min-w-0 overflow-hidden rounded-[20px] bg-[#dac6ff] shadow-[0_12px_28px_rgba(76,29,149,0.11)]', className)}>
+        <ShopLink to={to} className="relative block aspect-[0.92] overflow-hidden bg-[#cfbaf8]">
           {product.image ? (
             <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
           ) : (
             <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-7 w-7" /></div>
           )}
-          {hasPromo && off > 0 && <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-extrabold text-[#5b21b6]">-{off}%</span>}
-          <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/85 text-[#4c1d95] shadow-sm backdrop-blur">
+          {hasPromo && off > 0 && <span className="absolute left-2 top-2 rounded-full bg-white/92 px-2 py-1 text-[9px] font-extrabold text-[#5b21b6]">-{off}%</span>}
+          <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/80 text-[#4c1d95] shadow-sm backdrop-blur">
             <Heart className="h-4 w-4" />
           </span>
           {!product.inStock && <span className="absolute inset-x-3 bottom-3 rounded-full bg-[#24133f]/80 px-2 py-1 text-center text-[9px] font-semibold text-white">Sold out</span>}
         </ShopLink>
-        <div className="px-1 pb-1 pt-3">
-          <ShopLink to={to} className="font-display line-clamp-1 text-[13px] font-bold leading-snug text-[#21133f] transition hover:text-[#6d28d9] sm:text-sm">
+        <div className="px-3 pb-3 pt-2.5">
+          <ShopLink to={to} className="font-display line-clamp-1 text-[12px] font-bold leading-snug text-[#21133f] transition hover:text-[#6d28d9] sm:text-sm">
             {product.name}
           </ShopLink>
           <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -60,7 +60,7 @@ export default function ProductCard({product, variant = 'default', className}: {
               disabled={!product.inStock}
               aria-label="ခြင်းထဲထည့်မည်"
               onClick={quickAdd}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#6d28d9] text-white shadow-[0_8px_18px_rgba(109,40,217,0.32)] transition hover:bg-[#5b21b6] disabled:cursor-not-allowed disabled:bg-[#b8a4db]">
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#6d28d9] text-white shadow-[0_8px_18px_rgba(109,40,217,0.28)] transition hover:bg-[#5b21b6] disabled:cursor-not-allowed disabled:bg-[#b8a4db]">
               <ShoppingBag className="h-4 w-4" />
             </button>
           </div>
