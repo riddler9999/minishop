@@ -183,15 +183,15 @@ function DemoReferenceHome({products, categories, loading, error}: {products: Pr
   const featured = products.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#eee6ff] px-3 pb-28 pt-3 sm:px-5 md:px-8 md:pt-6">
-      <section className="mx-auto max-w-[430px] md:max-w-5xl">
+    <div className="min-h-screen bg-[#eee6ff] px-[clamp(10px,2.6vw,32px)] pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[clamp(10px,2vw,24px)] md:pb-10">
+      <section className="mx-auto w-full max-w-6xl">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             nav(`/products${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`);
           }}
-          className="flex items-center gap-3 px-1">
-          <div className="flex min-h-12 flex-1 items-center gap-3 rounded-full bg-white/95 px-4 shadow-[0_10px_28px_rgba(72,35,122,0.10)]">
+          className="mx-auto flex w-full max-w-3xl items-center gap-2 sm:gap-3">
+          <div className="flex min-h-11 flex-1 items-center gap-3 rounded-full bg-white/95 px-4 shadow-[0_10px_28px_rgba(72,35,122,0.10)] sm:min-h-12">
             <Search className="h-5 w-5 shrink-0 text-[#34204f]" strokeWidth={2.2} />
             <input
               value={query}
@@ -201,33 +201,33 @@ function DemoReferenceHome({products, categories, loading, error}: {products: Pr
               className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-[#2b1a47] outline-none placeholder:text-[#7e7192]"
             />
           </div>
-          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[radial-gradient(circle_at_35%_25%,#a78bfa_0%,#6d28d9_48%,#3b176c_100%)] text-sm font-black text-white shadow-[0_10px_28px_rgba(76,29,149,0.26)] ring-2 ring-white/60">
+          <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-[radial-gradient(circle_at_35%_25%,#a78bfa_0%,#6d28d9_48%,#3b176c_100%)] text-sm font-black text-white shadow-[0_10px_28px_rgba(76,29,149,0.26)] ring-2 ring-white/60 sm:h-12 sm:w-12">
             M
           </div>
         </form>
 
-        <div className="mt-4 overflow-hidden rounded-[26px] border border-white/60 bg-[linear-gradient(135deg,#d9c7ff_0%,#efe7ff_48%,#c9b2ff_100%)] px-5 py-6 shadow-[0_18px_42px_rgba(72,35,122,0.12)] sm:px-6">
-          <div className="flex min-h-[116px] items-center justify-between gap-4">
+        <div className="mx-auto mt-4 w-full max-w-5xl overflow-hidden rounded-[22px] border border-white/60 bg-[linear-gradient(135deg,#d9c7ff_0%,#efe7ff_48%,#c9b2ff_100%)] px-4 py-5 shadow-[0_18px_42px_rgba(72,35,122,0.12)] sm:rounded-[26px] sm:px-6 sm:py-6">
+          <div className="flex min-h-[104px] items-center justify-between gap-3 sm:min-h-[116px] sm:gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6d28d9]">Banner</p>
-              <h2 className="mt-2 max-w-[240px] text-[24px] font-black leading-[1.05] tracking-[-0.04em] text-[#21133f]">Featured campaign area</h2>
+              <h2 className="mt-2 max-w-[240px] text-[clamp(20px,5.2vw,28px)] font-black leading-[1.05] tracking-[-0.04em] text-[#21133f]">Featured campaign area</h2>
               <p className="mt-2 max-w-[260px] text-xs leading-5 text-[#6f6280]">Promotion, collection or seasonal artwork can be placed here.</p>
             </div>
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-[22px] bg-white/55 text-[#6d28d9] ring-1 ring-white/70">
+            <div className="grid h-16 w-16 shrink-0 place-items-center rounded-[18px] bg-white/55 text-[#6d28d9] ring-1 ring-white/70 sm:h-20 sm:w-20 sm:rounded-[22px]">
               <Sparkles className="h-7 w-7" strokeWidth={1.8} />
             </div>
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[30px] bg-[#f8f3ff] px-4 pb-6 pt-5 shadow-[0_22px_52px_rgba(72,35,122,0.11)] sm:px-5 md:px-7">
+        <div className="mx-auto mt-4 w-full max-w-5xl overflow-hidden rounded-[24px] bg-[#f8f3ff] px-3 pb-5 pt-4 shadow-[0_22px_52px_rgba(72,35,122,0.11)] sm:rounded-[30px] sm:px-5 sm:pb-6 sm:pt-5 md:px-7">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-[43px] font-black leading-[0.92] tracking-[-0.055em] text-[#21133f] sm:text-[48px]">New<br />arrivals</h1>
+            <h1 className="text-[clamp(34px,9vw,56px)] font-black leading-[0.92] tracking-[-0.055em] text-[#21133f]">New<br />arrivals</h1>
             <button type="button" aria-label="Filter products" className="mt-1 grid h-10 w-10 place-items-center rounded-full text-[#49365f] transition hover:bg-white/80">
               <SlidersHorizontal className="h-5 w-5" strokeWidth={1.8} />
             </button>
           </div>
 
-          <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-1">
+          <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1 sm:mt-5">
             <ShopLink to="/products" className="shrink-0 rounded-full bg-[#42146f] px-6 py-2.5 text-xs font-bold text-white shadow-[0_8px_18px_rgba(66,20,111,0.18)]">All</ShopLink>
             {visibleCategories.map((category) => (
               <ShopLink key={category} to={`/products?category=${encodeURIComponent(category)}`} className="shrink-0 rounded-full border border-[#baa7da] bg-white/55 px-5 py-2.5 text-xs font-semibold text-[#49365f]">
@@ -238,10 +238,10 @@ function DemoReferenceHome({products, categories, loading, error}: {products: Pr
 
           {error && <div className="mt-5 rounded-2xl border border-[#dacaf5] bg-white/80 p-4 text-sm text-[#4d3a68]">{error}</div>}
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 min-[380px]:gap-3 sm:mt-5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {loading
               ? Array.from({length: 4}).map((_, index) => <ProductCardSkeleton key={index} compact />)
-              : featured.map((product) => <ProductCard key={product.id} product={product} variant="demo-purple" />)}
+              : products.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} variant="demo-purple" />)}
           </div>
 
           {!loading && !error && products.length === 0 && (
