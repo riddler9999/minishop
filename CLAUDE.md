@@ -54,8 +54,7 @@ must be the repo root (this is a standalone repo, not a monorepo subfolder).
 ## Environment
 
 Copy `.env.example` to `.env.local`. Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-(public anon key — **never** the `service_role` key) plus `VITE_DEFAULT_PLAN` (`starter` |
-`business`). Plan resolution **fails closed**: an unset, unknown or malformed value resolves to
+(public anon key — **never** the `service_role` key) plus `VITE_DEFAULT_PLAN` (`free_trial` | `starter` | `business`). Plan resolution **fails closed**: an unset, unknown or malformed value resolves to
 `starter`, so a missing env var can never hand out paid features (`src/domain/plan.ts`).
 Without Supabase env vars configured, the **root** storefront falls back to the zero-backend
 localStorage demo (`src/data/demo/`) — intentional, so local/preview builds never break for lack
@@ -234,3 +233,8 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
 Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
 
 Do not add a new preset that merely recolors the same layout. A distinct preset must materially change composition/density/card language. Keep compatibility for persisted legacy IDs in `normalizeTheme()`. See `design/themes/aesthetic-themes.md`.
+
+
+## Production readiness
+
+Official status is **PRE-PRODUCTION / PRODUCTION HARDENING**. Before release or migration work, read `docs/production/ENVIRONMENT-MATRIX.md`, `MIGRATION-RUNBOOK.md`, `RELEASE-CHECKLIST.md`, and `ROLLBACK-RUNBOOK.md`. Preview must never point at Production Supabase.
