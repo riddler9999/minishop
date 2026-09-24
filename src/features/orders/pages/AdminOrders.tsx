@@ -107,9 +107,7 @@ function OrderDetail({
             </div>
           </section>
 
-          {/* Manual payment confirmation (online orders only) — Business feature.
-              Starter sellers still change status via the status grid below; the
-              last-5-digit verification helper is the gated Business workflow. */}
+          {/* Manual payment confirmation is a core selling workflow on every plan. */}
           {order.payment_method !== 'cod' && features.paymentVerification && (
             <section>
               <h4 className="my mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">ငွေပေးချေမှု စစ်ဆေးရန်</h4>
