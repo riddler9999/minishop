@@ -47,7 +47,7 @@ export default function ProductDetail() {
   }, [product?.id, product?.category]);
 
   useEffect(() => {
-    if (!isDemo || !product) return;
+    if (!product) return;
     let alive = true;
     setBestSelling([]);
     api.products({scope: 'active', featured: true, limit: 8})
@@ -56,7 +56,7 @@ export default function ProductDetail() {
       })
       .catch(() => {});
     return () => {alive = false;};
-  }, [isDemo, product?.id]);
+  }, [product?.id, slug]);
 
   if (err) return <div className="mx-auto max-w-3xl px-4 py-16 text-center"><p className="my text-ink-soft">{err}</p><ShopLink to="/products" className="mt-4 inline-block font-semibold text-brand-700">← ပစ္စည်းများသို့</ShopLink></div>;
   if (!product) return <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 md:grid-cols-2"><div className="aspect-4/5 animate-pulse rounded-2xl bg-cream-100" /><div className="space-y-4"><div className="h-6 w-2/3 animate-pulse rounded bg-cream-100" /><div className="h-8 w-1/3 animate-pulse rounded bg-cream-100" /></div></div>;
@@ -316,6 +316,15 @@ export default function ProductDetail() {
           <h2 className={`mb-5 font-display text-xl font-bold sm:text-2xl ${detail.related}`}>ဆင်တူ ပစ္စည်းများ</h2>
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 sm:mx-0 sm:px-0">
             {related.map((p) => <ProductCard key={p.id} product={p} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />)}
+          </div>
+        </section>
+      )}
+
+      {bestSelling.length > 0 && (
+        <section className="mt-14 overflow-hidden">
+          <h2 className={`mb-5 font-display text-xl font-bold sm:text-2xl ${detail.related}`}>Best Selling</h2>
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-6 sm:mx-0 sm:px-0">
+            {bestSelling.map((p) => <ProductCard key={p.id} product={p} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />)}
           </div>
         </section>
       )}
