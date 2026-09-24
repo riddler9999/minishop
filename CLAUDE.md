@@ -211,7 +211,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   enforced by the DB (`plan_is_platform_managed`), so a seller can never self-upgrade.
 - **Mid-cycle upgrade (Starter→Business) rule** (`admin_upgrade_plan`): the cycle cap is raised to
   200 but the orders already consumed this cycle are PRESERVED (`monthly_used` unchanged) — no fresh
-  150 — so nobody can burn 60 Starter orders then pay the difference for a full new allotment. The
+  200 — so nobody can burn 60 Starter orders then pay the difference for a full new allotment. The
   seller pays the price difference for the remaining cycle. See `PROJECT.md` D56.
 - **Downgrade** (`admin_schedule_downgrade`) takes effect at the NEXT renewal (`pending_plan`),
   never deletes Business data — only lowers the cap once applied.
