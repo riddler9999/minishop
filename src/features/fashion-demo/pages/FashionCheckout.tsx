@@ -6,23 +6,7 @@ import type {MerchantAccount} from '@/domain/shop';
 import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
-
-type PayMethod = 'cod' | 'kpay' | 'wave';
-
-function newIdempotencyKey(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
-    const r = (Math.random() * 16) | 0;
-    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
-
-const METHODS: {key: PayMethod; label: string; sub: string}[] = [
-  {key: 'cod', label: 'Cash on Delivery', sub: 'အိမ်ရောက် ငွေချေ'},
-  {key: 'kpay', label: 'KBZPay', sub: 'ငွေကြိုရှင်း'},
-  {key: 'wave', label: 'WavePay', sub: 'ငွေကြိုရှင်း'},
-];
+import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, resolveShippingFee, type PayMethod} from '@/features/checkout/checkoutLogic';
 
 export default function FashionCheckout() {
   const {items, subtotal, clear} = useCart();
@@ -64,20 +48,12 @@ export default function FashionCheckout() {
   }, [live, shipReload]);
 
   const townships = useMemo(() => townshipsOf(region), [region]);
-  const fee = useMemo(() => {
-    if (!region || !township) return null;
-    if (live) {
-      if (!shipCfg) return null;
-      const z = shipCfg.zones.find((x) => x.region === region && x.township === township);
-      return z ? z.fee : shipCfg.defaultFee;
-    }
-    return shippingFee(region, township) ?? 0;
-  }, [region, township, live, shipCfg]);
-
+  const demoFee = useMemo(() => shippingFee(region, township), [region, township]);
+  const fee = useMemo(() => resolveShippingFee({region, township, live, shippingConfig: shipCfg, demoFee}), [region, township, live, shipCfg, demoFee]);
   const grandTotal = subtotal + (fee ?? 0);
-  const online = method === 'kpay' || method === 'wave';
-  const providerAccounts = accounts.filter((a) => a.provider === method);
-  const ready = Boolean(name.trim() && phone.trim().length >= 6 && street.trim() && region && township && fee != null && items.length > 0 && (!online || refTail.length === 5));
+  const online = isOnlinePayment(method);
+  const providerAccounts = paymentAccounts(accounts, method);
+  const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
 
   const copy = async (text: string, key: string) => {
     try {
@@ -140,7 +116,7 @@ export default function FashionCheckout() {
           <section className="rounded-[20px] bg-white p-4 shadow-[0_10px_28px_rgba(88,52,64,0.07)] sm:p-5">
             <h2 className="mb-3 text-sm font-bold">Payment method</h2>
             <div className="grid grid-cols-3 gap-2">
-              {METHODS.map((m) => <button type="button" key={m.key} onClick={() => setMethod(m.key)} className={`min-h-20 rounded-[14px] border p-2.5 text-left ${method === m.key ? 'border-[#f43f70] bg-[#fff0f5] ring-1 ring-[#f43f70]' : 'border-[#f1e0e7] bg-white'}`}><span className="my block text-xs font-bold">{m.label}</span><span className="my text-[10px] text-slate-500">{m.sub}</span></button>)}
+              {PAYMENT_METHODS.map((m) => <button type="button" key={m.key} onClick={() => setMethod(m.key)} className={`min-h-20 rounded-[14px] border p-2.5 text-left ${method === m.key ? 'border-[#f43f70] bg-[#fff0f5] ring-1 ring-[#f43f70]' : 'border-[#f1e0e7] bg-white'}`}><span className="my block text-xs font-bold">{m.label}</span><span className="my text-[10px] text-slate-500">{m.sub}</span></button>)}
             </div>
             {method !== 'cod' && <>
               <div className="mt-3 space-y-2">{providerAccounts.map((a) => <div key={a.phone + a.accountName} className="flex items-center justify-between rounded-[14px] bg-[#fff8fa] px-3 py-2.5"><div><p className="my text-xs font-semibold">{a.accountName}</p><p className="text-sm font-bold text-[#f43f70]">{a.phone}</p></div><button type="button" onClick={() => copy(a.phone, a.phone)} className="inline-flex min-h-9 items-center gap-1 rounded-full bg-[#f43f70] px-3 text-[10px] font-bold text-white">{copied === a.phone ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied === a.phone ? 'ကူးပြီး' : 'ကူးမယ်'}</button></div>)}</div>
