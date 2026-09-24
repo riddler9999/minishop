@@ -249,7 +249,7 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
               <div className="space-y-3">
                 <div>
                   <h2 className="my text-base font-bold text-ink">Store Theme ရွေးရန်</h2>
-                  <p className="my mt-1 text-xs text-ink-soft">Theme ရွေးပြီးနောက် အရောင်၊ စာသား၊ ပုံနဲ့ typography ကို ဆက်ပြီး customize လုပ်နိုင်သည်။</p>
+                  <p className="my mt-1 text-xs text-ink-soft">Theme တစ်ခုစီက product niche မဟုတ်ဘဲ layout + visual aesthetic ကိုသတ်မှတ်ပေးသည်။ ဘာပစ္စည်းရောင်းရောင်း ကိုယ့် brand နဲ့ကိုက်တာရွေးပြီး အရောင်၊ စာသား၊ ပုံနဲ့ typography ကို ဆက် customize လုပ်နိုင်သည်။</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(Object.entries(THEME_PRESETS) as [ThemePresetId, (typeof THEME_PRESETS)[ThemePresetId]][]).map(([id, preset]) => {
@@ -257,18 +257,34 @@ function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: stri
                     return (
                       <button key={id} type="button" onClick={() => applyPreset(id)}
                         className={cx('my overflow-hidden rounded-2xl border p-3 text-left transition', active ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-cream-200 bg-white hover:bg-cream-50')}>
-                        <span className="mb-3 flex h-16 overflow-hidden rounded-xl border border-black/5 bg-white">
-                          <span className="w-2/5" style={{backgroundColor: preset.theme.accentColor}} />
-                          <span className="flex flex-1 flex-col justify-center gap-1.5 p-2">
-                            <span className="h-2 w-4/5 rounded-full bg-slate-900/80" />
-                            <span className="h-1.5 w-full rounded-full bg-slate-200" />
-                            <span className="h-1.5 w-2/3 rounded-full bg-slate-200" />
+                        <span className="mb-3 block overflow-hidden rounded-xl border border-black/10" style={{backgroundColor: preset.visual.canvas}}>
+                          <span className="grid h-20 grid-cols-[0.95fr_1.05fr] gap-1.5 p-2">
+                            <span
+                              className="block overflow-hidden border border-black/10"
+                              style={{
+                                backgroundColor: preset.visual.surface,
+                                borderRadius: preset.visual.radius === 'rounded' ? 12 : preset.visual.radius === 'soft' ? 8 : preset.visual.radius === 'compact' ? 4 : 0,
+                              }}>
+                              <span className="block h-8" style={{backgroundColor: preset.visual.accent, opacity: preset.visual.layout === 'tech' ? 0.18 : 1}} />
+                              <span className="block space-y-1 p-1.5">
+                                <span className="block h-1.5 w-4/5 bg-current opacity-80" style={{color: preset.visual.text}} />
+                                <span className="block h-1 w-3/5 bg-current opacity-25" style={{color: preset.visual.text}} />
+                              </span>
+                            </span>
+                            <span className={preset.visual.productGrid === 'dense-3' ? 'grid grid-cols-3 gap-1' : 'grid grid-cols-2 gap-1'}>
+                              {Array.from({length: preset.visual.productGrid === 'dense-3' ? 6 : 4}).map((_, index) => (
+                                <span key={index} className="block border border-black/10" style={{backgroundColor: preset.visual.surface, borderRadius: preset.visual.radius === 'rounded' ? 8 : preset.visual.radius === 'soft' ? 6 : preset.visual.radius === 'compact' ? 3 : 0}}>
+                                  <span className="block h-7 opacity-70" style={{backgroundColor: index % 2 ? preset.visual.border : preset.visual.accent}} />
+                                </span>
+                              ))}
+                            </span>
                           </span>
                         </span>
                         <span className="my flex items-center justify-between gap-2 text-sm font-bold text-ink">
                           {preset.label}{active && <Check className="h-4 w-4 text-brand-500" />}
                         </span>
                         <span className="my mt-1 block text-xs leading-5 text-ink-soft">{preset.description}</span>
+                        <span className="my mt-1.5 block text-[11px] font-medium text-ink-soft/80">{preset.bestFor}</span>
                       </button>
                     );
                   })}
