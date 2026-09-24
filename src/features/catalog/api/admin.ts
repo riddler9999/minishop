@@ -53,6 +53,18 @@ export const catalogAdminApi = {
     return {product: mapProduct(data)};
   },
 
+  async deleteProduct(id: string): Promise<{ok: true}> {
+    const shopId = await resolveOwnShopId();
+    const sb = requireSupabase();
+    const {error} = await sb
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .eq('shop_id', shopId);
+    if (error) throw new Error(mapDbError(error.message, 'ပစ္စည်း ဖျက်၍မရပါ။'));
+    return {ok: true};
+  },
+
   async createProduct(input: ProductCreateInput): Promise<{product: Product}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
