@@ -3,8 +3,8 @@
 // live phone preview ("canvas") on the right, both driven by one draft copy of
 // the shop's StorefrontTheme. Save writes the whole blob via
 // adminApi.updateShopTheme(); the storefront then renders it (Home / Category /
-// Product pages + a global announcement bar). Business-gated, consistent with
-// the existing branding feature.
+// Product pages + a global announcement bar). Store Design is available on every
+// plan; logo/extended branding remains separately Business-gated.
 //
 // Store Design is cosmetic only — normalizeTheme() re-validates on both write
 // and read, so nothing here can put the storefront into a broken state.
@@ -16,7 +16,7 @@ import type {Product} from '@/domain/product';
 import {DEFAULT_THEME, THEME_PRESETS, themeFromPreset, type StorefrontTheme, type ThemePresetId} from '@/domain/theme';
 import {FONT_PAIRING_IDS, FONT_PAIRINGS, type FontPairingId} from '@/domain/fontPairing';
 import {usePlan} from '@/features/billing/plan';
-import {PlanBadge, UpgradeCard} from '@/features/billing/PlanGate';
+import {PlanBadge} from '@/features/billing/PlanGate';
 import {SHOP_LOGOS_BUCKET} from '@/core/storage/buckets';
 import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/core/storage/imageUpload';
 import {cx} from '@/shared/lib/format';
@@ -38,16 +38,7 @@ export default function StoreDesign() {
   if (loading) return <div className="grid min-h-[40vh] place-items-center text-sm text-ink-soft">Loading…</div>;
   if (!shop) return <p className="my text-sm text-ink-soft">ဆိုင် အချက်အလက် ရှာမတွေ့ပါ။</p>;
 
-  if (!features.branding) {
-    return (
-      <div className="space-y-5">
-        <Header />
-        <UpgradeCard title="Store Design">
-          ပင်မစာမျက်နှာ၊ ပစ္စည်းစာရင်းနှင့် ပစ္စည်းအသေးစိတ် စာမျက်နှာများကို ကိုယ်ပိုင်ပုံစံ customize လုပ်ခြင်းသည် Business package feature ဖြစ်သည်။
-        </UpgradeCard>
-      </div>
-    );
-  }
+  if (!features.storeDesign) return null;
 
   return <StoreDesignEditor key={shop.id} shopName={shop.name} logoUrl={shop.logoUrl} />;
 }

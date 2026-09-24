@@ -1,6 +1,6 @@
 // ---- Shop settings / branding ----------------------------------------------
 // Seller-managed shop profile: name, phone, default delivery fee (all plans);
-// logo + extended branding (Business). Writes go through updateOwnShop() which
+// logo + extended branding (all plans). Writes go through updateOwnShop() which
 // is confined by RLS to the seller's own row. The public `/s/:slug` address is
 // intentionally read-only here — changing it would break every shared link.
 
@@ -13,7 +13,7 @@ import {updateOwnShop, type OwnShop} from '@/features/shop/sellerShop';
 import {SHOP_LOGOS_BUCKET} from '@/core/storage/buckets';
 import {adminApi} from '@/data/dataSource';
 import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/core/storage/imageUpload';
-import {PlanBadge, UpgradeCard} from '@/features/billing/PlanGate';
+import {PlanBadge} from '@/features/billing/PlanGate';
 import {cx} from '@/shared/lib/format';
 
 const field =
@@ -84,13 +84,12 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         name,
         phone,
         defaultDeliveryFee: feeN,
-        // Only write branding fields the plan actually exposes.
-        ...(features.branding ? {logoUrl} : {}),
+        logoUrl,
       });
       // Only after the DB write succeeds is it safe to drop the old object —
       // deleting first risks a persisted URL pointing at nothing if the write
       // above had failed instead.
-      if (features.branding && previousLogoUrl && previousLogoUrl !== logoUrl) {
+      if (previousLogoUrl && previousLogoUrl !== logoUrl) {
         const oldPath = deriveStoragePath(previousLogoUrl, SHOP_LOGOS_BUCKET);
         if (oldPath) await adminApi.deleteShopLogo(oldPath).catch(() => {});
       }
@@ -199,9 +198,8 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
           </label>
         </div>
 
-        {/* Branding — Business only */}
-        {features.branding ? (
-          <div className="block">
+        {/* Branding — available on every plan */}
+        <div className="block">
             <span className={lbl}>
               <span className="inline-flex items-center gap-1.5">
                 <ImageIcon className="h-4 w-4 text-gold-600" /> ဆိုင် Logo
@@ -238,12 +236,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
               PNG သို့မဟုတ် WebP ပုံဖိုင်သာ တင်နိုင်သည် (JPG/JPEG လက်မခံပါ) — storefront နှင့် console တွင် ပေါ်ပါမည်။
             </span>
             {logoErr && <p className="my mt-1 text-sm text-brand-600">{logoErr}</p>}
-          </div>
-        ) : (
-          <UpgradeCard title="Logo နှင့် branding">
-            ဆိုင် logo နှင့် အပို branding customization သည် Business package feature ဖြစ်သည်။
-          </UpgradeCard>
-        )}
+        </div>
 
         {err && <p className="my text-sm text-brand-600">{err}</p>}
         {ok && (

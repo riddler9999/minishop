@@ -6,7 +6,6 @@ import type {AdminOrder} from '@/domain/order';
 import type {Product} from '@/domain/product';
 import {ks} from '@/shared/lib/format';
 import {usePlan} from '@/features/billing/plan';
-import {UpgradeCard} from '@/features/billing/PlanGate';
 import EntitlementSummary from '@/features/billing/components/EntitlementSummary';
 import {statusMeta, PAID_STATUSES, OPEN_STATUSES, type OrderStatus} from '@/domain/orderStatus';
 import {addYangonDays, getYangonAnalyticsWindow, YANGON_TZ} from '@/features/admin/lib/analyticsTime';
@@ -92,7 +91,7 @@ function RevenueTrend({points}: {points: RevenuePoint[]}) {
 }
 
 export default function Dashboard() {
-  const {shop, features} = usePlan();
+  const {shop} = usePlan();
   const {signOut} = useAdminAuth();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
@@ -256,7 +255,6 @@ export default function Dashboard() {
         )}
       </section>
 
-      {features.advancedDashboard ? (
         <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-sm">
           <div className="flex items-center justify-between px-4 py-4 sm:px-5">
             <h2 className="text-[17px] font-bold text-slate-950">Low Stock Products</h2>
@@ -284,9 +282,7 @@ export default function Dashboard() {
             </ul>
           )}
         </section>
-      ) : (
-        <UpgradeCard title="Stock analytics">Low-stock analytics is available with the Business package.</UpgradeCard>
-      )}
+
 
       <p className="sr-only">{shop?.name ?? 'Shop'} dashboard</p>
     </div>
