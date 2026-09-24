@@ -11,6 +11,7 @@ import {Check, Clock, Copy, ShieldAlert, Store, Upload, XCircle} from 'lucide-re
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {APP_INITIAL} from '@/shared/lib/brand';
 import type {Plan} from '@/domain/plan';
+import {PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
 import {
   PLAN_PRICE_KS,
   PAYMENT_METHOD_LABEL,
@@ -32,14 +33,24 @@ const PLAN_CARDS: {plan: Plan; label: string; blurb: string; features: string[]}
   {
     plan: 'business',
     label: 'Business',
-    blurb: 'ရောင်းအားကောင်းသော ဆိုင်များအတွက် — feature အပြည့်အစုံ',
-    features: ['လစဉ် Order ၁၅၀', 'Promotion စျေးနှုန်း', 'Analytics + Logo/Branding', 'Extra Orders ဝယ်နိုင်'],
+    blurb: 'ရောင်းအားများလာတဲ့အခါ အလုပ်ပိုမြန်၊ လူပိုသက်သာအောင်',
+    features: [
+      `လစဉ် Order ${PLAN_MONTHLY_QUOTA.business}`,
+      `Product ${PLAN_PRODUCT_LIMIT.business} ခု`,
+      'Selling features အားလုံး',
+      'Productivity + Automation',
+    ],
   },
   {
     plan: 'starter',
     label: 'Starter',
-    blurb: 'အသစ်စတင်သူများအတွက် — အခြေခံ ဆိုင်စီမံခန့်ခွဲမှု',
-    features: ['လစဉ် Order ၆၀', 'ပစ္စည်း အကန့်အသတ်မဲ့', 'မြို့နယ်အလိုက် ပို့ခ', 'Extra Orders ဝယ်နိုင်'],
+    blurb: 'ပုံမှန်ရောင်းချဖို့လိုတဲ့ selling features အပြည့်',
+    features: [
+      `လစဉ် Order ${PLAN_MONTHLY_QUOTA.starter}`,
+      `Product ${PLAN_PRODUCT_LIMIT.starter} ခု`,
+      'Promotion + Design + Analytics',
+      'Extra Orders ဝယ်နိုင်',
+    ],
   },
 ];
 

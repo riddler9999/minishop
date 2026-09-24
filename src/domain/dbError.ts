@@ -84,7 +84,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   subscription_inactive:
     'ဆိုင်သည် ယာယီ order လက်ခံနိုင်ခြင်း မရှိသေးပါ — ဆိုင်ရှင်ကို ဆက်သွယ်ပါ။',
   product_limit_reached:
-    'အခမဲ့ Free Trial တွင် ပစ္စည်း ၁၀ ခုအထိသာ ထည့်နိုင်ပါသည် — Starter / Business သို့ upgrade လုပ်ပါ။',
+    'လက်ရှိ Plan ၏ Product အရေအတွက် ကန့်သတ်ချက် ပြည့်သွားပါပြီ — မလိုတော့သော Product ကို ဖျက်ပါ သို့မဟုတ် Plan upgrade လုပ်ပါ။',
   extra_orders_not_available:
     'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
   duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',

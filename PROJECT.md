@@ -83,16 +83,18 @@ Current domain truth ကို `CONTEXT.md` မှာထားတယ်။ `PROJ
 - `src/features/billing/plan.tsx` — seller-console feature presentation
 - `src/features/billing/api.ts` — live entitlement read model
 
-Current plans:
+Current plans (FINAL — D60 / ADR 0002):
 
-- `free_trial` — 0 Ks, 20 lifetime orders, max 10 products
-- `starter` — 30,000 Ks/cycle, 60 orders/cycle
-- `business` — 60,000 Ks/cycle, 150 orders/cycle
+- `free_trial` — unchanged: 0 Ks, 20 created orders lifetime, max 10 total products
+- `starter` — **29,000 Ks/month, 60 created orders/cycle, max 100 total products**
+- `business` — **79,000 Ks/month, 200 created orders/cycle, max 500 total products**
 - Extra Orders — 500 Ks/order, purchased balance never expires
+- Created Order + Order No = consumed entitlement; Reject/Cancel/RTO/no-show/refund does not restore quota
+- Active + Draft + Archived products all count toward the product cap; deletion frees the slot
 
 Plan ကို seller က သူ့ဘာသာပြောင်းလို့မရဘူး။ Paid activation/renewal က `shops.plan` တစ်ခုတည်းကိုပြောင်းတာမဟုတ်ဘဲ `shop_entitlements` ကိုပါ တစ်ပြိုင်နက်တည်း reconcile လုပ်ရမယ်။
 
-Township shipping, last-5 buyer payment verification, Store Branding, Store Design နဲ့ Analytics က plan အားလုံးအတွက် core features ဖြစ်တယ်။ Business-only UI features အဖြစ် promotions နဲ့ integrations ကိုပဲ ဆက်ထားတယ်။ Downgrade လုပ်ရင် data မဖျက်ဘူး။
+Township shipping, last-5 buyer payment verification, Store Branding, Store Design, basic Promotions နဲ့ basic Analytics က core selling features ဖြစ်တယ်။ Plan upgrade ကို selling feature ပိတ်ပြီးမတွန်းဘူး။ Business က scale + productivity + staff/workflow + bulk operations + automation/integrations ဘက်မှာကွာမယ်။ Business-only paid Add-ons ကို subscription ထဲ free bundle မလုပ်ဘူး။ Downgrade လုပ်ရင် data မဖျက်ဘူး။
 
 ## Authentication & Onboarding
 
@@ -610,7 +612,7 @@ new table အတွက် RLS/policy warning မရှိ။ DB error code ၃ �
 `tests/subscription.test.ts` က gate + pricing ကို guard လုပ်တယ်။ (`0008_shop_owner_unique` က pending ဆက်ဖြစ် —
 ဒီ migration က မထိ။)
 
-### D56 — Pricing V1: Free Trial တီးယာ + Auditable Order Entitlement Model
+### D56 — SUPERSEDED BY D60 — Pricing V1: Free Trial တီးယာ + Auditable Order Entitlement Model
 
 Commercial pricing ကို အပြီးသတ်ဆုံးဖြတ်ပြီး entitlement (quota + purchased balance) system ကို
 end-to-end ထည့်ထားတယ် (migration `0016_entitlements_and_pricing.sql`)။
@@ -672,7 +674,7 @@ order (retry = order တစ်ခုတည်း, consume ၁ ကြိမ်), 
 
 **Applied (2026-09-23):** `0016_entitlements_and_pricing` ကို live project (`fsxdnmnycizjkgstokze`) သို့ apply လုပ်ပြီး entitlement tables/indexes/functions ကို runtime မှာ verify လုပ်ထားတယ်။ Existing shops အားလုံးမှာ entitlement row ရှိပြီး `shops.plan ↔ shop_entitlements.plan` drift = 0။ `0008_shop_owner_unique` က pending ဆက်ဖြစ်။
 
-### D57 — Pricing V1 (0016) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
+### D57 — HISTORICAL / SUPERSEDED BY D60 — Pricing V1 (0016) နှင့် Parallel Payment-proof Auto-verification (0011/0012) ကို ညှိရန်
 
 Pricing V1 (D56, `0016_entitlements_and_pricing.sql`) ကို branch ခွဲပြီး develop လုပ်နေစဉ်
 `main` မှာ **သီးခြား parallel work** ဝင်လာတယ် — `0011_payment_proof_auto_plan.sql`
@@ -739,3 +741,35 @@ Pilot Ready လို့သတ်မှတ်ဖို့ အနည်းဆု�
 MiniShop exposes exactly five storefront design families: Clean & Minimal, Street & Bold, Soft & Elegant, Grid & Catalog, and Dark Modern. Theme choice is category-neutral; any seller can use any theme regardless of merchandise.
 
 A theme must materially change layout composition (hero, catalog density, product-card language, product-detail presentation and commerce surfaces), not only accent color or typography. The selected aesthetic continues through Cart Drawer → Checkout → Order Success → Order Tracking, while payment/order behaviour and semantic status colors remain unchanged. `shops.theme.presetId` remains the persisted selector; no production database migration is required. Legacy preset IDs normalize to the closest new family so existing shops fail safely.
+
+
+### D60 — FINAL Pricing & Packaging Contract
+**Date:** 2026-09-25  
+**Status:** CONFIRMED — supersedes conflicting commercial/package decisions in D56/D57 and exploratory pricing docs.
+
+Paid plans:
+- Starter — 29,000 Ks/month; 60 created Orders/cycle; 100 total Products.
+- Business — 79,000 Ks/month; 200 created Orders/cycle; 500 total Products.
+- Free Trial and Extra Orders remain unchanged unless a later owner decision explicitly replaces them.
+
+Billing:
+- A valid checkout that successfully creates an Order and generates an Order No consumes exactly one entitlement.
+- Reject, cancellation, no-show, RTO, or later refund does not restore entitlement.
+- Verified platform/system duplicate or platform error may be corrected administratively.
+- Cycle quota is consumed before purchased Extra Orders.
+
+Products:
+- Product limits count all catalog rows: Active + Draft + Archived.
+- Archive does not free capacity; permanent deletion does.
+
+Packaging philosophy:
+- Starter and Business both get selling/conversion capabilities needed to grow sales.
+- Business does not win by withholding selling features. It wins by making the same operation faster, easier, and less labour-intensive at higher scale.
+- Core includes storefront/catalog, checkout/order tracking, shipping, payment verification, branding/design/themes, basic promotions, and basic analytics.
+- Business differentiation is scale/productivity: higher order/product limits plus staff/permissions, bulk operations, advanced operational reporting, scheduled/automated workflows, integrations/API/webhooks, and priority operations as those capabilities ship.
+- Business-only paid Add-ons are separately priced. ChatGPT Operator/Plugin is an example Add-on, not part of the 79,000 Ks base subscription.
+
+Implementation truth:
+- `CONTEXT.md` + ADR 0002 are canonical.
+- Historical migrations stay immutable; migration 0021 reconciles current DB runtime when explicitly applied.
+- Production migration application still requires owner approval.

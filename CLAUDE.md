@@ -154,8 +154,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `0011_payment_proof_auto_plan.sql` and `0012_shop_application_transaction_id.sql` (historical
   payment-proof automation foundation), `0013`–`0015` (delivery pricing), `0016_entitlements_and_pricing.sql`
   (Pricing V1: Free Trial, subscription cycles, order entitlements, Extra Orders, idempotent order
-  consumption), and `0017_reconcile_payment_activation.sql` (current payment-proof activation:
-  30,000/60,000 Ks validation + delegation to entitlement-aware subscription activation).
+  consumption), and `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), and `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions).
   Historical migrations may contain superseded rules; current runtime truth is the latest migration
   plus `CONTEXT.md`. Never infer live migration application state from this file — check the live
   Supabase migration history before applying anything.
@@ -182,7 +181,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   project — see `PROJECT.md` Stack section for the project ref. Only the anon key belongs in
   frontend code; RLS is the actual enforcement boundary, not the frontend.
 
-### Plan gating + order entitlements (Free Trial / Starter / Business — Pricing V1, D56)
+### Plan packaging + order entitlements (Free Trial / Starter / Business — FINAL D60 / ADR 0002)
 
 - **Three tiers.** `src/domain/plan.ts` (`Plan = 'free_trial' | 'starter' | 'business'`) holds the
   resolution rule (`normalizePlan`, `resolvePlanValue`) and **fails closed to `free_trial`** (the
@@ -191,17 +190,16 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   plan is derived in the `shops` insert trigger (0016) from the seller's platform-approved
   application, so a seller still can never pick a higher tier directly.
 - **Feature gating** (`src/features/billing/plan.tsx`, `.tsx` JSX provider; `usePlan()` only inside
-  `PlanProvider`, which wraps only `AdminConsole`). Business-only: promotions and integrations. **Township shipping, payment verification, Store Branding,
-  Store Design, and Analytics are CORE on every plan** (the old `advancedShipping`/Business gates were removed — D56). Gating hides
+  `PlanProvider`, which wraps only `AdminConsole`). Basic promotions are CORE; integrations remain Business productivity capabilities. **Township shipping, payment verification, Store Branding,
+  Store Design, basic Promotions, and basic Analytics are CORE** (the old `advancedShipping`/Business gates were removed — D56). Gating hides
   + upsells (`features/billing/PlanGate.tsx`) but never deletes data.
 - **Order entitlements are the real pricing mechanic** (`src/domain/entitlement.ts` — the single
   source of truth, mirrored verbatim by `place_order()` in 0016). FOUR concepts kept separate,
-  never collapsed into one number: subscription state/cycle, monthly quota (Free 20 lifetime /
-  Starter 60 / Business 150), permanent purchased Extra Orders balance (500 Ks/order, never
+  never collapsed into one number: subscription state/cycle, quota (Free 20 lifetime /
+  Starter 60 / Business 200), total-product caps (10 / 100 / 500), permanent purchased Extra Orders balance (500 Ks/order, never
   expires), and the payments + append-only ledger. A valid order consumes ONE entitlement
   immediately (**monthly quota first, then purchased**), atomically + idempotently
-  (`orders.idempotency_key`), the entitlement row locked `FOR UPDATE` for concurrency. Seller status
-  changes never affect billing; cancellation never auto-refunds. Free trial: 10-product cap
+  (`orders.idempotency_key`), the entitlement row locked `FOR UPDATE` for concurrency. Seller status changes never affect billing; Reject/Cancel/RTO/no-show/refund never restore consumed quota. Free trial: 10-product cap
   (server-enforced), cannot buy/consume Extra Orders.
 - **Anonymous abuse limiting is database-distributed.** `private.api_rate_limits` + `private.enforce_rate_limit()` (0007) are the source of truth for `place_order()` and `lookup_order()`; Vercel handlers must not add process-local `Map` counters.
 - **Payment-proof storage seam.** `src/features/billing/paymentProofStorage.ts` owns proof validation and the upload → DB persist → rollback/old-object cleanup invariant for both plan applications and Extra Orders.
@@ -211,9 +209,9 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   philosophy (no in-app super-admin). Sellers submit Extra-Orders purchase requests
   (`order_pack_purchases`) via the admin Billing page. Plan stays read-only in the seller UI —
   enforced by the DB (`plan_is_platform_managed`), so a seller can never self-upgrade.
-- **Mid-cycle upgrade (Starter→Business) rule** (`admin_upgrade_plan`): the monthly cap is raised to
-  150 but the orders already consumed this cycle are PRESERVED (`monthly_used` unchanged) — no fresh
-  150 — so nobody can burn 60 Starter orders then pay the difference for a full new allotment. The
+- **Mid-cycle upgrade (Starter→Business) rule** (`admin_upgrade_plan`): the cycle cap is raised to
+  200 but the orders already consumed this cycle are PRESERVED (`monthly_used` unchanged) — no fresh
+  200 — so nobody can burn 60 Starter orders then pay the difference for a full new allotment. The
   seller pays the price difference for the remaining cycle. See `PROJECT.md` D56.
 - **Downgrade** (`admin_schedule_downgrade`) takes effect at the NEXT renewal (`pending_plan`),
   never deletes Business data — only lowers the cap once applied.

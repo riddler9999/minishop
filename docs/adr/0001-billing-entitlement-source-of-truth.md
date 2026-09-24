@@ -9,7 +9,11 @@ MiniShop previously had two partially independent plan-payment paths. The older 
 
 A direct `shops.plan` update can therefore display one plan while checkout enforces a different entitlement state.
 
-## Decision
+## Supersession
+
+Pricing numbers in this ADR are historical. **ADR 0002 is the current commercial source of truth** and supersedes the 30,000/60,000 pricing references below. The architectural rule that payment activation must reconcile `shops.plan` and `shop_entitlements` remains valid.
+
+## Historical Decision
 
 1. Current plan prices are defined by the Pricing V1 contract: Starter 30,000 Ks and Business 60,000 Ks.
 2. Payment-proof automation must treat OCR/vision output as untrusted and validate amount, receiver name, confidence, and unique full transaction ID in Postgres.

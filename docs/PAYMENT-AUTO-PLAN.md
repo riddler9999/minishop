@@ -6,7 +6,7 @@ Flow:
 3. n8n uses a vision model to extract: `amount`, `transaction_id`, `date`, `time`, `sender_name`, `receiver_name`, plus confidence.
 4. n8n calls the server-side activation RPC/API. Do not update `shops.plan` directly from the browser or workflow; activation must reconcile `shops.plan` and `shop_entitlements` together.
 5. The RPC validates untrusted extraction and persists the result:
-   - valid receiver + supported amount (30,000 Starter / 60,000 Business) + unique transaction ID + confidence >= 0.92 → `approved` and activate Starter/Business through the entitlement-aware subscription path
+   - valid receiver + supported amount (29,000 Starter / 79,000 Business) + unique transaction ID + confidence >= 0.92 → `approved` and activate Starter/Business through the entitlement-aware subscription path
    - missing transaction ID or confidence < 0.92 → `manual_review`, no plan activation
    - unsupported amount, receiver mismatch, or duplicate transaction ID → `rejected`, no plan activation
 6. `rejection_reason` stores the deterministic reason code so operations can review failures without relying on workflow logs.
@@ -24,7 +24,7 @@ Required webhook payload from app:
 Expected verified extraction:
 ```json
 {
-  "amount": 60000,
+  "amount": 79000,
   "transaction_id": "string",
   "date": "YYYY-MM-DD",
   "time": "HH:mm:ss",
@@ -43,7 +43,7 @@ Security notes:
 
 ## Current pricing contract
 
-- Starter: 30,000 Ks
-- Business: 60,000 Ks
-- The historical 50,000/80,000 amounts in migration 0011 are superseded by migration 0017.
+- Starter: 29,000 Ks
+- Business: 79,000 Ks
+- The historical 50,000/80,000 amounts in migration 0011 and 30,000/60,000 amounts in migration 0017 are superseded by migration 0021.
 - Never edit an already-applied migration to change runtime truth; add a later reconciliation migration instead.

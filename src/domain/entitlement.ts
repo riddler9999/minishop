@@ -1,5 +1,5 @@
 // ---- DOMAIN: order entitlements (quota + purchased balance) ------------------
-// Pure leaf (domain layer): the ONE authoritative definition of the pricing V1
+// Pure leaf (domain layer): the ONE authoritative definition of the current pricing
 // entitlement math — how many billable orders a shop may still place, in what
 // order they are consumed, and whether add-ons apply. The DB RPC
 // `place_order()` (migration 0016) mirrors THIS math exactly; the SQL and this
@@ -28,11 +28,18 @@ function isPaidPlan(plan: Plan): boolean {
 export const PLAN_MONTHLY_QUOTA: Record<Plan, number> = {
   free_trial: 20,
   starter: 60,
-  business: 150,
+  business: 200,
 };
 
-// Free-trial product ceiling, enforced server-side (11th product is blocked).
-export const FREE_TRIAL_PRODUCT_LIMIT = 10;
+// Total catalog rows per plan. Active + draft + archived products all count;
+// deleting a product frees a slot. Migration 0021 enforces these limits.
+export const PLAN_PRODUCT_LIMIT: Record<Plan, number> = {
+  free_trial: 10,
+  starter: 100,
+  business: 500,
+};
+
+export const FREE_TRIAL_PRODUCT_LIMIT = PLAN_PRODUCT_LIMIT.free_trial;
 
 // ---- Extra Orders (add-on) --------------------------------------------------
 // Flat price, no volume discount. Purchased quantity NEVER expires and can only

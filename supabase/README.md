@@ -5,7 +5,7 @@ Multi-tenant backend for the storefront SaaS. Schema, RLS and RPCs live in
 
 ## Migrations
 
-`0001`–`0007`, `0009`–`0012`, `0016` and `0017` are applied to the live project. `0008` and
+`0001`–`0007`, `0009`–`0012`, `0016` and `0017` were previously recorded as applied to the live project. `0008` and
 `0013`–`0015` are **pending — not yet applied** (need owner go-ahead). Never apply a migration to
 production without the owner's explicit go-ahead — see
 `.claude/skills/supabase-migration/SKILL.md`.
@@ -28,7 +28,11 @@ production without the owner's explicit go-ahead — see
 | `0014_ninjavan_production_pricing.sql` | Adds server-side Ninja Van production pricing and composes it into checkout/order placement. **Pending — not yet applied**. |
 | `0015_ninjavan_verified_seed.sql` | Seeds verified Ninja Van production rate data. **Pending — not yet applied**. |
 | `0016_entitlements_and_pricing.sql` | Pricing V1 (D56): `free_trial` tier; `shop_entitlements`, append-only `entitlement_ledger`, `order_pack_purchases`; `orders.idempotency_key`; atomic/idempotent entitlement consumption; free-trial 10-product limit; township shipping core; owner-only `admin_*` entitlement RPCs. Applied. |
-| `0017_reconcile_payment_activation.sql` | Replaces the historical payment activation runtime with current 30,000/60,000 pricing, replay-safe verification, and entitlement-aware `admin_activate_subscription()`. Applied. |
+| `0017_reconcile_payment_activation.sql` | Historical reconciliation for 30,000/60,000 pricing. Superseded by 0021. |
+| `0018_production_safe_delivery_reconciliation.sql` | Production-safe delivery/runtime reconciliation preserving atomic entitlement consumption. Live apply state must be verified. |
+| `0019_production_safe_ninjavan_verified_seed.sql` | Production-safe verified Ninja Van seed. Live apply state must be verified. |
+| `0020_branding_core_all_plans.sql` | Removes the historical Business-only branding guard. Live apply state must be verified. |
+| `0021_final_pricing_packaging_reconciliation.sql` | **FINAL D60/ADR 0002:** 29,000/79,000 prices; 60/200 order quotas; 10/100/500 total-product caps; created-order usage; basic promotions core. **Review-only until explicit production approval.** |
 
 ## Security model (read before touching)
 

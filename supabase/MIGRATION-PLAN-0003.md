@@ -1,3 +1,5 @@
+> **Historical plan:** billing semantics in this document are superseded by ADR 0002 and migration 0021. Current paid pricing is 29,000/79,000 Ks and seller cancellation does not reverse a successfully created order entitlement. Do not use this file as current commercial truth.
+
 # Migration & Compatibility Plan — 0003 (Platform / Plan + Usage)
 
 Prepares the existing Mini TikTok Shop backend for a **commercial multi-tenant

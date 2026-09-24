@@ -3,6 +3,7 @@ import {describe, it} from 'node:test';
 import {
   PLAN_MONTHLY_QUOTA,
   FREE_TRIAL_PRODUCT_LIMIT,
+  PLAN_PRODUCT_LIMIT,
   EXTRA_ORDER_UNIT_PRICE_KS,
   EXTRA_ORDER_PRESETS,
   extraOrdersPriceKs,
@@ -21,11 +22,12 @@ const base: EntitlementState = {
 };
 
 describe('plan quotas + extra-order pricing', () => {
-  it('matches the finalized pricing V1 quotas', () => {
+  it('matches the final pricing quotas and product caps', () => {
     assert.equal(PLAN_MONTHLY_QUOTA.free_trial, 20);
     assert.equal(PLAN_MONTHLY_QUOTA.starter, 60);
-    assert.equal(PLAN_MONTHLY_QUOTA.business, 150);
+    assert.equal(PLAN_MONTHLY_QUOTA.business, 200);
     assert.equal(FREE_TRIAL_PRODUCT_LIMIT, 10);
+    assert.deepEqual(PLAN_PRODUCT_LIMIT, {free_trial: 10, starter: 100, business: 500});
   });
 
   it('prices Extra Orders linearly at 500/order with no volume discount', () => {

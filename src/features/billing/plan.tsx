@@ -1,4 +1,4 @@
-// ---- Plan feature gating (Starter vs Business) ------------------------------
+// ---- Plan packaging (Starter vs Business) -----------------------------------
 // The commercial packaging layer. Two sellable tiers gate which seller-console
 // and storefront capabilities are available. This is a FRONTEND gating layer:
 // it decides what UI to render, not what the database allows — RLS is unchanged
@@ -31,7 +31,7 @@ export type {Plan};
 //   - Payment verification (last-5 matching) is NOT a plan differentiator — it is
 //     available on every plan.
 //   - Store branding, Store Design, and analytics are CORE on every plan.
-//   - Promotions and integrations remain plan differentiators.
+//   - Basic promotions are CORE; integrations remain Business productivity/automation capabilities.
 export interface PlanFeatures {
   /** Promotion pricing on products + the storefront "featured" carousel. */
   promotions: boolean;
@@ -47,11 +47,10 @@ export interface PlanFeatures {
   integrations: boolean;
 }
 
-// Free trial and Starter share the same core seller-facing feature set for
-// branding, Store Design, and analytics. They still differ from paid plans in
-// order quota/Extra-Orders eligibility, while promotions/integrations remain gated.
+// Core selling features stay available across tiers. Business differentiates
+// through scale/productivity/automation, not by crippling the storefront.
 const CORE: PlanFeatures = {
-  promotions: false,
+  promotions: true,
   paymentVerification: true,
   advancedDashboard: true,
   storeDesign: true,

@@ -1,6 +1,6 @@
 // ---- BILLING: current-month usage + live order entitlements -----------------
 // getUsage() reads the analytics billable-usage view/RPC (0003). getEntitlement()
-// reads the pricing-V1 entitlement counters (0016) — the quota + purchased
+// reads the current entitlement counters (0016) — the quota + purchased
 // balance that actually gate order placement. Frontend plan gating lives in
 // plan.tsx; this module only reports numbers.
 
@@ -16,7 +16,7 @@ export interface ShopEntitlement extends EntitlementView {
 }
 
 export const billingApi = {
-  // ---- monthly usage (billable = confirmed, minus cancelled/test/duplicate) ---
+  // ---- monthly usage (valid created orders; cancellation/rejection does not refund) ---
   async getUsage(): Promise<{usage: ShopUsage}> {
     const sb = requireSupabase();
     const {data, error} = await sb.rpc('current_shop_usage');
