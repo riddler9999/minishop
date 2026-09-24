@@ -21,6 +21,8 @@ import {
 import {
   EXTRA_ORDER_PRESETS,
   EXTRA_ORDER_UNIT_PRICE_KS,
+  PLAN_MONTHLY_QUOTA,
+  PLAN_PRODUCT_LIMIT,
   extraOrdersPriceKs,
 } from '@/domain/entitlement';
 import {
@@ -337,12 +339,12 @@ function UpgradePanel() {
         <Sparkles className="h-5 w-5 text-pink-500" /> Plan upgrade
       </h2>
       <p className="mt-1 text-sm text-slate-500">
-        Free Trial တွင် Order ၂၀ (တစ်သက်တာ) နှင့် ပစ္စည်း ၁၀ ခုအထိသာ ရပါသည်။ ပိုမိုလက်ခံနိုင်ရန် upgrade လုပ်ပါ။
+        Free Trial တွင် Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ) နှင့် ပစ္စည်း ${PLAN_PRODUCT_LIMIT.free_trial} ခုအထိသာ ရပါသည်။ ပိုမိုလက်ခံနိုင်ရန် upgrade လုပ်ပါ။
       </p>
 
       <div className="mt-4 grid gap-3">
-        <PlanRow name="Starter" price={PLAN_PRICE_KS.starter} orders={60} note="core ecommerce features" />
-        <PlanRow name="Business" price={PLAN_PRICE_KS.business} orders={150} note="Starter + advanced features" />
+        <PlanRow name="Starter" price={PLAN_PRICE_KS.starter} orders={PLAN_MONTHLY_QUOTA.starter} products={PLAN_PRODUCT_LIMIT.starter} note="selling features အပြည့်" />
+        <PlanRow name="Business" price={PLAN_PRICE_KS.business} orders={PLAN_MONTHLY_QUOTA.business} products={PLAN_PRODUCT_LIMIT.business} note="ပိုမြန်၊ လူသက်သာ၊ automation-ready" />
       </div>
 
       <div className="mt-4 rounded-2xl border border-pink-100 bg-pink-50/40 p-4">
@@ -370,12 +372,12 @@ function UpgradePanel() {
   );
 }
 
-function PlanRow({name, price, orders, note}: {name: string; price: number; orders: number; note: string}) {
+function PlanRow({name, price, orders, products, note}: {name: string; price: number; orders: number; products: number; note: string}) {
   return (
     <div className="flex items-center justify-between rounded-2xl border-2 border-slate-200 p-4">
       <div>
         <p className="font-display text-lg font-bold text-slate-950">{name}</p>
-        <p className="text-xs text-slate-500">လစဉ် Order {orders} ခု · {note}</p>
+        <p className="text-xs text-slate-500">လစဉ် Order {orders} ခု · Product {products} ခု · {note}</p>
       </div>
       <span className="font-display text-lg font-bold text-pink-600">{formatKs(price)}<span className="text-xs font-medium text-slate-400">/လ</span></span>
     </div>
