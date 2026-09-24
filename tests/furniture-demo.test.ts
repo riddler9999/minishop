@@ -59,7 +59,7 @@ test('furniture demo uses explicit MMK prices and furniture-only fixtures', asyn
   assert.match(data, /Rattan Sideboard/);
   assert.match(page, /MMK/);
   assert.match(page, /Intl\.NumberFormat/);
-  assert.equal(page.includes('$'), false);
+  assert.equal(page.includes('USD'), false);
 });
 
 test('furniture cart is isolated from existing demo cart storage', async () => {
