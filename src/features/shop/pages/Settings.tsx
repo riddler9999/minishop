@@ -1,6 +1,6 @@
 // ---- Shop settings / branding ----------------------------------------------
 // Seller-managed shop profile: name, phone, default delivery fee (all plans);
-// logo + extended branding (Business). Writes go through updateOwnShop() which
+// logo + extended branding (all plans). Writes go through updateOwnShop() which
 // is confined by RLS to the seller's own row. The public `/s/:slug` address is
 // intentionally read-only here — changing it would break every shared link.
 
@@ -13,7 +13,7 @@ import {updateOwnShop, type OwnShop} from '@/features/shop/sellerShop';
 import {SHOP_LOGOS_BUCKET} from '@/core/storage/buckets';
 import {adminApi} from '@/data/dataSource';
 import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/core/storage/imageUpload';
-import {PlanBadge, UpgradeCard} from '@/features/billing/PlanGate';
+import {PlanBadge} from '@/features/billing/PlanGate';
 import {cx} from '@/shared/lib/format';
 
 const field =
@@ -37,7 +37,7 @@ export default function Settings() {
 }
 
 function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
-  const {plan, features, refresh} = usePlan();
+  const {plan, refresh} = usePlan();
 
   const [name, setName] = useState(shop.name);
   const [phone, setPhone] = useState(shop.phone ?? '');
@@ -83,14 +83,12 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
       await updateOwnShop(user.id, {
         name,
         phone,
-        defaultDeliveryFee: feeN,
-        // Only write branding fields the plan actually exposes.
-        ...(features.branding ? {logoUrl} : {}),
+        defaultDeliveryFee: feeN,        logoUrl,
       });
       // Only after the DB write succeeds is it safe to drop the old object —
       // deleting first risks a persisted URL pointing at nothing if the write
       // above had failed instead.
-      if (features.branding && previousLogoUrl && previousLogoUrl !== logoUrl) {
+      if (previousLogoUrl && previousLogoUrl !== logoUrl) {
         const oldPath = deriveStoragePath(previousLogoUrl, SHOP_LOGOS_BUCKET);
         if (oldPath) await adminApi.deleteShopLogo(oldPath).catch(() => {});
       }
@@ -200,50 +198,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         </div>
 
         {/* Branding — Business only */}
-        {features.branding ? (
-          <div className="block">
-            <span className={lbl}>
-              <span className="inline-flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4 text-gold-600" /> ဆိုင် Logo
-              </span>
-            </span>
-            <div className="flex items-center gap-3">
-              {logoUrl ? (
-                <div className="relative">
-                  <img src={logoUrl} alt="logo preview" className="h-14 w-14 rounded-xl border border-cream-200 object-cover" />
-                  <button
-                    type="button"
-                    onClick={removeLogo}
-                    aria-label="logo ဖယ်ရှားရန်"
-                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white shadow">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-cream-300 bg-cream-50 text-ink-soft">
-                  <ImageIcon className="h-5 w-5" />
-                </div>
-              )}
-              <label
-                className={cx(
-                  'my inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-cream-200 px-3.5 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100',
-                  uploadingLogo && 'pointer-events-none opacity-60',
-                )}>
-                {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {uploadingLogo ? 'တင်နေသည်…' : logoUrl ? 'ပြောင်းရန်' : 'ပုံတင်ရန်'}
-                <input type="file" accept="image/png,image/webp" className="hidden" onChange={onLogoFileChange} disabled={uploadingLogo} />
-              </label>
-            </div>
-            <span className="my mt-1.5 block text-xs text-ink-soft">
-              PNG သို့မဟုတ် WebP ပုံဖိုင်သာ တင်နိုင်သည် (JPG/JPEG လက်မခံပါ) — storefront နှင့် console တွင် ပေါ်ပါမည်။
-            </span>
-            {logoErr && <p className="my mt-1 text-sm text-brand-600">{logoErr}</p>}
-          </div>
-        ) : (
-          <UpgradeCard title="Logo နှင့် branding">
-            ဆိုင် logo နှင့် အပို branding customization သည် Business package feature ဖြစ်သည်။
-          </UpgradeCard>
-        )}
+        
 
         {err && <p className="my text-sm text-brand-600">{err}</p>}
         {ok && (
