@@ -568,3 +568,22 @@ The public product demo is mounted at `/demo/*` and is intentionally a distinct 
 
 Visual direction: soft lavender canvas, dark-purple primary actions, lilac product surfaces, light-lavender/white cards, large radii, pill controls, restrained purple shadows, product-first hierarchy, and a floating four-item mobile navigation.
 
+
+
+---
+
+## 14. Storefront theme taxonomy
+
+Storefront themes are organized by **design aesthetic and layout vibe**, never by product niche. The seller should be able to pick any theme regardless of merchandise category.
+
+Canonical theme families:
+
+1. **Clean & Minimal** — editorial, spacious, black/white product-first layout
+2. **Street & Bold** — poster-like, high-contrast, oversized typography
+3. **Soft & Elegant** — rounded, pastel, boutique/refined composition
+4. **Grid & Catalog** — dense, utility-first, fast-scanning product grid
+5. **Dark Modern** — full-dark, neon-accent, tech-forward visual language
+
+A preset is not considered a distinct theme if it only changes accent color or font. Each family must materially change layout composition, product-card treatment, density and storefront shell language.
+
+See `design/themes/aesthetic-themes.md` for the implementation contract and legacy ID mapping.
