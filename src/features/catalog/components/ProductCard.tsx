@@ -4,7 +4,7 @@ import {useCart} from '@/features/cart/state';
 import {cx, ks} from '@/shared/lib/format';
 import {ShopLink, useShopNavigate} from '@/features/tenancy/ShopLink';
 
-type ProductCardVariant = 'default' | 'compact' | 'feature' | 'demo-purple';
+type ProductCardVariant = 'default' | 'compact' | 'feature' | 'demo-purple' | 'clean-minimal' | 'street-bold' | 'soft-elegant' | 'grid-catalog' | 'dark-modern';
 
 export default function ProductCard({product, variant = 'default', className}: {product: Product; variant?: ProductCardVariant; className?: string}) {
   const {add} = useCart();
@@ -53,6 +53,97 @@ export default function ProductCard({product, variant = 'default', className}: {
           <div className="mt-1.5 min-w-0">
             <span className="block truncate font-sans text-[12px] font-black text-[#24133f] sm:text-sm">{ks(price)}</span>
             {hasPromo && <span className="block truncate text-[9px] text-[#7c6f98] line-through">{ks(product.price)}</span>}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === 'clean-minimal') {
+    return (
+      <article className={cx('group min-w-0 bg-white', className)}>
+        <ShopLink to={to} className="relative block aspect-[4/5] overflow-hidden bg-[#f4f4f4]">
+          {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" /> : <div className="grid h-full w-full place-items-center text-zinc-400"><ImageOff className="h-7 w-7" /></div>}
+          {hasPromo && off > 0 && <span className="absolute left-2 top-2 bg-white px-2 py-1 text-[9px] font-bold tracking-wide text-black">-{off}%</span>}
+        </ShopLink>
+        <div className="pt-2.5">
+          <ShopLink to={to} className="line-clamp-1 text-[12px] font-medium text-black hover:underline sm:text-sm">{product.name}</ShopLink>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <span className="text-[12px] font-semibold text-black sm:text-sm">{ks(price)}</span>
+            <button type="button" disabled={!product.inStock} onClick={quickAdd} className="grid h-8 w-8 place-items-center border border-black bg-white text-black transition hover:bg-black hover:text-white disabled:opacity-30" aria-label="ခြင်းထဲထည့်မည်"><ShoppingBag className="h-3.5 w-3.5" /></button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === 'street-bold') {
+    return (
+      <article className={cx('group min-w-0 border-2 border-black bg-[#f2ff00] shadow-[5px_5px_0_#111]', className)}>
+        <ShopLink to={to} className="relative block aspect-square overflow-hidden border-b-2 border-black bg-white">
+          {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" /> : <div className="grid h-full w-full place-items-center text-black"><ImageOff className="h-7 w-7" /></div>}
+          {hasPromo && off > 0 && <span className="absolute left-2 top-2 bg-[#ff4d00] px-2 py-1 text-[10px] font-black text-white">-{off}%</span>}
+        </ShopLink>
+        <div className="p-2.5">
+          <ShopLink to={to} className="line-clamp-2 text-[13px] font-black uppercase leading-tight text-black sm:text-sm">{product.name}</ShopLink>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-sm font-black text-black">{ks(price)}</span>
+            <button type="button" disabled={!product.inStock} onClick={buyNow} className="min-h-9 border-2 border-black bg-black px-3 text-[10px] font-black uppercase text-white transition hover:bg-[#ff4d00] disabled:opacity-40">BUY</button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === 'soft-elegant') {
+    return (
+      <article className={cx('group min-w-0 overflow-hidden rounded-[26px] border border-[#eadbd5] bg-[#fffaf7] shadow-[0_14px_36px_rgba(100,70,75,0.08)]', className)}>
+        <ShopLink to={to} className="relative block aspect-[4/5] overflow-hidden bg-[#f2e7e1]">
+          {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" /> : <div className="grid h-full w-full place-items-center text-[#b79a9f]"><ImageOff className="h-7 w-7" /></div>}
+          {hasPromo && off > 0 && <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-semibold text-[#8a5260]">Save {off}%</span>}
+        </ShopLink>
+        <div className="p-3.5">
+          {product.category && <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#a18489]">{product.category}</p>}
+          <ShopLink to={to} className="font-display mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[#4a3337]">{product.name}</ShopLink>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-sm font-bold text-[#8d5360]">{ks(price)}</span>
+            <button type="button" disabled={!product.inStock} onClick={quickAdd} className="grid h-9 w-9 place-items-center rounded-full bg-[#ead7d4] text-[#7c4e58] transition hover:bg-[#dfc4c1] disabled:opacity-40" aria-label="ခြင်းထဲထည့်မည်"><ShoppingBag className="h-4 w-4" /></button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === 'grid-catalog') {
+    return (
+      <article className={cx('group min-w-0 overflow-hidden rounded-lg border border-[#dbe2ea] bg-white', className)}>
+        <ShopLink to={to} className="relative block aspect-square overflow-hidden bg-[#f3f6fa]">
+          {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center text-slate-400"><ImageOff className="h-6 w-6" /></div>}
+          {hasPromo && off > 0 && <span className="absolute left-1.5 top-1.5 rounded bg-[#ef4444] px-1.5 py-0.5 text-[8px] font-bold text-white">-{off}%</span>}
+        </ShopLink>
+        <div className="p-2">
+          <ShopLink to={to} className="line-clamp-2 min-h-[30px] text-[10px] font-medium leading-[1.35] text-[#111827] sm:text-xs">{product.name}</ShopLink>
+          <div className="mt-1.5 flex items-center justify-between gap-1">
+            <span className="truncate text-[11px] font-extrabold text-[#0f6fff] sm:text-xs">{ks(price)}</span>
+            <button type="button" disabled={!product.inStock} onClick={quickAdd} className="grid h-7 w-7 shrink-0 place-items-center rounded bg-[#0f6fff] text-white disabled:bg-slate-300" aria-label="ခြင်းထဲထည့်မည်"><ShoppingBag className="h-3.5 w-3.5" /></button>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  if (variant === 'dark-modern') {
+    return (
+      <article className={cx('group min-w-0 overflow-hidden rounded-[18px] border border-[#2a2a30] bg-[#151518] shadow-[0_18px_42px_rgba(0,0,0,0.28)]', className)}>
+        <ShopLink to={to} className="relative block aspect-[0.95] overflow-hidden bg-[#0f0f12]">
+          {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover opacity-95 transition duration-500 group-hover:scale-[1.03]" /> : <div className="grid h-full w-full place-items-center text-[#73fbd3]"><ImageOff className="h-7 w-7" /></div>}
+          {hasPromo && off > 0 && <span className="absolute left-2 top-2 rounded-md border border-[#73fbd3]/40 bg-black/70 px-2 py-1 text-[9px] font-bold text-[#73fbd3] backdrop-blur">-{off}%</span>}
+        </ShopLink>
+        <div className="p-3">
+          <ShopLink to={to} className="line-clamp-1 text-[12px] font-semibold text-[#f8fafc] sm:text-sm">{product.name}</ShopLink>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <span className="text-[12px] font-black text-[#73fbd3] sm:text-sm">{ks(price)}</span>
+            <button type="button" disabled={!product.inStock} onClick={quickAdd} className="grid h-8 w-8 place-items-center rounded-lg border border-[#73fbd3]/50 bg-[#73fbd3]/10 text-[#73fbd3] transition hover:bg-[#73fbd3] hover:text-[#08110e] disabled:opacity-30" aria-label="ခြင်းထဲထည့်မည်"><ShoppingBag className="h-3.5 w-3.5" /></button>
           </div>
         </div>
       </article>
