@@ -19,7 +19,7 @@ production without the owner's explicit go-ahead — see
 | `0005_fix_storage_policy_path.sql` | Corrects the Storage policy's shop-id path segment |
 | `0006_optimize_rls_and_fk_index.sql` | RLS predicate optimization + missing FK indexes |
 | `0007_production_hardening.sql` | Rate limiting on the anon RPCs; platform-managed `plan`/`owner_id`/billing triggers; stricter `place_order()` / `lookup_order()` validation. Raises typed exceptions (`rate_limit_exceeded`, `duplicate_order_limit`, `business_plan_required`, …) — the frontend maps these to Burmese copy via `src/domain/dbError.ts` (`mapDbError`, see D48) |
-| `0008_shop_owner_unique.sql` | `unique(owner_id)` on `shops` (`shops_owner_unique`), dropping the now-redundant `shops_owner_idx` — enforces one shop per owner (the admin flow assumes it; see `PROJECT.md` D49). **Pending — not yet applied** (run the migration's duplicate-detection query before applying) |
+| `0008_shop_owner_unique.sql` | `unique(owner_id)` on `shops` (`shops_owner_unique`), dropping the redundant `shops_owner_idx`. **Applied to production 2026-09-25 after duplicate-owner preflight returned zero rows.** |
 | `0009_shop_theme.sql` | `shops.theme jsonb` — seller-editable Store Design (D52). Applied |
 | `0010_shop_application_gate.sql` | `shop_applications` + private `payment-proofs` bucket — paid onboarding gate (D55). Applied |
 | `0011_payment_proof_auto_plan.sql` | Historical payment-proof OCR/auto-verification foundation: creates `payment_proofs` + the first `activate_plan_from_verified_payment()` implementation. Its 50,000/80,000 amounts and direct `shops.plan` update are superseded by `0017`. Applied. |
@@ -29,10 +29,10 @@ production without the owner's explicit go-ahead — see
 | `0015_ninjavan_verified_seed.sql` | Seeds verified Ninja Van production rate data. **Pending — not yet applied**. |
 | `0016_entitlements_and_pricing.sql` | Pricing V1 (D56): `free_trial` tier; `shop_entitlements`, append-only `entitlement_ledger`, `order_pack_purchases`; `orders.idempotency_key`; atomic/idempotent entitlement consumption; free-trial 10-product limit; township shipping core; owner-only `admin_*` entitlement RPCs. Applied. |
 | `0017_reconcile_payment_activation.sql` | Historical reconciliation for 30,000/60,000 pricing. Superseded by 0021. |
-| `0018_production_safe_delivery_reconciliation.sql` | Production-safe delivery/runtime reconciliation preserving atomic entitlement consumption. Live apply state must be verified. |
-| `0019_production_safe_ninjavan_verified_seed.sql` | Production-safe verified Ninja Van seed. Live apply state must be verified. |
-| `0020_branding_core_all_plans.sql` | Removes the historical Business-only branding guard. Live apply state must be verified. |
-| `0021_final_pricing_packaging_reconciliation.sql` | **FINAL D60/ADR 0002:** 29,000/79,000 prices; 60/200 order quotas; 10/100/500 total-product caps; created-order usage; basic promotions core. **Review-only until explicit production approval.** |
+| `0018_production_safe_delivery_reconciliation.sql` | Production-safe delivery/runtime reconciliation preserving atomic entitlement consumption. **Applied to production.** |
+| `0019_production_safe_ninjavan_verified_seed.sql` | Production-safe approved 11-route Yangon Ninja Van rate matrix. **Applied to production 2026-09-25.** |
+| `0020_branding_core_all_plans.sql` | Removes the historical Business-only branding guard. **Applied to production 2026-09-25.** |
+| `0021_final_pricing_packaging_reconciliation.sql` | **FINAL D60/ADR 0002:** 29,000/79,000 prices; 60/200 order quotas; 10/100/500 total-product caps; created-order usage; basic promotions core. **Applied to production 2026-09-25 and post-verified.** |
 
 ## Security model (read before touching)
 
@@ -72,3 +72,5 @@ the project URL + public anon key.
 Shipped since this list was written: Storage buckets + tenant-safe policies
 (`0003`, path fix in `0005`) and anti-abuse rate limiting on the anon RPCs
 (`0007`). Slip upload was dropped for MVP — see `PROJECT.md` D6.
+
+| `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. |
