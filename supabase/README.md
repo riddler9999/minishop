@@ -73,4 +73,10 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 (`0003`, path fix in `0005`) and anti-abuse rate limiting on the anon RPCs
 (`0007`). Slip upload was dropped for MVP — see `PROJECT.md` D6.
 
-| `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. |
+| `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. **Applied to production 2026-09-25 and advisor-verified.** |
+
+### Residual advisor decisions (2026-09-25)
+
+- `lookup_order()` and `place_order()` remain intentionally executable by buyer-facing API roles. Both are SECURITY DEFINER RPCs by design; revoking them would break public order lookup/checkout. Keep their internal validation/rate-limit tests as the control.
+- Supabase's multiple-permissive-policy findings are performance advisories, not authorization failures. No policy rewrite was made during this reconciliation to avoid changing access semantics without a dedicated RLS test pass.
+- Leaked-password protection is an Auth project setting, not a SQL migration. Enable it in Supabase Auth when the project setting is available to the operator/tooling.
