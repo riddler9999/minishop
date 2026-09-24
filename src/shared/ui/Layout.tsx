@@ -190,7 +190,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
           <button type="button" aria-label="မီနူးပိတ်ရန်" className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={() => setMenuOpen(false)} />
           <aside className={isDemo ? "relative flex h-full w-[84%] max-w-[390px] flex-col bg-[#fbf8ff] p-6 shadow-2xl" : "relative flex h-full w-[84%] max-w-[390px] flex-col bg-white p-6 shadow-2xl"}>
             <div className={isDemo ? "flex items-center justify-between border-b border-[#e1d4f5] pb-5" : "flex items-center justify-between border-b border-rose-100 pb-5"}>
-              <div><p className={isDemo ? "text-2xl font-black text-[#21133f]" : "text-2xl font-bold text-slate-950"}>{shopName}</p><p className={isDemo ? "mt-1 text-xs font-medium text-[#6d28d9]" : "mt-1 text-xs font-medium text-[#e11d48]"}>အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
+              <div><p className={isDemo ? "text-2xl font-black text-[#21133f]" : "text-2xl font-bold text-slate-950"}>{shopName}</p><p className={isDemo ? "mt-1 text-xs font-medium text-[#6d28d9]" : "mt-1 text-xs font-medium text-[#e11d48]"}>Online Store</p></div>
               <button type="button" aria-label="မီနူးပိတ်ရန်" onClick={() => setMenuOpen(false)} className={isDemo ? "grid h-11 w-11 place-items-center rounded-full text-[#59466f] hover:bg-[#efe5ff]" : "grid h-11 w-11 place-items-center rounded-full hover:bg-[#fff0f5]"}><X className="h-6 w-6" /></button>
             </div>
             <nav className="mt-7 flex flex-col">
