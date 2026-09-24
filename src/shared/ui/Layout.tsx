@@ -97,7 +97,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
   const active = (target: string) => target === '/' ? pathname.endsWith('/') : pathname.includes(target);
 
   return (
-    <div className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : 'bg-white'}`} style={fontPairingStyle(theme.fontPairing)}>
+    <div data-demo-store={isDemo ? "" : undefined} className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : 'bg-white'}`} style={fontPairingStyle(theme.fontPairing)}>
       <AnnouncementBar />
       {!isDemo && (
         <header className="sticky top-0 z-40 border-b border-rose-100/70 bg-white/95 backdrop-blur-xl">
