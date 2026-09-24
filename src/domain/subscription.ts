@@ -8,14 +8,14 @@
 import type {Plan} from '@/domain/plan';
 
 // ---- Pricing (Ks) -----------------------------------------------------------
-// Prepaid MONTHLY plan prices (pricing V1). Single source of truth for the
+// Prepaid MONTHLY plan prices (Final Pricing Contract, ADR 0002). Single source of truth for the
 // plan-selection UI and the informational `amount` stored on the application
 // (the owner still verifies the real transfer against the screenshot — the
 // amount is never a security check). Free trial is 0 Ks (no payment).
 export const PLAN_PRICE_KS: Record<Plan, number> = {
   free_trial: 0,
-  starter: 30000,
-  business: 60000,
+  starter: 29000,
+  business: 79000,
 };
 
 // The plan a seller can self-select without any payment or manual approval.
