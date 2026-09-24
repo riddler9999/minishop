@@ -61,7 +61,7 @@ export default function ProductDetail() {
         setBestSelling(
           DEMO_BEST_SELLING_IDS
             .map((productId) => byId.get(productId))
-            .filter((item): item is Product => Boolean(item) && item.id !== product.id),
+            .filter((item): item is Product => item != null && item.id !== product.id),
         );
       })
       .catch(() => {
