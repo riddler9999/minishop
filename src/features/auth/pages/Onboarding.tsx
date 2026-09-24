@@ -58,16 +58,16 @@ export default function Onboarding() {
   if (!checking && !loadError && gate === 'admin') return <Navigate to="/admin" replace />;
   if (!checking && !loadError && gate === 'subscribe') return <Navigate to="/admin/subscribe" replace />;
   if (authLoading || checking) {
-    return <div className="grid min-h-screen place-items-center bg-white text-sm text-slate-500">Loading…</div>;
+    return <div className="platform-shell grid min-h-screen place-items-center bg-[var(--minishop-canvas)] text-sm text-slate-500">Loading…</div>;
   }
   if (loadError) {
     return (
-      <div className="grid min-h-screen place-items-center bg-white px-4 text-center">
+      <div className="platform-shell grid min-h-screen place-items-center bg-[var(--minishop-canvas)] px-4 text-center">
         <div className="max-w-sm">
           <p className="my text-sm text-slate-500">ဆိုင် အချက်အလက် ရယူ၍ မရသေးပါ — ကွန်ရက် ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။</p>
           <button
             onClick={() => setRetry((n) => n + 1)}
-            className="my mt-4 rounded-xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#be123c]">
+            className="my mt-4 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-600">
             ထပ်ကြိုးစားရန်
           </button>
         </div>
@@ -108,17 +108,17 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center bg-white px-4 py-10">
+    <div className="platform-shell grid min-h-screen place-items-center bg-[var(--minishop-canvas)] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-[#fb7185] to-[#e11d48] font-display text-2xl font-bold text-white shadow-lg">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-500 font-display text-2xl font-bold text-white shadow-lg">
             {APP_INITIAL}
           </span>
           <h1 className="my mt-4 font-display text-2xl font-bold text-slate-950">ဆိုင် စတင်ဖွင့်ရန်</h1>
           <p className="my mt-1 text-sm text-slate-500/70">အဆင့် ၄ ဆင့်ဖြင့် မိနစ်ပိုင်းအတွင်း ဆိုင်ဖွင့်နိုင်သည်</p>
         </div>
 
-        <form onSubmit={submit} className="space-y-3 rounded-2xl bg-white p-6 shadow-xl">
+        <form onSubmit={submit} className="space-y-3 rounded-2xl border border-[var(--minishop-border)] bg-white p-6 shadow-[0_18px_50px_rgba(15,29,49,0.08)]">
           <label className="block">
             <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင်နာမည်</span>
             <input
@@ -128,13 +128,13 @@ export default function Onboarding() {
                 if (!slugTouched) setSlug(slugify(e.target.value));
               }}
               placeholder="ဥပမာ — Su Su Fashion"
-              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
+              className="w-full rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
             />
           </label>
 
           <label className="block">
             <span className="my mb-1.5 block text-sm font-semibold text-slate-950">ဆိုင် Link</span>
-            <div className="flex items-center gap-1 rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 focus-within:border-[#e11d48]">
+            <div className="flex items-center gap-1 rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 focus-within:border-brand-500">
               <span className="my shrink-0 text-sm text-slate-500">/s/</span>
               <input
                 value={slug}
@@ -148,7 +148,7 @@ export default function Onboarding() {
             </div>
             <span className="my mt-1 block text-xs text-slate-500">
               ဆိုင် link — {slug.trim() ? (
-                <span className="font-semibold text-[#e11d48]">/s/{slug.trim()}</span>
+                <span className="font-semibold text-brand-600">/s/{slug.trim()}</span>
               ) : (
                 'ဖောက်သည်ကို မျှဝေမည့် အမြဲတမ်း လိပ်စာ'
               )}
@@ -162,7 +162,7 @@ export default function Onboarding() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09xxxxxxxxx"
-              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]"
+              className="w-full rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500"
             />
           </label>
 
@@ -175,7 +175,7 @@ export default function Onboarding() {
                   setOriginRegion(e.target.value);
                   setOriginTownship('');
                 }}
-                className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48]">
+                className="w-full rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500">
                 <option value="">— ရွေးချယ်ပါ —</option>
                 {regionNames().map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
@@ -186,7 +186,7 @@ export default function Onboarding() {
                 value={originTownship}
                 disabled={!originRegion}
                 onChange={(e) => setOriginTownship(e.target.value)}
-                className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48] disabled:opacity-60">
+                className="w-full rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 disabled:opacity-60">
                 <option value="">{originRegion ? '— ရွေးချယ်ပါ —' : 'တိုင်းအရင်ရွေးပါ'}</option>
                 {townshipsOf(originRegion).map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
               </select>
@@ -204,7 +204,7 @@ export default function Onboarding() {
                   key={key}
                   type="button"
                   onClick={() => setDeliveryService(key)}
-                  className={`rounded-xl border p-3 text-left transition ${deliveryService === key ? 'border-[#e11d48] bg-rose-50' : 'border-rose-100 bg-white'}`}>
+                  className={`rounded-xl border p-3 text-left transition ${deliveryService === key ? 'border-brand-500 bg-brand-50' : 'border-[var(--minishop-border)] bg-white'}`}>
                   <span className="my block text-sm font-bold text-slate-950">{title}</span>
                   <span className="my mt-1 block text-xs text-slate-500">{sub}</span>
                 </button>
@@ -219,7 +219,7 @@ export default function Onboarding() {
               value={fee}
               disabled={deliveryService !== 'custom'}
               onChange={(e) => setFee(e.target.value)}
-              className="w-full rounded-xl border border-rose-100 bg-rose-50/40 px-3.5 py-2.5 text-sm outline-none focus:border-[#e11d48] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl border border-[var(--minishop-border)] bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
             />
             <span className="my mt-1 block text-xs text-slate-500">
               {deliveryService === 'ninjavan'
@@ -229,14 +229,14 @@ export default function Onboarding() {
           </label>
 
           {err && (
-            <p className="my flex items-center gap-1.5 text-sm text-[#e11d48]">
+            <p className="my flex items-center gap-1.5 text-sm text-brand-600">
               <ShieldAlert className="h-4 w-4 shrink-0" /> {err}
             </p>
           )}
 
           <button
             disabled={saving}
-            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#e11d48] py-3 text-sm font-bold text-white transition hover:bg-[#be123c] disabled:opacity-50">
+            className="my mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white transition hover:bg-brand-600 disabled:opacity-50">
             <Store className="h-4 w-4" /> {saving ? 'ဖန်တီးနေသည်…' : 'ဆိုင် ဖန်တီးရန်'}
           </button>
 
