@@ -50,11 +50,20 @@ export default function ProductDetail() {
     if (!product) return;
     let alive = true;
     setBestSelling([]);
-    api.products({scope: 'active', featured: true, limit: 8})
-      .then((r) => {
-        if (alive) setBestSelling(r.products.filter((p) => p.id !== product.id).slice(0, 8));
-      })
-      .catch(() => {});
+    (async () => {
+      try {
+        const featured = await api.products({scope: 'active', featured: true, limit: 8});
+        let picks = featured.products.filter((p) => p.id !== product.id);
+        if (picks.length < 4) {
+          const fallback = await api.products({scope: 'active', limit: 8});
+          const seen = new Set(picks.map((p) => p.id));
+          picks = [...picks, ...fallback.products.filter((p) => p.id !== product.id && !seen.has(p.id))];
+        }
+        if (alive) setBestSelling(picks.slice(0, 8));
+      } catch {
+        if (alive) setBestSelling([]);
+      }
+    })();
     return () => {alive = false;};
   }, [product?.id, slug]);
 
