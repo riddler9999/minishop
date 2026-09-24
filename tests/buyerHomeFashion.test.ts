@@ -129,7 +129,7 @@ test('root demo storefront uses the purple reference design without replacing te
   const layout = await readFile(layoutPath, 'utf8');
   const detail = await readFile(new URL('../src/features/catalog/pages/ProductDetail.tsx', import.meta.url), 'utf8');
 
-  assert.match(home, /if \(!slug\)/);
+  assert.match(home, /if \\(isDemo\\)/);
   assert.match(home, /DemoReferenceHome/);
   assert.match(home, /variant="demo-purple"/);
   assert.match(home, /#eee6ff/i);
