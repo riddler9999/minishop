@@ -8,6 +8,13 @@ const cardPath = new URL('../src/features/catalog/components/ProductCard.tsx', i
 const fixturesPath = new URL('../src/data/demo/fixtures.ts', import.meta.url);
 const previewPath = new URL('../src/features/shop/components/StorePreview.tsx', import.meta.url);
 
+test('demo best selling is explicitly curated instead of inferred from promotions', async () => {
+  const fixtures = await readFile(fixturesPath, 'utf8');
+
+  assert.match(fixtures, /export const DEMO_BEST_SELLING_IDS/);
+  assert.match(fixtures, /demo-\d+/);
+});
+
 test('product detail shows full gallery with arrows and requested content hierarchy', async () => {
   const source = await readFile(detailPath, 'utf8');
   const demoStart = source.indexOf('if (isDemo)');
@@ -27,7 +34,12 @@ test('product detail shows full gallery with arrows and requested content hierar
   assert.ok(title >= 0 && price > title && quantity > price && description > quantity);
 
   assert.match(demo, /Best Selling/);
-  assert.match(source.slice(demoEnd), /Best Selling/);
+  assert.match(demo, /DEMO_BEST_SELLING_IDS/);
+  assert.doesNotMatch(demo, /Popular picks|View all/);
+
+  const tenant = source.slice(demoEnd);
+  assert.doesNotMatch(tenant, /Best Selling/);
+  assert.doesNotMatch(source, /featured:\s*true/);
 });
 
 test('demo product cards do not render a favorite control', async () => {
