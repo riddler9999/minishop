@@ -48,7 +48,7 @@ export interface ShippingZonePatch {
 export type UsageTier = '0-100' | '101-500' | '501-1500' | '1501-3000' | '3000+';
 
 // Current-month billable-order usage for the signed-in seller's own shop.
-// `billableOrders` counts confirmed orders EXCLUDING cancelled / test / duplicate.
+// `billableOrders` counts valid created orders, excluding platform-marked test / duplicate rows. Seller cancellation/rejection does not reverse billing.
 export interface ShopUsage {
   shopId: string;
   plan: ShopPlan;
