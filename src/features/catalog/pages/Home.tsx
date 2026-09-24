@@ -144,9 +144,9 @@ function LifestyleBanner() {
             Explore More <ArrowRight className="h-4 w-4" />
           </ShopLink>
         </div>
-        <div className="hidden text-right md:block">
-          <div className="text-6xl">🧶</div>
-          <p className="mt-2 text-xs font-semibold text-[#be123c]">Good Clothes · Good Mood</p>
+        <div className="hidden max-w-[220px] text-right md:block">
+          <p className="text-2xl font-black leading-tight text-[#be123c]">Good Clothes.<br />Good Mood.</p>
+          <p className="mt-2 text-xs font-semibold text-slate-500">Made for everyday style.</p>
         </div>
       </div>
     </section>
