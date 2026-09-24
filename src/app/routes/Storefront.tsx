@@ -10,6 +10,8 @@ import Checkout from '@/features/checkout/pages/Checkout';
 import OrderSuccess from '@/features/checkout/pages/OrderSuccess';
 import OrderLookup from '@/features/orders/pages/OrderLookup';
 import PolicyPage from '@/shared/ui/PolicyPage';
+import DemoCart from '@/features/cart/pages/DemoCart';
+import {DemoStoreProvider} from '@/features/demo/DemoStoreContext';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {getOwnShop} from '@/features/shop/sellerShop';
 import {getCachedShopInfo} from '@/features/tenancy/shopResolver';
@@ -50,11 +52,13 @@ export default function Storefront() {
   ) : undefined;
 
   return (
+    <DemoStoreProvider>
     <Layout drawerFooterAction={drawerFooterAction}>
       <Routes>
         <Route index element={<Home />} />
         <Route path="products" element={<Products />} />
         <Route path="products/:id" element={<ProductDetail />} />
+        <Route path="cart" element={<DemoCart />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="order/:orderId" element={<OrderSuccess />} />
         <Route path="orders" element={<OrderLookup />} />
@@ -65,5 +69,6 @@ export default function Storefront() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
+    </DemoStoreProvider>
   );
 }

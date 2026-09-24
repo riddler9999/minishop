@@ -8,20 +8,27 @@
 // Use for IN-APP storefront paths only (absolute, starting with `/`). Do NOT
 // use for real site-root links such as the admin console.
 import {useCallback} from 'react';
-import {Link, useNavigate, useParams, type LinkProps, type NavigateOptions} from 'react-router-dom';
+import {Link, useLocation, useNavigate, useParams, type LinkProps, type NavigateOptions} from 'react-router-dom';
 import {shopHref} from '@/features/tenancy/shopContext';
 
 type ShopLinkProps = Omit<LinkProps, 'to'> & {to: string};
 
+function scopedHref(path: string, pathname: string): string {
+  if (pathname === '/demo' || pathname.startsWith('/demo/')) return path === '/' ? '/demo' : `/demo${path}`;
+  return shopHref(path);
+}
+
 export function ShopLink({to, ...rest}: ShopLinkProps) {
-  return <Link to={shopHref(to)} {...rest} />;
+  const {pathname} = useLocation();
+  return <Link to={scopedHref(to, pathname)} {...rest} />;
 }
 
 /** Like useNavigate(), but shop-scoped for string paths. `nav(-1)` etc. still
  *  use the plain useNavigate() — this is only for absolute in-app paths. */
 export function useShopNavigate() {
   const nav = useNavigate();
-  return useCallback((to: string, opts?: NavigateOptions) => nav(shopHref(to), opts), [nav]);
+  const {pathname} = useLocation();
+  return useCallback((to: string, opts?: NavigateOptions) => nav(scopedHref(to, pathname), opts), [nav, pathname]);
 }
 
 /**

@@ -14,6 +14,9 @@ const cartPagePath = new URL('../src/features/cart/pages/Cart.tsx', import.meta.
 const productCardPath = new URL('../src/features/catalog/components/ProductCard.tsx', import.meta.url);
 const checkoutPath = new URL('../src/features/checkout/pages/Checkout.tsx', import.meta.url);
 const onboardingPath = new URL('../src/features/auth/pages/Onboarding.tsx', import.meta.url);
+const shopLinkPath = new URL('../src/features/tenancy/ShopLink.tsx', import.meta.url);
+const demoContextPath = new URL('../src/features/demo/DemoStoreContext.tsx', import.meta.url);
+const demoCartPath = new URL('../src/features/cart/pages/DemoCart.tsx', import.meta.url);
 const landingCssPath = new URL('../src/features/landing/pages/landing.css', import.meta.url);
 
 async function readHome() {
@@ -95,15 +98,18 @@ test('storefront exposes privacy and terms routes and footer links', async () =>
   assert.match(layout, /to="\/terms-of-service"[^>]*>Terms of Service/);
 });
 
-test('cart is drawer-only and the standalone cart page is removed', async () => {
+test('tenant storefront remains drawer-first while demo owns an isolated cart page', async () => {
   const storefront = await readFile(storefrontPath, 'utf8');
   const drawer = await readFile(cartDrawerPath, 'utf8');
 
-  assert.equal(storefront.includes('path="cart"'), false);
+  assert.match(storefront, /path="cart" element={<DemoCart \/>}/);
   assert.equal(storefront.includes("features/cart/pages/Cart"), false);
-  assert.equal(drawer.includes("go('/cart')"), false);
   assert.equal(drawer.includes('စျေးခြင်း အပြည့်ကြည့်ရန်'), false);
   await assert.rejects(readFile(cartPagePath, 'utf8'));
+  const demoCart = await readFile(demoCartPath, 'utf8');
+  assert.match(demoCart, /useDemoStore/);
+  assert.match(demoCart, /Navigate to="\/" replace/);
+  assert.match(demoCart, /#6d28d9/i);
 });
 
 test('compact home product cards match the reference with a cart icon action', async () => {
@@ -123,14 +129,14 @@ test('root demo storefront uses the purple reference design without replacing te
   const layout = await readFile(layoutPath, 'utf8');
   const detail = await readFile(new URL('../src/features/catalog/pages/ProductDetail.tsx', import.meta.url), 'utf8');
 
-  assert.match(home, /if \(!slug\)/);
+  assert.match(home, /if \(isDemo\)/);
   assert.match(home, /DemoReferenceHome/);
   assert.match(home, /variant="demo-purple"/);
   assert.match(home, /#eee6ff/i);
   assert.match(card, /demo-purple/);
   assert.match(card, /#6d28d9/i);
-  assert.match(layout, /const isDemo = !shop/);
-  assert.match(detail, /const isDemo = !slug/);
+  assert.match(layout, /useDemoStore/);
+  assert.match(detail, /useDemoStore/);
 });
 
 test('cart drawer checkout and admin onboarding contain no legacy brown cream or gold theme tokens', async () => {
@@ -141,11 +147,41 @@ test('cart drawer checkout and admin onboarding contain no legacy brown cream or
   ]);
 
   for (const source of sources) {
-    for (const forbidden of ['brand-', 'cream-', 'gold-']) {
+    for (const forbidden of ['cream-', 'gold-']) {
       assert.equal(source.includes(forbidden), false, `legacy theme token remains: ${forbidden}`);
     }
   }
 
   const onboarding = sources[2];
-  assert.match(onboarding, /bg-\[#e11d48\].*text-white/);
+  assert.match(onboarding, /bg-brand-500.*text-white/);
+});
+
+
+test('demo storefront navigation cannot escape to generic root product routes', async () => {
+  const shopLink = await readFile(shopLinkPath, 'utf8');
+  const context = await readFile(demoContextPath, 'utf8');
+  assert.match(shopLink, /pathname === '\/demo'/);
+  assert.match(shopLink, /path === '\/' \? '\/demo'/);
+  assert.match(shopLink, /\/demo\$\{path\}/);
+  assert.match(context, /pathname\.startsWith\('\/demo\/'\)/);
+});
+
+test('demo product listing uses purple cards without quick-add while tenant default stays available', async () => {
+  const products = await readFile(new URL('../src/features/catalog/pages/Products.tsx', import.meta.url), 'utf8');
+  const card = await readFile(productCardPath, 'utf8');
+  assert.match(products, /variant=\{isDemo \? 'demo-purple' : 'default'\}/);
+  const demoBranch = card.slice(card.indexOf("variant === 'demo-purple'"), card.indexOf("const compact"));
+  assert.equal(demoBranch.includes('aria-label="ခြင်းထဲထည့်မည်"'), false);
+  assert.match(card, /variant = 'default'/);
+});
+
+test('demo cart and checkout are scoped by the demo theme without changing tenant contracts', async () => {
+  const layout = await readFile(layoutPath, 'utf8');
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
+  const checkout = await readFile(checkoutPath, 'utf8');
+  assert.match(layout, /data-demo-store/);
+  assert.match(css, /\[data-demo-store\]/);
+  assert.match(css, /--demo-primary: #6d28d9/);
+  assert.match(checkout, /api\.createOrder/);
+  assert.match(checkout, /idempotencyKey/);
 });

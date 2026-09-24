@@ -6,6 +6,7 @@ import type {StorefrontTheme} from '@/domain/theme';
 import {getCachedShopInfo, getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
+import {useDemoStore} from '@/features/demo/DemoStoreContext';
 
 function SearchStrip() {
   const nav = useShopNavigate();
@@ -252,6 +253,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const slug = useShopSlugParam();
   const theme = getStorefrontTheme();
+  const isDemo = useDemoStore();
 
   useEffect(() => {
     let alive = true;
@@ -275,7 +277,7 @@ export default function Home() {
   }, [slug]);
 
   const visibleProducts = products ?? [];
-  if (!slug) {
+  if (isDemo) {
     return <DemoReferenceHome products={visibleProducts} categories={categories} loading={products === null && !error} error={error} />;
   }
 
