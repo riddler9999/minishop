@@ -4,6 +4,7 @@ import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
 import {FONT_PAIRINGS} from '@/domain/fontPairing';
+import {getThemeVisual, type StorefrontTheme} from '@/domain/theme';
 import {getCachedShopInfo, getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {APP_NAME} from '@/shared/lib/brand';
 import {ShopLink} from '@/features/tenancy/ShopLink';
@@ -19,23 +20,24 @@ function fontPairingStyle(fontPairing: keyof typeof FONT_PAIRINGS): React.CSSPro
   };
 }
 
-function Brand() {
+function Brand({theme}: {theme: StorefrontTheme}) {
   const shop = getCachedShopInfo();
+  const visual = getThemeVisual(theme);
   const name = shop?.name ?? APP_NAME;
   const logoUrl = shop?.logoUrl;
 
   return (
     <ShopLink to="/" className="flex min-w-0 items-center gap-2 overflow-hidden">
       {logoUrl ? (
-        <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-2xl object-cover ring-2 ring-[#fbcfe8]" />
+        <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 object-cover" style={{borderRadius: theme.presetId === 'street-bold' || theme.presetId === 'clean-minimal' ? 0 : 14, border: `1px solid ${visual.border}`}} />
       ) : (
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border-2 border-[#e11d48] text-[#e11d48]">
+        <span className="grid h-10 w-10 shrink-0 place-items-center border-2" style={{borderColor: visual.accent, color: visual.accent, borderRadius: theme.presetId === 'street-bold' || theme.presetId === 'clean-minimal' ? 0 : 14}}>
           <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
         </span>
       )}
       <span className="min-w-0">
-        <span className="font-display block truncate text-[20px] font-black leading-none tracking-[-0.03em] text-[#e11d48] sm:text-[24px]">{name}</span>
-        <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400 sm:block">Wear Your Story</span>
+        <span className="font-display block truncate text-[20px] font-black leading-none tracking-[-0.03em] sm:text-[24px]" style={{color: theme.presetId === 'dark-modern' ? visual.text : theme.presetId === 'street-bold' ? '#ffffff' : visual.text}}>{name}</span>
+        <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[0.12em] sm:block" style={{color: theme.presetId === 'street-bold' ? '#f2ff00' : visual.muted}}>Online Store</span>
       </span>
     </ShopLink>
   );
@@ -67,6 +69,9 @@ export default function Layout({children, drawerFooterAction}: {children: React.
   const shopName = shop?.name ?? APP_NAME;
   const theme = getStorefrontTheme();
   const isDemo = useDemoStore();
+  const visual = getThemeVisual(theme);
+  const street = theme.presetId === 'street-bold';
+  const dark = theme.presetId === 'dark-modern';
 
   useEffect(() => {
     setMenuOpen(false);
@@ -97,21 +102,27 @@ export default function Layout({children, drawerFooterAction}: {children: React.
   const active = (target: string) => target === '/' ? pathname.endsWith('/') : pathname.includes(target);
 
   return (
-    <div data-demo-store={isDemo ? "" : undefined} className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : 'bg-white'}`} style={fontPairingStyle(theme.fontPairing)}>
+    <div
+      data-demo-store={isDemo ? "" : undefined}
+      data-store-theme={isDemo ? undefined : theme.presetId}
+      className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : ''}`}
+      style={isDemo ? fontPairingStyle(theme.fontPairing) : {...fontPairingStyle(theme.fontPairing), backgroundColor: visual.canvas, color: visual.text}}>
       <AnnouncementBar />
       {!isDemo && (
-        <header className="sticky top-0 z-40 border-b border-rose-100/70 bg-white/95 backdrop-blur-xl">
-          <div className="mx-auto flex h-[78px] w-full max-w-[1440px] items-center gap-3 px-4 sm:h-[88px] sm:px-6 lg:px-8">
-            <Brand />
+        <header
+          className={`sticky top-0 z-40 border-b backdrop-blur-xl ${street ? 'border-black bg-black' : dark ? 'bg-[#09090b]/95' : 'bg-white/95'}`}
+          style={{borderColor: street ? '#111111' : visual.border}}>
+          <div className={`mx-auto flex w-full max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-8 ${theme.presetId === 'grid-catalog' ? 'h-[64px] sm:h-[70px]' : street ? 'h-[72px] sm:h-[78px]' : 'h-[78px] sm:h-[88px]'}`}>
+            <Brand theme={theme} />
             <div className="ml-auto flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
-              <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+              <ShopLink to="/products" aria-label="ပစ္စည်းရှာရန်" className={`grid h-11 w-11 place-items-center transition focus-visible:outline-none ${street || theme.presetId === 'clean-minimal' ? 'rounded-none' : 'rounded-full'}`} style={{color: street ? '#ffffff' : visual.text, backgroundColor: dark ? '#151518' : 'transparent'}}>
                 <Search className="h-[22px] w-[22px]" strokeWidth={1.8} />
               </ShopLink>
               <button type="button" onClick={openDrawer} aria-label="ဈေးခြင်းဖွင့်ရန်" className="relative grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
                 <ShoppingBag className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                {count > 0 && <span className="absolute right-0 top-0 grid h-[19px] min-w-[19px] place-items-center rounded-full bg-[#ff3b72] px-1 font-sans text-[10px] font-bold text-white ring-2 ring-white">{count}</span>}
+                {count > 0 && <span className="absolute right-0 top-0 grid h-[19px] min-w-[19px] place-items-center rounded-full px-1 font-sans text-[10px] font-bold" style={{backgroundColor: visual.accent, color: visual.accentText}}>{count}</span>}
               </button>
-              <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className="grid h-11 w-11 place-items-center rounded-full text-slate-900 transition hover:bg-[#fff0f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e11d48]">
+              <button type="button" onClick={() => setMenuOpen(true)} aria-label="မီနူးဖွင့်ရန်" className={`grid h-11 w-11 place-items-center transition focus-visible:outline-none ${street || theme.presetId === 'clean-minimal' ? 'rounded-none' : 'rounded-full'}`} style={{color: street ? '#ffffff' : visual.text, backgroundColor: dark ? '#151518' : 'transparent'}}>
                 <Menu className="h-[22px] w-[22px]" strokeWidth={1.8} />
               </button>
             </div>
@@ -121,10 +132,10 @@ export default function Layout({children, drawerFooterAction}: {children: React.
 
       <main className="flex-1">{children}</main>
 
-      {!isDemo && <footer className="hidden border-t border-rose-100 bg-slate-950 text-white md:block">
+      {!isDemo && <footer className="hidden border-t md:block" style={{borderColor: visual.border, backgroundColor: street ? '#111111' : dark ? '#0f0f12' : visual.surface, color: street || dark ? '#ffffff' : visual.text}}>
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
-          <div><p className="text-xl font-bold">{shopName}</p><p className="mt-1 text-xs text-rose-200">အွန်လိုင်းဖက်ရှင်ဆိုင်</p></div>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/65 sm:justify-start">
+          <div><p className="text-xl font-bold">{shopName}</p><p className="mt-1 text-xs opacity-60">Online Store</p></div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm opacity-65 sm:justify-start">
             <ShopLink to="/products" className="hover:text-white">ပစ္စည်းများ</ShopLink>
             <ShopLink to="/orders" className="hover:text-white">အော်ဒါရှာရန်</ShopLink>
             <ShopLink to="/privacy-policy" className="hover:text-white">Privacy Policy</ShopLink>
