@@ -92,7 +92,7 @@ Current plans:
 
 Plan ကို seller က သူ့ဘာသာပြောင်းလို့မရဘူး။ Paid activation/renewal က `shops.plan` တစ်ခုတည်းကိုပြောင်းတာမဟုတ်ဘဲ `shop_entitlements` ကိုပါ တစ်ပြိုင်နက်တည်း reconcile လုပ်ရမယ်။
 
-Township shipping နဲ့ last-5 buyer payment verification က core features ဖြစ်တယ်။ Business-only UI features တွေက promotions, advanced dashboard, branding/Store Design နဲ့ integrations ဖြစ်တယ်။ Downgrade လုပ်ရင် data မဖျက်ဘူး။
+Township shipping, last-5 buyer payment verification နဲ့ Store Design က core features ဖြစ်တယ်။ Business-only UI features တွေက promotions, advanced dashboard, logo/extended branding နဲ့ integrations ဖြစ်တယ်။ Downgrade လုပ်ရင် data မဖျက်ဘူး။
 
 ## Authentication & Onboarding
 
@@ -339,9 +339,9 @@ error ဖြစ်ရင် null → default; core shop payload ဘယ်တေ�
 (`/api/storefront/shop-logos/…`, PR #43) ဆီ rewrite လုပ်တယ်။ Admin `getShopTheme()` က column
 မရှိသေးရင် `supported:false` ပြန်ပေးပြီး editor မှာ migration-pending banner ပြတယ်။
 
-**Plan gating** — `features.branding` (Business) အောက်မှာ gate လုပ်ထားတယ် (logo/branding နဲ့
-ကိုက်ညီအောင်)။ Starter မှာ `UpgradeCard` ပြတယ်။ Downgrade လုပ်ရင် theme data မဖျက် — upgrade
-ပြန်လုပ်ရင် ပြန်ပေါ်တယ်။
+**Plan gating** — Store Design ကို Free Trial / Starter / Business အားလုံးမှာ အသုံးပြုနိုင်တယ်။
+Logo/extended branding ကသာ `features.branding` (Business) အောက်မှာ gate လုပ်ထားတယ်။ Downgrade
+လုပ်ရင် theme data မဖျက်ဘူး။
 
 **Hero image** — `uploadShopLogo` (shop-logos bucket) ကို ပြန်သုံးပြီး upload-before-write
 invariant (unsaved upload ကို replace/save-fail/unmount မှာ cleanup၊ old object ကို write
