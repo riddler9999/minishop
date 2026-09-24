@@ -22,6 +22,16 @@ test('final pricing migration enforces total product caps', () => {
   assert.match(sql, /select count\(\*\) into v_count[\s\S]*from public\.products[\s\S]*where shop_id = new\.shop_id/);
 });
 
+test('product cap serializes concurrent creates per shop before counting rows', () => {
+  const start = sql.indexOf('create or replace function public.enforce_product_limit()');
+  const end = sql.indexOf('-- Basic promotions are Core', start);
+  const productLimit = sql.slice(start, end);
+  const lockIndex = productLimit.search(/from public\.shops[\s\S]*for update/);
+  const countIndex = productLimit.indexOf('select count(*) into v_count');
+  assert.ok(lockIndex >= 0, 'shop row must be locked FOR UPDATE');
+  assert.ok(countIndex > lockIndex, 'shop lock must happen before product count');
+});
+
 test('basic promotions are no longer Business-gated in the database', () => {
   assert.match(sql, /drop trigger if exists products_enforce_plan/);
   assert.match(sql, /drop function if exists public\.enforce_product_plan/);
