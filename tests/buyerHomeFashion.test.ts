@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 
 const homePath = new URL('../src/features/catalog/pages/Home.tsx', import.meta.url);
+const aestheticHomePath = new URL('../src/features/catalog/components/AestheticHome.tsx', import.meta.url);
 const layoutPath = new URL('../src/shared/ui/Layout.tsx', import.meta.url);
 // The buyer-facing default copy now lives in the storefront theme defaults
 // (Store Design). Home.tsx renders it via theme.home.* instead of hardcoding
@@ -36,22 +37,26 @@ test('buyer home keeps real tenant catalog and navigation contracts', async () =
 });
 
 test('buyer home keeps search-assisted discovery without cart shortcuts', async () => {
-  const source = await readHome();
+  const source = (await readHome()) + (await readFile(aestheticHomePath, 'utf8'));
 
   assert.match(source, /to="\/products"/);
   assert.match(source, /\/products\?category=/);
   assert.match(source, /useShopNavigate/);
   assert.match(source, /nav\(`\/products/);
-  assert.match(source, /encodeURIComponent\(value\.trim\(\)\)/);
+  assert.match(source, /encodeURIComponent\(q\)/);
   assert.equal(source.includes("to: '/cart'"), false);
 });
 
-test('buyer storefront uses Burmese fashion copy and removes jewellery presentation', async () => {
-  const source = ((await readHome()) + (await readFile(layoutPath, 'utf8')) + (await readFile(themePath, 'utf8'))).toLowerCase();
+test('buyer storefront theme copy stays category-neutral and removes niche-specific presentation', async () => {
+  const source = ((await readHome()) + (await readFile(aestheticHomePath, 'utf8')) + (await readFile(layoutPath, 'utf8')) + (await readFile(themePath, 'utf8'))).toLowerCase();
 
-  assert.match(source, /အသစ်ရောက် ပစ္စည်းများ/);
   assert.match(source, /ပစ္စည်းများကြည့်ရန်/);
-  assert.match(source, /အွန်လိုင်းဖက်ရှင်ဆိုင်/);
+  assert.match(source, /clean & minimal/);
+  assert.match(source, /street & bold/);
+  assert.match(source, /soft & elegant/);
+  assert.match(source, /grid & catalog/);
+  assert.match(source, /dark modern/);
+  assert.match(source, /online store/);
 
   for (const forbidden of [
     'fine jewellery',
@@ -61,9 +66,10 @@ test('buyer storefront uses Burmese fashion copy and removes jewellery presentat
     'crafted with meaning',
     'shop the collection',
     'online fashion store',
+    'အွန်လိုင်းဖက်ရှင်ဆိုင်',
     'jewel-cta',
   ]) {
-    assert.equal(source.includes(forbidden), false, `unexpected jewellery/English copy: ${forbidden}`);
+    assert.equal(source.includes(forbidden), false, `unexpected niche-specific copy: ${forbidden}`);
   }
 });
 
@@ -166,12 +172,16 @@ test('demo storefront navigation cannot escape to generic root product routes', 
   assert.match(context, /pathname\.startsWith\('\/demo\/'\)/);
 });
 
-test('demo product listing uses purple cards without quick-add while tenant default stays available', async () => {
+test('demo product listing keeps isolated purple cards while tenant catalog uses aesthetic variants', async () => {
   const products = await readFile(new URL('../src/features/catalog/pages/Products.tsx', import.meta.url), 'utf8');
   const card = await readFile(productCardPath, 'utf8');
-  assert.match(products, /variant=\{isDemo \? 'demo-purple' : 'default'\}/);
-  const demoBranch = card.slice(card.indexOf("variant === 'demo-purple'"), card.indexOf("const compact"));
+  assert.match(products, /variant="demo-purple"/);
+  assert.match(products, /variant=\{ui\.card\}/);
+  const demoBranch = card.slice(card.indexOf("variant === 'demo-purple'"), card.indexOf("variant === 'clean-minimal'"));
   assert.equal(demoBranch.includes('aria-label="ခြင်းထဲထည့်မည်"'), false);
+  for (const id of ['clean-minimal', 'street-bold', 'soft-elegant', 'grid-catalog', 'dark-modern']) {
+    assert.match(card, new RegExp(`variant === '${id}'`));
+  }
   assert.match(card, /variant = 'default'/);
 });
 
