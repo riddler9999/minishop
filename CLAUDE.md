@@ -192,7 +192,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   application, so a seller still can never pick a higher tier directly.
 - **Feature gating** (`src/features/billing/plan.tsx`, `.tsx` JSX provider; `usePlan()` only inside
   `PlanProvider`, which wraps only `AdminConsole`). Business-only: promotions, advanced dashboard,
-  branding/logo/Store Design, integrations. **Township shipping and payment verification are now
+  logo/extended branding, integrations. **Township shipping, payment verification, and Store Design are
   CORE on every plan** (the old `advancedShipping`/Business gates were removed — D56). Gating hides
   + upsells (`features/billing/PlanGate.tsx`) but never deletes data.
 - **Order entitlements are the real pricing mechanic** (`src/domain/entitlement.ts` — the single
