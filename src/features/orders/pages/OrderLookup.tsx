@@ -51,7 +51,7 @@ export default function OrderLookup() {
   return (
     <div className="commerce-page mx-auto max-w-2xl px-4 py-10">
       <div className="text-center">
-        <div className="commerce-success-icon mx-auto grid h-14 w-14 place-items-center rounded-full">
+        <div className="commerce-icon-well mx-auto grid h-14 w-14 place-items-center rounded-full">
           <Package className="h-6 w-6" />
         </div>
         <h1 className="commerce-title my mt-3 font-display text-2xl font-bold">Order စစ်ဆေးရန်</h1>
