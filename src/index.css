@@ -158,18 +158,18 @@ textarea {
   }
 }
 
-/* Demo Store visual isolation.
-   This scope intentionally overrides legacy tenant pink/rose utility colors only
-   inside /demo. Real /s/:slug storefronts keep their existing theme unchanged. */
+/* Perfume demo visual isolation.
+   This scope remaps shared storefront utilities only inside /demo. Real /s/:slug
+   tenant storefronts keep their existing fashion theme and behavior unchanged. */
 [data-demo-store] {
-  --demo-bg: #eee6ff;
-  --demo-surface: #fbf8ff;
-  --demo-surface-soft: #f4edff;
-  --demo-primary: #6d28d9;
-  --demo-primary-dark: #3a1268;
-  --demo-text: #21133f;
-  --demo-muted: #76698a;
-  --demo-border: #d9c8f2;
+  --demo-bg: #fff1e6;
+  --demo-surface: #fffaf5;
+  --demo-surface-soft: #fff4e8;
+  --demo-primary: #f05a00;
+  --demo-primary-dark: #8f2d00;
+  --demo-text: #25140b;
+  --demo-muted: #80695b;
+  --demo-border: #f3d5bd;
 }
 [data-demo-store] [class*="text-[#e11d48]"],
 [data-demo-store] [class*="text-[#be123c]"] { color: var(--demo-primary) !important; }
@@ -184,7 +184,7 @@ textarea {
 [data-demo-store] [class*="bg-[#faf8f9]"],
 [data-demo-store] [class*="bg-[#fffdfd]"] { background-color: var(--demo-surface-soft) !important; }
 [data-demo-store] [class*="focus:border-[#e11d48]"]:focus { border-color: var(--demo-primary) !important; }
-[data-demo-store] [class*="focus:ring-[#e11d48]"]:focus { --tw-ring-color: rgb(109 40 217 / 0.14) !important; }
+[data-demo-store] [class*="focus:ring-[#e11d48]"]:focus { --tw-ring-color: rgb(240 90 0 / 0.14) !important; }
 
 [data-demo-store] [class*="text-brand-"] { color: var(--demo-primary) !important; }
 [data-demo-store] [class*="bg-brand-700"],

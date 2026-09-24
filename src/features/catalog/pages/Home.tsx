@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {ArrowRight, Headphones, Search, ShieldCheck, Shirt, ShoppingBag, SlidersHorizontal, Sparkles, Tags, Truck} from 'lucide-react';
+import {ArrowRight, Headphones, Menu, Search, ShieldCheck, Shirt, ShoppingBag, Sparkles, Tags, Truck} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import type {StorefrontTheme} from '@/domain/theme';
@@ -179,77 +179,88 @@ function Benefits() {
 function DemoReferenceHome({products, categories, loading, error}: {products: Product[]; categories: string[]; loading: boolean; error: string}) {
   const nav = useShopNavigate();
   const [query, setQuery] = useState('');
-  const visibleCategories = categories.slice(0, 3);
+  const hero = products[0] ?? null;
+  const visibleCategories = categories.slice(0, 4);
   const featured = products.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#eee6ff] px-3 pb-28 pt-3 sm:px-5 md:px-8 md:pt-6">
+    <div className="min-h-screen bg-[#fff1e6] px-3 pb-28 pt-3 sm:px-5 md:px-8 md:pt-6">
       <section className="mx-auto max-w-[430px] md:max-w-5xl">
+        <div className="flex items-center justify-between px-1">
+          <ShopLink to="/products" aria-label="Browse fragrances" className="grid h-11 w-11 place-items-center rounded-full bg-white/60 text-[#7a3210] shadow-sm">
+            <Menu className="h-5 w-5" />
+          </ShopLink>
+          <p className="font-serif text-lg font-black tracking-[0.14em] text-[#7a3210]">SOLÉ</p>
+          <ShopLink to="/cart" aria-label="Shopping bag" className="grid h-11 w-11 place-items-center rounded-full bg-white/60 text-[#f05a00] shadow-sm">
+            <ShoppingBag className="h-5 w-5" />
+          </ShopLink>
+        </div>
+
+        <div className="relative mt-3 min-h-[530px] overflow-hidden rounded-[34px] bg-[linear-gradient(145deg,#ff7a00_0%,#f05a00_55%,#d94700_100%)] px-6 pb-6 pt-7 text-white shadow-[0_24px_60px_rgba(191,70,0,0.24)]">
+          <div className="relative z-10 max-w-[72%]">
+            <p className="text-xs font-bold">★ Exclusive</p>
+            <h1 className="mt-5 font-serif text-[48px] leading-[0.91] tracking-[-0.045em]">Find Your<br />Signature<br />Scent</h1>
+            <p className="mt-4 max-w-[230px] text-sm leading-5 text-white/85">Premium fragrances for every mood and occasion.</p>
+            <ShopLink to="/products" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#6d2b08] px-5 py-3 text-sm font-bold text-white">
+              Explore Collection <ArrowRight className="h-4 w-4" />
+            </ShopLink>
+          </div>
+
+          <div className="absolute -right-14 top-28 h-64 w-64 rounded-full bg-[#ff9b3d]/55" />
+          {hero?.image ? (
+            <img src={hero.image} alt={hero.name} className="absolute bottom-14 right-[-4%] h-[300px] w-[78%] object-contain drop-shadow-[0_30px_28px_rgba(84,27,0,0.25)]" />
+          ) : (
+            <div className="absolute bottom-20 right-8 h-56 w-44 rounded-[45%_45%_40%_40%] bg-[#ffb25e]/60" />
+          )}
+
+          <div className="absolute inset-x-0 bottom-0 grid grid-cols-3 gap-1 border-t border-white/20 bg-white/12 px-4 py-4 text-center text-[9px] font-semibold backdrop-blur">
+            <span>Premium<br />Quality</span>
+            <span>Long Lasting<br />Fragrance</span>
+            <span>Secure<br />Packaging</span>
+          </div>
+        </div>
+
         <form
           onSubmit={(event) => {
             event.preventDefault();
             nav(`/products${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''}`);
           }}
-          className="flex items-center gap-3 px-1">
-          <div className="flex min-h-12 flex-1 items-center gap-3 rounded-full bg-white/95 px-4 shadow-[0_10px_28px_rgba(72,35,122,0.10)]">
-            <Search className="h-5 w-5 shrink-0 text-[#34204f]" strokeWidth={2.2} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              aria-label="ပစ္စည်းရှာရန်"
-              placeholder="Search"
-              className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-[#2b1a47] outline-none placeholder:text-[#7e7192]"
-            />
-          </div>
-          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[radial-gradient(circle_at_35%_25%,#a78bfa_0%,#6d28d9_48%,#3b176c_100%)] text-sm font-black text-white shadow-[0_10px_28px_rgba(76,29,149,0.26)] ring-2 ring-white/60">
-            M
-          </div>
+          className="mt-4 flex min-h-12 items-center gap-3 rounded-full bg-[#fffaf5] px-4 shadow-[0_10px_28px_rgba(151,63,10,0.10)]">
+          <Search className="h-5 w-5 text-[#7a5d4b]" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Search fragrances"
+            placeholder="Search fragrances"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[#25140b] outline-none placeholder:text-[#a48774]"
+          />
         </form>
 
-        <div className="mt-4 overflow-hidden rounded-[26px] border border-white/60 bg-white shadow-[0_18px_42px_rgba(72,35,122,0.12)]">
-          <img
-            src="/demo/file_00000000f99481f9acca9a032cd86775.png"
-            alt="MiniShop Fashion Demo Store banner"
-            className="block h-auto w-full object-cover"
-          />
+        <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
+          <ShopLink to="/products" className="shrink-0 rounded-full bg-[#f05a00] px-5 py-2.5 text-xs font-bold text-white">All scents</ShopLink>
+          {visibleCategories.map((category) => (
+            <ShopLink key={category} to={`/products?category=${encodeURIComponent(category)}`} className="shrink-0 rounded-full border border-[#f0c9aa] bg-white/65 px-5 py-2.5 text-xs font-semibold text-[#6f5140]">
+              {category}
+            </ShopLink>
+          ))}
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-[30px] bg-[#f8f3ff] px-4 pb-6 pt-5 shadow-[0_22px_52px_rgba(72,35,122,0.11)] sm:px-5 md:px-7">
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-[43px] font-black leading-[0.92] tracking-[-0.055em] text-[#21133f] sm:text-[48px]">New<br />arrivals</h1>
-            <button type="button" aria-label="Filter products" className="mt-1 grid h-10 w-10 place-items-center rounded-full text-[#49365f] transition hover:bg-white/80">
-              <SlidersHorizontal className="h-5 w-5" strokeWidth={1.8} />
-            </button>
-          </div>
+        {error && <div className="mt-5 rounded-2xl border border-[#f3d5bd] bg-white/80 p-4 text-sm text-[#6f5140]">{error}</div>}
 
-          <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-1">
-            <ShopLink to="/products" className="shrink-0 rounded-full bg-[#42146f] px-6 py-2.5 text-xs font-bold text-white shadow-[0_8px_18px_rgba(66,20,111,0.18)]">All</ShopLink>
-            {visibleCategories.map((category) => (
-              <ShopLink key={category} to={`/products?category=${encodeURIComponent(category)}`} className="shrink-0 rounded-full border border-[#baa7da] bg-white/55 px-5 py-2.5 text-xs font-semibold text-[#49365f]">
-                {category}
-              </ShopLink>
-            ))}
-          </div>
-
-          {error && <div className="mt-5 rounded-2xl border border-[#dacaf5] bg-white/80 p-4 text-sm text-[#4d3a68]">{error}</div>}
-
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
-            {loading
-              ? Array.from({length: 4}).map((_, index) => <ProductCardSkeleton key={index} compact />)
-              : featured.map((product) => <ProductCard key={product.id} product={product} variant="demo-purple" />)}
-          </div>
-
-          {!loading && !error && products.length === 0 && (
-            <div className="mt-5 rounded-2xl border border-[#dacaf5] bg-white/70 px-5 py-10 text-center text-sm text-[#6d5b82]">ဒီဆိုင်မှာ ပစ္စည်းမတင်ရသေးပါ။</div>
-          )}
-
-          <ShopLink
-            to="/products"
-            className="mx-auto mt-6 flex min-h-12 w-fit items-center gap-3 rounded-full bg-[#3a1268] px-7 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(58,18,104,0.24)]">
-            <ShoppingBag className="h-4 w-4" />
-            View all products
-          </ShopLink>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+          {loading
+            ? Array.from({length: 4}).map((_, index) => <ProductCardSkeleton key={index} compact />)
+            : featured.map((product) => <ProductCard key={product.id} product={product} variant="demo-perfume" />)}
         </div>
+
+        {!loading && !error && products.length === 0 && (
+          <div className="mt-5 rounded-2xl border border-[#f3d5bd] bg-white/70 px-5 py-10 text-center text-sm text-[#80695b]">No fragrances yet.</div>
+        )}
+
+        <ShopLink to="/products" className="mx-auto mt-6 flex min-h-12 w-fit items-center gap-3 rounded-full bg-[#8f2d00] px-7 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(143,45,0,0.22)]">
+          <ShoppingBag className="h-4 w-4" />
+          View full catalog
+        </ShopLink>
       </section>
     </div>
   );

@@ -1,18 +1,19 @@
 import {createContext, useContext, type ReactNode} from 'react';
 import {useLocation} from 'react-router-dom';
 
+/** Isolated orange/amber visual language for the public /demo perfume template. */
 export const DEMO_STORE = {
-  bg: '#eee6ff',
-  surface: '#fbf8ff',
-  surfaceSoft: '#f6f0ff',
-  product: '#dac6ff',
-  productStage: '#cdb7f7',
-  primary: '#6d28d9',
-  primaryDark: '#3a1268',
-  text: '#21133f',
-  muted: '#76698a',
-  border: '#d9c8f2',
-  shadow: '0 18px 48px rgba(76,29,149,0.14)',
+  bg: '#fff1e6',
+  surface: '#fffaf5',
+  surfaceSoft: '#fff4e8',
+  product: '#ffd9b8',
+  productStage: '#ffc789',
+  primary: '#f05a00',
+  primaryDark: '#8f2d00',
+  text: '#25140b',
+  muted: '#80695b',
+  border: '#f3d5bd',
+  shadow: '0 18px 48px rgba(151,63,10,0.14)',
   radius: '28px',
 } as const;
 

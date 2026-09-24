@@ -55,37 +55,44 @@ export default function ProductDetail() {
 
   if (isDemo) {
     return (
-      <div className="min-h-screen bg-[#cdb7f7] pb-28">
+      <div className="min-h-screen bg-[#fff1e6] pb-28">
         <div className="mx-auto max-w-[430px]">
-          <div className="relative min-h-[420px] overflow-hidden px-4 pt-4">
+          <div className="relative min-h-[455px] overflow-hidden px-4 pt-4">
             <div className="relative z-20 flex items-center justify-between">
-              <button onClick={() => nav(-1)} aria-label="နောက်သို့" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] shadow-[0_8px_22px_rgba(76,29,149,0.10)] backdrop-blur">
+              <button
+                onClick={() => nav(-1)}
+                aria-label="Back"
+                className="grid h-11 w-11 place-items-center rounded-full bg-white/80 text-[#25140b] shadow-[0_8px_22px_rgba(151,63,10,0.10)] backdrop-blur">
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div className="flex gap-2">
-                <button type="button" aria-label="နှစ်သက်မှု" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
+                <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-full bg-[#25140b] text-white">
                   <Heart className="h-5 w-5" />
-                </button>
-                <button type="button" aria-label="More" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
+                </span>
+                <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-full bg-white/80 text-[#7a3210] backdrop-blur">
                   <MoreHorizontal className="h-5 w-5" />
-                </button>
+                </span>
               </div>
             </div>
 
-            <div className="absolute inset-x-6 bottom-5 top-16 overflow-hidden rounded-[34px] bg-[radial-gradient(circle_at_50%_45%,#eadfff_0%,#d8c8fa_56%,#c2aaf2_100%)]">
+            <div className="absolute inset-x-4 bottom-5 top-16 overflow-hidden rounded-[34px] bg-[radial-gradient(circle_at_50%_42%,#fffaf4_0%,#ffe3c7_58%,#ffc88d_100%)]">
               {product.images[active] ? (
-                <img src={product.images[active]} alt={product.name} className="h-full w-full object-contain p-6 drop-shadow-[0_28px_30px_rgba(76,29,149,0.18)]" />
+                <img src={product.images[active]} alt={product.name} className="h-full w-full object-contain p-7 drop-shadow-[0_30px_28px_rgba(116,43,4,0.22)]" />
               ) : (
-                <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-10 w-10" /></div>
+                <div className="grid h-full w-full place-items-center text-[#f05a00]"><ImageOff className="h-10 w-10" /></div>
               )}
             </div>
           </div>
 
           {product.images.length > 1 && (
             <div className="no-scrollbar flex justify-center gap-2 overflow-x-auto px-4 pb-3">
-              {product.images.map((im, i) => (
-                <button key={i} onClick={() => setActive(i)} className={`h-2.5 w-2.5 shrink-0 rounded-full transition ${i === active ? 'bg-[#6d28d9]' : 'bg-white/75'}`} aria-label={`ပုံ ${i + 1}`}>
-                  <span className="sr-only">{im}</span>
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActive(index)}
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full transition ${index === active ? 'bg-[#f05a00]' : 'bg-white/85'}`}
+                  aria-label={`Image ${index + 1}`}>
+                  <span className="sr-only">{image}</span>
                 </button>
               ))}
             </div>
@@ -93,35 +100,51 @@ export default function ProductDetail() {
 
           {(product.color || product.size) && (
             <div className="flex flex-wrap items-center gap-3 px-4 pb-4 pt-2">
-              {product.color && <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]"><span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />{product.color}</span>}
-              {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]">Size · {product.size}</span>}
+              {product.color && (
+                <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/80 px-4 text-sm font-semibold text-[#6f5140]">
+                  <span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />
+                  {product.color}
+                </span>
+              )}
+              {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-white/80 px-4 text-sm font-semibold text-[#6f5140]">Size · {product.size}</span>}
             </div>
           )}
 
-          <div className="rounded-t-[34px] bg-[#fbf8ff] px-5 pb-8 pt-6 shadow-[0_-18px_42px_rgba(76,29,149,0.10)]">
-            <h1 className="font-display text-[30px] font-black leading-tight tracking-[-0.04em] text-[#21133f]">{product.name}</h1>
-            {product.description && <p className="my mt-3 line-clamp-3 text-sm leading-6 text-[#76698a]">{product.description}</p>}
+          <div className="rounded-t-[34px] bg-[#fffaf5] px-5 pb-8 pt-6 shadow-[0_-18px_42px_rgba(151,63,10,0.10)]">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#f05a00]">Signature fragrance</p>
+            <h1 className="mt-1 font-serif text-[31px] font-black leading-tight tracking-[-0.03em] text-[#25140b]">{product.name}</h1>
+            {product.description && <p className="my mt-3 line-clamp-3 text-sm leading-6 text-[#80695b]">{product.description}</p>}
 
             <div className="mt-5 flex items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7a9f]">Price</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a07c65]">Price</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="font-sans text-[27px] font-black tracking-[-0.03em] text-[#21133f]">{ks(price)}</span>
-                  {hasPromo && <span className="text-xs text-[#988ca7] line-through">{ks(product.price)}</span>}
+                  <span className="font-sans text-[27px] font-black tracking-[-0.03em] text-[#25140b]">{ks(price)}</span>
+                  {hasPromo && <span className="text-xs text-[#a68b7a] line-through">{ks(product.price)}</span>}
                 </div>
               </div>
-              <div className="flex items-center rounded-[16px] border border-[#dfd1f5] bg-white">
-                <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Minus className="h-4 w-4" /></button>
-                <span className="w-8 text-center text-sm font-bold text-[#2b1a47]">{qty}</span>
-                <button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Plus className="h-4 w-4" /></button>
+              <div className="flex items-center rounded-[16px] border border-[#f3d5bd] bg-white">
+                <button onClick={() => setQty((value) => Math.max(1, value - 1))} aria-label="Decrease quantity" className="grid h-11 w-11 place-items-center text-[#f05a00]">
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-bold text-[#25140b]">{qty}</span>
+                <button onClick={() => setQty((value) => Math.min(Math.max(product.stock, 1), value + 1))} aria-label="Increase quantity" className="grid h-11 w-11 place-items-center text-[#f05a00]">
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#6d28d9] bg-white px-4 py-3 text-sm font-bold text-[#6d28d9] transition hover:bg-[#f3ecff] disabled:opacity-50">
-                {added ? <><Check className="h-4 w-4" /> Added</> : <><ShoppingBag className="h-4 w-4" /> Add to cart</>}
+              <button
+                disabled={!product.inStock}
+                onClick={doAdd}
+                className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#f05a00] bg-white px-4 py-3 text-sm font-bold text-[#f05a00] transition hover:bg-[#fff2e7] disabled:cursor-not-allowed disabled:opacity-50">
+                {added ? <><Check className="h-4 w-4" /> Added</> : <><ShoppingBag className="h-4 w-4" /> Add to bag</>}
               </button>
-              <button disabled={!product.inStock} onClick={buyNow} className="min-h-13 rounded-[18px] bg-[#6d28d9] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(109,40,217,0.30)] transition hover:bg-[#5b21b6] disabled:opacity-50">
+              <button
+                disabled={!product.inStock}
+                onClick={buyNow}
+                className="min-h-13 rounded-[18px] bg-[#f05a00] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(240,90,0,0.28)] transition hover:bg-[#d94700] disabled:cursor-not-allowed disabled:opacity-50">
                 Buy now
               </button>
             </div>

@@ -17,6 +17,8 @@ const onboardingPath = new URL('../src/features/auth/pages/Onboarding.tsx', impo
 const shopLinkPath = new URL('../src/features/tenancy/ShopLink.tsx', import.meta.url);
 const demoContextPath = new URL('../src/features/demo/DemoStoreContext.tsx', import.meta.url);
 const demoCartPath = new URL('../src/features/cart/pages/DemoCart.tsx', import.meta.url);
+const productDetailPath = new URL('../src/features/catalog/pages/ProductDetail.tsx', import.meta.url);
+const orderSuccessPath = new URL('../src/features/checkout/pages/OrderSuccess.tsx', import.meta.url);
 const landingCssPath = new URL('../src/features/landing/pages/landing.css', import.meta.url);
 
 async function readHome() {
@@ -109,7 +111,7 @@ test('tenant storefront remains drawer-first while demo owns an isolated cart pa
   const demoCart = await readFile(demoCartPath, 'utf8');
   assert.match(demoCart, /useDemoStore/);
   assert.match(demoCart, /Navigate to="\/" replace/);
-  assert.match(demoCart, /#6d28d9/i);
+  assert.match(demoCart, /#f05a00/i);
 });
 
 test('compact home product cards match the reference with a cart icon action', async () => {
@@ -123,7 +125,7 @@ test('compact home product cards match the reference with a cart icon action', a
 });
 
 
-test('root demo storefront uses the purple reference design without replacing tenant storefront styling', async () => {
+test('root demo storefront uses the orange perfume reference design without replacing tenant storefront styling', async () => {
   const home = await readHome();
   const card = await readFile(productCardPath, 'utf8');
   const layout = await readFile(layoutPath, 'utf8');
@@ -131,10 +133,10 @@ test('root demo storefront uses the purple reference design without replacing te
 
   assert.match(home, /if \(isDemo\)/);
   assert.match(home, /DemoReferenceHome/);
-  assert.match(home, /variant="demo-purple"/);
-  assert.match(home, /#eee6ff/i);
-  assert.match(card, /demo-purple/);
-  assert.match(card, /#6d28d9/i);
+  assert.match(home, /variant="demo-perfume"/);
+  assert.match(home, /#fff1e6/i);
+  assert.match(card, /demo-perfume/);
+  assert.match(card, /#f05a00/i);
   assert.match(layout, /useDemoStore/);
   assert.match(detail, /useDemoStore/);
 });
@@ -166,11 +168,11 @@ test('demo storefront navigation cannot escape to generic root product routes', 
   assert.match(context, /pathname\.startsWith\('\/demo\/'\)/);
 });
 
-test('demo product listing uses purple cards without quick-add while tenant default stays available', async () => {
+test('demo product listing uses perfume cards without quick-add while tenant default stays available', async () => {
   const products = await readFile(new URL('../src/features/catalog/pages/Products.tsx', import.meta.url), 'utf8');
   const card = await readFile(productCardPath, 'utf8');
-  assert.match(products, /variant=\{isDemo \? 'demo-purple' : 'default'\}/);
-  const demoBranch = card.slice(card.indexOf("variant === 'demo-purple'"), card.indexOf("const compact"));
+  assert.match(products, /variant=\{isDemo \? 'demo-perfume' : 'default'\}/);
+  const demoBranch = card.slice(card.indexOf("variant === 'demo-perfume'"), card.indexOf("const compact"));
   assert.equal(demoBranch.includes('aria-label="ခြင်းထဲထည့်မည်"'), false);
   assert.match(card, /variant = 'default'/);
 });
@@ -181,7 +183,41 @@ test('demo cart and checkout are scoped by the demo theme without changing tenan
   const checkout = await readFile(checkoutPath, 'utf8');
   assert.match(layout, /data-demo-store/);
   assert.match(css, /\[data-demo-store\]/);
-  assert.match(css, /--demo-primary: #6d28d9/);
+  assert.match(css, /--demo-primary: #f05a00/);
   assert.match(checkout, /api\.createOrder/);
   assert.match(checkout, /idempotencyKey/);
+});
+
+
+test('perfume demo keeps production storefront capabilities intact', async () => {
+  const layout = await readFile(layoutPath, 'utf8');
+  const detail = await readFile(productDetailPath, 'utf8');
+
+  assert.match(layout, /logoUrl/);
+  assert.match(layout, /to="\/privacy-policy"[^>]*>Privacy Policy/);
+  assert.match(layout, /to="\/terms-of-service"[^>]*>Terms of Service/);
+  assert.match(layout, /grid-cols-5/);
+
+  assert.match(detail, /'အဖြူ': '#ffffff'/);
+  assert.match(detail, /product\.size/);
+  assert.match(detail, /product\.description/);
+  assert.match(detail, /setQty/);
+  assert.match(detail, /relatedEnabled/);
+});
+
+test('perfume theme reaches drawer checkout and order success through demo scope', async () => {
+  const drawer = await readFile(cartDrawerPath, 'utf8');
+  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
+  const checkout = await readFile(checkoutPath, 'utf8');
+  const success = await readFile(orderSuccessPath, 'utf8');
+
+  assert.match(drawer, /#f05a00/i);
+  assert.equal(drawer.includes('#6d28d9'), false);
+  assert.match(css, /--demo-bg: #fff1e6/);
+  assert.match(css, /--demo-surface: #fffaf5/);
+  assert.match(css, /--demo-primary: #f05a00/);
+  assert.match(css, /\[data-demo-store\] \[class\*="text-brand-"\]/);
+  assert.match(checkout, /api\.createOrder/);
+  assert.match(checkout, /idempotencyKey/);
+  assert.match(success, /text-brand-700/);
 });
