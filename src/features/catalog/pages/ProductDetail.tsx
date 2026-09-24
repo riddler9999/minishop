@@ -8,6 +8,7 @@ import {ks} from '@/shared/lib/format';
 import ProductCard from '@/features/catalog/components/ProductCard';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
+import {useDemoStore} from '@/features/demo/DemoStoreContext';
 
 const COLOR_MAP: Record<string, string> = {
   'အဖြူ': '#ffffff', white: '#ffffff', 'အနက်': '#111111', black: '#111111', 'အနီ': '#ef4444', red: '#ef4444',
@@ -22,7 +23,7 @@ export default function ProductDetail() {
   const slug = useShopSlugParam();
   const {add} = useCart();
   const theme = getStorefrontTheme();
-  const isDemo = !slug;
+  const isDemo = useDemoStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [err, setErr] = useState('');
   const [active, setActive] = useState(0);
@@ -53,7 +54,6 @@ export default function ProductDetail() {
   const buyNow = () => {add(product, qty); shopNav('/checkout');};
 
   if (isDemo) {
-    const demoSwatches = ['#6d28d9', '#c4c4c4', '#111111', '#8fc5ea', '#f3a0ae'];
     return (
       <div className="min-h-screen bg-[#cdb7f7] pb-28">
         <div className="mx-auto max-w-[430px]">
@@ -91,13 +91,12 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <div className="px-4 pb-4">
-            <div className="flex items-center gap-3 overflow-x-auto py-2">
-              {demoSwatches.map((swatch, i) => (
-                <span key={swatch} className={`block h-10 w-10 shrink-0 rounded-full border-[3px] ${i === 0 ? 'border-[#6d28d9] ring-2 ring-white' : 'border-white/70'}`} style={{backgroundColor: swatch}} />
-              ))}
+          {(product.color || product.size) && (
+            <div className="flex flex-wrap items-center gap-3 px-4 pb-4 pt-2">
+              {product.color && <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]"><span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />{product.color}</span>}
+              {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-white/75 px-4 text-sm font-semibold text-[#49365f]">Size · {product.size}</span>}
             </div>
-          </div>
+          )}
 
           <div className="rounded-t-[34px] bg-[#fbf8ff] px-5 pb-8 pt-6 shadow-[0_-18px_42px_rgba(76,29,149,0.10)]">
             <h1 className="font-display text-[30px] font-black leading-tight tracking-[-0.04em] text-[#21133f]">{product.name}</h1>
