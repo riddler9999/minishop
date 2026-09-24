@@ -111,9 +111,16 @@ export const DEFAULT_THEME: StorefrontTheme = {
   },
 };
 
+type ThemePresetOverrides = Omit<Partial<StorefrontTheme>, 'announcement' | 'home' | 'category' | 'product'> & {
+  announcement?: Partial<AnnouncementTheme>;
+  home?: Partial<HomeTheme>;
+  category?: Partial<CategoryTheme>;
+  product?: Partial<ProductTheme>;
+};
+
 function preset(
   id: ThemePresetId,
-  partial: Partial<StorefrontTheme>,
+  partial: ThemePresetOverrides,
   meta: Omit<ThemePresetDefinition, 'theme'>,
 ): ThemePresetDefinition {
   return {
