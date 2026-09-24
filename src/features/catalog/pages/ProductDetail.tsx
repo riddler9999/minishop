@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {ArrowLeft, Check, ImageOff, Minus, Plus, ShoppingBag} from 'lucide-react';
+import {ArrowLeft, Check, Heart, ImageOff, Minus, MoreHorizontal, Plus, ShoppingBag} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {useCart} from '@/features/cart/state';
@@ -51,6 +51,86 @@ export default function ProductDetail() {
   const colorHex = product.color ? COLOR_MAP[product.color.trim().toLowerCase()] ?? '#d1d5db' : null;
   const doAdd = () => {add(product, qty); setAdded(true); setTimeout(() => setAdded(false), 1500);};
   const buyNow = () => {add(product, qty); shopNav('/checkout');};
+
+  if (isDemo) {
+    const demoSwatches = ['#6d28d9', '#c4c4c4', '#111111', '#8fc5ea', '#f3a0ae'];
+    return (
+      <div className="min-h-screen bg-[#cdb7f7] pb-28">
+        <div className="mx-auto max-w-[430px]">
+          <div className="relative min-h-[420px] overflow-hidden px-4 pt-4">
+            <div className="relative z-20 flex items-center justify-between">
+              <button onClick={() => nav(-1)} aria-label="နောက်သို့" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] shadow-[0_8px_22px_rgba(76,29,149,0.10)] backdrop-blur">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="flex gap-2">
+                <button type="button" aria-label="နှစ်သက်မှု" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
+                  <Heart className="h-5 w-5" />
+                </button>
+                <button type="button" aria-label="More" className="grid h-11 w-11 place-items-center rounded-full bg-white/72 text-[#2c1a48] backdrop-blur">
+                  <MoreHorizontal className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="absolute inset-x-6 bottom-5 top-16 overflow-hidden rounded-[34px] bg-[radial-gradient(circle_at_50%_45%,#eadfff_0%,#d8c8fa_56%,#c2aaf2_100%)]">
+              {product.images[active] ? (
+                <img src={product.images[active]} alt={product.name} className="h-full w-full object-contain p-6 drop-shadow-[0_28px_30px_rgba(76,29,149,0.18)]" />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-10 w-10" /></div>
+              )}
+            </div>
+          </div>
+
+          {product.images.length > 1 && (
+            <div className="no-scrollbar flex justify-center gap-2 overflow-x-auto px-4 pb-3">
+              {product.images.map((im, i) => (
+                <button key={i} onClick={() => setActive(i)} className={`h-2.5 w-2.5 shrink-0 rounded-full transition ${i === active ? 'bg-[#6d28d9]' : 'bg-white/75'}`} aria-label={`ပုံ ${i + 1}`}>
+                  <span className="sr-only">{im}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="px-4 pb-4">
+            <div className="flex items-center gap-3 overflow-x-auto py-2">
+              {demoSwatches.map((swatch, i) => (
+                <span key={swatch} className={`block h-10 w-10 shrink-0 rounded-full border-[3px] ${i === 0 ? 'border-[#6d28d9] ring-2 ring-white' : 'border-white/70'}`} style={{backgroundColor: swatch}} />
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-t-[34px] bg-[#fbf8ff] px-5 pb-8 pt-6 shadow-[0_-18px_42px_rgba(76,29,149,0.10)]">
+            <h1 className="font-display text-[30px] font-black leading-tight tracking-[-0.04em] text-[#21133f]">{product.name}</h1>
+            {product.description && <p className="my mt-3 line-clamp-3 text-sm leading-6 text-[#76698a]">{product.description}</p>}
+
+            <div className="mt-5 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a7a9f]">Price</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="font-sans text-[27px] font-black tracking-[-0.03em] text-[#21133f]">{ks(price)}</span>
+                  {hasPromo && <span className="text-xs text-[#988ca7] line-through">{ks(product.price)}</span>}
+                </div>
+              </div>
+              <div className="flex items-center rounded-[16px] border border-[#dfd1f5] bg-white">
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Minus className="h-4 w-4" /></button>
+                <span className="w-8 text-center text-sm font-bold text-[#2b1a47]">{qty}</span>
+                <button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Plus className="h-4 w-4" /></button>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#6d28d9] bg-white px-4 py-3 text-sm font-bold text-[#6d28d9] transition hover:bg-[#f3ecff] disabled:opacity-50">
+                {added ? <><Check className="h-4 w-4" /> Added</> : <><ShoppingBag className="h-4 w-4" /> Add to cart</>}
+              </button>
+              <button disabled={!product.inStock} onClick={buyNow} className="min-h-13 rounded-[18px] bg-[#6d28d9] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(109,40,217,0.30)] transition hover:bg-[#5b21b6] disabled:opacity-50">
+                Buy now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 ${isDemo ? 'min-h-screen bg-[#eee6ff]' : ''}`}>
