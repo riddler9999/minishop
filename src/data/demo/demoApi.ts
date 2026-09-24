@@ -158,14 +158,14 @@ export const api = {
 
     // Re-price server-side style: trust the (resolved) demo catalog, not the client.
     const catalog = resolvedProducts();
-    const lines = b.items
-      .map((it) => {
-        const p = catalog.find((x) => x.id === it.id);
-        if (!p) return null;
-        const price = unit(p);
-        return {name: p.name, price, qty: it.qty};
-      })
-      .filter(Boolean) as {name: string; price: number; qty: number}[];
+    const lines = b.items.map((it) => {
+      const p = catalog.find((x) => x.id === it.id);
+      if (!p) throw new Error('ပစ္စည်း ရှာမတွေ့ပါ');
+      if (!p.inStock || p.stock < it.qty) throw new Error(`${p.name} လက်ကျန်မလုံလောက်ပါ။`);
+      if (!Number.isInteger(it.qty) || it.qty < 1) throw new Error('ပစ္စည်းအရေအတွက် မမှန်ပါ။');
+      const price = unit(p);
+      return {name: p.name, price, qty: it.qty};
+    });
 
     const itemTotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
     const deliveryFee = b.shippingFee || 0;
@@ -220,10 +220,15 @@ export const api = {
     return {ok: true, slipUrl: 'demo-slip'};
   },
 
-  async ordersByPhone(phone: string): Promise<{orders: TrackedOrder[]}> {
+  async ordersByPhone(phone: string, orderNo?: string): Promise<{orders: TrackedOrder[]}> {
     await delay();
+    if (!orderNo?.trim()) {
+      throw new Error('ဖုန်းနံပါတ်နှင့် Order နံပါတ် နှစ်ခုလုံး လိုအပ်ပါသည်။');
+    }
     const all = loadOrders();
-    return {orders: all[normPhone(phone)] || []};
+    const orders = all[normPhone(phone)] || [];
+    const wanted = orderNo.trim().toUpperCase();
+    return {orders: orders.filter((order) => order.order_id.toUpperCase() === wanted)};
   },
 };
 
