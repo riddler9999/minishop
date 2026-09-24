@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Grid2X2, Home, Menu, PackageSearch, Search, ShoppingBag, UserRound, X} from 'lucide-react';
+import {Grid2X2, Home, Menu, PackageSearch, Search, ShoppingBag, X} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {useCart} from '@/features/cart/state';
 import {api} from '@/data/dataSource';
@@ -135,7 +135,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
       </footer>}
 
       {isDemo ? (
-        <nav className="fixed inset-x-4 bottom-3 z-40 mx-auto grid h-[70px] max-w-[390px] grid-cols-4 rounded-[26px] border border-white/70 bg-[#fbf8ff]/96 px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-2 shadow-[0_18px_48px_rgba(76,29,149,0.18)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+        <nav className="fixed inset-x-4 bottom-3 z-40 mx-auto grid h-[70px] max-w-[390px] grid-cols-3 rounded-[26px] border border-white/70 bg-[#fbf8ff]/96 px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-2 shadow-[0_18px_48px_rgba(76,29,149,0.18)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
           <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? 'text-[#6d28d9]' : 'text-[#6f6280]'}`}>
             <span className={`grid h-8 w-8 place-items-center rounded-full ${active('/') ? 'bg-[#efe5ff]' : ''}`}><Home className="h-[19px] w-[19px]" strokeWidth={2.1} /></span>
             <span>Home</span>
@@ -150,10 +150,6 @@ export default function Layout({children, drawerFooterAction}: {children: React.
             </span>
             <span>Cart</span>
           </ShopLink>
-          <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-[#6f6280]">
-            <span className="grid h-8 w-8 place-items-center rounded-full"><UserRound className="h-[20px] w-[20px]" strokeWidth={2.1} /></span>
-            <span>Profile</span>
-          </button>
         </nav>
       ) : (
         <nav className="fixed inset-x-0 bottom-0 z-40 grid h-[72px] grid-cols-5 border-t border-rose-100 bg-white/98 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(88,52,64,0.08)] backdrop-blur md:hidden" aria-label="Mobile navigation">

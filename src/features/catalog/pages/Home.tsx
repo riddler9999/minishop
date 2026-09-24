@@ -206,6 +206,19 @@ function DemoReferenceHome({products, categories, loading, error}: {products: Pr
           </div>
         </form>
 
+        <div className="mt-4 overflow-hidden rounded-[26px] border border-white/60 bg-[linear-gradient(135deg,#d9c7ff_0%,#efe7ff_48%,#c9b2ff_100%)] px-5 py-6 shadow-[0_18px_42px_rgba(72,35,122,0.12)] sm:px-6">
+          <div className="flex min-h-[116px] items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6d28d9]">Banner</p>
+              <h2 className="mt-2 max-w-[240px] text-[24px] font-black leading-[1.05] tracking-[-0.04em] text-[#21133f]">Featured campaign area</h2>
+              <p className="mt-2 max-w-[260px] text-xs leading-5 text-[#6f6280]">Promotion, collection or seasonal artwork can be placed here.</p>
+            </div>
+            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-[22px] bg-white/55 text-[#6d28d9] ring-1 ring-white/70">
+              <Sparkles className="h-7 w-7" strokeWidth={1.8} />
+            </div>
+          </div>
+        </div>
+
         <div className="mt-4 overflow-hidden rounded-[30px] bg-[#f8f3ff] px-4 pb-6 pt-5 shadow-[0_22px_52px_rgba(72,35,122,0.11)] sm:px-5 md:px-7">
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-[43px] font-black leading-[0.92] tracking-[-0.055em] text-[#21133f] sm:text-[48px]">New<br />arrivals</h1>
