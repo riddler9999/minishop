@@ -4,7 +4,7 @@ import {useCart} from '@/features/cart/state';
 import {cx, ks} from '@/shared/lib/format';
 import {ShopLink, useShopNavigate} from '@/features/tenancy/ShopLink';
 
-type ProductCardVariant = 'default' | 'compact' | 'feature';
+type ProductCardVariant = 'default' | 'compact' | 'feature' | 'demo-purple';
 
 export default function ProductCard({product, variant = 'default', className}: {product: Product; variant?: ProductCardVariant; className?: string}) {
   const {add} = useCart();
@@ -27,6 +27,34 @@ export default function ProductCard({product, variant = 'default', className}: {
           <div className="absolute inset-0 bg-gradient-to-t from-[#1c1109]/85 via-[#1c1109]/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-4 text-white"><h3 className="font-display line-clamp-2 text-base font-semibold leading-snug">{product.name}</h3><span className="mt-1 block font-sans text-sm font-bold">{ks(price)}</span></div>
         </ShopLink>
+      </article>
+    );
+  }
+
+  if (variant === 'demo-purple') {
+    return (
+      <article className={cx('group min-w-0 overflow-hidden rounded-[20px] bg-[#dac6ff] shadow-[0_12px_28px_rgba(76,29,149,0.11)]', className)}>
+        <ShopLink to={to} className="relative block aspect-[0.92] overflow-hidden bg-[#cfbaf8]">
+          {product.image ? (
+            <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" />
+          ) : (
+            <div className="grid h-full w-full place-items-center text-[#6d28d9]"><ImageOff className="h-7 w-7" /></div>
+          )}
+          {hasPromo && off > 0 && <span className="absolute left-2 top-2 rounded-full bg-white/92 px-2 py-1 text-[9px] font-extrabold text-[#5b21b6]">-{off}%</span>}
+          <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/80 text-[#4c1d95] shadow-sm backdrop-blur">
+            <Heart className="h-4 w-4" />
+          </span>
+          {!product.inStock && <span className="absolute inset-x-3 bottom-3 rounded-full bg-[#24133f]/80 px-2 py-1 text-center text-[9px] font-semibold text-white">Sold out</span>}
+        </ShopLink>
+        <div className="px-3 pb-3 pt-2.5">
+          <ShopLink to={to} className="font-display line-clamp-1 text-[12px] font-bold leading-snug text-[#21133f] transition hover:text-[#6d28d9] sm:text-sm">
+            {product.name}
+          </ShopLink>
+          <div className="mt-1.5 min-w-0">
+            <span className="block truncate font-sans text-[12px] font-black text-[#24133f] sm:text-sm">{ks(price)}</span>
+            {hasPromo && <span className="block truncate text-[9px] text-[#7c6f98] line-through">{ks(product.price)}</span>}
+          </div>
+        </div>
       </article>
     );
   }
