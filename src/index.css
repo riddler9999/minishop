@@ -170,3 +170,14 @@ textarea {
 [data-demo-store] [class*="bg-[#fffdfd]"] { background-color: var(--demo-surface-soft) !important; }
 [data-demo-store] [class*="focus:border-[#e11d48]"]:focus { border-color: var(--demo-primary) !important; }
 [data-demo-store] [class*="focus:ring-[#e11d48]"]:focus { --tw-ring-color: rgb(109 40 217 / 0.14) !important; }
+
+[data-demo-store] [class*="text-brand-"] { color: var(--demo-primary) !important; }
+[data-demo-store] [class*="bg-brand-700"],
+[data-demo-store] [class*="bg-brand-800"],
+[data-demo-store] [class*="bg-brand-900"] { background-color: var(--demo-primary) !important; }
+[data-demo-store] [class*="bg-brand-50"],
+[data-demo-store] [class*="bg-brand-100"],
+[data-demo-store] [class*="bg-brand-200"],
+[data-demo-store] [class*="bg-cream-"] { background-color: var(--demo-surface-soft) !important; }
+[data-demo-store] [class*="border-brand-"],
+[data-demo-store] [class*="border-cream-"] { border-color: var(--demo-border) !important; }
