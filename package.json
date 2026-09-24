@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prototype:demo-home": "vite --open '/prototype/demo-home?variant=editorial'",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit && eslint .",
