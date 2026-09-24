@@ -26,22 +26,28 @@ interface CartCtx {
 
 const Ctx = createContext<CartCtx | null>(null);
 
-function storageKey(): string {
-  return `minishop_cart:${getShopSlug() ?? 'demo'}`;
+function storageKey(storageScope?: string): string {
+  return `minishop_cart:${storageScope ?? getShopSlug() ?? 'demo'}`;
 }
 
-function load(): CartItem[] {
+function load(storageScope?: string): CartItem[] {
   try {
-    const raw = localStorage.getItem(storageKey());
+    const raw = localStorage.getItem(storageKey(storageScope));
     return raw ? (JSON.parse(raw) as CartItem[]) : [];
   } catch {
     return [];
   }
 }
 
-export function CartProvider({children}: {children: ReactNode}) {
-  const key = storageKey();
-  const [items, setItems] = useState<CartItem[]>(load);
+export function CartProvider({
+  children,
+  storageScope,
+}: {
+  children: ReactNode;
+  storageScope?: string;
+}) {
+  const key = storageKey(storageScope);
+  const [items, setItems] = useState<CartItem[]>(() => load(storageScope));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
