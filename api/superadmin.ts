@@ -21,7 +21,7 @@ export function createSuperadminHandler(
     const [{data: shops, error: se}, {data: applications, error: ae}, {data: packs, error: pe}, {data: entitlements, error: ee}] = await Promise.all([
       sb.from('shops').select('id,name,slug,owner_id,plan,is_active,created_at,updated_at').order('created_at', {ascending:false}).limit(500),
       sb.from('shop_applications').select('owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note').order('created_at', {ascending:false}).limit(200),
-      sb.from('order_pack_purchases').select('id,shop_id,qty,amount,payment_method,payment_ref_tail,transaction_id,screenshot_path,status,created_at,reviewed_at').order('created_at', {ascending:false}).limit(200),
+      sb.from('order_pack_purchases').select('id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at').order('created_at', {ascending:false}).limit(200),
       sb.from('shop_entitlements').select('shop_id,plan,active,monthly_quota,monthly_used,purchased_balance,cycle_end,pending_plan,updated_at').limit(500),
     ]);
     if (se || ae || pe || ee) return sendJson(res, 502, {error: 'Could not load platform data'});
