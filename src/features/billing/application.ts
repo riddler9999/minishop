@@ -81,7 +81,7 @@ export async function getMyApplication(userId: string): Promise<ShopApplication 
     .select(APPLICATION_COLUMNS)
     .eq('owner_id', userId)
     .maybeSingle();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error.message, 'လျှောက်လွှာ အချက်အလက် ရယူ၍မရပါ။'));
   return data ? mapApplication(data as ApplicationRow) : null;
 }
 
