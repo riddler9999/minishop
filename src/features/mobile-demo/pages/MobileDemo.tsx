@@ -22,10 +22,10 @@ import type {Product} from '@/domain/product';
 import {CartProvider, useCart} from '@/features/cart/state';
 import {setShopSlug} from '@/features/tenancy/shopContext';
 import {
-  FURNITURE_BEST_SELLING_IDS,
-  FURNITURE_CATEGORIES,
-  FURNITURE_FEATURED_IDS,
-  FURNITURE_PRODUCTS,
+  MOBILE_BEST_SELLING_IDS,
+  MOBILE_CATEGORIES,
+  MOBILE_FEATURED_IDS,
+  MOBILE_PRODUCTS,
   mobileProduct,
 } from '../data';
 import {
@@ -60,7 +60,7 @@ function MobileHeader() {
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-4 sm:px-6">
         <button
           type="button"
-          onClick={() => nav('/mobile-demo')}
+          onClick={() => nav('/mobile-store-demo')}
           className="group flex min-h-11 items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc] focus-visible:ring-offset-2"
           aria-label="Mobile One home">
           <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#f1e7dc] text-[#f5f5f6] transition group-hover:bg-[#eadbcb]">
@@ -75,14 +75,14 @@ function MobileHeader() {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => nav('/mobile-demo/products')}
+            onClick={() => nav('/mobile-store-demo/products')}
             className="grid h-11 w-11 place-items-center rounded-full text-[#292b29] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
             aria-label="Search mobile">
             <Search className="h-[21px] w-[21px]" strokeWidth={1.8} />
           </button>
           <button
             type="button"
-            onClick={() => nav('/mobile-demo/cart')}
+            onClick={() => nav('/mobile-store-demo/cart')}
             className="relative grid h-11 w-11 place-items-center rounded-full text-[#292b29] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
             aria-label={`Open cart, ${count} item${count === 1 ? '' : 's'}`}>
             <ShoppingBag className="h-[21px] w-[21px]" strokeWidth={1.8} />
@@ -122,16 +122,16 @@ function MobileShell({children}: {children: ReactNode}) {
           <div className="text-sm">
             <p className="font-bold">Shop</p>
             <div className="mt-3 grid gap-2 text-[#a8a8ad]">
-              <button type="button" onClick={() => nav('/mobile-demo/products')} className="w-fit hover:text-[#d8d8dc]">All Mobile</button>
-              <button type="button" onClick={() => nav('/mobile-demo/orders')} className="w-fit hover:text-[#d8d8dc]">Track Order</button>
+              <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="w-fit hover:text-[#d8d8dc]">All Mobile</button>
+              <button type="button" onClick={() => nav('/mobile-store-demo/orders')} className="w-fit hover:text-[#d8d8dc]">Track Order</button>
             </div>
           </div>
           <div className="text-sm">
             <p className="font-bold">Info</p>
             <div className="mt-3 grid gap-2 text-[#a8a8ad]">
-              <button type="button" onClick={() => nav('/mobile-demo/shipping-policy')} className="w-fit hover:text-[#d8d8dc]">Shipping Policy</button>
-              <button type="button" onClick={() => nav('/mobile-demo/refund-policy')} className="w-fit hover:text-[#d8d8dc]">Refund Policy</button>
-              <button type="button" onClick={() => nav('/mobile-demo/privacy-policy')} className="w-fit hover:text-[#d8d8dc]">Privacy Policy</button>
+              <button type="button" onClick={() => nav('/mobile-store-demo/shipping-policy')} className="w-fit hover:text-[#d8d8dc]">Shipping Policy</button>
+              <button type="button" onClick={() => nav('/mobile-store-demo/refund-policy')} className="w-fit hover:text-[#d8d8dc]">Refund Policy</button>
+              <button type="button" onClick={() => nav('/mobile-store-demo/privacy-policy')} className="w-fit hover:text-[#d8d8dc]">Privacy Policy</button>
             </div>
           </div>
         </div>
@@ -140,17 +140,17 @@ function MobileShell({children}: {children: ReactNode}) {
       <nav
         className="fixed inset-x-0 bottom-0 z-40 grid h-[76px] grid-cols-5 border-t border-[#28282c] bg-[#141416]/98 px-1 pb-[max(6px,env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden"
         aria-label="Mobile One demo mobile navigation">
-        <button type="button" onClick={() => nav('/mobile-demo')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${pathname === '/mobile-demo' ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
+        <button type="button" onClick={() => nav('/mobile-store-demo')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${pathname === '/mobile-store-demo' ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
           <Home className="h-5 w-5" strokeWidth={1.8} /><span>Home</span>
         </button>
-        <button type="button" onClick={() => nav('/mobile-demo/products')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-demo/products') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
+        <button type="button" onClick={() => nav('/mobile-store-demo/products')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-store-demo/products') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
           <Grid2X2 className="h-5 w-5" strokeWidth={1.8} /><span>Shop</span>
         </button>
-        <button type="button" onClick={() => nav('/mobile-demo/cart')} className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-demo/cart') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
+        <button type="button" onClick={() => nav('/mobile-store-demo/cart')} className={`relative flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-store-demo/cart') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
           <ShoppingBag className="h-5 w-5" strokeWidth={1.8} /><span>Cart</span>
           {count > 0 && <span className="absolute right-[22%] top-0 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#d8d8dc] px-1 text-[9px] font-bold text-black">{count}</span>}
         </button>
-        <button type="button" onClick={() => nav('/mobile-demo/orders')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-demo/orders') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
+        <button type="button" onClick={() => nav('/mobile-store-demo/orders')} className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/mobile-store-demo/orders') ? 'text-[#f5f5f6]' : 'text-[#9b9ba1]'}`}>
           <PackageSearch className="h-5 w-5" strokeWidth={1.8} /><span>Orders</span>
         </button>
         <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-semibold text-[#9b9ba1]">
@@ -168,13 +168,13 @@ function MobileShell({children}: {children: ReactNode}) {
             </div>
             <div className="mt-5 flex flex-col">
               {[
-                ['/mobile-demo', 'Home'],
-                ['/mobile-demo/products', 'Shop All'],
-                ['/mobile-demo/orders', 'Track Order'],
-                ['/mobile-demo/shipping-policy', 'Shipping Policy'],
-                ['/mobile-demo/refund-policy', 'Refund Policy'],
-                ['/mobile-demo/privacy-policy', 'Privacy Policy'],
-                ['/mobile-demo/terms-of-service', 'Terms of Service'],
+                ['/mobile-store-demo', 'Home'],
+                ['/mobile-store-demo/products', 'Shop All'],
+                ['/mobile-store-demo/orders', 'Track Order'],
+                ['/mobile-store-demo/shipping-policy', 'Shipping Policy'],
+                ['/mobile-store-demo/refund-policy', 'Refund Policy'],
+                ['/mobile-store-demo/privacy-policy', 'Privacy Policy'],
+                ['/mobile-store-demo/terms-of-service', 'Terms of Service'],
               ].map(([to, label]) => (
                 <button
                   type="button"
@@ -231,7 +231,7 @@ function ProductCard({product}: {product: Product}) {
     <article className="min-w-0 overflow-hidden rounded-[20px] border border-[#2c2c31] bg-[#141416]">
       <button
         type="button"
-        onClick={() => nav(`/mobile-demo/products/${encodeURIComponent(product.id)}`)}
+        onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)}
         className="relative block w-full overflow-hidden bg-[#1a1a1d] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8d8dc]">
         <div className="aspect-[1.04] w-full overflow-hidden">
           <img src={product.image ?? ''} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />
@@ -247,7 +247,7 @@ function ProductCard({product}: {product: Product}) {
         </button>
       </button>
       <div className="p-3.5">
-        <button type="button" onClick={() => nav(`/mobile-demo/products/${encodeURIComponent(product.id)}`)} className="line-clamp-2 min-h-[40px] text-left text-[13px] font-bold leading-5 text-[#1d201e] sm:text-sm">
+        <button type="button" onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)} className="line-clamp-2 min-h-[40px] text-left text-[13px] font-bold leading-5 text-[#1d201e] sm:text-sm">
           {product.name}
         </button>
         <p className="mt-1 text-[11px] text-[#9b9ba1]">{product.color}</p>
@@ -273,14 +273,14 @@ function ProductCard({product}: {product: Product}) {
 function MobileHome() {
   const nav = useNavigate();
   const [query, setQuery] = useState('');
-  const featured = FURNITURE_FEATURED_IDS
-    .map((id) => FURNITURE_PRODUCTS.find((product) => product.id === id))
+  const featured = MOBILE_FEATURED_IDS
+    .map((id) => MOBILE_PRODUCTS.find((product) => product.id === id))
     .filter((product): product is Product => Boolean(product));
 
   const categoryImages = useMemo(() => {
     const map = new Map<string, string>();
-    for (const category of FURNITURE_CATEGORIES) {
-      const image = FURNITURE_PRODUCTS.find((product) => product.category === category)?.image;
+    for (const category of MOBILE_CATEGORIES) {
+      const image = MOBILE_PRODUCTS.find((product) => product.category === category)?.image;
       if (image) map.set(category, image);
     }
     return map;
@@ -289,7 +289,7 @@ function MobileHome() {
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     const q = query.trim();
-    nav(q ? `/mobile-demo/products?q=${encodeURIComponent(q)}` : '/mobile-demo/products');
+    nav(q ? `/mobile-store-demo/products?q=${encodeURIComponent(q)}` : '/mobile-store-demo/products');
   };
 
   return (
@@ -310,7 +310,7 @@ function MobileHome() {
             <p className="mt-4 text-sm font-medium leading-6 text-[#c9c9ce] sm:text-base">Flagship phones, audio and gadgets for everyday life.</p>
             <button
               type="button"
-              onClick={() => nav('/mobile-demo/products')}
+              onClick={() => nav('/mobile-store-demo/products')}
               className="mt-5 inline-flex min-h-12 w-fit items-center gap-3 rounded-full bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b] transition hover:bg-[#ffffff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f5f5f6] focus-visible:ring-offset-2">
               Shop Now <ArrowRight className="h-4 w-4" />
             </button>
@@ -325,14 +325,14 @@ function MobileHome() {
         <section className="mt-7">
           <div className="flex items-end justify-between gap-4">
             <h2 className="text-[25px] font-black tracking-[-0.04em]">Categories</h2>
-            <button type="button" onClick={() => nav('/mobile-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">See all <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">See all <ArrowRight className="h-4 w-4" /></button>
           </div>
           <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
-            {FURNITURE_CATEGORIES.slice(0, 5).map((category) => (
+            {MOBILE_CATEGORIES.slice(0, 5).map((category) => (
               <button
                 type="button"
                 key={category}
-                onClick={() => nav(`/mobile-demo/products?category=${encodeURIComponent(category)}`)}
+                onClick={() => nav(`/mobile-store-demo/products?category=${encodeURIComponent(category)}`)}
                 className="w-[104px] shrink-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc] focus-visible:ring-offset-2">
                 <span className="block aspect-square overflow-hidden rounded-[20px] bg-[#ece7df]">
                   <img src={categoryImages.get(category) ?? HERO_IMAGE} alt="" className="h-full w-full object-cover" />
@@ -346,7 +346,7 @@ function MobileHome() {
         <section className="mt-7">
           <div className="flex items-end justify-between gap-4">
             <h2 className="text-[25px] font-black tracking-[-0.04em]">Featured</h2>
-            <button type="button" onClick={() => nav('/mobile-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">See all <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">See all <ArrowRight className="h-4 w-4" /></button>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
             {featured.map((product) => <ProductCard key={product.id} product={product} />)}
@@ -366,7 +366,7 @@ function MobileProducts() {
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return FURNITURE_PRODUCTS.filter((product) => {
+    return MOBILE_PRODUCTS.filter((product) => {
       const categoryOk = category === 'All' || product.category === category;
       const queryOk = !q || `${product.name} ${product.category ?? ''} ${product.color ?? ''}`.toLowerCase().includes(q);
       return categoryOk && queryOk;
@@ -378,7 +378,7 @@ function MobileProducts() {
     if (next === 'All') nextParams.delete('category');
     else nextParams.set('category', next);
     const qs = nextParams.toString();
-    nav(qs ? `/mobile-demo/products?${qs}` : '/mobile-demo/products');
+    nav(qs ? `/mobile-store-demo/products?${qs}` : '/mobile-store-demo/products');
   };
 
   return (
@@ -392,7 +392,7 @@ function MobileProducts() {
         <div className="mt-5"><SearchField value={query} onChange={setQuery} placeholder="Search sofa, chair, table..." /></div>
 
         <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
-          {['All', ...FURNITURE_CATEGORIES].map((item) => (
+          {['All', ...MOBILE_CATEGORIES].map((item) => (
             <button
               type="button"
               key={item}
@@ -412,7 +412,7 @@ function MobileProducts() {
             <Smartphone className="mx-auto h-7 w-7 text-[#f5f5f6]" />
             <p className="mt-3 text-sm font-semibold">No mobile found.</p>
             <p className="mt-1 text-xs text-[#9b9ba1]">Try another category or clear your search.</p>
-            <button type="button" onClick={() => {setQuery(''); nav('/mobile-demo/products');}} className="mt-4 min-h-11 rounded-full bg-[#f5f5f6] px-5 text-xs font-bold text-black">Clear filters</button>
+            <button type="button" onClick={() => {setQuery(''); nav('/mobile-store-demo/products');}} className="mt-4 min-h-11 rounded-full bg-[#f5f5f6] px-5 text-xs font-bold text-black">Clear filters</button>
           </div>
         )}
       </main>
@@ -435,7 +435,7 @@ function MobileProductDetail() {
         <main className="mx-auto max-w-xl px-4 py-20 text-center">
           <Smartphone className="mx-auto h-8 w-8 text-[#f5f5f6]" />
           <h1 className="mt-4 text-xl font-black">Mobile not found</h1>
-          <button type="button" onClick={() => nav('/mobile-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b]">Back to shop</button>
+          <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b]">Back to shop</button>
         </main>
       </MobileShell>
     );
@@ -444,9 +444,9 @@ function MobileProductDetail() {
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
   const oldPrice = product.isPromotion && product.promoPrice ? product.price : null;
   const images = product.images?.length ? product.images : product.image ? [product.image] : [];
-  const bestSelling = FURNITURE_BEST_SELLING_IDS
+  const bestSelling = MOBILE_BEST_SELLING_IDS
     .filter((productId) => productId !== product.id)
-    .map((productId) => FURNITURE_PRODUCTS.find((item) => item.id === productId))
+    .map((productId) => MOBILE_PRODUCTS.find((item) => item.id === productId))
     .filter((item): item is Product => Boolean(item));
 
   const addCurrent = () => add(product, qty);
@@ -506,7 +506,7 @@ function MobileProductDetail() {
             </div>
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={addCurrent} className="min-h-[52px] rounded-[15px] border border-[#d8d8dc] bg-transparent px-5 text-sm font-bold text-[#8c572f] transition hover:bg-[#f1e7dc]">Add to Cart</button>
-              <button type="button" onClick={() => {addCurrent(); nav('/mobile-demo/checkout');}} className="min-h-[52px] rounded-[15px] bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b] transition hover:bg-[#ffffff]">Buy Now</button>
+              <button type="button" onClick={() => {addCurrent(); nav('/mobile-store-demo/checkout');}} className="min-h-[52px] rounded-[15px] bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b] transition hover:bg-[#ffffff]">Buy Now</button>
             </div>
             <div className="mt-5 flex items-center gap-2 text-xs text-[#a8a8ad]"><Truck className="h-4 w-4 text-[#7d8874]" /> Yangon delivery from 15,000 MMK · free over 2,000,000 MMK</div>
           </div>
@@ -518,7 +518,7 @@ function MobileProductDetail() {
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#f5f5f6]">Popular Picks</p>
               <h2 className="mt-1 text-[25px] font-black tracking-[-0.04em]">Best Selling</h2>
             </div>
-            <button type="button" onClick={() => nav('/mobile-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">
+            <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#a8a8ad] hover:text-[#f5f5f6]">
               See all <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -529,7 +529,7 @@ function MobileProductDetail() {
                 <button
                   type="button"
                   key={item.id}
-                  onClick={() => nav(`/mobile-demo/products/${encodeURIComponent(item.id)}`)}
+                  onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(item.id)}`)}
                   className="w-[70%] max-w-[260px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-[#2c2c31] bg-[#141416] text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc] focus-visible:ring-offset-2 sm:w-[240px]">
                   <div className="aspect-[1.18] overflow-hidden bg-[#1a1a1d]">
                     {item.image && <img src={item.image} alt={item.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />}
@@ -564,7 +564,7 @@ function MobileCart() {
             <ShoppingBag className="mx-auto h-8 w-8 text-[#f5f5f6]" />
             <p className="mt-4 text-sm font-semibold">Your cart is empty.</p>
             <p className="mt-1 text-xs text-[#9b9ba1]">Choose the phone or gadget that fits your day.</p>
-            <button type="button" onClick={() => nav('/mobile-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Browse Products</button>
+            <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Browse Products</button>
           </div>
         ) : (
           <>
@@ -593,7 +593,7 @@ function MobileCart() {
               <div className="flex items-center justify-between text-sm text-[#a8a8ad]"><span>Subtotal</span><strong className="text-[#f5f5f6]">{formatMMK(subtotal)}</strong></div>
               <p className="mt-2 text-[11px] leading-5 text-[#9b9ba1]">Shipping is calculated at checkout. Orders over 2,000,000 MMK receive free demo delivery.</p>
             </section>
-            <button type="button" onClick={() => nav('/mobile-demo/checkout')} className="mt-4 min-h-14 w-full rounded-[16px] bg-[#f5f5f6] px-5 text-sm font-black text-[#0a0b0c] transition hover:bg-[#ffffff]">
+            <button type="button" onClick={() => nav('/mobile-store-demo/checkout')} className="mt-4 min-h-14 w-full rounded-[16px] bg-[#f5f5f6] px-5 text-sm font-black text-[#0a0b0c] transition hover:bg-[#ffffff]">
               Continue to Checkout
             </button>
           </>
@@ -620,7 +620,7 @@ function MobileCheckout() {
         <main className="mx-auto max-w-xl px-4 py-20 text-center">
           <ShoppingBag className="mx-auto h-8 w-8 text-[#f5f5f6]" />
           <p className="mt-4 text-sm font-semibold">Your cart is empty.</p>
-          <button type="button" onClick={() => nav('/mobile-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Browse Products</button>
+          <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Browse Products</button>
         </main>
       </MobileShell>
     );
@@ -644,7 +644,7 @@ function MobileCheckout() {
       subtotal,
     });
     clear();
-    nav(`/mobile-demo/order/${encodeURIComponent(order.orderNo)}`, {state: {order}});
+    nav(`/mobile-store-demo/order/${encodeURIComponent(order.orderNo)}`, {state: {order}});
   };
 
   return (
@@ -719,7 +719,7 @@ function MobileOrderSuccess() {
   const order = stateOrder ?? getMobileDemoOrder(orderId);
 
   if (!order) {
-    return <MobileShell><main className="mx-auto max-w-xl px-4 py-20 text-center"><p className="text-sm text-[#a8a8ad]">Order details are unavailable.</p><button type="button" onClick={() => nav('/mobile-demo/orders')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Track Order</button></main></MobileShell>;
+    return <MobileShell><main className="mx-auto max-w-xl px-4 py-20 text-center"><p className="text-sm text-[#a8a8ad]">Order details are unavailable.</p><button type="button" onClick={() => nav('/mobile-store-demo/orders')} className="mt-5 min-h-11 rounded-full bg-[#f5f5f6] px-6 text-sm font-bold text-black">Track Order</button></main></MobileShell>;
   }
 
   return (
@@ -736,8 +736,8 @@ function MobileOrderSuccess() {
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-[#2a2a2e] pt-4 text-sm"><span className="text-[#a8a8ad]">Total</span><strong>{formatMMK(order.total)}</strong></div>
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            <button type="button" onClick={() => nav(`/mobile-demo/orders?orderNo=${encodeURIComponent(order.orderNo)}&phone=${encodeURIComponent(order.phone)}`)} className="min-h-12 rounded-[14px] border border-[#d8d8dc] text-sm font-bold text-[#8c572f]">Track Order</button>
-            <button type="button" onClick={() => nav('/mobile-demo/products')} className="min-h-12 rounded-[14px] bg-[#f5f5f6] text-sm font-bold text-black">Continue Shopping</button>
+            <button type="button" onClick={() => nav(`/mobile-store-demo/orders?orderNo=${encodeURIComponent(order.orderNo)}&phone=${encodeURIComponent(order.phone)}`)} className="min-h-12 rounded-[14px] border border-[#d8d8dc] text-sm font-bold text-[#8c572f]">Track Order</button>
+            <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="min-h-12 rounded-[14px] bg-[#f5f5f6] text-sm font-bold text-black">Continue Shopping</button>
           </div>
         </section>
       </main>
