@@ -10,6 +10,7 @@ import {
 } from '../components/HomeSections';
 import './landing.css';
 import './landing-burmese-fix.css';
+import './landing-demo-mockup.css';
 
 export default function Landing() {
   return (
