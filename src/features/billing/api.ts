@@ -8,6 +8,7 @@ import {requireSupabase} from '@/core/supabase/client';
 import type {ShopPlan, ShopUsage, UsageTier} from '@/domain/shop';
 import {normalizePlan} from '@/domain/plan';
 import {resolveEntitlementView, type EntitlementState, type EntitlementView} from '@/domain/entitlement';
+import {mapDbError} from '@/domain/dbError';
 
 export interface ShopEntitlement extends EntitlementView {
   cycleStart: string | null;
@@ -20,7 +21,7 @@ export const billingApi = {
   async getUsage(): Promise<{usage: ShopUsage}> {
     const sb = requireSupabase();
     const {data, error} = await sb.rpc('current_shop_usage');
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
     if (!data) throw new Error('ဤအကောင့်တွင် ဆိုင် မရှိသေးပါ။');
     const r = data as {
       shop_id: string;
@@ -47,7 +48,7 @@ export const billingApi = {
   async getEntitlement(): Promise<{entitlement: ShopEntitlement}> {
     const sb = requireSupabase();
     const {data, error} = await sb.rpc('current_shop_entitlement');
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
     if (!data) throw new Error('ဤအကောင့်တွင် ဆိုင် မရှိသေးပါ။');
     const r = data as {
       shop_id: string;
