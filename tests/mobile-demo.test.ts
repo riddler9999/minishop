@@ -84,3 +84,27 @@ test('production storefront remains separate from Mobile One demo', async () => 
   assert.equal(productionHome.includes('mobile-store-demo'), false);
   assert.equal(productionHome.includes('Mobile One'), false);
 });
+
+
+test('mobile shipping contract stays consistent at 5,000 MMK below free threshold', async () => {
+  const page = await readFile(mobilePath, 'utf8');
+  const order = await readFile(mobileOrderPath, 'utf8');
+  assert.match(page, /const shippingFee = subtotal >= 2_000_000 \? 0 : 5_000;/);
+  assert.match(page, /Yangon delivery from 5,000 MMK/);
+  assert.match(order, /const shippingFee = input\.subtotal >= 2_000_000 \? 0 : 5_000;/);
+});
+
+test('mobile product card avoids nested buttons and keeps dark-theme readable foregrounds', async () => {
+  const source = await readFile(mobilePath, 'utf8');
+  const productCardStart = source.indexOf('function ProductCard');
+  const productCardEnd = source.indexOf('function MobileHome');
+  const productCard = source.slice(productCardStart, productCardEnd);
+  assert.equal(/<button[\s\S]*?<button/.test(productCard), false);
+  assert.equal(source.includes('text-[#292b29]'), false);
+  assert.equal(source.includes('text-[#1d201e]'), false);
+  assert.equal(source.includes('text-[#373936]'), false);
+  assert.equal(source.includes('text-[#4c4e4b]'), false);
+  assert.equal(source.includes('text-[#66655f]'), false);
+  assert.equal(source.includes('text-[#615f5a]'), false);
+  assert.equal(source.includes('text-[#8c572f]'), false);
+});
