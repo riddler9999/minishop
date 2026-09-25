@@ -1,7 +1,7 @@
-import {sendJson} from './_http.js';
-import {clean} from './_validation.js';
-import {mapDbError} from '../src/domain/dbError.js';
-import {requireSuperadmin} from './_superadmin.js';
+import {sendJson} from './_http.ts';
+import {clean} from './_validation.ts';
+import {mapDbError} from '../src/domain/dbError.ts';
+import {requireSuperadmin} from './_superadmin.ts';
 
 const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
 
