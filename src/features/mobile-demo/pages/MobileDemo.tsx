@@ -56,14 +56,14 @@ function MobileHeader() {
   const {count} = useCart();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#ebe4dc] bg-[#141416]/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-[#2a2a2e] bg-[#141416]/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-4 sm:px-6">
         <button
           type="button"
           onClick={() => nav('/mobile-store-demo')}
           className="group flex min-h-11 items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc] focus-visible:ring-offset-2"
           aria-label="Mobile One home">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#f1e7dc] text-[#f5f5f6] transition group-hover:bg-[#eadbcb]">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#202024] text-[#f5f5f6] transition group-hover:bg-[#2a2a2e]">
             <Smartphone className="h-5 w-5" strokeWidth={1.7} />
           </span>
           <span>
@@ -76,14 +76,14 @@ function MobileHeader() {
           <button
             type="button"
             onClick={() => nav('/mobile-store-demo/products')}
-            className="grid h-11 w-11 place-items-center rounded-full text-[#292b29] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
+            className="grid h-11 w-11 place-items-center rounded-full text-[#e7e7ea] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
             aria-label="Search mobile">
             <Search className="h-[21px] w-[21px]" strokeWidth={1.8} />
           </button>
           <button
             type="button"
             onClick={() => nav('/mobile-store-demo/cart')}
-            className="relative grid h-11 w-11 place-items-center rounded-full text-[#292b29] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
+            className="relative grid h-11 w-11 place-items-center rounded-full text-[#e7e7ea] transition hover:bg-[#202024] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc]"
             aria-label={`Open cart, ${count} item${count === 1 ? '' : 's'}`}>
             <ShoppingBag className="h-[21px] w-[21px]" strokeWidth={1.8} />
             {count > 0 && (
@@ -116,7 +116,7 @@ function MobileShell({children}: {children: ReactNode}) {
           <div>
             <p className="text-xl font-black tracking-[-0.04em]">Mobile One</p>
             <p className="mt-2 max-w-sm text-sm leading-6 text-[#a8a8ad]">
-              Modern mobile for calm, practical homes in Yangon. Demo storefront powered by MiniShop MM.
+              Premium phones, audio and gadgets for Myanmar buyers. Demo storefront powered by MiniShop MM.
             </p>
           </div>
           <div className="text-sm">
@@ -180,7 +180,7 @@ function MobileShell({children}: {children: ReactNode}) {
                   type="button"
                   key={to}
                   onClick={() => { setMenuOpen(false); nav(to); }}
-                  className="min-h-12 border-b border-[#2c2c31] text-left text-sm font-semibold text-[#373936] transition hover:text-[#f5f5f6]">
+                  className="min-h-12 border-b border-[#2c2c31] text-left text-sm font-semibold text-[#e7e7ea] transition hover:text-[#f5f5f6]">
                   {label}
                 </button>
               ))}
@@ -202,7 +202,7 @@ function SearchField({
   placeholder?: string;
 }) {
   return (
-    <div className="flex min-h-[52px] items-center gap-3 rounded-[18px] border border-[#2a2a2e] bg-[#141416] px-4 shadow-[0_4px_18px_rgba(76,59,43,0.04)] focus-within:border-[#b47d55] focus-within:ring-2 focus-within:ring-[#d8d8dc]/10">
+    <div className="flex min-h-[52px] items-center gap-3 rounded-[18px] border border-[#2a2a2e] bg-[#141416] px-4 shadow-[0_4px_18px_rgba(76,59,43,0.04)] focus-within:border-[#d8d8dc] focus-within:ring-2 focus-within:ring-[#d8d8dc]/10">
       <Search className="h-5 w-5 shrink-0 text-[#9b9ba1]" strokeWidth={1.7} />
       <input
         value={value}
@@ -229,25 +229,27 @@ function ProductCard({product}: {product: Product}) {
 
   return (
     <article className="min-w-0 overflow-hidden rounded-[20px] border border-[#2c2c31] bg-[#141416]">
-      <button
-        type="button"
-        onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)}
-        className="relative block w-full overflow-hidden bg-[#1a1a1d] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8d8dc]">
-        <div className="aspect-[1.04] w-full overflow-hidden">
-          <img src={product.image ?? ''} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />
-        </div>
+      <div className="relative block w-full overflow-hidden bg-[#1a1a1d]">
+        <button
+          type="button"
+          onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)}
+          className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8d8dc]">
+          <div className="aspect-[1.04] w-full overflow-hidden">
+            <img src={product.image ?? ''} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />
+          </div>
+        </button>
         {oldPrice && <span className="absolute left-2.5 top-2.5 rounded-full bg-[#d8d8dc] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-black">Sale</span>}
         <button
           type="button"
-          onClick={(event) => { event.stopPropagation(); setFavorite((value) => !value); }}
+          onClick={() => setFavorite((value) => !value)}
           className={`absolute right-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-[#17171a]/94 shadow-sm transition ${favorite ? 'text-[#f5f5f6]' : 'text-[#f3f3f5]'}`}
           aria-label={favorite ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
           aria-pressed={favorite}>
           <Heart className="h-4 w-4" strokeWidth={1.8} fill={favorite ? 'currentColor' : 'none'} />
         </button>
-      </button>
+      </div>
       <div className="p-3.5">
-        <button type="button" onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)} className="line-clamp-2 min-h-[40px] text-left text-[13px] font-bold leading-5 text-[#1d201e] sm:text-sm">
+        <button type="button" onClick={() => nav(`/mobile-store-demo/products/${encodeURIComponent(product.id)}`)} className="line-clamp-2 min-h-[40px] text-left text-[13px] font-bold leading-5 text-[#f5f5f6] sm:text-sm">
           {product.name}
         </button>
         <p className="mt-1 text-[11px] text-[#9b9ba1]">{product.color}</p>
@@ -334,10 +336,10 @@ function MobileHome() {
                 key={category}
                 onClick={() => nav(`/mobile-store-demo/products?category=${encodeURIComponent(category)}`)}
                 className="w-[104px] shrink-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8d8dc] focus-visible:ring-offset-2">
-                <span className="block aspect-square overflow-hidden rounded-[20px] bg-[#ece7df]">
+                <span className="block aspect-square overflow-hidden rounded-[20px] bg-[#1a1a1d]">
                   <img src={categoryImages.get(category) ?? HERO_IMAGE} alt="" className="h-full w-full object-cover" />
                 </span>
-                <span className="mt-2 block text-center text-xs font-semibold text-[#4c4e4b]">{category}</span>
+                <span className="mt-2 block text-center text-xs font-semibold text-[#d0d0d4]">{category}</span>
               </button>
             ))}
           </div>
@@ -389,7 +391,7 @@ function MobileProducts() {
           <span className="text-xs font-medium text-[#9b9ba1]">{visible.length} items</span>
         </div>
 
-        <div className="mt-5"><SearchField value={query} onChange={setQuery} placeholder="Search sofa, chair, table..." /></div>
+        <div className="mt-5"><SearchField value={query} onChange={setQuery} placeholder="Search iPhone, Galaxy, audio..." /></div>
 
         <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
           {['All', ...MOBILE_CATEGORIES].map((item) => (
@@ -397,7 +399,7 @@ function MobileProducts() {
               type="button"
               key={item}
               onClick={() => setCategory(item)}
-              className={`min-h-10 shrink-0 rounded-full border px-4 text-[11px] font-semibold transition ${category === item ? 'border-[#d8d8dc] bg-[#d8d8dc] text-black' : 'border-[#e2d9cf] bg-[#141416] text-[#615f5a] hover:border-[#b98b69]'}`}>
+              className={`min-h-10 shrink-0 rounded-full border px-4 text-[11px] font-semibold transition ${category === item ? 'border-[#d8d8dc] bg-[#d8d8dc] text-black' : 'border-[#34343a] bg-[#141416] text-[#b8b8bd] hover:border-[#d8d8dc]'}`}>
               {item}
             </button>
           ))}
@@ -454,12 +456,12 @@ function MobileProductDetail() {
   return (
     <MobileShell>
       <main className="mx-auto max-w-6xl px-4 pb-12 pt-4 sm:px-6">
-        <button type="button" onClick={() => nav(-1)} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#66655f] hover:text-[#f5f5f6]">
+        <button type="button" onClick={() => nav(-1)} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#b8b8bd] hover:text-[#f5f5f6]">
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
         <div className="grid gap-6 md:grid-cols-2 md:gap-9">
           <div>
-            <div className="relative aspect-[1.02] overflow-hidden rounded-[26px] bg-[#ebe5de]">
+            <div className="relative aspect-[1.02] overflow-hidden rounded-[26px] bg-[#1a1a1d]">
               {images[activeImage] && <img src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />}
               <button
                 type="button"
@@ -497,7 +499,7 @@ function MobileProductDetail() {
             </div>
             {product.description && <p className="mt-5 text-sm leading-7 text-[#b4b4b8]">{product.description}</p>}
             <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#2d2d31] bg-[#141416] p-3">
-              <span className="text-xs font-semibold text-[#66655f]">Quantity</span>
+              <span className="text-xs font-semibold text-[#b8b8bd]">Quantity</span>
               <div className="inline-flex items-center rounded-full border border-[#34343a]">
                 <button type="button" onClick={() => setQty((value) => Math.max(1, value - 1))} className="grid h-10 w-10 place-items-center" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
                 <span className="w-8 text-center text-sm font-bold">{qty}</span>
@@ -505,10 +507,10 @@ function MobileProductDetail() {
               </div>
             </div>
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              <button type="button" onClick={addCurrent} className="min-h-[52px] rounded-[15px] border border-[#d8d8dc] bg-transparent px-5 text-sm font-bold text-[#8c572f] transition hover:bg-[#f1e7dc]">Add to Cart</button>
+              <button type="button" onClick={addCurrent} className="min-h-[52px] rounded-[15px] border border-[#d8d8dc] bg-transparent px-5 text-sm font-bold text-[#f5f5f6] transition hover:bg-[#202024]">Add to Cart</button>
               <button type="button" onClick={() => {addCurrent(); nav('/mobile-store-demo/checkout');}} className="min-h-[52px] rounded-[15px] bg-[#f5f5f6] px-5 text-sm font-bold text-[#0a0a0b] transition hover:bg-[#ffffff]">Buy Now</button>
             </div>
-            <div className="mt-5 flex items-center gap-2 text-xs text-[#a8a8ad]"><Truck className="h-4 w-4 text-[#7d8874]" /> Yangon delivery from 15,000 MMK · free over 2,000,000 MMK</div>
+            <div className="mt-5 flex items-center gap-2 text-xs text-[#a8a8ad]"><Truck className="h-4 w-4 text-[#b8b8bd]" /> Yangon delivery from 5,000 MMK · free over 2,000,000 MMK</div>
           </div>
         </div>
 
@@ -577,7 +579,7 @@ function MobileCart() {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start gap-2">
                       <p className="line-clamp-2 flex-1 text-sm font-bold leading-5">{item.name}</p>
-                      <button type="button" onClick={() => remove(item.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#9b9ba1] hover:bg-[#202024] hover:text-[#8c572f]" aria-label={`Remove ${item.name}`}><Trash2 className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => remove(item.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#9b9ba1] hover:bg-[#202024] hover:text-[#f5f5f6]" aria-label={`Remove ${item.name}`}><Trash2 className="h-4 w-4" /></button>
                     </div>
                     <p className="mt-1 text-sm font-black">{formatMMK(item.price)}</p>
                     <div className="mt-auto inline-flex w-fit items-center rounded-full border border-[#34343a]">
@@ -612,7 +614,7 @@ function MobileCheckout() {
   const [note, setNote] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'kpay'>('cod');
   const [error, setError] = useState('');
-  const shippingFee = subtotal >= 2_000_000 ? 0 : 15_000;
+  const shippingFee = subtotal >= 2_000_000 ? 0 : 5_000;
 
   if (!items.length) {
     return (
@@ -736,7 +738,7 @@ function MobileOrderSuccess() {
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-[#2a2a2e] pt-4 text-sm"><span className="text-[#a8a8ad]">Total</span><strong>{formatMMK(order.total)}</strong></div>
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            <button type="button" onClick={() => nav(`/mobile-store-demo/orders?orderNo=${encodeURIComponent(order.orderNo)}&phone=${encodeURIComponent(order.phone)}`)} className="min-h-12 rounded-[14px] border border-[#d8d8dc] text-sm font-bold text-[#8c572f]">Track Order</button>
+            <button type="button" onClick={() => nav(`/mobile-store-demo/orders?orderNo=${encodeURIComponent(order.orderNo)}&phone=${encodeURIComponent(order.phone)}`)} className="min-h-12 rounded-[14px] border border-[#d8d8dc] text-sm font-bold text-[#f5f5f6]">Track Order</button>
             <button type="button" onClick={() => nav('/mobile-store-demo/products')} className="min-h-12 rounded-[14px] bg-[#f5f5f6] text-sm font-bold text-black">Continue Shopping</button>
           </div>
         </section>
@@ -841,7 +843,7 @@ function MobilePolicy({title}: {title: string}) {
           <h1 className="mt-2 text-3xl font-black tracking-[-0.05em]">{title}</h1>
           <p className="mt-3 text-sm leading-7 text-[#a8a8ad]">{policy.lead}</p>
           <div className="mt-7 space-y-6">
-            {policy.sections.map((section) => <section key={section.heading}><h2 className="text-base font-black">{section.heading}</h2><p className="mt-2 text-sm leading-7 text-[#66655f]">{section.body}</p></section>)}
+            {policy.sections.map((section) => <section key={section.heading}><h2 className="text-base font-black">{section.heading}</h2><p className="mt-2 text-sm leading-7 text-[#b8b8bd]">{section.body}</p></section>)}
           </div>
         </div>
       </main>
@@ -878,4 +880,4 @@ export default function MobileDemo() {
   );
 }
 
-export const FURNITURE_DEMO_COLORS = COLORS;
+export const MOBILE_DEMO_COLORS = COLORS;
