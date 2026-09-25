@@ -41,6 +41,7 @@ export type DbErrorCode =
   // Owner-only entitlement RPC guards (service_role; sellers rarely see these)
   | 'duplicate_payment'
   | 'invalid_credit_quantity'
+  | 'unknown_purchase'
   | 'unknown_shop'
   | 'invalid_plan'
   // place_order() validation
@@ -93,6 +94,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
     'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
   duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',
   invalid_credit_quantity: 'Extra Orders အရေအတွက် မမှန်ပါ။',
+  unknown_purchase: 'Extra Orders ဝယ်ယူမှု ရှာမတွေ့ပါ။',
   unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
   invalid_plan: 'Plan အမျိုးအစား မမှန်ပါ။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
