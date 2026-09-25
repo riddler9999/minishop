@@ -6,6 +6,7 @@ import {requireSupabase} from '@/core/supabase/client';
 import type {TablesInsert, TablesUpdate} from '@/core/supabase/database.types';
 import type {ShippingZone, ShippingZoneInput, ShippingZonePatch} from '@/domain/shop';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
+import {mapDbError} from '@/domain/dbError';
 
 function mapShippingZone(row: {id: string; region: string; township: string; fee: number}): ShippingZone {
   return {id: row.id, region: row.region, township: row.township, fee: row.fee};
@@ -23,7 +24,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .order('region', {ascending: true})
       .order('township', {ascending: true});
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
     return {zones: (data ?? []).map(mapShippingZone)};
   },
 
