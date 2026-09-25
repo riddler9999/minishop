@@ -40,7 +40,7 @@ export const shippingAdminApi = {
     const {data, error} = await sb.from('shipping_zones').insert(row).select('id, region, township, fee').maybeSingle();
     if (error || !data) {
       if (error?.code === '23505') throw new Error('ဒီဒေသ/မြို့နယ်အတွက် ပို့ခ ရှိပြီးသားပါ။');
-      throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ဖန်တီး၍မရပါ။');
+      throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ဖန်တီး၍မရပါ။'));
     }
     return {zone: mapShippingZone(data)};
   },
@@ -57,7 +57,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .select('id, region, township, fee')
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။'));
     return {zone: mapShippingZone(data)};
   },
 
