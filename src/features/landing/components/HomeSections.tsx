@@ -4,7 +4,7 @@ import {PLAN_PRICE_KS} from '@/domain/subscription';
 import {EXTRA_ORDER_UNIT_PRICE_KS, PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
 import type {Plan} from '@/domain/plan';
 
-const channels = ['Facebook', 'TikTok', 'Telegram'];
+const channels = ['Facebook', 'TikTok', 'Messenger', 'Telegram'];
 
 const checkoutFeatures = [
   {icon: MapPin, title: 'မြို့နယ်နဲ့ တိုင်းဒေသကြီး', body: 'Customer ဘက်က လိပ်စာ အပြည့်အစုံ မရိုက်တတ်ရင်တောင် မြို့နယ် အလွယ်တကူ ရွေးလိုက်ရုံပဲ။'},
@@ -143,7 +143,7 @@ export function SellEverywhere() {
   return (
     <section className="landing-everywhere-section" aria-labelledby="everywhere-title">
       <div className="landing-everywhere-copy">
-        <span className="landing-section-pill">ONE STORE. EVERYWHERE.</span>
+        <span className="landing-section-pill">ONE PLACE TO SELL EVERYWHERE.</span>
         <h2 id="everywhere-title">FB၊ TikTok၊ Telegram... ဘယ်ကပဲလာလာ Order တွေက တစ်နေရာတည်း စုပေးတယ်</h2>
         <p>App တစ်ခုချင်းစီ လိုက်ဖွင့်ပြီး စာရင်းတွေလိုက်ကူးမနေပါနဲ့တော့။ ဘယ်နေရာကပဲ ဝယ်ဝယ် Dashboard တစ်ခုတည်းမှာ Order အကုန် စနစ်တကျ ရှိနေမယ်။</p>
       </div>
@@ -152,7 +152,7 @@ export function SellEverywhere() {
           {channels.map((channel) => <div key={channel}><Send size={17}/>{channel}</div>)}
         </div>
         <div className="landing-channel-line" aria-hidden="true"/>
-        <div className="landing-store-node"><ShoppingBag size={28}/><strong>MiniShop</strong><span>Store Link</span></div>
+        <div className="landing-store-node"><span className="landing-store-brandmark">m</span><strong>MiniShop MM</strong><span>Store Link</span></div>
         <div className="landing-channel-line" aria-hidden="true"/>
         <div className="landing-order-node"><LayoutDashboard size={26}/><strong>Orders</strong><span>တစ်နေရာထဲမှာ</span></div>
       </div>

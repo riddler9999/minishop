@@ -1,4 +1,4 @@
-import {ArrowRight, Check, ExternalLink, ShoppingBag, Sparkles} from 'lucide-react';
+import {ArrowRight, Check, ExternalLink, Sparkles} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
 const proofItems = ['ပစ္စည်းတွေကို တစ်နေရာတည်းမှာ ပြနိုင်', 'ဝယ်သူကိုယ်တိုင် Order တင်နိုင်', 'Product အကြောင်းပြည့်ပြည့်စုံစုံ ပြနိုင်'];
@@ -8,8 +8,8 @@ export default function HeroSection() {
     <section className="landing-hero" aria-labelledby="landing-title">
       <div className="landing-topbar">
         <Link className="landing-wordmark" to="/" aria-label="MiniShop homepage">
-          <span className="landing-wordmark-mark" aria-hidden="true"><ShoppingBag size={20} strokeWidth={2.2}/></span>
-          <span>MiniShop</span>
+          <span className="landing-wordmark-mark" aria-hidden="true">m</span>
+          <span className="landing-wordmark-text"><strong>Mini</strong><b>Shop</b><em>MM</em></span>
         </Link>
         <div className="landing-topbar-actions">
           <Link className="landing-text-link" to="/demo">Demo Store</Link>
@@ -48,7 +48,7 @@ export default function HeroSection() {
             </div>
           </div>
           <div className="landing-animation-cursor" aria-hidden="true"/>
-          <div className="landing-animation-cart" aria-hidden="true"><ShoppingBag size={20}/><span>2</span></div>
+          <div className="landing-animation-cart" aria-hidden="true"><span className="landing-cart-mark">m</span><span>2</span></div>
           <div className="landing-animation-order">Order တင်ပြီး ✓</div>
         </div>
       </div>
