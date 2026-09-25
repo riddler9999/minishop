@@ -1,9 +1,7 @@
-import {ArrowRight, Check, Clock3, ExternalLink, ShoppingBag, Smartphone, Sparkles} from 'lucide-react';
+import {ArrowRight, Check, ExternalLink, ShoppingBag, Sparkles} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
-const PHONE_ASSET = '/minishop-storefront.webp';
-
-const proofItems = ['၂ မိနစ်နဲ့ ဆိုင်စရောင်းနိုင်', 'IT ပညာ လုံးဝမလို', 'ဖုန်းတစ်လုံးတည်းနဲ့ အကုန်ပြီး'];
+const proofItems = ['ပစ္စည်းတွေကို တစ်နေရာတည်းမှာ ပြနိုင်', 'ဝယ်သူကိုယ်တိုင် Order တင်နိုင်', 'Product အကြောင်းပြည့်ပြည့်စုံစုံ ပြနိုင်'];
 
 export default function HeroSection() {
   return (
@@ -21,10 +19,14 @@ export default function HeroSection() {
 
       <div className="landing-hero-copy">
         <span className="landing-pill"><Sparkles size={16} aria-hidden="true"/> အွန်လိုင်းရောင်းသူတွေအတွက် သီးသန့်</span>
-        <h1 id="landing-title">Chat ထဲမှာ တစ်ယောက်ချင်း ဈေးရောင်းရတာ ပင်ပန်းနေပြီလား?<br/><span>ကိုယ့် Store Link လေး ချထားရုံနဲ့ Order တွေ အလိုအလျောက် ဝင်လာမယ်</span></h1>
+        <h1 id="landing-title">ဝယ်ဖို့ဆိုတာ မြင်အောင်ပြပေးနိုင်မှ ဝယ်တာပါ</h1>
         <p className="landing-hero-lede">
-          ဈေးဘယ်လောက်လဲ၊ ပစ္စည်းရှိသေးလား ခဏခဏ ဖြေမနေပါနဲ့တော့။ ပစ္စည်းတင်၊ Link ယူပြီး Bio ထဲ ထည့်ထားလိုက်ရုံနဲ့ ဝယ်သူက စိတ်ကြိုက်ရွေးပြီး အော်ဒါ တန်းတင်သွားလိမ့်မယ်။
+          တစ်ခုဝယ်ဖို့လာတဲ့သူက တခြားပစ္စည်းတွေပါမြင်ရင် နှစ်ခုဝယ်သွားနိုင်တယ်။
         </p>
+        <div className="landing-hero-points">
+          <p><strong>ဝယ်မယ်ဆိုရင်တောင် ဝယ်လို့လွယ်အောင်လုပ်ထားဖို့လိုသေးတယ်</strong><span>ဝယ်ယူနည်းလိုက်ပြပေးစရာမလိုတဲ့အထိ ကိုယ်တိုင်အလွယ်တကူ အော်ဒါတင်နိုင်ရမယ်။</span></p>
+          <p><strong>မေးစရာမလိုအောင်လည်း ပြည့်စုံဖို့လိုတယ်</strong><span>ပစ္စည်းတစ်ခုချင်းစီအကြောင်းကို ဝယ်သူက ထပ်မေးစရာမလိုတဲ့အထိ ပြည့်ပြည့်စုံစုံပြထားနိုင်ရမယ်။</span></p>
+        </div>
         <div className="landing-hero-buttons">
           <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ အခုပဲ ဆိုင်ဖွင့်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
           <Link className="landing-demo-cta" to="/demo">Demo ဆိုင်ကို အရင်ကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
@@ -34,17 +36,20 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="landing-hero-visual" aria-label="MiniShop storefront preview">
-        <div className="landing-phone-shell">
-          <img className="landing-phone-image" src={PHONE_ASSET} alt="MiniShop mobile storefront preview"/>
-        </div>
-        <div className="landing-floating-card landing-floating-card-top">
-          <span className="landing-floating-icon"><Clock3 size={18} aria-hidden="true"/></span>
-          <span><strong>မြန်မြန်စတင်နိုင်</strong><small>လွယ်ကူတဲ့ setup</small></span>
-        </div>
-        <div className="landing-floating-card landing-floating-card-bottom">
-          <span className="landing-floating-icon"><Smartphone size={18} aria-hidden="true"/></span>
-          <span><strong>Mobile-first</strong><small>Buyer experience</small></span>
+      <div className="landing-hero-visual" aria-label="MiniShop buyer journey animation">
+        <div className="landing-store-animation" role="img" aria-label="ပစ္စည်းကြည့်ပြီး အော်ဒါတင်တဲ့ buyer journey">
+          <div className="landing-store-browser">
+            <div className="landing-store-browser-bar"><span/><span/><span/></div>
+            <div className="landing-store-grid">
+              <article><div/><strong>Product 01</strong><small>25,000 Ks</small></article>
+              <article><div/><strong>Product 02</strong><small>32,000 Ks</small></article>
+              <article><div/><strong>Product 03</strong><small>18,000 Ks</small></article>
+              <article><div/><strong>Product 04</strong><small>41,000 Ks</small></article>
+            </div>
+          </div>
+          <div className="landing-animation-cursor" aria-hidden="true"/>
+          <div className="landing-animation-cart" aria-hidden="true"><ShoppingBag size={20}/><span>2</span></div>
+          <div className="landing-animation-order">Order တင်ပြီး ✓</div>
         </div>
       </div>
     </section>
