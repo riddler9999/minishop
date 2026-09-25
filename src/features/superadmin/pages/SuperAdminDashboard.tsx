@@ -2,6 +2,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import {Navigate} from 'react-router-dom';
 import {Activity, CreditCard, RefreshCw, ShieldCheck, Store, WalletCards} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
+import {buildCreditPackRequest, ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} from '@/features/superadmin/orderPackApproval';
 
 type Payload = {
   metrics: {shops:number; activeShops:number; pendingApplications:number; pendingOrderPacks:number; recordedRevenue:number};
@@ -15,6 +16,7 @@ export default function SuperAdminDashboard() {
   const [data,setData]=useState<Payload|null>(null);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState('');
+  const [packTransactionIds,setPackTransactionIds]=useState<Record<string,string>>({});
   const token=session?.access_token;
 
   const load=useCallback(async()=>{
@@ -87,7 +89,7 @@ export default function SuperAdminDashboard() {
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4"><h2 className="font-bold">Extra-order purchase requests</h2></div>
-        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=><div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex gap-2">{p.proofUrl&&<a href={p.proofUrl} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-sm font-semibold">View proof</a>}<button disabled={!!busy} onClick={()=>{const transactionId=window.prompt("Full transaction ID"); if(transactionId?.trim()) void act(p.id,{action:"credit-pack",purchaseId:p.id,transactionId:transactionId.trim()},"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div>)}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
+        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=>{const transactionId=packTransactionIds[p.id]||''; const creditRequest=buildCreditPackRequest(p.id,transactionId); return <div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex flex-col gap-2 md:items-end"><label className="text-xs font-semibold text-slate-600">Verified full transaction ID<input aria-label={`Full transaction ID for purchase ${p.id}`} value={transactionId} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setPackTransactionIds((current)=>({...current,[p.id]:e.target.value}))} placeholder="Enter full transaction ID" className="mt-1 block w-full min-w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal text-slate-950" /></label><div className="flex gap-2">{p.proofUrl&&<a href={p.proofUrl} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-sm font-semibold">View proof</a>}<button disabled={!!busy||!creditRequest} onClick={()=>{if(creditRequest) void act(p.id,creditRequest,"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div></div>})}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
       </section>
     </div>
   </main>;
