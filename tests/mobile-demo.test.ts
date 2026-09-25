@@ -99,7 +99,13 @@ test('mobile product card avoids nested buttons and keeps dark-theme readable fo
   const productCardStart = source.indexOf('function ProductCard');
   const productCardEnd = source.indexOf('function MobileHome');
   const productCard = source.slice(productCardStart, productCardEnd);
-  assert.equal(/<button[\s\S]*?<button/.test(productCard), false);
+  let buttonDepth = 0;
+  for (const match of productCard.matchAll(/<\/?button\b/g)) {
+    if (match[0].startsWith('</')) buttonDepth -= 1;
+    else buttonDepth += 1;
+    assert.ok(buttonDepth <= 1, 'ProductCard must not nest a button inside another button');
+  }
+  assert.equal(buttonDepth, 0, 'ProductCard button tags must remain balanced');
   assert.equal(source.includes('text-[#292b29]'), false);
   assert.equal(source.includes('text-[#1d201e]'), false);
   assert.equal(source.includes('text-[#373936]'), false);
