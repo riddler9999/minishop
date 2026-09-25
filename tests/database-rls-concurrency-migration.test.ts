@@ -32,7 +32,7 @@ test('branding storage write policies remain owner-path scoped without a Busines
     const block = sql.slice(start, next < 0 ? sql.length : next);
     assert.match(block, /bucket_id = 'shop-logos'/);
     assert.match(block, /s\.owner_id = \(select auth\.uid\(\)\)/);
-    assert.match(block, /s\.id::text = \(storage\.foldername\(name\)\)\[1\]/);
+    assert.match(block, /s\.id::text = \(storage\.foldername\((?:storage\.objects\.)?name\)\)\[1\]/);
     assert.doesNotMatch(block, /s\.plan\s*=\s*'business'/);
   }
 });
