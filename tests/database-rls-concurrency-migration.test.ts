@@ -80,3 +80,9 @@ test('maintained database types include pack transaction identity and hardened R
   assert.match(source, /order_pack_purchases:[\s\S]*transaction_id: string \| null/);
   assert.match(source, /admin_credit_order_pack:[\s\S]*p_purchase_id: string; p_transaction_id: string/);
 });
+
+
+test('storage owner policies qualify the outer storage object path', () => {
+  assert.match(sql, /storage\.foldername\(storage\.objects\.name\)/);
+  assert.doesNotMatch(sql, /storage\.foldername\(name\)/);
+});

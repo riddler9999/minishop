@@ -71,7 +71,7 @@ create policy tenant_media_owner_insert on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
     or
@@ -80,7 +80,7 @@ create policy tenant_media_owner_insert on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
   );
@@ -93,7 +93,7 @@ create policy tenant_media_owner_update on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
     or
@@ -102,7 +102,7 @@ create policy tenant_media_owner_update on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
   )
@@ -112,7 +112,7 @@ create policy tenant_media_owner_update on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
     or
@@ -121,7 +121,7 @@ create policy tenant_media_owner_update on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
   );
@@ -134,7 +134,7 @@ create policy tenant_media_owner_delete on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
     or
@@ -143,7 +143,7 @@ create policy tenant_media_owner_delete on storage.objects
       and exists (
         select 1 from public.shops s
         where s.owner_id = (select auth.uid())
-          and s.id::text = (storage.foldername(name))[1]
+          and s.id::text = (storage.foldername(storage.objects.name))[1]
       )
     )
   );
