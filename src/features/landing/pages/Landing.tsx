@@ -9,6 +9,7 @@ import {
   ThreeStepStoreCreation,
 } from '../components/HomeSections';
 import './landing.css';
+import './landing-burmese-fix.css';
 
 export default function Landing() {
   return (
