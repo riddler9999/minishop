@@ -114,6 +114,7 @@ export type Database = {
           id: string
           payment_method: string
           payment_ref_tail: string | null
+          transaction_id: string | null
           qty: number
           review_note: string | null
           reviewed_at: string | null
@@ -128,6 +129,7 @@ export type Database = {
           id?: string
           payment_method: string
           payment_ref_tail?: string | null
+          transaction_id?: string | null
           qty: number
           review_note?: string | null
           reviewed_at?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           id?: string
           payment_method?: string
           payment_ref_tail?: string | null
+          transaction_id?: string | null
           qty?: number
           review_note?: string | null
           reviewed_at?: string | null
@@ -535,6 +538,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_credit_order_pack: {
+        Args: { p_purchase_id: string; p_transaction_id: string }
+        Returns: undefined
+      }
       current_shop_entitlement: {
         Args: Record<PropertyKey, never>
         Returns: Json
