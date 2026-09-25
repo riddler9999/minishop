@@ -71,7 +71,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .select('id')
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။'));
     return {ok: true};
   },
 };
