@@ -7,13 +7,13 @@ Audit mode: Production read-only inspection + repository remediation. No Product
 
 ## Executive status
 
-**CONDITIONAL / NOT READY TO CLAIM DATABASE-SAFE YET.**
+**RUNTIME-PROVEN IN FREE DISPOSABLE LOCAL SUPABASE CI; PRODUCTION DEPLOYMENT STILL NOT APPROVED.**
 
 The audit confirmed one cross-tenant RLS defect in Production and one branding Storage-policy contract drift. It also found that Extra Order pack credits were idempotent per purchase row but did not have a database-enforced identity for the underlying payment, allowing the same real payment to be represented by multiple purchase rows. Repository migration 0023 remediates these defects, but it has **not** been applied to Production.
 
 Production read-only integrity checks found no current negative stock, plan/entitlement mismatch, quota mismatch, duplicate normalized subscription transaction IDs, or duplicate entitlement-ledger sources.
 
-Mutation/concurrency runtime tests remain **BLOCKED** in this session because no safe Supabase branch/staging database existed and the execution environment had no Docker/Postgres/Supabase CLI. A reproducible staging-only harness is included at `tests/database-runtime-audit.sql`. Source/regex tests are explicitly not treated as concurrency proof.
+GitHub Actions run `36123942215` successfully created a disposable local Supabase stack using Docker + Supabase CLI v2.117.0, replayed the full migration chain through 0023, and executed the behavioral runtime suite against `http://127.0.0.1:54321` with no Production credentials. The job then destroyed the local stack. Runtime evidence now covers PostgreSQL transaction/concurrency behavior plus Supabase Auth/JWT, PostgREST/RPC, RLS, and Storage behavior. Source/regex tests remain contract checks only and are not used as runtime proof.
 
 ## Schema map
 
@@ -222,15 +222,15 @@ Preflight immediately before Production apply:
 | --- | --- | --- | --- |
 | RLS anon reads | Production read-only role simulation | migration contract test | PROVEN for inspected reads |
 | Seller cross-tenant reads | Production read-only role simulation | migration contract test | FAILED pre-fix / fix UNPROVEN until applied in safe DB |
-| Seller cross-tenant writes | not run | policy SQL inspection | BLOCKED |
-| place_order atomicity | not run | existing migration tests inspect locks/idempotency | BLOCKED runtime |
-| idempotency concurrency | not run | unique index/function source | BLOCKED runtime |
-| stock concurrency | not run | stock constraint + FOR UPDATE source | BLOCKED runtime |
-| entitlement concurrency | not run | entitlement FOR UPDATE source | BLOCKED runtime |
-| product-cap concurrency | not run | lock-before-count source test | BLOCKED runtime |
-| billing duplicate payment | no mutation run | unique indexes/RPC source | PARTIAL |
-| order-pack duplicate payment | no mutation run | new 0023 test | BLOCKED runtime |
-| branding storage all plans | no mutation run | new 0023 test | BLOCKED runtime |
+| Seller cross-tenant writes | GitHub Actions local Supabase runtime | policy SQL inspection | PROVEN — GitHub Actions local Supabase |
+| place_order atomicity | GitHub Actions local Supabase runtime | existing migration tests inspect locks/idempotency | PROVEN — GitHub Actions local Supabase |
+| idempotency concurrency | GitHub Actions local Supabase runtime, 2 concurrent clients | unique index/function source | PROVEN — GitHub Actions local Supabase |
+| stock concurrency | GitHub Actions local Supabase runtime, 2 concurrent clients | stock constraint + FOR UPDATE source | PROVEN — GitHub Actions local Supabase |
+| entitlement concurrency | GitHub Actions local Supabase runtime, 2 concurrent clients | entitlement FOR UPDATE source | PROVEN — GitHub Actions local Supabase |
+| product-cap concurrency | GitHub Actions local Supabase runtime, 2 concurrent clients per plan | lock-before-count source test | PROVEN — GitHub Actions local Supabase |
+| billing duplicate payment | GitHub Actions local Supabase runtime | unique indexes/RPC source | PROVEN — GitHub Actions local Supabase |
+| order-pack duplicate payment | GitHub Actions local Supabase runtime, 2 concurrent clients | new 0023 test | PROVEN — GitHub Actions local Supabase |
+| branding storage all plans | GitHub Actions local Supabase runtime | new 0023 test | PROVEN — GitHub Actions local Supabase |
 
 Existing tests such as `entitlementMigration.test.ts`, `final-pricing-migration.test.ts`, and `production-db-hardening-migration.test.ts` are source/regex contracts. They **do not prove PostgreSQL runtime locking, RLS, authorization, or concurrency behavior**.
 
@@ -243,7 +243,7 @@ Existing tests such as `entitlementMigration.test.ts`, `final-pricing-migration.
 1. `shop-logos` Storage writes remain Business-only despite Branding being Core on all plans. 0023 proposed.
 2. Extra Order packs lacked unique underlying payment identity; the same real transfer could be represented by multiple purchase rows. 0023 proposed.
 3. Anonymous callers can query active `shops` base rows, including `owner_id` and `plan`. A dedicated buyer-safe view/RPC migration is needed before revoking anon base-table SELECT.
-4. Full mutation/concurrency behavioral suite has not been executed in an isolated DB; release must not claim these invariants as proven.
+4. Runtime suite is proven in disposable local Supabase CI. One domain-rule case remains PARTIAL: rejection/RTO/refund non-restoration cannot be transitioned distinctly because the current schema does not persist separate statuses for all three outcomes.
 
 ### P2
 1. `database.types.ts` is not strictly current/generated despite its header; regenerate after schema deployment.
@@ -257,4 +257,4 @@ No Production DB mutation was performed by this audit. Until 0023 is reviewed, s
 
 ## Required next step
 
-Run `tests/database-runtime-audit.sql` against a disposable/local Supabase or paid Supabase branch, apply 0023 there, execute all RLS write and concurrency cases, record evidence, then perform a separate Production migration deployment gate.
+Keep the zero-cost `Database Runtime Integration` GitHub Actions gate green, reconcile the remaining PARTIAL rejection/RTO/refund status-model gap if product requirements require distinct persisted transitions, then perform a separate explicit Production migration deployment gate. Do not apply 0023 to Production from this PR.
