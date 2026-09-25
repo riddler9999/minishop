@@ -1,5 +1,6 @@
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
+import {mapDbError} from '../src/domain/dbError.js';
 import {requireSuperadmin} from './_superadmin.js';
 
 const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
@@ -75,6 +76,6 @@ export default async function handler(req: any, res: any) {
     ({error} = await sb.from('shops').update({is_active: body.active}).eq('id', shopId));
   }
 
-  if (error) return sendJson(res, 400, {error: error.message || 'Action failed'});
+  if (error) return sendJson(res, 400, {error: mapDbError(error.message, 'Action failed')});
   return sendJson(res, 200, {ok: true});
 }
