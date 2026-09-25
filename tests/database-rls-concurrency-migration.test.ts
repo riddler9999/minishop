@@ -53,3 +53,17 @@ test('migration does not apply destructive data operations', () => {
   assert.doesNotMatch(sql, /\bdrop table\b/i);
   assert.doesNotMatch(sql, /\bdelete from\b/i);
 });
+
+
+test('superadmin credit-pack action requires and forwards a full transaction id', () => {
+  const source = fs.readFileSync('api/superadmin.ts', 'utf8');
+  assert.match(source, /const transactionId = clean\(body\.transactionId, 160\) \|\| null/);
+  assert.match(source, /Missing purchase or transaction id/);
+  assert.match(source, /p_transaction_id: transactionId/);
+});
+
+test('maintained database types include pack transaction identity and hardened RPC signature', () => {
+  const source = fs.readFileSync('src/core/supabase/database.types.ts', 'utf8');
+  assert.match(source, /order_pack_purchases:[\s\S]*transaction_id: string \| null/);
+  assert.match(source, /admin_credit_order_pack:[\s\S]*p_purchase_id: string; p_transaction_id: string/);
+});
