@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 
 const PHONE_ASSET = '/minishop-storefront.webp';
 
-const proofItems = ['မိနစ်ပိုင်းအတွင်း ဆိုင်ဖွင့်နိုင်', 'Coding မလို', 'Mobile မှာ အဆင်ပြေ'];
+const proofItems = ['၂ မိနစ်နဲ့ ဆိုင်စရောင်းနိုင်', 'IT ပညာ လုံးဝမလို', 'ဖုန်းတစ်လုံးတည်းနဲ့ အကုန်ပြီး'];
 
 export default function HeroSection() {
   return (
@@ -15,20 +15,19 @@ export default function HeroSection() {
         </Link>
         <div className="landing-topbar-actions">
           <Link className="landing-text-link" to="/demo">Demo Store</Link>
-          <Link className="landing-topbar-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခုပဲ စတင်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
+          <Link className="landing-topbar-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ အခုပဲ ဆိုင်ဖွင့်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
         </div>
       </div>
 
       <div className="landing-hero-copy">
-        <span className="landing-pill"><Sparkles size={16} aria-hidden="true"/> Myanmar Online Seller တွေအတွက်</span>
-        <h1 id="landing-title">Social Media ကနေ<br/><span>ကိုယ့် Online Shop ဆီ</span><br/>Customer ကို ခေါ်လာပါ။</h1>
+        <span className="landing-pill"><Sparkles size={16} aria-hidden="true"/> အွန်လိုင်းရောင်းသူတွေအတွက် သီးသန့်</span>
+        <h1 id="landing-title">Chat ထဲမှာ တစ်ယောက်ချင်း ဈေးရောင်းရတာ ပင်ပန်းနေပြီလား?<br/><span>ကိုယ့် Store Link လေး ချထားရုံနဲ့ Order တွေ အလိုအလျောက် ဝင်လာမယ်</span></h1>
         <p className="landing-hero-lede">
-          TikTok, Telegram, Facebook မှာ ပစ္စည်းတင်ရောင်းနေရုံနဲ့ မလုံလောက်ဘူး။ MiniShop နဲ့
-          ကြည့်လို့လွယ်၊ Order တင်လို့လွယ်တဲ့ Store Link တစ်ခုဖန်တီးပါ။
+          ဈေးဘယ်လောက်လဲ၊ ပစ္စည်းရှိသေးလား ခဏခဏ ဖြေမနေပါနဲ့တော့။ ပစ္စည်းတင်၊ Link ယူပြီး Bio ထဲ ထည့်ထားလိုက်ရုံနဲ့ ဝယ်သူက စိတ်ကြိုက်ရွေးပြီး အော်ဒါ တန်းတင်သွားလိမ့်မယ်။
         </p>
         <div className="landing-hero-buttons">
-          <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခုပဲ စတင်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
-          <Link className="landing-demo-cta" to="/demo">Demo Store ကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
+          <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ အခုပဲ ဆိုင်ဖွင့်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
+          <Link className="landing-demo-cta" to="/demo">Demo ဆိုင်ကို အရင်ကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
         </div>
         <div className="landing-proof-row" aria-label="MiniShop setup benefits">
           {proofItems.map((item) => <span key={item}><Check size={15} aria-hidden="true"/>{item}</span>)}

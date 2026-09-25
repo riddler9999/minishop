@@ -7,9 +7,9 @@ import type {Plan} from '@/domain/plan';
 const channels = ['Facebook', 'TikTok', 'Telegram'];
 
 const checkoutFeatures = [
-  {icon: MapPin, title: 'Region / Township', body: 'Customer က ကိုယ့်နေရာကို လွယ်လွယ်ရွေးနိုင်မယ်။'},
-  {icon: Truck, title: 'Delivery Fee', body: 'ပို့ခကို checkout flow ထဲမှာ ရှင်းရှင်းပြနိုင်မယ်။'},
-  {icon: CreditCard, title: 'Local Payments', body: 'COD, KBZPay, WavePay နဲ့ Order လက်ခံနိုင်မယ်။'},
+  {icon: MapPin, title: 'မြို့နယ်နဲ့ တိုင်းဒေသကြီး', body: 'Customer ဘက်က လိပ်စာ အပြည့်အစုံ မရိုက်တတ်ရင်တောင် မြို့နယ် အလွယ်တကူ ရွေးလိုက်ရုံပဲ။'},
+  {icon: Truck, title: 'Deli ခ အလိုအလျောက် တွက်ချက်ခြင်း', body: 'မြို့နယ်ရွေးလိုက်တာနဲ့ ပို့ခပါ တခါတည်းတွက်ပေးလို့ “Deli ခ ဘယ်လောက်လဲ” လိုက်မေးစရာ မလိုတော့ဘူး။'},
+  {icon: CreditCard, title: 'KPay, Wave & COD စနစ်', body: 'မြန်မာပြည်မှာ အသုံးအများဆုံး KPay, WavePay ငွေလွှဲစနစ်တွေရော အိမ်ရောက်ငွေချေ (COD) ပါ အပြည့်အစုံ ပါတယ်။'},
 ];
 
 const themes = [
@@ -32,44 +32,44 @@ const pricingPlans: Array<{
   {
     plan: 'free_trial',
     name: 'Free Trial',
-    eyebrow: 'စမ်းသုံးကြည့်ဖို့',
+    eyebrow: 'အစမ်းသုံးကြည့်ချင်သူများအတွက်',
     priceSuffix: '',
-    description: 'ငွေမချေဘဲ ဆိုင်ဖွင့်ပြီး MiniShop flow ကို လက်တွေ့စမ်းကြည့်နိုင်ပါတယ်။',
+    description: 'ဆိုင်စမ်းဖွင့်ပြီး MiniShop ဘယ်လို အလုပ်လုပ်လဲဆိုတာ စမ်းသပ်ကြည့်နိုင်ပါတယ်။',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ)`,
       `Product ${PLAN_PRODUCT_LIMIT.free_trial} ခုအထိ`,
       'Core ecommerce features',
       'Credit Card မလို',
     ],
-    cta: 'အခမဲ့စတင်မယ်',
+    cta: 'အခမဲ့ စမ်းသုံးမယ်',
   },
   {
     plan: 'starter',
     name: 'Starter',
-    eyebrow: 'ပုံမှန်ရောင်းချနေတဲ့ဆိုင်များ',
+    eyebrow: 'အရောင်းမှန်နေတဲ့ အွန်လိုင်းရှော့ပ်များအတွက် (အသင့်တော်ဆုံး)',
     priceSuffix: '/ လ',
-    description: 'လစဉ် Order volume မများသေးတဲ့ seller တွေအတွက် အခြေခံ operation ကိုအပြည့်သုံးနိုင်ပါတယ်။',
+    description: 'တစ်နေ့ အော်ဒါ ၁ ခု၊ ၂ ခု ပုံမှန်ရှိနေတဲ့ Seller တွေအတွက် အချိန်ကုန်သက်သာပြီး စနစ်ကျစေမယ့် Plan',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.starter} ခု / လ`,
       `Product ${PLAN_PRODUCT_LIMIT.starter} ခုအထိ`,
       'ရောင်းဖို့လိုတဲ့ Core features အားလုံး',
       `Extra Orders = ${EXTRA_ORDER_UNIT_PRICE_KS.toLocaleString()} Ks / order`,
     ],
-    cta: 'Starter ရွေးမယ်',
+    cta: 'Starter ဖြင့် စတင်မယ်',
   },
   {
     plan: 'business',
     name: 'Business',
-    eyebrow: 'Order volume ပိုများတဲ့ဆိုင်များ',
+    eyebrow: 'နေ့စဉ် အော်ဒါများတဲ့ Brand ကြီးများအတွက်',
     priceSuffix: '/ လ',
-    description: 'ရောင်းအားများလာတဲ့အခါ လူနည်းနည်းနဲ့ ပိုမြန်မြန် run နိုင်ဖို့ scale နဲ့ productivity ကိုပေးပါတယ်။',
+    description: 'အော်ဒါများပြားပြီး လူအင်အား သက်သက်သာသာနဲ့ အလုပ်သွက်သွက် လုပ်ချင်တဲ့ ဆိုင်ကြီးများအတွက်',
     features: [
       `Order ${PLAN_MONTHLY_QUOTA.business} ခု / လ`,
       `Product ${PLAN_PRODUCT_LIMIT.business} ခုအထိ`,
       'Starter selling features အားလုံး',
       'Productivity / automation capabilities',
     ],
-    cta: 'Business ရွေးမယ်',
+    cta: 'Business သို့ အဆင့်မြှင့်မယ်',
   },
 ];
 
@@ -88,15 +88,15 @@ export function StopSellingThroughChat() {
   return (
     <section className="landing-story-section" aria-labelledby="chat-title">
       <div className="landing-story-heading">
-        <span className="landing-section-pill">STOP SELLING THROUGH CHAT</span>
-        <h2 id="chat-title">ပုံပို့၊ ဈေးပြန်ဖြေ၊ Order စာရင်းလိုက်မှတ်နေရတာကို လျှော့လိုက်ပါ</h2>
-        <p>Customer တစ်ယောက်ချင်းစီကို chat ထဲမှာ အကုန်ပြန်ရှင်းပြနေရမယ့်အစား Store Link တစ်ခုနဲ့ ပစ္စည်းကြည့်ခြင်းကနေ Order တင်ခြင်းအထိ တစ်လမ်းတည်းပို့ပါ။</p>
+        <span className="landing-section-pill">NO MORE CHAT STRESS</span>
+        <h2 id="chat-title">မနက်မိုးလင်းတာနဲ့ Chat တွေဖတ်၊ စာရင်းတွေလိုက်မှတ်နေရတဲ့ ဒုက္ခကို အဆုံးသတ်လိုက်ပါ</h2>
+        <p>အရောင်း Post တင်ပြီး မအားလို့ စာမပြန်နိုင်ရင် ဝယ်သူက တခြားဆိုင်ဆီ ထွက်သွားတတ်တယ်။ MiniShop ရှိရင် စာပြန်နောက်ကျလို့ အားနာစရာမလိုဘဲ ဝယ်သူက သူ့ဖာသာ ဈေးဝယ်ပြီး ငွေပါ ရှင်းသွားမယ်။</p>
       </div>
       <div className="landing-comparison">
         <article className="landing-comparison-card">
           <span className="landing-comparison-label">အခုလို</span>
           <div className="landing-chat-stack" aria-label="manual chat selling">
-            {['ဒီဟာဘယ်လောက်လဲ?', 'အရောင်ရှိလား?', 'ပို့ခဘယ်လောက်လဲ?', 'Order တင်ချင်တယ်'].map((text) => (
+            {['ဈေးဘယ်လောက်လဲ?', 'ဒီအရောင်/ဆိုဒ် ရှိသေးလား?', 'ပို့ခ ဘယ်လောက်လဲရှင်?', 'အော်ဒါ ဘယ်လိုတင်ရမလဲ?'].map((text) => (
               <div key={text} className="landing-chat-bubble"><MessageCircle size={16}/>{text}</div>
             ))}
           </div>
@@ -105,7 +105,7 @@ export function StopSellingThroughChat() {
         <article className="landing-comparison-card landing-comparison-card-after">
           <span className="landing-comparison-label">MiniShop နဲ့</span>
           <div className="landing-journey-list">
-            {['ပစ္စည်းကိုယ်တိုင်ကြည့်', 'Cart ထဲထည့်', 'Checkout လုပ်', 'Order တင်'].map((text, index) => (
+            {['ပစ္စည်းနဲ့ ဈေးနှုန်းကို ကိုယ်တိုင် အေးဆေးကြည့်မယ်', 'လိုချင်တာ Cart ထဲ ထည့်မယ်', 'လိပ်စာရွေးပြီး KPay / Wave / COD နဲ့ ငွေရှင်းမယ်', 'Order တန်းကျပြီး စာရင်းထဲ အော်တိုရောက်မယ်'].map((text, index) => (
               <div key={text}><span>{index + 1}</span>{text}<Check size={17}/></div>
             ))}
           </div>
@@ -117,15 +117,15 @@ export function StopSellingThroughChat() {
 
 export function ThreeStepStoreCreation() {
   const steps = [
-    {number: '01', icon: PackageCheck, title: 'ပစ္စည်းတင်', body: 'ပုံ၊ ဈေးနှုန်းနဲ့ Product အချက်အလက်တွေ ထည့်ပါ။'},
-    {number: '02', icon: Palette, title: 'ဆိုင်ပြင်', body: 'ကိုယ့် Brand နဲ့ကိုက်တဲ့ Theme ကိုရွေးပြီး Store ကိုပြင်ပါ။'},
-    {number: '03', icon: Share2, title: 'Link Share', body: 'Store Link ကို Facebook, TikTok, Telegram မှာ မျှဝေပြီး စရောင်းပါ။'},
+    {number: '01', icon: PackageCheck, title: 'ပစ္စည်းတင်မယ်', body: 'ပုံရိုက်ထည့်၊ ဈေးနှုန်းနဲ့ ကိုယ့်ဆီမှာကျန်တဲ့ အရေအတွက် ထည့်လိုက်ရုံပဲ။'},
+    {number: '02', icon: Palette, title: 'Design Theme ရွေးမယ်', body: 'ကိုယ့် Brand နဲ့လိုက်မယ့် အရောင်နဲ့ ပုံစံကို 1-Click နဲ့ အလွယ်တကူ ပြောင်းမယ်။'},
+    {number: '03', icon: Share2, title: 'Link မျှဝေပြီး အော်ဒါစောင့်မယ်', body: 'ရလာတဲ့ ဆိုင် Link ကို Page Bio၊ TikTok Bio နဲ့ Chat အော်တိုမက်ဆေ့ခ်ျတွေမှာ ထည့်ထားလိုက်ပါ။'},
   ];
   return (
     <section className="landing-steps-section" aria-labelledby="steps-title">
       <div className="landing-section-head">
         <span className="landing-section-pill">3 STEPS</span>
-        <h2 id="steps-title">Store တစ်ခုစဖို့ ဒီလောက်ပဲလိုတယ်</h2>
+        <h2 id="steps-title">၃ ဆင့်တည်းနဲ့ ဆိုင်စဖွင့်လို့ရပြီ</h2>
       </div>
       <div className="landing-steps-grid">
         {steps.map(({number, icon: Icon, title, body}) => (
@@ -144,8 +144,8 @@ export function SellEverywhere() {
     <section className="landing-everywhere-section" aria-labelledby="everywhere-title">
       <div className="landing-everywhere-copy">
         <span className="landing-section-pill">ONE STORE. EVERYWHERE.</span>
-        <h2 id="everywhere-title">ဘယ် Channel ကနေရောင်းရောင်း Order ကတော့ တစ်နေရာထဲမှာ</h2>
-        <p>Facebook post, TikTok bio, Telegram channel ကနေ Customer ကို MiniShop ဆီ တိုက်ရိုက်ခေါ်လာပါ။</p>
+        <h2 id="everywhere-title">FB၊ TikTok၊ Telegram... ဘယ်ကပဲလာလာ Order တွေက တစ်နေရာတည်း စုပေးတယ်</h2>
+        <p>App တစ်ခုချင်းစီ လိုက်ဖွင့်ပြီး စာရင်းတွေလိုက်ကူးမနေပါနဲ့တော့။ ဘယ်နေရာကပဲ ဝယ်ဝယ် Dashboard တစ်ခုတည်းမှာ Order အကုန် စနစ်တကျ ရှိနေမယ်။</p>
       </div>
       <div className="landing-channel-flow" aria-label="social channels to MiniShop">
         <div className="landing-channel-list">
@@ -175,8 +175,8 @@ export function MyanmarCheckout() {
       </div>
       <div className="landing-checkout-copy">
         <span className="landing-section-pill">BUILT FOR MYANMAR</span>
-        <h2 id="checkout-title">Myanmar Seller တွေရဲ့ Checkout Flow ကို တိုက်ရိုက်ထည့်ထားတယ်</h2>
-        <p>Global ecommerce template ကို ပြန်ညှိထားတာမဟုတ်ဘဲ local selling flow ကို အဓိကထားတယ်။</p>
+        <h2 id="checkout-title">မြန်မာ ဝယ်သူတွေ ဈေးဝယ်နေကျ Flow အတိုင်း ကွက်တိ ချထားပေးတယ်</h2>
+        <p>နိုင်ငံခြား template တွေလို အဆင့်တွေမရှုပ်ဘူး။ မြန်မာပြည် အွန်လိုင်းဈေးဝယ်သူတွေ မျက်စိကျက်ပြီးသား ပုံစံအတိုင်း အလွယ်ဆုံး ဝယ်လို့ရအောင် လုပ်ထားပါတယ်။</p>
         <div className="landing-checkout-features">
           {checkoutFeatures.map(({icon: Icon, title, body}) => (
             <div key={title}><Icon size={20}/><span><strong>{title}</strong><small>{body}</small></span></div>
@@ -192,8 +192,8 @@ export function ThemeShowcase() {
     <section className="landing-themes-section" aria-labelledby="themes-title">
       <div className="landing-section-head">
         <span className="landing-section-pill">5 STORE THEMES</span>
-        <h2 id="themes-title">ဆိုင်တိုင်း ပုံစံတူနေစရာမလိုပါဘူး</h2>
-        <p>ကိုယ့် product category နဲ့ brand feeling ကိုက်တဲ့ Theme ကိုရွေးပြီး Store ကို ကိုယ့်ဆိုင်လိုမြင်အောင်ပြင်ပါ။</p>
+        <h2 id="themes-title">Designer ငှားစရာမလိုဘဲ ဆိုင်သပ်သပ်ရပ်ရပ် ဖြစ်သွားစေမယ့် Themes များ</h2>
+        <p>အဝတ်အထည်လား၊ အလှကုန်လား၊ ပစ္စည်းစုံလား — ကိုယ့် Brand နဲ့ ကွက်တိကျမယ့် Design ကို တစ်ချက်နှိပ်ရုံနဲ့ ပြောင်းလဲနိုင်ပါတယ်။</p>
       </div>
       <div className="landing-theme-strip">
         {themes.map((theme) => (
@@ -207,7 +207,7 @@ export function ThemeShowcase() {
           </article>
         ))}
       </div>
-      <Link className="landing-demo-cta landing-theme-demo" to="/demo">Live Demo ကြည့်မယ် <ArrowRight size={17}/></Link>
+      <Link className="landing-demo-cta landing-theme-demo" to="/demo">တကယ့် ဆိုင်နမူနာကို စမ်းကြည့်မယ် <ArrowRight size={17}/></Link>
     </section>
   );
 }
@@ -217,8 +217,8 @@ export function PricingSection() {
     <section className="landing-pricing-section" aria-labelledby="pricing-title">
       <div className="landing-section-head landing-pricing-head">
         <span className="landing-section-pill">SIMPLE PRICING</span>
-        <h2 id="pricing-title">ကိုယ့်ဆိုင်ရဲ့ Order Volume နဲ့ကိုက်တဲ့ Plan ကိုရွေးပါ</h2>
-        <p>Free Trial နဲ့စမ်းသုံးပြီးနောက် လိုအပ်သလို Starter သို့မဟုတ် Business ကိုရွေးနိုင်ပါတယ်။ Paid plan နှစ်ခုလုံးမှာ Extra Orders ကို ဝယ်ထားရင် balance မ expire ပါ။</p>
+        <h2 id="pricing-title">ကိုယ့်ရဲ့ အရောင်းပမာဏအလိုက် တန်တဲ့ Plan ကို ရွေးပါ</h2>
+        <p>စမ်းသုံးကြည့်ချင်ရင် Free Plan နဲ့ အခုပဲ စတင်လိုက်ပါ။ ကတ်နံပါတ်တွေ၊ ငွေကြိုပေးရတာတွေ လုံးဝမလိုပါဘူး။</p>
       </div>
       <div className="landing-pricing-grid">
         {pricingPlans.map((item) => (
