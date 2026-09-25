@@ -53,12 +53,12 @@ Status: FIXED.
 Affected: catalog list, order list, shipping list/mutations, billing usage/entitlement, order-pack list, seller application lookup, own-shop lookup, shop-settings read.
 Risk: raw Postgres/Supabase details could surface in seller UI; inconsistent error semantics made network/DB/internal errors indistinguishable from domain-safe messages.
 Remediation: route DB messages through `mapDbError` with context-specific fallbacks.
-Status: PARTIALLY FIXED in the audited high-value paths; storage upload/delete raw provider errors remain accepted debt because storage errors are not DB typed errors and need a separate storage error taxonomy.
+Status: FIXED for the audited database paths. Storage upload/delete provider errors are tracked separately as P2 debt because they need a storage-specific error taxonomy.
 
-### P1-03 — Shop settings plan fallback was fail-open relative to canonical domain truth
-Affected: `src/features/shop/api/settings.ts`
-Risk: nullable/missing plan values were projected as `starter`, contradicting the canonical fail-closed rule and potentially presenting higher capacity than the least-privileged tier.
-Remediation: fallback changed to `free_trial`.
+### P1-03 — Runtime plan projections could bypass canonical fail-closed normalization
+Affected: `src/features/shop/api/settings.ts`, `src/features/billing/api.ts`
+Risk: shop settings previously defaulted a null plan to `starter`; both settings and usage used TypeScript casts that allowed an unknown runtime string to bypass `normalizePlan()`.
+Remediation: both external DB plan values now pass through `normalizePlan()`, so null/malformed/unknown values resolve to `free_trial`.
 Status: FIXED.
 
 ### P1-04 — Test architecture overuses source/regex contracts
@@ -67,11 +67,11 @@ Risk: these tests prove implementation text exists, not runtime behavior.
 Remediation: retained existing tests but explicitly classify them as source contracts. New remediation test is behavioral for the pure error mapper. Critical runtime integration gaps are listed below.
 Status: OPEN (test-hardening follow-up).
 
-### P1-05 — Superadmin operational surface is high-privilege and lacks dedicated runtime behavior tests
+### P1-05 — Superadmin operational surface needed behavioral API coverage
 Affected: `api/_superadmin.ts`, `api/superadmin.ts`, SuperAdminDashboard.
-Risk: auth allow-list, service-role confinement, action validation and safe failure behavior are production-critical.
-Remediation: raw error leak fixed; dedicated injected-dependency API tests are still required.
-Status: OPEN.
+Risk: auth rejection, privileged action validation and error sanitization are production-critical.
+Remediation: `api/superadmin.ts` now exposes an injected-dependency handler factory without changing its default runtime export; behavioral tests cover auth rejection, unknown DB error sanitization and typed DB error mapping. The real Supabase Auth allow-list/service-role integration still requires staging integration coverage.
+Status: FIXED at handler level; staging auth/service-role integration remains follow-up.
 
 ### P2-01 — Module-global storefront tenant context is intentionally mutable
 Affected: `src/features/tenancy/shopContext.ts`.
@@ -99,7 +99,7 @@ Status: ACCEPTED DEBT. Prioritize runtime schemas for privileged and public API 
 - No confirmed browser service-role import.
 - No confirmed production storefront -> demo fallback on tenant routes.
 - No confirmed seller Admin -> demo backend fallback.
-- Canonical fail-closed plan rule was violated in shop-settings projection and is fixed in this branch.
+- Canonical fail-closed plan rule was violated in shop-settings/usage runtime projections and is fixed in this branch.
 - Error-boundary rule was violated by several data-access paths and is remediated for the inspected high-value DB paths.
 
 ## Critical flows and coverage quality
@@ -110,11 +110,12 @@ Behavioral coverage present:
 - checkout input normalization
 - checkout handler POST behavior with injected RPC
 - selected pure domain helpers
+- superadmin handler auth rejection and safe error mapping
 
 Source/regex-only coverage exists for many gateway and architecture invariants; this is not runtime proof.
 
 Missing/high-priority runtime coverage:
-1. Superadmin authentication/authorization/action behavior.
+1. Superadmin real Supabase Auth allow-list + service-role integration against staging.
 2. Seller RLS tenant-isolation integration against a disposable Supabase/staging database.
 3. Real database transaction tests for place_order concurrency/idempotency/stock/entitlement together.
 4. Product-cap concurrent create integration test against Postgres.
