@@ -22,6 +22,7 @@ import type {Product} from '@/domain/product';
 import {CartProvider, useCart} from '@/features/cart/state';
 import {setShopSlug} from '@/features/tenancy/shopContext';
 import {
+  FURNITURE_BEST_SELLING_IDS,
   FURNITURE_CATEGORIES,
   FURNITURE_FEATURED_IDS,
   FURNITURE_PRODUCTS,
@@ -443,6 +444,10 @@ function FurnitureProductDetail() {
   const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
   const oldPrice = product.isPromotion && product.promoPrice ? product.price : null;
   const images = product.images?.length ? product.images : product.image ? [product.image] : [];
+  const bestSelling = FURNITURE_BEST_SELLING_IDS
+    .filter((productId) => productId !== product.id)
+    .map((productId) => FURNITURE_PRODUCTS.find((item) => item.id === productId))
+    .filter((item): item is Product => Boolean(item));
 
   const addCurrent = () => add(product, qty);
 
@@ -506,6 +511,39 @@ function FurnitureProductDetail() {
             <div className="mt-5 flex items-center gap-2 text-xs text-[#6f706b]"><Truck className="h-4 w-4 text-[#7d8874]" /> Yangon delivery from 15,000 MMK · free over 1,500,000 MMK</div>
           </div>
         </div>
+
+        <section className="mt-10 border-t border-[#e7dfd6] pt-7">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#9a6239]">Popular Picks</p>
+              <h2 className="mt-1 text-[25px] font-black tracking-[-0.04em]">Best Selling</h2>
+            </div>
+            <button type="button" onClick={() => nav('/furniture-demo/products')} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#6f706b] hover:text-[#9a6239]">
+              See all <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
+            {bestSelling.map((item) => {
+              const itemPrice = item.isPromotion && item.promoPrice ? item.promoPrice : item.price;
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => nav(`/furniture-demo/products/${encodeURIComponent(item.id)}`)}
+                  className="w-[70%] max-w-[260px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-[#ece5dd] bg-[#fffdf9] text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a66b3f] focus-visible:ring-offset-2 sm:w-[240px]">
+                  <div className="aspect-[1.18] overflow-hidden bg-[#eee8e0]">
+                    {item.image && <img src={item.image} alt={item.name} loading="lazy" className="h-full w-full object-cover transition duration-300 hover:scale-[1.025]" />}
+                  </div>
+                  <div className="p-3.5">
+                    <p className="line-clamp-1 text-sm font-bold">{item.name}</p>
+                    <p className="mt-1 text-[11px] text-[#77756f]">{item.category}</p>
+                    <p className="mt-2 text-sm font-black">{formatMMK(itemPrice)}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       </main>
     </FurnitureShell>
   );
