@@ -50,10 +50,12 @@ create policy products_public_read on public.products
     )
   );
 
--- Ninja Van published rate rows are public storefront configuration too.
+-- Ninja Van rate rows contain no tenant-owned seller data. Keep them readable
+-- by anon + authenticated because seller-side delivery configuration may query
+-- the shared published rate table directly.
 drop policy if exists ninjavan_rates_public_read on public.ninjavan_rates;
 create policy ninjavan_rates_public_read on public.ninjavan_rates
-  for select to anon
+  for select to anon, authenticated
   using (is_active = true);
 
 -- ---- 2. Branding Storage is Core on every plan ------------------------------
