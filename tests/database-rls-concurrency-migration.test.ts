@@ -7,14 +7,21 @@ const sql = fs.readFileSync(
   'utf8',
 );
 
-test('public storefront table policies apply only to anon, not authenticated sellers', () => {
+test('public storefront tenant policies apply only to anon', () => {
   for (const policy of ['shops_public_read', 'payacc_public_read', 'ship_public_read', 'products_public_read']) {
     assert.match(
       sql,
-      new RegExp(`create policy ${policy}[\\s\\S]*?for select to anon`, 'i'),
+      new RegExp(`create policy ${policy}[\\s\\S]*?for select to anon(?:\\s|\\n)`, 'i'),
       `${policy} must target anon only`,
     );
   }
+});
+
+test('shared Ninja Van rates remain readable by anon and authenticated roles', () => {
+  assert.match(
+    sql,
+    /create policy ninjavan_rates_public_read[\s\S]*for select to anon, authenticated/i,
+  );
 });
 
 test('branding storage write policies remain owner-path scoped without a Business plan gate', () => {
@@ -36,16 +43,22 @@ test('Extra Order purchases gain normalized full transaction identity with uniqu
     sql,
     /create unique index if not exists order_pack_purchases_transaction_id_uidx[\s\S]*btrim\(transaction_id\)[\s\S]*where transaction_id is not null/i,
   );
+  assert.match(sql, /order_pack_purchases_approved_transaction_required/);
 });
 
 test('pack credit requires payment identity and preserves retry idempotency', () => {
-  const start = sql.indexOf('create or replace function public.admin_credit_order_pack');
+  const start = sql.indexOf('create function public.admin_credit_order_pack');
   assert.ok(start >= 0);
   const block = sql.slice(start);
   assert.match(block, /transaction_id_required/);
   assert.match(block, /duplicate_transaction_id/);
   assert.match(block, /for update/);
   assert.match(block, /on conflict \(shop_id, source_type, source_id\)/);
+  assert.match(block, /grant execute on function public\.admin_credit_order_pack\(uuid, text\)[\s\S]*to service_role/);
+});
+
+test('migration removes the legacy one-argument pack credit RPC', () => {
+  assert.match(sql, /drop function if exists public\.admin_credit_order_pack\(uuid\)/i);
 });
 
 test('migration does not apply destructive data operations', () => {
@@ -53,7 +66,6 @@ test('migration does not apply destructive data operations', () => {
   assert.doesNotMatch(sql, /\bdrop table\b/i);
   assert.doesNotMatch(sql, /\bdelete from\b/i);
 });
-
 
 test('superadmin credit-pack action requires and forwards a full transaction id', () => {
   const source = fs.readFileSync('api/superadmin.ts', 'utf8');
