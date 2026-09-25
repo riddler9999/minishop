@@ -69,7 +69,8 @@ test('migration does not apply destructive data operations', () => {
 
 test('superadmin credit-pack action requires and forwards a full transaction id', () => {
   const source = fs.readFileSync('api/superadmin.ts', 'utf8');
-  assert.match(source, /const transactionId = clean\(body\.transactionId, 160\) \|\| null/);
+  assert.match(source, /const transactionIdInput = String\(body\.transactionId \?\? ''\)\.trim\(\)/);
+  assert.match(source, /transactionIdInput\.length <= 160/);
   assert.match(source, /Missing purchase or transaction id/);
   assert.match(source, /p_transaction_id: transactionId/);
 });
