@@ -6,8 +6,9 @@
 import {requireSupabase} from '@/core/supabase/client';
 import {mapDbError} from '@/domain/dbError';
 import type {Json, TablesUpdate} from '@/core/supabase/database.types';
-import type {ShopPlan, ShopSettings, ShopSettingsPatch} from '@/domain/shop';
+import type {ShopSettings, ShopSettingsPatch} from '@/domain/shop';
 import {normalizeTheme, type StorefrontTheme} from '@/domain/theme';
+import {normalizePlan} from '@/domain/plan';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 
 // Raised when the seller edits Store Design before migration 0009 has been
@@ -40,7 +41,7 @@ export const shopSettingsApi = {
         phone: data.phone,
         logoUrl: data.logo_url,
         defaultDeliveryFee: data.default_delivery_fee,
-        plan: (data.plan as ShopPlan) ?? 'free_trial',
+        plan: normalizePlan(data.plan),
         isActive: data.is_active,
       },
     };
