@@ -90,7 +90,8 @@ async function createSeller(label: string): Promise<Seller> {
 
 async function createShop(ownerId: string, plan: Plan, label: string) {
   const id = randomUUID();
-  const slug = `runtime-${label}-${randomUUID().slice(0, 8)}`;
+  const safeLabel = label.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 20).replace(/-+$/g, '') || 'shop';
+  const slug = `rt-${safeLabel}-${randomUUID().slice(0, 8)}`;
   const result = await service.from('shops').insert({
     id,
     owner_id: ownerId,
