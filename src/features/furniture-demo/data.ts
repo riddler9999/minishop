@@ -224,7 +224,7 @@ export const FURNITURE_PRODUCTS: Product[] = [
   },
 ];
 
-export const FURNITURE_FEATURED_IDS = ['furniture-1', 'furniture-2', 'furniture-3', 'furniture-6'];
+export const FURNITURE_FEATURED_IDS = ['furniture-1', 'furniture-2', 'furniture-3', 'furniture-4', 'furniture-5', 'furniture-6'];
 
 export function furnitureProduct(id: string | undefined): Product | null {
   if (!id) return null;
