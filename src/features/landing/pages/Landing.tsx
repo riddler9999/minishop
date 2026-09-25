@@ -1,6 +1,6 @@
 import HeroSection from '../components/HeroSection';
 import {
-  DashboardPreview,
+  DashboardFinalCTA,
   MyanmarCheckout,
   PricingSection,
   SellEverywhere,
@@ -23,7 +23,7 @@ export default function Landing() {
         <MyanmarCheckout />
         <ThemeShowcase />
         <PricingSection />
-        <DashboardPreview />
+        <DashboardFinalCTA />
         <footer className="landing-footer">
           <strong>MiniShop</strong>
           <span>Myanmar Online Business ကို ပိုလွယ်ကူအောင် ♡</span>
