@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
     const [{data: shops, error: se}, {data: applications, error: ae}, {data: packs, error: pe}, {data: entitlements, error: ee}] = await Promise.all([
       sb.from('shops').select('id,name,slug,owner_id,plan,is_active,created_at,updated_at').order('created_at', {ascending:false}).limit(500),
       sb.from('shop_applications').select('owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note').order('created_at', {ascending:false}).limit(200),
-      sb.from('order_pack_purchases').select('id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at').order('created_at', {ascending:false}).limit(200),
+      sb.from('order_pack_purchases').select('id,shop_id,qty,amount,payment_method,payment_ref_tail,transaction_id,screenshot_path,status,created_at,reviewed_at').order('created_at', {ascending:false}).limit(200),
       sb.from('shop_entitlements').select('shop_id,plan,active,monthly_quota,monthly_used,purchased_balance,cycle_end,pending_plan,updated_at').limit(500),
     ]);
     if (se || ae || pe || ee) return sendJson(res, 502, {error: 'Could not load platform data'});
@@ -38,6 +38,7 @@ export default async function handler(req: any, res: any) {
   if (!ACTIONS.has(action)) return sendJson(res, 400, {error: 'Invalid action'});
   const shopId = clean(body.shopId, 80);
   const paymentRef = clean(body.paymentRef, 120) || null;
+  const transactionId = clean(body.transactionId, 160) || null;
 
   let error: any = null;
   if (action === 'approve-application' || action === 'reject-application') {
@@ -64,8 +65,8 @@ export default async function handler(req: any, res: any) {
     ({error} = await sb.rpc('admin_cancel_subscription', {p_shop_id: shopId}));
   } else if (action === 'credit-pack') {
     const purchaseId = clean(body.purchaseId, 80);
-    if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
-    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId}));
+    if (!purchaseId || !transactionId) return sendJson(res, 400, {error:'Missing purchase or transaction id'});
+    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId, p_transaction_id: transactionId}));
   } else if (action === 'reject-pack') {
     const purchaseId = clean(body.purchaseId, 80);
     if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
