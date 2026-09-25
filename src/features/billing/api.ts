@@ -5,7 +5,7 @@
 // plan.tsx; this module only reports numbers.
 
 import {requireSupabase} from '@/core/supabase/client';
-import type {ShopPlan, ShopUsage, UsageTier} from '@/domain/shop';
+import type {ShopUsage, UsageTier} from '@/domain/shop';
 import {normalizePlan} from '@/domain/plan';
 import {resolveEntitlementView, type EntitlementState, type EntitlementView} from '@/domain/entitlement';
 import {mapDbError} from '@/domain/dbError';
@@ -33,7 +33,7 @@ export const billingApi = {
     return {
       usage: {
         shopId: r.shop_id,
-        plan: (r.plan as ShopPlan) ?? 'free_trial',
+        plan: normalizePlan(r.plan),
         month: r.month,
         billableOrders: r.billable_orders,
         tier: r.tier as UsageTier,
