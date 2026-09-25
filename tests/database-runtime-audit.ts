@@ -647,6 +647,12 @@ async function main() {
       const seller = await createSeller(`storage-${plan}`);
       const shop = await createShop(seller.id, plan, `storage-${plan}`);
       storageFixtures.push({ seller, shop });
+      const selfVisible = await seller.client.from('shops').select('id,owner_id,plan').eq('id', shop.id).single();
+      assert.equal(selfVisible.error, null, `${plan} owner cannot read own shop: ${errorText(selfVisible.error)}`);
+      assert.equal(selfVisible.data?.owner_id, seller.id);
+      const session = await seller.client.auth.getSession();
+      assert.equal(session.error, null, `${plan} session lookup failed: ${session.error?.message}`);
+      assert.ok(session.data.session?.access_token, `${plan} authenticated session missing`);
       const upload = await seller.client.storage.from('shop-logos').upload(
         `${shop.id}/logo-${plan}.png`,
         new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' }),
