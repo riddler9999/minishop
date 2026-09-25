@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createSuperadminHandler} from '../api/superadmin.ts';
+import {buildCreditPackRequest, ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} from '../src/features/superadmin/orderPackApproval.ts';
 
 function makeResponse() {
   let body = '';
@@ -86,4 +87,41 @@ test('GET pack projection stays pre-0023 compatible and does not request transac
   assert.equal(res.statusCode, 200);
   assert.equal(selected.length, 1);
   assert.doesNotMatch(selected[0], /transaction_id/);
+});
+
+
+test('frontend approval request rejects missing or whitespace-only transaction id', () => {
+  assert.equal(buildCreditPackRequest('purchase-1', ''), null);
+  assert.equal(buildCreditPackRequest('purchase-1', '   '), null);
+});
+
+test('frontend approval request includes purchaseId and trimmed transactionId', () => {
+  assert.deepEqual(buildCreditPackRequest(' purchase-1 ', '  TX-778899  '), {
+    action: 'credit-pack',
+    purchaseId: 'purchase-1',
+    transactionId: 'TX-778899',
+  });
+});
+
+test('frontend approval request rejects transaction id above max length', () => {
+  assert.equal(
+    buildCreditPackRequest('purchase-1', 'X'.repeat(ORDER_PACK_TRANSACTION_ID_MAX_LENGTH + 1)),
+    null,
+  );
+});
+
+test('credit-pack rejects overlong transactionId before RPC instead of truncating identity', async () => {
+  const {admin, rpcCalls} = makeAdmin();
+  const handler = createSuperadminHandler({requireAccess: async () => ({admin, user:{}} as any)} as any);
+  const res:any = makeResponse();
+  await handler({
+    method:'POST',
+    body:{
+      action:'credit-pack',
+      purchaseId:'purchase-1',
+      transactionId:'X'.repeat(ORDER_PACK_TRANSACTION_ID_MAX_LENGTH + 1),
+    },
+  }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(rpcCalls.length, 0);
 });
