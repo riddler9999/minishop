@@ -46,7 +46,9 @@ export function createSuperadminHandler(
   if (!ACTIONS.has(action)) return sendJson(res, 400, {error: 'Invalid action'});
   const shopId = clean(body.shopId, 80);
   const paymentRef = clean(body.paymentRef, 120) || null;
-  const transactionId = clean(body.transactionId, 160) || null;
+  const transactionIdInput = String(body.transactionId ?? '').trim();
+  const transactionId =
+    transactionIdInput && transactionIdInput.length <= 160 ? transactionIdInput : null;
 
   let error: any = null;
   if (action === 'approve-application' || action === 'reject-application') {
