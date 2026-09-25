@@ -4,7 +4,7 @@ Updated: 2026-09-25
 
 ## P1 follow-up debt
 
-1. Add behavioral superadmin API tests with injected auth/admin clients covering unauthorized, forbidden, invalid action, typed RPC failure sanitization and success.
+1. Add staging integration tests for real superadmin Supabase Auth allow-list + service-role boundary.
 2. Add disposable Supabase/Postgres integration tests for tenant isolation and RLS.
 3. Add concurrent `place_order` tests proving idempotency, stock decrement and entitlement consumption under retries/races.
 4. Add concurrent product-create tests proving product-cap serialization.
