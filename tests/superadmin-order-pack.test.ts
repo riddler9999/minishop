@@ -65,7 +65,7 @@ test('credit-pack maps unknown DB errors to safe domain fallback', async () => {
 
 test('GET pack projection stays pre-0023 compatible and does not request transaction_id', async () => {
   const selected:string[] = [];
-  const query = (selection:string) => ({
+  const query = () => ({
     order(){ return this; },
     limit: async () => ({data:[], error:null}),
   });
@@ -74,7 +74,7 @@ test('GET pack projection stays pre-0023 compatible and does not request transac
       return {
         select(selection:string) {
           if (table === 'order_pack_purchases') selected.push(selection);
-          return query(selection);
+          return query();
         },
       };
     },
