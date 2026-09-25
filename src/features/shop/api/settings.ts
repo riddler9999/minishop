@@ -31,7 +31,7 @@ export const shopSettingsApi = {
       .select('id, slug, name, phone, logo_url, default_delivery_fee, plan, is_active')
       .eq('id', shopId)
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ဆိုင် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ဆိုင် ရှာမတွေ့ပါ။'));
     return {
       shop: {
         id: data.id,
@@ -40,7 +40,7 @@ export const shopSettingsApi = {
         phone: data.phone,
         logoUrl: data.logo_url,
         defaultDeliveryFee: data.default_delivery_fee,
-        plan: (data.plan as ShopPlan) ?? 'starter',
+        plan: (data.plan as ShopPlan) ?? 'free_trial',
         isActive: data.is_active,
       },
     };
