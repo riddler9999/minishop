@@ -1,0 +1,66 @@
+import type {CartItem} from '@/features/cart/state';
+
+const ORDER_STORAGE_KEY = 'minishop:mobile-demo:orders:v1';
+
+export interface MobileDemoOrder {
+  orderNo: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  note: string;
+  paymentMethod: 'cod' | 'kpay';
+  items: CartItem[];
+  subtotal: number;
+  shippingFee: number;
+  total: number;
+  createdAt: string;
+}
+
+function readOrders(): MobileDemoOrder[] {
+  try {
+    const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as MobileDemoOrder[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeOrders(orders: MobileDemoOrder[]): void {
+  try {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
+  } catch {
+    // Demo-only persistence. The confirmation route still receives the order in navigation state.
+  }
+}
+
+export function createMobileDemoOrder(
+  input: Omit<MobileDemoOrder, 'orderNo' | 'createdAt' | 'shippingFee' | 'total'>,
+): MobileDemoOrder {
+  const shippingFee = input.subtotal >= 2_000_000 ? 0 : 5_000;
+  const order: MobileDemoOrder = {
+    ...input,
+    orderNo: `MO-${Date.now().toString().slice(-8)}`,
+    createdAt: new Date().toISOString(),
+    shippingFee,
+    total: input.subtotal + shippingFee,
+  };
+  writeOrders([order, ...readOrders()].slice(0, 20));
+  return order;
+}
+
+export function findMobileDemoOrder(orderNo: string, phone: string): MobileDemoOrder | null {
+  const normalizedOrder = orderNo.trim().toUpperCase();
+  const normalizedPhone = phone.replace(/\s+/g, '');
+  return (
+    readOrders().find(
+      (order) =>
+        order.orderNo.toUpperCase() === normalizedOrder &&
+        order.phone.replace(/\s+/g, '') === normalizedPhone,
+    ) ?? null
+  );
+}
+
+export function getMobileDemoOrder(orderNo: string | undefined): MobileDemoOrder | null {
+  if (!orderNo) return null;
+  return readOrders().find((order) => order.orderNo === orderNo) ?? null;
+}
