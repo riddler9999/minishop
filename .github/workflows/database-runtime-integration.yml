@@ -57,6 +57,11 @@ jobs:
       - name: Replay full migration chain through 0023
         run: supabase db reset
 
+      - name: Inspect Storage RLS runtime state
+        run: |
+          docker exec supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select policyname, permissive, roles, cmd, qual, with_check from pg_policies where schemaname='storage' and tablename='objects' order by policyname;"
+          docker exec supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select id,name,public,file_size_limit,allowed_mime_types from storage.buckets order by id;"
+
       - name: Run behavioral database audit
         shell: bash
         run: |
@@ -69,9 +74,10 @@ jobs:
           export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY}"
           npm run test:database-runtime
 
-      - name: Assert no Production identifiers in runtime infrastructure
+      - name: Assert no hosted Supabase credentials or URLs in runtime infrastructure
+        if: always()
         run: |
-          ! grep -R -n -E 'fsxdnmnycizjkgstokze|db\.fsxdnmnycizjkgstokze\.supabase\.co|https://fsxdnmnycizjkgstokze\.supabase\.co' \
+          ! grep -R -n -E 'https://[a-z0-9-]+\.supabase\.co|db\.[a-z0-9-]+\.supabase\.co|eyJ[a-zA-Z0-9_-]{20,}\.' \
             .github/workflows/database-runtime-integration.yml tests/database-runtime-audit.ts
 
       - name: Stop disposable Supabase
