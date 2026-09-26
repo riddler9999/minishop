@@ -109,12 +109,18 @@ as $
     select coalesce(p_theme, '{}'::jsonb) as t
   ),
   preset as (
-    select case coalesce(t->>'presetId', 'clean-minimal')
-      when 'soft-elegant' then 'soft-elegant'
-      when 'dark-modern' then 'dark-modern'
+    select case coalesce(t->>'presetId', 'soft-elegant')
+      when 'clean-minimal' then 'clean-minimal'
       when 'street-bold' then 'street-bold'
-      when 'warm-boutique' then 'warm-boutique'
-      else 'clean-minimal'
+      when 'soft-elegant' then 'soft-elegant'
+      when 'grid-catalog' then 'grid-catalog'
+      when 'dark-modern' then 'dark-modern'
+      when 'minimal' then 'clean-minimal'
+      when 'fashion' then 'soft-elegant'
+      when 'dark-luxury' then 'dark-modern'
+      when 'fresh-market' then 'grid-catalog'
+      when 'modern-shop' then 'street-bold'
+      else 'soft-elegant'
     end as theme_id,
     t
     from legacy
@@ -220,8 +226,8 @@ insert into public.store_designs (
 )
 select
   s.id,
-  coalesce(s.theme, '{}'::jsonb),
-  coalesce(s.theme, '{}'::jsonb),
+  store_design_private.legacy_theme_to_store_design(s.theme),
+  store_design_private.legacy_theme_to_store_design(s.theme),
   null,
   1,
   1,
@@ -249,8 +255,8 @@ begin
     published_at
   ) values (
     new.id,
-    coalesce(new.theme, '{}'::jsonb),
-    coalesce(new.theme, '{}'::jsonb),
+    store_design_private.legacy_theme_to_store_design(new.theme),
+    store_design_private.legacy_theme_to_store_design(new.theme),
     null,
     1,
     1,
