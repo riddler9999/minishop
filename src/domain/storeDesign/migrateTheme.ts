@@ -25,7 +25,9 @@ function copyCompatibleSettings(target: StoreSection, source: StoreSection): Sto
   const targetSettings = next.settings as unknown as Record<string, unknown>;
   const sourceSettings = source.settings as unknown as Record<string, unknown>;
   for (const field of fields) {
-    if (Object.prototype.hasOwnProperty.call(sourceSettings, field)) targetSettings[field] = structuredClone(sourceSettings[field]);
+    if (Object.prototype.hasOwnProperty.call(sourceSettings, field)) {
+      targetSettings[field] = structuredClone(sourceSettings[field]);
+    }
   }
   return next;
 }
@@ -35,10 +37,26 @@ export function createThemeDraft(current: StoreDesignDocument, targetThemeId: Th
   const target = createDefaultStoreDesign(targetThemeId);
 
   for (const templateName of ['home', 'collection', 'product'] as const) {
+    const sourceSections = source.templates[templateName].sections;
+    const consumedByType = new Map<StoreSectionType, number>();
+
     target.templates[templateName].sections = target.templates[templateName].sections.map((targetSection) => {
-      const sourceSection = source.templates[templateName].sections.find((section) => section.type === targetSection.type);
-      return sourceSection ? copyCompatibleSettings(targetSection, sourceSection) : targetSection;
+      const consumed = consumedByType.get(targetSection.type) ?? 0;
+      const matching = sourceSections.filter((section) => section.type === targetSection.type);
+      const sourceSection = matching[consumed];
+      if (!sourceSection) return targetSection;
+      consumedByType.set(targetSection.type, consumed + 1);
+      return copyCompatibleSettings(targetSection, sourceSection);
     });
+
+    for (const sourceSection of sourceSections) {
+      const matching = sourceSections.filter((section) => section.type === sourceSection.type);
+      const sourceIndex = matching.findIndex((section) => section.id === sourceSection.id);
+      const consumed = consumedByType.get(sourceSection.type) ?? 0;
+      if (sourceIndex >= consumed) {
+        target.templates[templateName].sections.push(structuredClone(sourceSection));
+      }
+    }
   }
 
   // CTA language is seller-authored semantic content. Visual values come from target defaults.
