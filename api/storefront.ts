@@ -1,6 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
+import {loadBuyerStoreDesign} from './_store-design.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -42,15 +43,32 @@ export default async function handler(req: any, res: any) {
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
   if (action === 'shop') {
-    // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
-    // core shop payload can never break if the column isn't there yet: on any
-    // error (e.g. column missing before 0009 is applied) theme resolves to null
-    // and the storefront falls back to its defaults (domain/theme.ts). The blob
-    // is passed through raw — the browser re-validates it via normalizeTheme().
+    // Preserve the legacy public shop payload until the shared Store Design
+    // renderer cutover. Task #108 adds a separate Published-only read path
+    // rather than changing what existing storefront pages interpret as theme.
     let theme: unknown = null;
     const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
     if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
-    return sendJson(res, 200, {shop: {id: shop.id, name: shop.name, logoUrl: media(shop.logo_url), defaultDeliveryFee: shop.default_delivery_fee, theme}}, true);
+    return sendJson(res, 200, {
+      shop: {
+        id: shop.id,
+        name: shop.name,
+        logoUrl: media(shop.logo_url),
+        defaultDeliveryFee: shop.default_delivery_fee,
+        theme,
+      },
+    }, true);
+  }
+  if (action === 'store-design') {
+    try {
+      const storeDesign = await loadBuyerStoreDesign({
+        loadPublished: () => sb.rpc('load_published_store_design', {p_shop_slug: slug}),
+        loadLegacyTheme: () => sb.from('shops').select('theme').eq('id', shop.id).maybeSingle(),
+      });
+      return sendJson(res, 200, {storeDesign}, true);
+    } catch {
+      return sendJson(res, 502, {error: 'Store Design unavailable'});
+    }
   }
   if (action === 'categories') {
     const {data, error} = await sb.from('products').select('category').eq('shop_id', shop.id).eq('status', 'active').not('category', 'is', null);

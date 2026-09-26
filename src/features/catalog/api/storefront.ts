@@ -1,5 +1,7 @@
 // ---- CATALOG: buyer-facing queries ------------------------------------------
 import type {Product} from '@/domain/product';
+import type {StoreDesignDocument} from '@/domain/storeDesign';
+import {normalizeStoreDesign} from '@/domain/storeDesign';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 
 async function request(params: Record<string, string | number | boolean | undefined>) {
@@ -21,5 +23,9 @@ export const catalogStorefrontApi = {
   },
   async categories(): Promise<{categories: string[]}> {
     return request({action: 'categories'}) as Promise<{categories: string[]}>;
+  },
+  async loadPublishedStoreDesign(): Promise<StoreDesignDocument> {
+    const response = await request({action: 'store-design'}) as {storeDesign?: unknown};
+    return normalizeStoreDesign(response.storeDesign);
   },
 };
