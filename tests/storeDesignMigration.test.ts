@@ -17,7 +17,8 @@ describe('Store Design lifecycle migration contract', () => {
     assert.match(sql, /published_revision\s+bigint\s+not null\s+default 1/i);
 
     assert.doesNotMatch(sql, /drop\s+column\s+(if\s+exists\s+)?theme/i);
-    assert.match(sql, /insert into public\.store_designs[\s\S]*select[\s\S]*s\.theme/i);
+    assert.match(sql, /create or replace function store_design_private\.legacy_theme_to_store_design/i);
+    assert.match(sql, /insert into public\.store_designs[\s\S]*store_design_private\.legacy_theme_to_store_design\(s\.theme\)/i);
     assert.match(sql, /on conflict \(shop_id\) do nothing/i);
   });
 
