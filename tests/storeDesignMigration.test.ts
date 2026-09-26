@@ -49,10 +49,10 @@ describe('Store Design lifecycle migration contract', () => {
   it('initializes future shops without overwriting legacy theme', async () => {
     const sql = await readFile(migrationPath, 'utf8');
 
-    assert.match(sql, /create or replace function public\.init_store_design_lifecycle\(\)/i);
+    assert.match(sql, /create or replace function store_design_private\.init_store_design_lifecycle\(\)/i);
     assert.match(sql, /new\.theme/i);
     assert.match(sql, /create trigger init_store_design_lifecycle_after_shop/i);
     assert.match(sql, /after insert on public\.shops/i);
-    assert.match(sql, /revoke all on function public\.init_store_design_lifecycle\(\)/i);
+    assert.match(sql, /revoke all on function store_design_private\.init_store_design_lifecycle\(\)/i);
   });
 });
