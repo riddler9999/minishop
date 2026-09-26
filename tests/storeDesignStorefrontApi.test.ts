@@ -1,31 +1,63 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {readFile} from 'node:fs/promises';
-
-const gatewayPath = new URL('../api/storefront.ts', import.meta.url);
+import {loadBuyerStoreDesign} from '../api/_store-design.ts';
 
 describe('Published-only buyer Store Design read path', () => {
-  it('reads Published through the dedicated buyer RPC and never exposes Draft or Previous Published', async () => {
-    const source = await readFile(gatewayPath, 'utf8');
+  it('returns Published and does not touch legacy theme when lifecycle data exists', async () => {
+    const published = {schemaVersion: 1, themeId: 'dark-modern'};
+    let legacyReads = 0;
 
-    assert.match(source, /load_published_store_design/);
-    assert.doesNotMatch(source, /draft_document/);
-    assert.doesNotMatch(source, /previous_published_document/);
+    const result = await loadBuyerStoreDesign({
+      loadPublished: async () => ({data: {document: published}, error: null}),
+      loadLegacyTheme: async () => {
+        legacyReads += 1;
+        return {data: {theme: {presetId: 'minimal'}}, error: null};
+      },
+    });
+
+    assert.deepEqual(result, published);
+    assert.equal(legacyReads, 0);
   });
 
-  it('keeps active-shop tenant lookup before resolving Store Design', async () => {
-    const source = await readFile(gatewayPath, 'utf8');
-    const activeShopLookup = source.indexOf(".eq('is_active', true)");
-    const publishedLookup = source.indexOf('load_published_store_design');
+  it('falls back to legacy theme only when the lifecycle RPC succeeds without a document', async () => {
+    const legacy = {presetId: 'fashion'};
+    let legacyReads = 0;
 
-    assert.ok(activeShopLookup >= 0);
-    assert.ok(publishedLookup > activeShopLookup);
+    const result = await loadBuyerStoreDesign({
+      loadPublished: async () => ({data: null, error: null}),
+      loadLegacyTheme: async () => {
+        legacyReads += 1;
+        return {data: {theme: legacy}, error: null};
+      },
+    });
+
+    assert.deepEqual(result, legacy);
+    assert.equal(legacyReads, 1);
   });
 
-  it('keeps transitional legacy shops.theme fallback when no lifecycle document is returned', async () => {
-    const source = await readFile(gatewayPath, 'utf8');
+  it('does not silently fall back when the Published RPC fails', async () => {
+    let legacyReads = 0;
 
-    assert.match(source, /select\('theme'\)/);
-    assert.match(source, /published.*theme|theme.*published/is);
+    await assert.rejects(
+      loadBuyerStoreDesign({
+        loadPublished: async () => ({data: null, error: {message: 'database unavailable'}}),
+        loadLegacyTheme: async () => {
+          legacyReads += 1;
+          return {data: {theme: {presetId: 'fashion'}}, error: null};
+        },
+      }),
+      /Published Store Design unavailable/,
+    );
+
+    assert.equal(legacyReads, 0);
+  });
+
+  it('preserves the existing fail-safe default path when the legacy fallback query fails', async () => {
+    const result = await loadBuyerStoreDesign({
+      loadPublished: async () => ({data: null, error: null}),
+      loadLegacyTheme: async () => ({data: null, error: {message: 'legacy column unavailable'}}),
+    });
+
+    assert.equal(result, null);
   });
 });
