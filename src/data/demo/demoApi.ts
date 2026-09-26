@@ -9,18 +9,74 @@
 import type {AdminOrder, OrderResult, TrackedOrder} from '@/domain/order';
 import type {Product, ProductPatch} from '@/domain/product';
 import type {MerchantAccount} from '@/domain/shop';
+import {createDefaultStoreDesign, normalizeStoreDesign, type StoreDesignDocument} from '@/domain/storeDesign';
+import {StoreDesignConflictError} from '@/features/shop/api/storeDesign';
 
 // Loaded lazily to avoid a static import cycle with data/products.ts.
 import {DEMO_MERCHANT_ACCOUNTS, DEMO_PRODUCTS, demoCategories} from '@/data/demo/fixtures';
 
 const ORDERS_KEY = 'demo_store_orders_v1';
 const OVERRIDES_KEY = 'demo_store_product_overrides_v1';
+const STORE_DESIGN_KEY = 'demo_store_design_lifecycle_v1';
 
 // Simulate network latency so skeleton loaders are visible (nicer demo feel).
 const delay = (ms = 260) => new Promise((r) => setTimeout(r, ms));
 
 function unit(p: Product): number {
   return p.isPromotion && p.promoPrice ? p.promoPrice : p.price;
+}
+
+
+type DemoStoreDesignLifecycle = {
+  draft_document: StoreDesignDocument;
+  published_document: StoreDesignDocument;
+  previous_published_document: StoreDesignDocument | null;
+  draft_revision: number;
+  published_revision: number;
+  updated_at: string | null;
+  published_at: string | null;
+};
+
+function defaultStoreDesignLifecycle(): DemoStoreDesignLifecycle {
+  const document = createDefaultStoreDesign('soft-elegant');
+  return {
+    draft_document: document,
+    published_document: document,
+    previous_published_document: null,
+    draft_revision: 1,
+    published_revision: 1,
+    updated_at: null,
+    published_at: null,
+  };
+}
+
+function loadStoreDesignLifecycle(): DemoStoreDesignLifecycle {
+  try {
+    const raw = localStorage.getItem(STORE_DESIGN_KEY);
+    if (!raw) return defaultStoreDesignLifecycle();
+    const value = JSON.parse(raw) as Partial<DemoStoreDesignLifecycle>;
+    return {
+      draft_document: normalizeStoreDesign(value.draft_document),
+      published_document: normalizeStoreDesign(value.published_document),
+      previous_published_document: value.previous_published_document == null
+        ? null
+        : normalizeStoreDesign(value.previous_published_document),
+      draft_revision: Number(value.draft_revision) || 1,
+      published_revision: Number(value.published_revision) || 1,
+      updated_at: typeof value.updated_at === 'string' ? value.updated_at : null,
+      published_at: typeof value.published_at === 'string' ? value.published_at : null,
+    };
+  } catch {
+    return defaultStoreDesignLifecycle();
+  }
+}
+
+function saveStoreDesignLifecycle(value: DemoStoreDesignLifecycle) {
+  try {
+    localStorage.setItem(STORE_DESIGN_KEY, JSON.stringify(value));
+  } catch {
+    /* ignore quota / private mode */
+  }
 }
 
 // ---- PRODUCT OVERRIDE LAYER ------------------------------------------------
@@ -240,6 +296,76 @@ export const api = {
 // @/features/auth/adminAuth.tsx — and the admin console never reaches this
 // module: @/data/dataSource.ts re-exports the LIVE adminApi unconditionally.)
 export const adminApi = {
+
+  // --- Store Design lifecycle ---
+  async loadOwnStoreDesign() {
+    await delay(80);
+    const row = loadStoreDesignLifecycle();
+    return {
+      draft: row.draft_document,
+      published: row.published_document,
+      previousPublished: row.previous_published_document,
+      draftRevision: row.draft_revision,
+      publishedRevision: row.published_revision,
+      updatedAt: row.updated_at,
+      publishedAt: row.published_at,
+    };
+  },
+
+  async saveDraft(input: {expectedRevision: number; document: StoreDesignDocument}) {
+    await delay(100);
+    const row = loadStoreDesignLifecycle();
+    if (row.draft_revision !== input.expectedRevision) throw new StoreDesignConflictError();
+    row.draft_document = normalizeStoreDesign(input.document);
+    row.draft_revision += 1;
+    row.updated_at = new Date().toISOString();
+    saveStoreDesignLifecycle(row);
+    return {revision: row.draft_revision, document: row.draft_document};
+  },
+
+  async publishDraft(input: {expectedDraftRevision: number}) {
+    await delay(100);
+    const row = loadStoreDesignLifecycle();
+    if (row.draft_revision !== input.expectedDraftRevision) throw new StoreDesignConflictError();
+    row.previous_published_document = row.published_document;
+    row.published_document = row.draft_document;
+    row.published_revision += 1;
+    row.updated_at = new Date().toISOString();
+    row.published_at = row.updated_at;
+    saveStoreDesignLifecycle(row);
+    return {
+      draft: row.draft_document,
+      published: row.published_document,
+      previousPublished: row.previous_published_document,
+      draftRevision: row.draft_revision,
+      publishedRevision: row.published_revision,
+      updatedAt: row.updated_at,
+      publishedAt: row.published_at,
+    };
+  },
+
+  async rollbackPublished() {
+    await delay(100);
+    const row = loadStoreDesignLifecycle();
+    if (!row.previous_published_document) throw new Error('store_design_previous_missing');
+    const current = row.published_document;
+    row.published_document = row.previous_published_document;
+    row.previous_published_document = current;
+    row.published_revision += 1;
+    row.updated_at = new Date().toISOString();
+    row.published_at = row.updated_at;
+    saveStoreDesignLifecycle(row);
+    return {
+      draft: row.draft_document,
+      published: row.published_document,
+      previousPublished: row.previous_published_document,
+      draftRevision: row.draft_revision,
+      publishedRevision: row.published_revision,
+      updatedAt: row.updated_at,
+      publishedAt: row.published_at,
+    };
+  },
+
   // --- Products ---
   async listProducts(): Promise<{products: Product[]}> {
     await delay(120);
