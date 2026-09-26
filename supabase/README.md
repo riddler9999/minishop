@@ -80,3 +80,5 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 - `lookup_order()` and `place_order()` remain intentionally executable by buyer-facing API roles. Both are SECURITY DEFINER RPCs by design; revoking them would break public order lookup/checkout. Keep their internal validation/rate-limit tests as the control.
 - Supabase's multiple-permissive-policy findings are performance advisories, not authorization failures. No policy rewrite was made during this reconciliation to avoid changing access semantics without a dedicated RLS test pass.
 - Leaked-password protection is an Auth project setting, not a SQL migration. Enable it in Supabase Auth when the project setting is available to the operator/tooling.
+
+| `0024_store_design_lifecycle.sql` | Additive Store Builder lifecycle: one `store_designs` row per shop, owner-only lifecycle access, optimistic Draft saves, atomic Publish/Rollback, and Published-only buyer RPC. Preserves `shops.theme`. **Pending — repository implementation only; NOT applied to production without separate owner approval.** |

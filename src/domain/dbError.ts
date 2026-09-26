@@ -36,6 +36,11 @@ export type DbErrorCode =
   | 'subscription_inactive'
   | 'product_limit_reached'
   | 'extra_orders_not_available'
+  // Store Design lifecycle (0024)
+  | 'store_design_conflict'
+  | 'store_design_invalid'
+  | 'store_design_not_found'
+  | 'store_design_previous_missing'
   // Owner-only entitlement RPC guards (service_role; sellers rarely see these)
   | 'duplicate_payment'
   | 'invalid_credit_quantity'
@@ -87,6 +92,14 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
     'လက်ရှိ Plan ၏ Product အရေအတွက် ကန့်သတ်ချက် ပြည့်သွားပါပြီ — မလိုတော့သော Product ကို ဖျက်ပါ သို့မဟုတ် Plan upgrade လုပ်ပါ။',
   extra_orders_not_available:
     'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
+  store_design_conflict:
+    'Store Design ကို တခြားနေရာမှာ ပြင်ထားပါတယ်။ နောက်ဆုံး Draft ကို ပြန်ဖွင့်ပြီး ထပ်လုပ်ပါ။',
+  store_design_invalid:
+    'Store Design အချက်အလက် မမှန်ပါ။ ပြင်ဆင်ပြီး ပြန်ကြိုးစားပါ။',
+  store_design_not_found:
+    'သင့်ဆိုင်အတွက် Store Design ရှာမတွေ့ပါ။',
+  store_design_previous_missing:
+    'ပြန်ပြောင်းနိုင်မယ့် အရင် Published Design မရှိသေးပါ။',
   duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',
   invalid_credit_quantity: 'Extra Orders အရေအတွက် မမှန်ပါ။',
   unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
