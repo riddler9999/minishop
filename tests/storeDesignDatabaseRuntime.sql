@@ -125,11 +125,17 @@ begin
   end if;
 
   v_public := public.load_published_store_design('shop-one');
-  if v_public->'document'->>'presetId' <> 'clean-minimal' then
-    raise exception 'buyer must still see legacy Published while Draft is unpublished';
+  if (v_public->'document'->>'schemaVersion')::integer <> 1 then
+    raise exception 'legacy backfill must be persisted as Store Design v1';
   end if;
-  if v_public->'document' ? 'schemaVersion' then
-    raise exception 'buyer saw Draft before Publish';
+  if v_public->'document'->>'themeId' <> 'clean-minimal' then
+    raise exception 'legacy preset was not mapped to Store Design themeId';
+  end if;
+  if v_public->'document' #>> '{templates,home,sections,1,settings,headline}' <> 'Legacy One' then
+    raise exception 'legacy Hero content was not preserved during backfill';
+  end if;
+  if v_public->'document'->>'themeId' = 'dark-modern' then
+    raise exception 'buyer saw unpublished Draft';
   end if;
 end;
 $$;
@@ -185,8 +191,11 @@ declare
   v_second jsonb;
 begin
   v_first := public.rollback_store_design_published();
-  if v_first->'published_document'->>'presetId' <> 'clean-minimal' then
+  if v_first->'published_document'->>'themeId' <> 'clean-minimal' then
     raise exception 'first rollback did not restore Previous Published';
+  end if;
+  if (v_first->'published_document'->>'schemaVersion')::integer <> 1 then
+    raise exception 'rollback restored a non-v1 legacy document';
   end if;
 
   v_second := public.rollback_store_design_published();
