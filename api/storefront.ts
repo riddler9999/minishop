@@ -43,19 +43,12 @@ export default async function handler(req: any, res: any) {
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
   if (action === 'shop') {
-    // Buyer Store Design is Published-only. Legacy shops.theme is used only
-    // when the lifecycle RPC succeeds without a document; operational RPC
-    // failures are surfaced instead of silently serving stale legacy state.
+    // Preserve the legacy public shop payload until the shared Store Design
+    // renderer cutover. Task #108 adds a separate Published-only read path
+    // rather than changing what existing storefront pages interpret as theme.
     let theme: unknown = null;
-    try {
-      theme = await loadBuyerStoreDesign({
-        loadPublished: () => sb.rpc('load_published_store_design', {p_shop_slug: slug}),
-        loadLegacyTheme: () => sb.from('shops').select('theme').eq('id', shop.id).maybeSingle(),
-      });
-    } catch {
-      return sendJson(res, 502, {error: 'Store Design unavailable'});
-    }
-
+    const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
+    if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
     return sendJson(res, 200, {
       shop: {
         id: shop.id,
@@ -65,6 +58,17 @@ export default async function handler(req: any, res: any) {
         theme,
       },
     }, true);
+  }
+  if (action === 'store-design') {
+    try {
+      const storeDesign = await loadBuyerStoreDesign({
+        loadPublished: () => sb.rpc('load_published_store_design', {p_shop_slug: slug}),
+        loadLegacyTheme: () => sb.from('shops').select('theme').eq('id', shop.id).maybeSingle(),
+      });
+      return sendJson(res, 200, {storeDesign}, true);
+    } catch {
+      return sendJson(res, 502, {error: 'Store Design unavailable'});
+    }
   }
   if (action === 'categories') {
     const {data, error} = await sb.from('products').select('category').eq('shop_id', shop.id).eq('status', 'active').not('category', 'is', null);
