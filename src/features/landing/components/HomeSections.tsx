@@ -1,4 +1,4 @@
-import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, ShoppingBag, Truck} from 'lucide-react';
+import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {PLAN_PRICE_KS} from '@/domain/subscription';
 import {EXTRA_ORDER_UNIT_PRICE_KS, PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
@@ -119,22 +119,12 @@ export function ThreeStepStoreCreation() {
   const steps = [
     {number: '01', icon: PackageCheck, title: 'ပစ္စည်းတင်မယ်', body: 'ပုံရိုက်ထည့်၊ ဈေးနှုန်းနဲ့ ကိုယ့်ဆီမှာကျန်တဲ့ အရေအတွက် ထည့်လိုက်ရုံပဲ။'},
     {number: '02', icon: Palette, title: 'Design Theme ရွေးမယ်', body: 'ကိုယ့် Brand နဲ့လိုက်မယ့် အရောင်နဲ့ ပုံစံကို 1-Click နဲ့ အလွယ်တကူ ပြောင်းမယ်။'},
-    {number: '03', icon: Share2, title: 'Link မျှဝေပြီး အော်ဒါစောင့်မယ်', body: 'ရလာတဲ့ ဆိုင် Link ကို Page Bio၊ TikTok Bio နဲ့ Chat အော်တိုမက်ဆေ့ခ်ျတွေမှာ ထည့်ထားလိုက်ပါ။'},
+    {number: '03', icon: Share2, title: 'Link မျှဝေပြီး အော်ဒါစောင့်မယ်', body: 'ရလာတဲ့ Link ကို Facebook, TikTok, Messenger မှာ ထည့်ထားပြီး Customer ကို ကိုယ်တိုင်ဝယ်ခိုင်းလိုက်ပါ။'},
   ];
   return (
     <section className="landing-steps-section" aria-labelledby="steps-title">
-      <div className="landing-section-head">
-        <span className="landing-section-pill">3 STEPS</span>
-        <h2 id="steps-title">၃ ဆင့်တည်းနဲ့ ဆိုင်စဖွင့်လို့ရပြီ</h2>
-      </div>
-      <div className="landing-steps-grid">
-        {steps.map(({number, icon: Icon, title, body}) => (
-          <article key={number} className="landing-step-card">
-            <div className="landing-step-top"><span>{number}</span><Icon size={24}/></div>
-            <h3>{title}</h3><p>{body}</p>
-          </article>
-        ))}
-      </div>
+      <div className="landing-section-head"><span className="landing-section-pill">3 STEPS. DONE.</span><h2 id="steps-title">ဆိုင်ဖွင့်ဖို့ နည်းပညာကျွမ်းကျင်စရာ မလိုဘူး</h2><p>Page ဆောက်၊ Website ရေး၊ Developer ရှာစရာမလိုဘူး။ ကိုယ့်ဖုန်းတစ်လုံးနဲ့ပဲ အွန်လိုင်းဆိုင်တစ်ဆိုင် အလွယ်တကူ ရသွားမယ်။</p></div>
+      <div className="landing-steps-grid">{steps.map(({number, icon: Icon, title, body}) => <article key={number} className="landing-step-card"><div className="landing-step-top"><span>{number}</span><Icon size={24}/></div><h3>{title}</h3><p>{body}</p></article>)}</div>
     </section>
   );
 }
@@ -142,15 +132,9 @@ export function ThreeStepStoreCreation() {
 export function SellEverywhere() {
   return (
     <section className="landing-everywhere-section" aria-labelledby="everywhere-title">
-      <div className="landing-everywhere-copy">
-        <span className="landing-section-pill">ONE PLACE TO SELL EVERYWHERE.</span>
-        <h2 id="everywhere-title">FB၊ TikTok၊ Telegram... ဘယ်ကပဲလာလာ Order တွေက တစ်နေရာတည်း စုပေးတယ်</h2>
-        <p>App တစ်ခုချင်းစီ လိုက်ဖွင့်ပြီး စာရင်းတွေလိုက်ကူးမနေပါနဲ့တော့။ ဘယ်နေရာကပဲ ဝယ်ဝယ် Dashboard တစ်ခုတည်းမှာ Order အကုန် စနစ်တကျ ရှိနေမယ်။</p>
-      </div>
-      <div className="landing-channel-flow" aria-label="social channels to MiniShop">
-        <div className="landing-channel-list">
-          {channels.map((channel) => <div key={channel}><Send size={17}/>{channel}</div>)}
-        </div>
+      <div className="landing-everywhere-copy"><span className="landing-section-pill">ONE LINK. ALL PLATFORM.</span><h2 id="everywhere-title">Platform မရွေးဘူး — Link တစ်ခုရှိရင် ဘယ်နေရာကမဆို ရောင်းလို့ရတယ်</h2><p>Facebook Page, TikTok Bio, Messenger Auto Reply, Telegram Channel — Customer ရှိတဲ့နေရာတိုင်းမှာ MiniShop Link တစ်ခုပဲ ချိတ်ထားလိုက်ပါ။</p></div>
+      <div className="landing-channel-flow">
+        <div className="landing-channel-list">{channels.map((channel) => <div key={channel}><Send size={16}/><span>{channel}</span></div>)}</div>
         <div className="landing-channel-line" aria-hidden="true"/>
         <div className="landing-store-node"><span className="landing-store-brandmark">m</span><strong>MiniShop MM</strong><span>Store Link</span></div>
         <div className="landing-channel-line" aria-hidden="true"/>
@@ -169,12 +153,12 @@ export function MyanmarCheckout() {
           <div className="landing-checkout-stage landing-checkout-stage-address">
             <div className="landing-checkout-step-heading"><span>၁</span> ပို့ဆောင်မည့် လိပ်စာ</div>
             <div className="landing-checkout-mini-grid">
-              <div className="landing-checkout-skeleton" />
-              <div className="landing-checkout-skeleton" />
-              <div className="landing-checkout-skeleton landing-checkout-skeleton-wide" />
+              <div className="landing-checkout-animated-field"><span>လက်ခံမည့်သူအမည် *</span><strong className="landing-checkout-value-name">မိုးသက်</strong></div>
+              <div className="landing-checkout-animated-field"><span>ဖုန်းနံပါတ် *</span><strong className="landing-checkout-value-phone">09 123 456 789</strong></div>
+              <div className="landing-checkout-animated-field landing-checkout-animated-field-wide"><span>လိပ်စာ *</span><strong className="landing-checkout-value-street">၁၂၃၊ ပြည်လမ်း</strong></div>
             </div>
-            <div className="landing-checkout-demo-field"><span>တိုင်း / ပြည်နယ်</span><strong>Yangon</strong></div>
-            <div className="landing-checkout-demo-field"><span>မြို့နယ်</span><strong>Sanchaung</strong></div>
+            <div className="landing-checkout-demo-field"><span>တိုင်း / ပြည်နယ် *</span><strong>Yangon</strong></div>
+            <div className="landing-checkout-demo-field"><span>မြို့နယ် *</span><strong>Sanchaung</strong></div>
             <div className="landing-checkout-fee-note">📦 Sanchaung — ပို့ဆောင်ခ <strong>3,000 Ks</strong></div>
           </div>
           <div className="landing-checkout-stage landing-checkout-stage-payment">
@@ -184,10 +168,7 @@ export function MyanmarCheckout() {
               <span className="landing-payment-option">KBZPay<small>ငွေလွှဲ</small></span>
               <span className="landing-payment-option">WavePay<small>ငွေလွှဲ</small></span>
             </div>
-            <div className="landing-checkout-total">
-              <span>အိမ်ရောက်မှ ပေးရမည့် ငွေ</span>
-              <strong>28,000 Ks</strong>
-            </div>
+            <div className="landing-checkout-total"><span>အိမ်ရောက်မှ ပေးရမည့် ငွေ</span><strong>28,000 Ks</strong></div>
           </div>
           <div className="landing-checkout-stage landing-checkout-stage-summary">
             <div className="landing-checkout-summary"><span>ပစ္စည်းတန်ဖိုး</span><strong>25,000 Ks</strong></div>
@@ -195,108 +176,44 @@ export function MyanmarCheckout() {
             <div className="landing-checkout-button">Order တင်မယ်</div>
           </div>
           <div className="landing-checkout-tap" aria-hidden="true" />
-          <div className="landing-checkout-success" aria-hidden="true">
-            <Check size={18}/>
-            <span>Order တင်ပြီးပါပြီ</span>
-          </div>
+          <div className="landing-checkout-success" aria-hidden="true"><Check size={18}/><span>Order တင်ပြီးပါပြီ</span></div>
         </div>
       </div>
       <div className="landing-checkout-copy">
         <span className="landing-section-pill">BUILT FOR MYANMAR</span>
         <h2 id="checkout-title">မြန်မာ ဝယ်သူတွေ ဈေးဝယ်နေကျ Flow အတိုင်း ကွက်တိ ချထားပေးတယ်</h2>
         <p>နိုင်ငံခြား template တွေလို အဆင့်တွေမရှုပ်ဘူး။ မြန်မာပြည် အွန်လိုင်းဈေးဝယ်သူတွေ မျက်စိကျက်ပြီးသား ပုံစံအတိုင်း အလွယ်ဆုံး ဝယ်လို့ရအောင် လုပ်ထားပါတယ်။</p>
-        <div className="landing-checkout-features">
-          {checkoutFeatures.map(({icon: Icon, title, body}) => (
-            <div key={title}><Icon size={20}/><span><strong>{title}</strong><small>{body}</small></span></div>
-          ))}
-        </div>
+        <div className="landing-checkout-features">{checkoutFeatures.map(({icon: Icon, title, body}) => <div key={title}><Icon size={20}/><span><strong>{title}</strong><small>{body}</small></span></div>)}</div>
       </div>
     </section>
   );
 }
+
 export function ThemeShowcase() {
   return (
     <section className="landing-themes-section" aria-labelledby="themes-title">
-      <div className="landing-section-head">
-        <span className="landing-section-pill">5 STORE THEMES</span>
-        <h2 id="themes-title">Designer ငှားစရာမလိုဘဲ ဆိုင်သပ်သပ်ရပ်ရပ် ဖြစ်သွားစေမယ့် Themes များ</h2>
-        <p>အဝတ်အထည်လား၊ အလှကုန်လား၊ ပစ္စည်းစုံလား — ကိုယ့် Brand နဲ့ ကွက်တိကျမယ့် Design ကို တစ်ချက်နှိပ်ရုံနဲ့ ပြောင်းလဲနိုင်ပါတယ်။</p>
-      </div>
-      <div className="landing-theme-strip">
-        {themes.map((theme) => (
-          <article key={theme.name} className="landing-theme-card">
-            <div className={'landing-theme-phone ' + theme.tone}>
-              <div className="landing-theme-nav"/>
-              <div className="landing-theme-hero"/>
-              <div className="landing-theme-products"><span/><span/><span/><span/></div>
-            </div>
-            <strong>{theme.name}</strong>
-          </article>
-        ))}
-      </div>
-      <Link className="landing-demo-cta landing-theme-demo" to="/demo">တကယ့် ဆိုင်နမူနာကို စမ်းကြည့်မယ် <ArrowRight size={17}/></Link>
+      <div className="landing-section-head"><span className="landing-section-pill">YOUR STORE. YOUR STYLE.</span><h2 id="themes-title">ဆိုင်တိုင်း ပုံစံတူစရာ မလိုဘူး</h2><p>အဝတ်အစားဆိုင်၊ အလှကုန်ဆိုင်၊ စားသောက်ကုန်ဆိုင် — ကိုယ့်ပစ္စည်းနဲ့ လိုက်ဖက်တဲ့ Theme ကို ရွေးပြီး ကိုယ့် Brand အရောင်နဲ့ ပြင်နိုင်ပါတယ်။</p></div>
+      <div className="landing-theme-grid">{themes.map(({name, tone}) => <div key={name} className={`landing-theme-card ${tone}`}><div className="landing-theme-browser"><span/><span/><span/></div><div className="landing-theme-hero"/><div className="landing-theme-products"><i/><i/><i/></div><strong>{name}</strong></div>)}</div>
     </section>
   );
 }
 
-export function PricingSection() {
+export function Pricing() {
   return (
-    <section className="landing-pricing-section" aria-labelledby="pricing-title">
-      <div className="landing-section-head landing-pricing-head">
-        <span className="landing-section-pill">SIMPLE PRICING</span>
-        <h2 id="pricing-title">ကိုယ့်ရဲ့ အရောင်းပမာဏအလိုက် တန်တဲ့ Plan ကို ရွေးပါ</h2>
-        <p>စမ်းသုံးကြည့်ချင်ရင် Free Plan နဲ့ အခုပဲ စတင်လိုက်ပါ။ ကတ်နံပါတ်တွေ၊ ငွေကြိုပေးရတာတွေ လုံးဝမလိုပါဘူး။</p>
-      </div>
+    <section className="landing-pricing-section" id="pricing" aria-labelledby="pricing-title">
+      <div className="landing-section-head"><span className="landing-section-pill">SIMPLE PRICING</span><h2 id="pricing-title">ဆိုင်အရွယ်အစားနဲ့ အော်ဒါအရေအတွက်အလိုက် ရွေးပါ</h2><p>အစမ်းသုံးကြည့်လို့ရတယ်။ အဆင်ပြေမှ ကိုယ့်အရောင်းနဲ့ ကိုက်တဲ့ Plan ကို ရွေးပါ။</p></div>
       <div className="landing-pricing-grid">
-        {pricingPlans.map((item) => (
-          <article key={item.plan} className={'landing-pricing-card landing-pricing-card-' + item.plan}>
-            <div className="landing-pricing-card-top">
-              <span className="landing-pricing-eyebrow">{item.eyebrow}</span>
-              <h3>{item.name}</h3>
-              <div className="landing-pricing-price">
-                <strong>{formatKs(PLAN_PRICE_KS[item.plan])}</strong>
-                {item.priceSuffix && <span>{item.priceSuffix}</span>}
-              </div>
-              <p>{item.description}</p>
-            </div>
-            <div className="landing-pricing-features">
-              {item.features.map((feature) => <span key={feature}><Check size={16}/>{feature}</span>)}
-            </div>
-            <Link className={item.plan === 'free_trial' ? 'landing-primary-cta landing-pricing-cta' : 'landing-demo-cta landing-pricing-cta'} to={signupHref(item.plan)}>
-              {item.cta} <ArrowRight size={17}/>
-            </Link>
-          </article>
-        ))}
+        {pricingPlans.map(({plan, name, eyebrow, priceSuffix, description, features, cta}) => <article key={plan} className={`landing-pricing-card ${plan === 'starter' ? 'landing-pricing-card-featured' : ''}`}>{plan === 'starter' && <span className="landing-popular-badge">အသင့်တော်ဆုံး</span>}<span className="landing-plan-eyebrow">{eyebrow}</span><h3>{name}</h3><div className="landing-plan-price"><strong>{formatKs(PLAN_PRICE_KS[plan])}</strong><span>{priceSuffix}</span></div><p>{description}</p><ul>{features.map((feature) => <li key={feature}><Check size={17}/><span>{feature}</span></li>)}</ul><Link to={signupHref(plan)} className="landing-plan-cta">{cta}<ArrowRight size={17}/></Link></article>)}
       </div>
-      <p className="landing-pricing-note">Plan ပြောင်းလဲမှုနှင့် billing အခြေအနေကို seller dashboard မှာ စစ်ဆေးနိုင်ပါတယ်။</p>
     </section>
   );
 }
 
-export function DashboardFinalCTA() {
+export function DashboardPreview() {
   return (
     <section className="landing-dashboard-section" aria-labelledby="dashboard-title">
-      <div className="landing-dashboard-mockup">
-        <div className="landing-dashboard-sidebar"><span/><span/><span/><span/></div>
-        <div className="landing-dashboard-main">
-          <div className="landing-dashboard-top"/>
-          <div className="landing-dashboard-stats"><span/><span/><span/></div>
-          <div className="landing-dashboard-table"><span/><span/><span/><span/></div>
-        </div>
-      </div>
-      <div className="landing-dashboard-copy">
-        <span className="landing-section-pill">ONE SIMPLE DASHBOARD</span>
-        <h2 id="dashboard-title">Products နဲ့ Orders ကို တစ်နေရာတည်းက စီမံပါ</h2>
-        <p>ဆိုင်ဖွင့်ပြီးတာနဲ့ အလုပ်မရှုပ်အောင် product, order, delivery နဲ့ store design ကို dashboard တစ်ခုထဲမှာ စီမံနိုင်မယ်။</p>
-        <div className="landing-dashboard-checks">
-          {['Product Management', 'Order Management', 'Delivery Settings', 'Theme Customization'].map((item) => <span key={item}><Check size={16}/>{item}</span>)}
-        </div>
-        <div className="landing-final-actions">
-          <Link className="landing-primary-cta" to={signupHref()}>ကိုယ့် Online Store စဖွင့်မယ် <ArrowRight size={18}/></Link>
-          <Link className="landing-demo-cta" to="/demo">Demo Store ကြည့်မယ်</Link>
-        </div>
-        <small className="landing-final-note">အခမဲ့စတင်နိုင်သည် · Credit Card မလို</small>
-      </div>
+      <div className="landing-dashboard-copy"><span className="landing-section-pill">SELLER CONTROL CENTER</span><h2 id="dashboard-title">Order, Product, Delivery — အားလုံး တစ်နေရာထဲမှာ</h2><p>Chat တစ်ခုချင်းစီ ပြန်ရှာ၊ Screenshot တွေ လိုက်ကြည့်၊ စာရင်းစာအုပ်ထဲ ပြန်မှတ်နေစရာ မလိုတော့ဘူး။ ဆိုင်ရဲ့ အရောင်းအခြေအနေကို Dashboard တစ်ခုထဲကနေ ကြည့်ပြီး စီမံနိုင်ပါတယ်။</p><Link to={signupHref()} className="landing-primary-cta">ကိုယ့်ဆိုင် စဖွင့်မယ် <ArrowRight size={18}/></Link></div>
+      <div className="landing-dashboard-window"><div className="landing-dashboard-sidebar"><span className="landing-store-brandmark">m</span>{[1,2,3,4].map((item) => <i key={item}/>)}</div><div className="landing-dashboard-main"><div className="landing-dashboard-top"><strong>Dashboard</strong><span>Today</span></div><div className="landing-dashboard-stats"><div><small>Orders</small><strong>24</strong></div><div><small>Revenue</small><strong>480K</strong></div><div><small>Products</small><strong>86</strong></div></div><div className="landing-dashboard-chart"><i/><i/><i/><i/><i/><i/><i/></div></div></div>
     </section>
   );
 }
