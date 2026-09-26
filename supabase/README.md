@@ -1,5 +1,18 @@
 # Supabase backend — Mini TikTok Shop SaaS
 
+## Current production truth — 2026-09-25
+
+> This section supersedes any conflicting status statement later in this file. Historical migration notes are intentionally retained for audit history.
+
+- Production: `Mini Tiktok Shop` (`fsxdnmnycizjkgstokze`), `ap-southeast-1`, ACTIVE_HEALTHY, PostgreSQL 17.6.
+- Live migration history contains 19 records through `production_db_hardening`.
+- Repository contains numbered files `0001` through `0022`; filename presence is **not** Production-apply evidence.
+- Earlier delivery files `0013`–`0015` remain historical source artifacts. Production uses later production-safe reconciliation migrations including `production_safe_delivery_reconciliation` and `production_safe_ninjavan_verified_seed`.
+- No staging branch existed at the Phase 1 audit. The preferred staging architecture is a persistent data-less Supabase branch after explicit cost approval.
+- Never blindly replay all repo migrations onto a Production-derived branch; reconcile live history and apply only proven pending/applicable migrations.
+- Production schema changes require explicit owner approval.
+
+
 Multi-tenant backend for the storefront SaaS. Schema, RLS and RPCs live in
 `migrations/`.
 

@@ -5,7 +5,7 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_ANON_KEY?: string;
-  // Deploy-wide default plan (starter | business) until per-shop plans exist.
+  // Deploy-wide fallback only: free_trial | starter | business; DB shop.plan is authoritative.
   readonly VITE_DEFAULT_PLAN?: string;
 }
 

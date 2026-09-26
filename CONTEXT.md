@@ -1,5 +1,7 @@
 # MiniShop Domain Context
 
+> **Current product status:** PRE-PRODUCTION / PRODUCTION HARDENING. Environment and release truth is maintained under `docs/production/`; older implementation notes remain historical context.
+
 MiniShop is a multi-tenant SaaS storefront for Myanmar online sellers. A seller owns one Shop and shares a tenant URL (`/s/:slug`); anonymous buyers browse and place Orders without creating an account.
 
 ## Core vocabulary

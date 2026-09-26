@@ -1,5 +1,7 @@
 # Mini Shop
 
+> **Official status:** PRE-PRODUCTION / PRODUCTION HARDENING. Production infrastructure exists, but staging and release-engineering gates are not fully closed. See [docs/production/](docs/production/) before any production release.
+
 A mobile-first, multi-tenant storefront and seller admin console for Myanmar online sellers, built with React, TypeScript, Vite, Tailwind CSS, and Supabase.
 
 ## Features
@@ -86,7 +88,7 @@ npm run dev
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | For live data | Public Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | For live data | Public anonymous key; access must be protected by RLS |
-| `VITE_DEFAULT_PLAN` | No | `starter` or `business`. Fallback only — `shops.plan` in the database is the source of truth. Resolution fails closed to `starter` when unset or invalid. |
+| `VITE_DEFAULT_PLAN` | No | `free_trial`, `starter`, or `business`. Fallback only — `shops.plan` is authoritative; unknown/unset fails closed to `free_trial`. |
 
 See [`.env.example`](.env.example) for details.
 
