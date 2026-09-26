@@ -28,10 +28,15 @@ describe('Store Design RLS and RPC security contract', () => {
     assert.match(sql, /s\.owner_id\s*=\s*\(select auth\.uid\(\)\)/i);
   });
 
-  it('locks down SECURITY DEFINER seller RPCs to authenticated callers', async () => {
+  it('keeps privileged implementations out of the exposed public schema', async () => {
     const sql = await readFile(migrationPath, 'utf8');
 
+    assert.match(sql, /create schema if not exists store_design_private/i);
+    assert.match(sql, /create or replace function store_design_private\.save_store_design_draft_internal/i);
     assert.match(sql, /security definer\s+set search_path = ''/i);
+    assert.match(sql, /create or replace function public\.save_store_design_draft\(p_expected_revision bigint, p_document jsonb\)[\s\S]*security invoker/i);
+    assert.doesNotMatch(sql, /create or replace function public\.save_store_design_draft[\s\S]*?security definer/i);
+
     assert.match(sql, /revoke all on function public\.load_own_store_design\(\) from public, anon, authenticated/i);
     assert.match(sql, /grant execute on function public\.load_own_store_design\(\) to authenticated/i);
     assert.match(sql, /revoke all on function public\.save_store_design_draft\(bigint,jsonb\) from public, anon, authenticated/i);
@@ -62,7 +67,7 @@ describe('Store Design RLS and RPC security contract', () => {
   it('validates v1 schema and protected Buy Now before Draft persistence or Publish', async () => {
     const sql = await readFile(migrationPath, 'utf8');
 
-    assert.match(sql, /create or replace function private\.is_store_design_document_valid\(p_document jsonb\)/i);
+    assert.match(sql, /create or replace function store_design_private\.is_store_design_document_valid\(p_document jsonb\)/i);
     assert.match(sql, /p_document->>'schemaVersion'\s*=\s*'1'/i);
     assert.match(sql, /globalSettings[\s\S]*buyNow[\s\S]*label/i);
     assert.match(sql, /globalSettings[\s\S]*buyNow[\s\S]*disabled/i);
