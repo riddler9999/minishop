@@ -95,6 +95,116 @@ $$;
 revoke all on function store_design_private.is_legacy_store_theme_compatible(jsonb)
   from public, anon, authenticated;
 
+
+-- Convert legacy shops.theme into Store Design v1 for lifecycle backfill.
+create or replace function store_design_private.legacy_theme_to_store_design(
+  p_theme jsonb
+) returns jsonb
+language sql
+immutable
+security invoker
+set search_path = ''
+as $
+  with legacy as (
+    select coalesce(p_theme, '{}'::jsonb) as t
+  ),
+  preset as (
+    select case coalesce(t->>'presetId', 'clean-minimal')
+      when 'soft-elegant' then 'soft-elegant'
+      when 'dark-modern' then 'dark-modern'
+      when 'street-bold' then 'street-bold'
+      when 'warm-boutique' then 'warm-boutique'
+      else 'clean-minimal'
+    end as theme_id,
+    t
+    from legacy
+  )
+  select jsonb_build_object(
+    'schemaVersion', 1,
+    'themeId', theme_id,
+    'globalSettings', jsonb_build_object(
+      'accentColor', coalesce(t->>'accentColor', '#ec4899'),
+      'fontPairing', coalesce(t->>'fontPairing', 'minimal'),
+      'buyNow', jsonb_build_object(
+        'label', coalesce(t #>> '{product,buyNowLabel}', 'ဝယ်မည်'),
+        'style', 'solid',
+        'width', 'full',
+        'disabled', false
+      )
+    ),
+    'templates', jsonb_build_object(
+      'home', jsonb_build_object(
+        'sections', jsonb_build_array(
+          jsonb_build_object(
+            'id', 'home-announcement-1',
+            'type', 'announcement',
+            'enabled', coalesce((t #>> '{announcement,enabled}')::boolean, false),
+            'settings', jsonb_build_object('text', coalesce(t #>> '{announcement,text}', ''))
+          ),
+          jsonb_build_object(
+            'id', 'home-hero-2',
+            'type', 'hero',
+            'enabled', coalesce((t #>> '{home,heroEnabled}')::boolean, true),
+            'settings', jsonb_build_object(
+              'headline', coalesce(t #>> '{home,heroHeadline}', ''),
+              'subtext', coalesce(t #>> '{home,heroSubtext}', ''),
+              'ctaLabel', coalesce(t #>> '{home,heroCtaLabel}', 'ပစ္စည်းများကြည့်ရန်'),
+              'imageUrl', nullif(t #>> '{home,heroImageUrl}', '')
+            )
+          ),
+          jsonb_build_object(
+            'id', 'home-featured-products-3',
+            'type', 'featured-products',
+            'enabled', true,
+            'settings', jsonb_build_object(
+              'title', coalesce(t #>> '{home,featuredTitle}', 'ရွေးချယ်ထားသော ပစ္စည်းများ'),
+              'productSource', jsonb_build_object('mode', 'manual', 'productIds', jsonb_build_array())
+            )
+          )
+        )
+      ),
+      'collection', jsonb_build_object(
+        'sections', jsonb_build_array(
+          jsonb_build_object(
+            'id', 'collection-product-collection-1',
+            'type', 'product-collection',
+            'enabled', true,
+            'settings', jsonb_build_object(
+              'title', coalesce(t #>> '{category,heading}', 'စုစည်းမှု'),
+              'productSource', jsonb_build_object(
+                'mode', 'dynamic',
+                'rule', 'category',
+                'category', '',
+                'limit', 12
+              )
+            )
+          )
+        )
+      ),
+      'product', jsonb_build_object(
+        'sections', jsonb_build_array(
+          jsonb_build_object(
+            'id', 'product-product-gallery-1',
+            'type', 'product-gallery',
+            'enabled', true,
+            'settings', jsonb_build_object('layout', 'carousel')
+          ),
+          jsonb_build_object(
+            'id', 'product-product-info-2',
+            'type', 'product-info',
+            'enabled', true,
+            'settings', jsonb_build_object('showPrice', true)
+          )
+        )
+      )
+    )
+  )
+  from preset;
+$;
+
+revoke all on function store_design_private.legacy_theme_to_store_design(jsonb)
+  from public, anon, authenticated;
+
 -- ---- 3. Existing-shop backfill ---------------------------------------------
 -- Copy, never delete or rewrite, shops.theme. Runtime/domain compatibility
 -- normalization turns these legacy-shaped initial documents into Store Design v1.
