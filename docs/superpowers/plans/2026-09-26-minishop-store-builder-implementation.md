@@ -35,6 +35,27 @@
 4. **Theme switch while live store serves traffic** — new theme remains Draft-only until Publish and buyer still receives old Published; covered in Tasks 5 and 6.
 5. **Dynamic Best Selling with cancelled/RTO/refunded later statuses** — ranking follows created-order historical demand contract and does not subtract later status changes; covered in Task 7.
 
+
+## GitHub Task Index
+
+Implementation tasks are tracked in GitHub Issues as the canonical task list:
+
+- #104 — Task 1: Durable admin/editor design contract
+- #105 — Task 2: Pure Store Design domain module
+- #106 — Task 3: Store Design lifecycle schema, RLS, and RPCs
+- #107 — Task 4: Seller lifecycle adapter and optimistic concurrency
+- #108 — Task 5: Published-only buyer design read path
+- #109 — Task 6: Shared catalog-owned storefront renderer
+- #110 — Task 7: Deterministic product-source resolution
+- #111 — Task 8: Protected Product Buy Now commerce boundary
+- #112 — Task 9: Admin IA and Themes screen
+- #113 — Task 10: Desktop editor shell and autosave state machine
+- #114 — Task 11: Section tree, inspector, and Commerce section library
+- #115 — Task 12: Product-source controls and mobile editor
+- #116 — Task 13: Compatibility cutover and full verification
+
+Dependencies are recorded in each issue body. Do not create a parallel `tasks/todo.md` for this work.
+
 ---
 
 ## File / Module Map
