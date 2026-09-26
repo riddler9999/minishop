@@ -1,6 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
+import {loadBuyerStoreDesign} from './_store-design.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -42,20 +43,17 @@ export default async function handler(req: any, res: any) {
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
   if (action === 'shop') {
-    // Buyer Store Design is Published-only. The dedicated RPC resolves the
-    // lifecycle row server-side and returns only the Published document. During
-    // the additive migration window, shops without a lifecycle row continue to
-    // fall back to legacy shops.theme so existing storefronts do not reset.
-    let publishedDesign: unknown = null;
-    const {data: publishedRow, error: publishedError} = await sb.rpc('load_published_store_design', {p_shop_slug: slug});
-    if (!publishedError && publishedRow && typeof publishedRow === 'object') {
-      publishedDesign = (publishedRow as {document?: unknown}).document ?? null;
-    }
-
-    let theme: unknown = publishedDesign;
-    if (theme == null) {
-      const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
-      if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
+    // Buyer Store Design is Published-only. Legacy shops.theme is used only
+    // when the lifecycle RPC succeeds without a document; operational RPC
+    // failures are surfaced instead of silently serving stale legacy state.
+    let theme: unknown = null;
+    try {
+      theme = await loadBuyerStoreDesign({
+        loadPublished: () => sb.rpc('load_published_store_design', {p_shop_slug: slug}),
+        loadLegacyTheme: () => sb.from('shops').select('theme').eq('id', shop.id).maybeSingle(),
+      });
+    } catch {
+      return sendJson(res, 502, {error: 'Store Design unavailable'});
     }
 
     return sendJson(res, 200, {
