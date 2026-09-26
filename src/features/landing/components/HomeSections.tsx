@@ -163,14 +163,42 @@ export function SellEverywhere() {
 export function MyanmarCheckout() {
   return (
     <section className="landing-checkout-section" aria-labelledby="checkout-title">
-      <div className="landing-checkout-preview">
-        <div className="landing-checkout-phone">
-          <div className="landing-checkout-bar">Checkout</div>
-          <span className="landing-checkout-label">Region</span><div className="landing-checkout-field">Yangon</div>
-          <span className="landing-checkout-label">Township</span><div className="landing-checkout-field">Sanchaung</div>
-          <span className="landing-checkout-label">Payment</span><div className="landing-payment-row"><span>COD</span><span>KBZPay</span><span>WavePay</span></div>
-          <div className="landing-checkout-summary"><span>Delivery Fee</span><strong>3,000 MMK</strong></div>
-          <div className="landing-checkout-button">Order Confirm</div>
+      <div className="landing-checkout-preview" aria-label="MiniShop real checkout flow animation">
+        <div className="landing-checkout-phone landing-checkout-phone-animated">
+          <div className="landing-checkout-bar">Order တင်မယ်</div>
+          <div className="landing-checkout-stage landing-checkout-stage-address">
+            <div className="landing-checkout-step-heading"><span>၁</span> ပို့ဆောင်မည့် လိပ်စာ</div>
+            <div className="landing-checkout-mini-grid">
+              <div className="landing-checkout-skeleton" />
+              <div className="landing-checkout-skeleton" />
+              <div className="landing-checkout-skeleton landing-checkout-skeleton-wide" />
+            </div>
+            <div className="landing-checkout-demo-field"><span>တိုင်း / ပြည်နယ်</span><strong>Yangon</strong></div>
+            <div className="landing-checkout-demo-field"><span>မြို့နယ်</span><strong>Sanchaung</strong></div>
+            <div className="landing-checkout-fee-note">📦 Sanchaung — ပို့ဆောင်ခ <strong>3,000 Ks</strong></div>
+          </div>
+          <div className="landing-checkout-stage landing-checkout-stage-payment">
+            <div className="landing-checkout-step-heading"><span>၂</span> ငွေပေးချေမှု</div>
+            <div className="landing-payment-row landing-payment-row-real">
+              <span className="landing-payment-option landing-payment-option-active">COD<small>အိမ်ရောက်ငွေချေ</small></span>
+              <span className="landing-payment-option">KBZPay<small>ငွေလွှဲ</small></span>
+              <span className="landing-payment-option">WavePay<small>ငွေလွှဲ</small></span>
+            </div>
+            <div className="landing-checkout-total">
+              <span>အိမ်ရောက်မှ ပေးရမည့် ငွေ</span>
+              <strong>28,000 Ks</strong>
+            </div>
+          </div>
+          <div className="landing-checkout-stage landing-checkout-stage-summary">
+            <div className="landing-checkout-summary"><span>ပစ္စည်းတန်ဖိုး</span><strong>25,000 Ks</strong></div>
+            <div className="landing-checkout-summary"><span>ပို့ဆောင်ခ</span><strong>3,000 Ks</strong></div>
+            <div className="landing-checkout-button">Order တင်မယ်</div>
+          </div>
+          <div className="landing-checkout-tap" aria-hidden="true" />
+          <div className="landing-checkout-success" aria-hidden="true">
+            <Check size={18}/>
+            <span>Order တင်ပြီးပါပြီ</span>
+          </div>
         </div>
       </div>
       <div className="landing-checkout-copy">
@@ -186,7 +214,6 @@ export function MyanmarCheckout() {
     </section>
   );
 }
-
 export function ThemeShowcase() {
   return (
     <section className="landing-themes-section" aria-labelledby="themes-title">
