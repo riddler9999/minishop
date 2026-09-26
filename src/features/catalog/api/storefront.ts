@@ -25,7 +25,7 @@ export const catalogStorefrontApi = {
     return request({action: 'categories'}) as Promise<{categories: string[]}>;
   },
   async loadPublishedStoreDesign(): Promise<StoreDesignDocument> {
-    const response = await request({action: 'shop'}) as {shop?: {theme?: unknown}};
-    return normalizeStoreDesign(response.shop?.theme);
+    const response = await request({action: 'store-design'}) as {storeDesign?: unknown};
+    return normalizeStoreDesign(response.storeDesign);
   },
 };
