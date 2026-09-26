@@ -167,4 +167,23 @@ describe('Store Design domain', () => {
     assert.ok(next.templates.home.sections.some((section) => section.id === 'seller-new-arrivals'));
   });
 
+  it('forces non-hideable protected sections enabled during normalization', () => {
+    const doc = normalizeStoreDesign({
+      schemaVersion: 1,
+      themeId: 'clean-minimal',
+      globalSettings: {},
+      templates: {
+        home: {sections: []},
+        collection: {sections: []},
+        product: {sections: [
+          {id: 'gallery', type: 'product-gallery', enabled: false, settings: {}},
+          {id: 'info', type: 'product-info', enabled: false, settings: {}},
+        ]},
+      },
+    });
+
+    assert.equal(doc.templates.product.sections.find((section) => section.type === 'product-gallery')?.enabled, true);
+    assert.equal(doc.templates.product.sections.find((section) => section.type === 'product-info')?.enabled, true);
+  });
+
 });
