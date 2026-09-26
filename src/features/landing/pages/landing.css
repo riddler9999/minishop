@@ -60,3 +60,33 @@
 .landing-pricing-card{position:relative}
 .landing-footer strong{color:var(--pink)}
 .landing-cart-mark{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:var(--pink);color:#fff;font:800 16px/1 Inter,system-ui,sans-serif}
+
+
+/* Animated checkout preview: mirrors the real storefront checkout flow but is display-only. */
+.landing-checkout-phone-animated{position:relative;overflow:hidden;min-height:500px}
+.landing-checkout-stage{transition:opacity .35s ease,transform .35s ease}
+.landing-checkout-step-heading{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:12px;font-weight:800;color:var(--ink)}
+.landing-checkout-step-heading>span{display:grid;place-items:center;width:22px;height:22px;border-radius:999px;background:var(--pink-soft);color:var(--pink);font:800 11px/1 system-ui,sans-serif}
+.landing-checkout-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.landing-checkout-skeleton{height:34px;border:1px solid #e7ebf0;border-radius:10px;background:linear-gradient(90deg,#f7f9fb 20%,#fff 40%,#f7f9fb 60%);background-size:220% 100%;animation:landingCheckoutShimmer 2.8s linear infinite}
+.landing-checkout-skeleton-wide{grid-column:1/-1}
+.landing-checkout-demo-field{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px;padding:10px 11px;border:1px solid #e2e8ee;border-radius:11px;background:#fafcfd;font-size:11px}
+.landing-checkout-demo-field span{color:#7d8791}.landing-checkout-demo-field strong{font-size:11px}
+.landing-checkout-fee-note{margin-top:9px;padding:8px 10px;border:1px dashed #f1c3d4;border-radius:10px;background:#fff6f9;color:#6f6170;font-size:10px}
+.landing-checkout-stage-payment{margin-top:16px}.landing-payment-row-real{grid-template-columns:repeat(3,1fr)}
+.landing-payment-option{display:flex!important;min-height:50px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:8px!important;font-size:10px!important}
+.landing-payment-option small{color:#8b929b;font-size:8px}.landing-payment-option-active{border-color:var(--pink)!important;background:var(--pink-soft)!important;color:var(--pink-dark)}
+.landing-checkout-total{margin-top:9px;padding:10px 11px;border:1px dashed #e4e8ed;border-radius:11px;background:#fbfcfd}.landing-checkout-total span,.landing-checkout-total strong{display:block}.landing-checkout-total span{color:#7d8791;font-size:9px}.landing-checkout-total strong{margin-top:3px;font:800 17px/1.2 system-ui,sans-serif}
+.landing-checkout-stage-summary{margin-top:12px}.landing-checkout-stage-summary .landing-checkout-summary{margin-top:0;padding:6px 0;border-top:0}.landing-checkout-stage-summary .landing-checkout-summary+.landing-checkout-summary{border-top:1px solid #edf1f4}
+.landing-checkout-tap{position:absolute;left:50%;bottom:34px;width:26px;height:32px;background:#20252c;clip-path:polygon(0 0,0 100%,29% 72%,46% 100%,59% 91%,41% 65%,76% 65%);filter:drop-shadow(0 4px 8px rgba(0,0,0,.15));animation:landingCheckoutTap 7s ease-in-out infinite;pointer-events:none}
+.landing-checkout-success{position:absolute;left:50%;bottom:24px;display:flex;align-items:center;gap:7px;transform:translateX(-50%) translateY(12px) scale(.96);padding:11px 14px;border-radius:999px;background:#173927;color:#fff;box-shadow:0 14px 30px rgba(23,57,39,.22);font-size:11px;font-weight:800;opacity:0;animation:landingCheckoutSuccess 7s ease-in-out infinite;pointer-events:none;white-space:nowrap}
+.landing-checkout-success svg{color:#7ce7aa}
+.landing-checkout-stage-address{animation:landingCheckoutAddress 7s ease-in-out infinite}.landing-checkout-stage-payment{animation:landingCheckoutPayment 7s ease-in-out infinite}.landing-checkout-stage-summary{animation:landingCheckoutSummary 7s ease-in-out infinite}
+@keyframes landingCheckoutShimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+@keyframes landingCheckoutAddress{0%,12%{opacity:.25;transform:translateY(4px)}22%,100%{opacity:1;transform:none}}
+@keyframes landingCheckoutPayment{0%,30%{opacity:.18;transform:translateY(6px)}40%,100%{opacity:1;transform:none}}
+@keyframes landingCheckoutSummary{0%,50%{opacity:.18;transform:translateY(6px)}60%,100%{opacity:1;transform:none}}
+@keyframes landingCheckoutTap{0%,58%{transform:translate(-70px,-18px) scale(1)}70%{transform:translate(26px,0) scale(1)}74%{transform:translate(26px,0) scale(.82)}80%,100%{transform:translate(26px,0) scale(1)}}
+@keyframes landingCheckoutSuccess{0%,76%,100%{opacity:0;transform:translateX(-50%) translateY(12px) scale(.96)}82%,94%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@media(max-width:650px){.landing-checkout-phone-animated{min-height:474px}.landing-payment-row-real{grid-template-columns:repeat(3,1fr)}}
+@media(prefers-reduced-motion:reduce){.landing-checkout-skeleton,.landing-checkout-stage-address,.landing-checkout-stage-payment,.landing-checkout-stage-summary,.landing-checkout-tap,.landing-checkout-success{animation:none}.landing-checkout-success{display:none}}
