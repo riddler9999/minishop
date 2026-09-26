@@ -104,7 +104,7 @@ language sql
 immutable
 security invoker
 set search_path = ''
-as $
+as $legacy$
   with legacy as (
     select coalesce(p_theme, '{}'::jsonb) as t
   ),
@@ -206,7 +206,7 @@ as $
     )
   )
   from preset;
-$;
+$legacy$;
 
 revoke all on function store_design_private.legacy_theme_to_store_design(jsonb)
   from public, anon, authenticated;
