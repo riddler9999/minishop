@@ -18,6 +18,7 @@ import {shippingAdminApi} from '@/features/shipping/api';
 import {paymentAccountsApi} from '@/features/shop/api/paymentAccounts';
 import {shopSettingsApi} from '@/features/shop/api/settings';
 import {shopStorageApi} from '@/features/shop/api/storage';
+import {storeDesignAdminApi} from '@/features/shop/api/storeDesign';
 
 /** Buyer-facing surface: catalog reads, checkout, order lookup. */
 export const api = {
@@ -34,5 +35,6 @@ export const adminApi = {
   ...shopSettingsApi,
   ...paymentAccountsApi,
   ...shopStorageApi,
+  ...storeDesignAdminApi,
   ...billingApi,
 };
