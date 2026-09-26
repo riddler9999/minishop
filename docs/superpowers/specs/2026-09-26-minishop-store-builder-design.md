@@ -285,11 +285,20 @@ Seller explicitly chooses products.
 
 ```text
 mode: dynamic
-rule: best_selling | new_arrivals | sale | collection
+rule: best_selling | new_arrivals | sale | category
 limit: N
 ```
 
 Rules must be deterministic and platform-defined.
+
+V1 uses the existing product `category` field as the only grouping source. “Collection” in seller-facing copy is an alias for Category; V1 does **not** introduce a new collections table or separate collection domain.
+
+Exact V1 dynamic semantics:
+
+- `new_arrivals` — active products ordered by `created_at DESC`, then stable tie-break by product id.
+- `sale` — active products where the existing promotion contract is true (`is_promotion = true` and valid `promo_price`), ordered by newest first unless the section adds an explicit seller sort later.
+- `category` — active products whose existing `products.category` equals the configured category value.
+- `best_selling` — active products ranked by quantity sold from **non-cancelled created orders**, using the repository's billable-order truth: once a valid checkout creates an Order and Order No, it counts toward best-selling demand; later Reject/Cancel/RTO/no-show/refund does not subtract historical demand. Aggregate `order_items.quantity` per product, descending; tie-break by newest product, then product id. This mirrors the current D60 created-order commercial semantics and avoids seller-controlled status changes rewriting historical ranking.
 
 AI-based product selection is out of scope for V1.
 
@@ -318,11 +327,27 @@ Shop
 
 `shops` continues to own shop identity and non-editor shop configuration.
 
-The exact persistence table/function names must follow repository/database conventions during implementation, but responsibilities must remain separated:
-- Shop identity/config
-- Store design lifecycle
-- Theme/schema normalization
-- Publish/rollback transaction boundary
+The persistence model for V1 is one lifecycle row per shop in a dedicated `store_designs` table:
+
+```text
+store_designs
+- shop_id                    primary key / fk shops(id)
+- draft_document             jsonb not null
+- published_document         jsonb not null
+- previous_published_document jsonb null
+- draft_revision             bigint not null default 1
+- published_revision         bigint not null default 1
+- updated_at
+- published_at
+```
+
+Do not introduce an immutable version-history table in V1. Draft / Published / Previous Published are lifecycle slots, not append-only versions.
+
+Responsibilities remain separated:
+- `shops` — shop identity and non-editor shop configuration
+- `store_designs` — Store Design lifecycle state
+- domain normalizer/registry — schema validation and compatibility
+- database RPCs — atomic save/publish/rollback and ownership enforcement
 
 ---
 
@@ -366,11 +391,12 @@ A central Section Registry defines:
 - Default settings
 - Validation
 - Normalization
-- Editor component
-- Renderer component
+- Renderer key / renderer registration metadata
 - Whether section is removable
 - Whether section is hideable
 - Product-source capability where applicable
+
+The pure domain registry must not import React. Editor and storefront rendering modules consume the registry and map renderer keys to React implementations at their own feature seams.
 
 ---
 
@@ -378,15 +404,19 @@ A central Section Registry defines:
 
 Editor preview must not use a fake parallel storefront implementation.
 
-The Draft preview and buyer-facing storefront must share the same rendering contract and storefront components.
+The shared renderer seam is intentionally split into deep modules:
 
-The difference is the design input:
-- Editor Preview → Draft
-- Buyer Storefront → Published
+- `src/domain/storeDesign/*` — pure document types, section registry metadata, normalization, invariant checks, and theme/content migration. No React, no Supabase.
+- `src/features/catalog/storeDesign/*` — buyer-facing section renderers and template composition. This module owns the real storefront rendering implementation.
+- `src/features/shop/storeBuilder/*` — editor shell, selection state, inspector controls, and preview wrapper. It consumes the catalog renderer rather than reimplementing storefront sections.
+- `src/features/shop/api/storeDesign.ts` — seller lifecycle persistence adapter.
+- `src/features/catalog/api/storeDesign.ts` or the existing storefront gateway composition — Published-only buyer read adapter.
 
-This prevents preview/production drift.
+The Draft preview and buyer-facing storefront therefore share the same **catalog-owned renderer module**. The difference is only the document input:
+- Editor Preview → normalized Draft
+- Buyer Storefront → normalized Published
 
-The same normalizer must be used before rendering both Draft and Published documents.
+The same domain normalizer must run before both. `StorePreview.tsx` must be retired or reduced to a thin wrapper around the shared renderer; it must not remain a second rendering implementation.
 
 ---
 
@@ -742,7 +772,56 @@ The redesign is successful when:
 
 ---
 
-## 23. Implementation Sequencing Constraint
+## 23. Durable Frontend Design Contract
+
+Before implementation changes the seller admin shell, create or update `DESIGN.md` as the durable UI contract for this redesign.
+
+It must lock:
+- Admin shell visual hierarchy and navigation grouping
+- Platform-neutral admin chrome separate from tenant storefront themes
+- Desktop split-editor pane behavior and minimum widths
+- Desktop preview = responsive canvas; mobile preview = constrained mobile viewport
+- Mobile section drawer and inspector bottom-sheet behavior
+- Spacing/density and card/surface rules
+- Burmese-first seller copy unless an existing explicit product decision says otherwise
+- Save / Saved / Retry / Conflict / Publish states
+- Focus, keyboard, dialog/drawer, touch-target, and contrast requirements
+- No horizontal overflow at 375 / 390 / 414 widths
+- Existing brand tokens should be reused before adding new one-off values
+
+The implementation plan must treat `DESIGN.md` as a source of truth alongside this specification.
+
+---
+
+## 24. Deep Module Interfaces
+
+The Store Design lifecycle seam presented to callers should remain narrow.
+
+Seller-facing interface:
+
+```ts
+loadOwnStoreDesign(): Promise<StoreDesignLifecycle>
+saveDraft(input: {
+  expectedRevision: number;
+  document: StoreDesignDocument;
+}): Promise<{revision: number; document: StoreDesignDocument}>
+publishDraft(input: {
+  expectedDraftRevision: number;
+}): Promise<StoreDesignLifecycle>
+rollbackPublished(): Promise<StoreDesignLifecycle>
+```
+
+Buyer-facing interface:
+
+```ts
+loadPublishedStoreDesign(shopSlug: string): Promise<StoreDesignDocument>
+```
+
+Callers must not know table names, lifecycle column names, RLS details, or publish transaction mechanics. Those stay inside the module implementation.
+
+---
+
+## 25. Implementation Sequencing Constraint
 
 Implementation should be decomposed into reviewable phases, with each phase producing working, testable software.
 
