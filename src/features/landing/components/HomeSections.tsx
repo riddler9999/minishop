@@ -198,7 +198,7 @@ export function ThemeShowcase() {
   );
 }
 
-export function Pricing() {
+export function PricingSection() {
   return (
     <section className="landing-pricing-section" id="pricing" aria-labelledby="pricing-title">
       <div className="landing-section-head"><span className="landing-section-pill">SIMPLE PRICING</span><h2 id="pricing-title">ဆိုင်အရွယ်အစားနဲ့ အော်ဒါအရေအတွက်အလိုက် ရွေးပါ</h2><p>အစမ်းသုံးကြည့်လို့ရတယ်။ အဆင်ပြေမှ ကိုယ့်အရောင်းနဲ့ ကိုက်တဲ့ Plan ကို ရွေးပါ။</p></div>
@@ -209,7 +209,7 @@ export function Pricing() {
   );
 }
 
-export function DashboardPreview() {
+export function DashboardFinalCTA() {
   return (
     <section className="landing-dashboard-section" aria-labelledby="dashboard-title">
       <div className="landing-dashboard-copy"><span className="landing-section-pill">SELLER CONTROL CENTER</span><h2 id="dashboard-title">Order, Product, Delivery — အားလုံး တစ်နေရာထဲမှာ</h2><p>Chat တစ်ခုချင်းစီ ပြန်ရှာ၊ Screenshot တွေ လိုက်ကြည့်၊ စာရင်းစာအုပ်ထဲ ပြန်မှတ်နေစရာ မလိုတော့ဘူး။ ဆိုင်ရဲ့ အရောင်းအခြေအနေကို Dashboard တစ်ခုထဲကနေ ကြည့်ပြီး စီမံနိုင်ပါတယ်။</p><Link to={signupHref()} className="landing-primary-cta">ကိုယ့်ဆိုင် စဖွင့်မယ် <ArrowRight size={18}/></Link></div>
