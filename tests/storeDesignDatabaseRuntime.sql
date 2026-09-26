@@ -7,10 +7,10 @@
 -- Backfill created exactly one lifecycle row per existing Shop.
 do $$
 begin
-  if (select count(*) from public.store_designs) <> 2 then
+  if (select count(*) from public.store_designs) is distinct from 2 then
     raise exception 'expected two backfilled lifecycle rows';
   end if;
-  if (select count(*) from public.shops where theme is not null) <> 2 then
+  if (select count(*) from public.shops where theme is not null) is distinct from 2 then
     raise exception 'legacy shops.theme must remain untouched';
   end if;
 end;
@@ -25,7 +25,7 @@ declare
   v_loaded jsonb;
   v_saved jsonb;
 begin
-  if (select count(*) from public.store_designs) <> 1 then
+  if (select count(*) from public.store_designs) is distinct from 1 then
     raise exception 'seller1 RLS must expose exactly one lifecycle row';
   end if;
 
@@ -37,7 +37,7 @@ begin
   end if;
 
   v_loaded := public.load_own_store_design();
-  if v_loaded->>'shop_id' <> 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' then
+  if v_loaded->>'shop_id' is distinct from 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' then
     raise exception 'load_own_store_design resolved wrong shop';
   end if;
 
@@ -55,7 +55,7 @@ begin
     }'::jsonb
   );
 
-  if (v_saved->>'revision')::bigint <> 2 then
+  if (v_saved->>'revision')::bigint is distinct from 2 then
     raise exception 'first Draft save must increment revision to 2';
   end if;
 end;
@@ -81,16 +81,16 @@ begin
     raise exception 'expected store_design_conflict';
   exception
     when others then
-      if sqlerrm <> 'store_design_conflict' then
+      if sqlerrm is distinct from 'store_design_conflict' then
         raise;
       end if;
   end;
 
-  if (select draft_revision from public.store_designs) <> 2 then
+  if (select draft_revision from public.store_designs) is distinct from 2 then
     raise exception 'stale save changed revision';
   end if;
 
-  if (select draft_document->>'themeId' from public.store_designs) <> 'dark-modern' then
+  if (select draft_document->>'themeId' from public.store_designs) is distinct from 'dark-modern' then
     raise exception 'stale save overwrote newer Draft';
   end if;
 end;
@@ -125,13 +125,13 @@ begin
   end if;
 
   v_public := public.load_published_store_design('shop-one');
-  if (v_public->'document'->>'schemaVersion')::integer <> 1 then
+  if (v_public->'document'->>'schemaVersion')::integer is distinct from 1 then
     raise exception 'legacy backfill must be persisted as Store Design v1';
   end if;
-  if v_public->'document'->>'themeId' <> 'clean-minimal' then
+  if v_public->'document'->>'themeId' is distinct from 'clean-minimal' then
     raise exception 'legacy preset was not mapped to Store Design themeId';
   end if;
-  if v_public->'document' #>> '{templates,home,sections,1,settings,headline}' <> 'Legacy One' then
+  if v_public->'document' #>> '{templates,home,sections,1,settings,headline}' is distinct from 'Legacy One' then
     raise exception 'legacy Hero content was not preserved during backfill';
   end if;
   if v_public->'document'->>'themeId' = 'dark-modern' then
@@ -151,13 +151,13 @@ declare
 begin
   v_result := public.publish_store_design_draft(2);
 
-  if v_result->'published_document'->>'themeId' <> 'dark-modern' then
+  if v_result->'published_document'->>'themeId' is distinct from 'dark-modern' then
     raise exception 'Publish did not promote Draft';
   end if;
-  if v_result->'previous_published_document'->>'presetId' <> 'clean-minimal' then
+  if v_result->'previous_published_document'->>'presetId' is distinct from 'clean-minimal' then
     raise exception 'Publish did not preserve previous Published';
   end if;
-  if (v_result->>'published_revision')::bigint <> 2 then
+  if (v_result->>'published_revision')::bigint is distinct from 2 then
     raise exception 'Publish did not increment published revision';
   end if;
 end;
@@ -171,7 +171,7 @@ declare
   v_public jsonb;
 begin
   v_public := public.load_published_store_design('shop-one');
-  if v_public->'document'->>'themeId' <> 'dark-modern' then
+  if v_public->'document'->>'themeId' is distinct from 'dark-modern' then
     raise exception 'buyer did not receive new Published design';
   end if;
   if v_public ? 'draft_document' or v_public ? 'previous_published_document' then
@@ -191,15 +191,15 @@ declare
   v_second jsonb;
 begin
   v_first := public.rollback_store_design_published();
-  if v_first->'published_document'->>'themeId' <> 'clean-minimal' then
+  if v_first->'published_document'->>'themeId' is distinct from 'clean-minimal' then
     raise exception 'first rollback did not restore Previous Published';
   end if;
-  if (v_first->'published_document'->>'schemaVersion')::integer <> 1 then
+  if (v_first->'published_document'->>'schemaVersion')::integer is distinct from 1 then
     raise exception 'rollback restored a non-v1 legacy document';
   end if;
 
   v_second := public.rollback_store_design_published();
-  if v_second->'published_document'->>'themeId' <> 'dark-modern' then
+  if v_second->'published_document'->>'themeId' is distinct from 'dark-modern' then
     raise exception 'second rollback did not reverse the first rollback';
   end if;
 end;
@@ -214,12 +214,12 @@ do $$
 declare
   v_loaded jsonb;
 begin
-  if (select count(*) from public.store_designs) <> 1 then
+  if (select count(*) from public.store_designs) is distinct from 1 then
     raise exception 'seller2 RLS must expose exactly one lifecycle row';
   end if;
 
   v_loaded := public.load_own_store_design();
-  if v_loaded->>'shop_id' <> 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' then
+  if v_loaded->>'shop_id' is distinct from 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' then
     raise exception 'seller2 resolved another tenant';
   end if;
 end;
@@ -252,12 +252,12 @@ begin
     raise exception 'expected store_design_invalid';
   exception
     when others then
-      if sqlerrm <> 'store_design_invalid' then
+      if sqlerrm is distinct from 'store_design_invalid' then
         raise;
       end if;
   end;
 
-  if (select published_document->>'themeId' from public.store_designs) <> 'dark-modern' then
+  if (select published_document->>'themeId' from public.store_designs) is distinct from 'dark-modern' then
     raise exception 'failed Publish mutated current Published';
   end if;
 end;
