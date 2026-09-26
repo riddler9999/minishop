@@ -35,7 +35,11 @@ describe('Store Design RLS and RPC security contract', () => {
     assert.match(sql, /create or replace function store_design_private\.save_store_design_draft_internal/i);
     assert.match(sql, /security definer\s+set search_path = ''/i);
     assert.match(sql, /create or replace function public\.save_store_design_draft\(p_expected_revision bigint, p_document jsonb\)[\s\S]*security invoker/i);
-    const publicSave = sql.match(/create or replace function public\\.save_store_design_draft\\(p_expected_revision bigint, p_document jsonb\\)([\\s\\S]*?)\\$\\$;/i);\n    assert.ok(publicSave);\n    assert.doesNotMatch(publicSave[1], /security definer/i);
+    const publicSave = sql.match(
+      /create or replace function public\.save_store_design_draft\(p_expected_revision bigint, p_document jsonb\)([\s\S]*?)\$\$;/i,
+    );
+    assert.ok(publicSave);
+    assert.doesNotMatch(publicSave[1], /security definer/i);
 
     assert.match(sql, /revoke all on function public\.load_own_store_design\(\) from public, anon, authenticated/i);
     assert.match(sql, /grant execute on function public\.load_own_store_design\(\) to authenticated/i);
