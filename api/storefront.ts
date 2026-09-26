@@ -42,15 +42,31 @@ export default async function handler(req: any, res: any) {
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
   if (action === 'shop') {
-    // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
-    // core shop payload can never break if the column isn't there yet: on any
-    // error (e.g. column missing before 0009 is applied) theme resolves to null
-    // and the storefront falls back to its defaults (domain/theme.ts). The blob
-    // is passed through raw — the browser re-validates it via normalizeTheme().
-    let theme: unknown = null;
-    const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
-    if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
-    return sendJson(res, 200, {shop: {id: shop.id, name: shop.name, logoUrl: media(shop.logo_url), defaultDeliveryFee: shop.default_delivery_fee, theme}}, true);
+    // Buyer Store Design is Published-only. The dedicated RPC resolves the
+    // lifecycle row server-side and returns only the Published document. During
+    // the additive migration window, shops without a lifecycle row continue to
+    // fall back to legacy shops.theme so existing storefronts do not reset.
+    let publishedDesign: unknown = null;
+    const {data: publishedRow, error: publishedError} = await sb.rpc('load_published_store_design', {p_shop_slug: slug});
+    if (!publishedError && publishedRow && typeof publishedRow === 'object') {
+      publishedDesign = (publishedRow as {document?: unknown}).document ?? null;
+    }
+
+    let theme: unknown = publishedDesign;
+    if (theme == null) {
+      const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
+      if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
+    }
+
+    return sendJson(res, 200, {
+      shop: {
+        id: shop.id,
+        name: shop.name,
+        logoUrl: media(shop.logo_url),
+        defaultDeliveryFee: shop.default_delivery_fee,
+        theme,
+      },
+    }, true);
   }
   if (action === 'categories') {
     const {data, error} = await sb.from('products').select('category').eq('shop_id', shop.id).eq('status', 'active').not('category', 'is', null);
