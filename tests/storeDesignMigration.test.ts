@@ -24,7 +24,7 @@ describe('Store Design lifecycle migration contract', () => {
   it('uses optimistic revision checks for Draft save', async () => {
     const sql = await readFile(migrationPath, 'utf8');
 
-    assert.match(sql, /create or replace function public\.save_store_design_draft\(p_expected_revision bigint, p_document jsonb\)/i);
+    assert.match(sql, /create or replace function public\.save_store_design_draft\(\s*p_expected_revision bigint,\s*p_document jsonb\s*\)/i);
     assert.match(sql, /for update/i);
     assert.match(sql, /v_design\.draft_revision\s*<>\s*p_expected_revision/i);
     assert.match(sql, /raise exception 'store_design_conflict'/i);
@@ -35,7 +35,7 @@ describe('Store Design lifecycle migration contract', () => {
   it('publishes and rolls back lifecycle slots atomically while row-locked', async () => {
     const sql = await readFile(migrationPath, 'utf8');
 
-    assert.match(sql, /create or replace function public\.publish_store_design_draft\(p_expected_draft_revision bigint\)/i);
+    assert.match(sql, /create or replace function public\.publish_store_design_draft\(\s*p_expected_draft_revision bigint\s*\)/i);
     assert.match(sql, /previous_published_document\s*=\s*published_document/i);
     assert.match(sql, /published_document\s*=\s*draft_document/i);
     assert.match(sql, /published_revision\s*=\s*published_revision\s*\+\s*1/i);
