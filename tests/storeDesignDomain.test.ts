@@ -143,4 +143,28 @@ describe('Store Design domain', () => {
     assert.ok(result.errors.some((error) => error.code === 'duplicate_section_id'));
     assert.ok(result.errors.some((error) => error.code === 'buy_now_required'));
   });
+  it('preserves additional compatible seller sections during theme migration', () => {
+    const current = createDefaultStoreDesign('clean-minimal');
+    current.templates.home.sections.push({
+      id: 'seller-rich-text-extra',
+      type: 'rich-text',
+      enabled: true,
+      settings: {text: 'Keep my extra section'},
+    });
+    current.templates.home.sections.push({
+      id: 'seller-new-arrivals',
+      type: 'new-arrivals',
+      enabled: true,
+      settings: {
+        title: 'Latest',
+        productSource: {mode: 'dynamic', rule: 'new_arrivals', limit: 6},
+      },
+    });
+
+    const next = createThemeDraft(current, 'dark-modern');
+
+    assert.ok(next.templates.home.sections.some((section) => section.id === 'seller-rich-text-extra'));
+    assert.ok(next.templates.home.sections.some((section) => section.id === 'seller-new-arrivals'));
+  });
+
 });
