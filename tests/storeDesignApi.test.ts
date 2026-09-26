@@ -4,7 +4,7 @@ import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
 import {
   StoreDesignConflictError,
   createStoreDesignLifecycleAdapter,
-} from '../src/features/shop/api/storeDesign.ts';
+} from '../src/features/shop/api/storeDesignAdapter.ts';
 
 function rpcClient(handler: (fn: string, args?: Record<string, unknown>) => Promise<{data: unknown; error: unknown}>) {
   return {rpc: handler};
