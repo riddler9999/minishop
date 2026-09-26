@@ -154,7 +154,7 @@ begin
   if v_result->'published_document'->>'themeId' is distinct from 'dark-modern' then
     raise exception 'Publish did not promote Draft';
   end if;
-  if v_result->'previous_published_document'->>'presetId' is distinct from 'clean-minimal' then
+  if v_result->'previous_published_document'->>'themeId' is distinct from 'clean-minimal' then
     raise exception 'Publish did not preserve previous Published';
   end if;
   if (v_result->>'published_revision')::bigint is distinct from 2 then
@@ -180,7 +180,7 @@ begin
 end;
 $$;
 
--- Rollback is reversible: first restores legacy Published, second swaps back.
+-- Rollback is reversible: first restores the converted v1 Previous Published, second swaps back.
 reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', false);
