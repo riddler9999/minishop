@@ -1,0 +1,95 @@
+name: Store Design DB contract
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/0024_store_design_lifecycle.sql'
+      - 'tests/storeDesignDatabaseRuntime.sql'
+      - '.github/workflows/store-design-db.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/0024_store_design_lifecycle.sql'
+      - 'tests/storeDesignDatabaseRuntime.sql'
+      - '.github/workflows/store-design-db.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: minishop_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d minishop_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: minishop_test
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create minimal Supabase auth + tenant contract
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          create role anon nologin;
+          create role authenticated nologin;
+
+          create schema auth;
+          create or replace function auth.uid()
+          returns uuid
+          language sql
+          stable
+          as $$
+            select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+          $$;
+
+          grant usage on schema auth to anon, authenticated;
+          grant execute on function auth.uid() to anon, authenticated;
+
+          create table public.shops (
+            id uuid primary key,
+            owner_id uuid not null,
+            slug text not null unique,
+            is_active boolean not null default true,
+            theme jsonb not null default '{}'::jsonb
+          );
+
+          grant usage on schema public to anon, authenticated;
+          grant select on public.shops to anon, authenticated;
+
+          insert into public.shops (id, owner_id, slug, theme) values
+            (
+              'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+              '11111111-1111-4111-8111-111111111111',
+              'shop-one',
+              '{"presetId":"clean-minimal","home":{"heroHeadline":"Legacy One"}}'::jsonb
+            ),
+            (
+              'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+              '22222222-2222-4222-8222-222222222222',
+              'shop-two',
+              '{"presetId":"street-bold","home":{"heroHeadline":"Legacy Two"}}'::jsonb
+            );
+          SQL
+
+      - name: Apply migration 0024 to disposable PostgreSQL only
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0024_store_design_lifecycle.sql
+
+      - name: Verify RLS, concurrency, Publish, Rollback, and buyer privacy
+        run: psql -v ON_ERROR_STOP=1 -f tests/storeDesignDatabaseRuntime.sql
