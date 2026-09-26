@@ -1,0 +1,85 @@
+name: Database Runtime Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - "tests/database-runtime-audit.ts"
+      - "tests/database-runtime-audit.sql"
+      - ".github/workflows/database-runtime-integration.yml"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-runtime:
+    name: Database Runtime Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Inspect zero-cost runtime
+        run: |
+          docker --version
+          docker compose version
+          supabase --version
+
+      - name: Create ephemeral local config
+        run: |
+          test ! -f supabase/config.toml
+          supabase init
+          echo "Generated local-only config:"
+          sed -n '1,220p' supabase/config.toml
+
+      - name: Start disposable local Supabase
+        run: supabase start
+
+      - name: Replay full migration chain through 0023
+        run: supabase db reset
+
+      - name: Inspect Storage RLS runtime state
+        run: |
+          docker exec supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select policyname, permissive, roles, cmd, qual, with_check from pg_policies where schemaname='storage' and tablename='objects' order by policyname;"
+          docker exec supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select id,name,public,file_size_limit,allowed_mime_types from storage.buckets order by id;"
+
+      - name: Run behavioral database audit
+        shell: bash
+        run: |
+          supabase status -o env > /tmp/supabase-local.env
+          set -a
+          source /tmp/supabase-local.env
+          set +a
+          export SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export SUPABASE_ANON_KEY="${ANON_KEY}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY}"
+          npm run test:database-runtime
+
+      - name: Assert no hosted Supabase credentials or URLs in runtime infrastructure
+        if: always()
+        run: |
+          ! grep -R -n -E 'https://[a-z0-9-]+\.supabase\.co|db\.[a-z0-9-]+\.supabase\.co|eyJ[a-zA-Z0-9_-]{20,}\.' \
+            .github/workflows/database-runtime-integration.yml tests/database-runtime-audit.ts
+
+      - name: Stop disposable Supabase
+        if: always()
+        run: supabase stop --no-backup || true

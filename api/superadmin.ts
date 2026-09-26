@@ -1,11 +1,19 @@
-import {sendJson} from './_http.js';
-import {clean} from './_validation.js';
-import {requireSuperadmin} from './_superadmin.js';
+import {sendJson} from './_http.ts';
+import {clean} from './_validation.ts';
+import {mapDbError} from '../src/domain/dbError.ts';
+import {requireSuperadmin} from './_superadmin.ts';
 
 const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
 
-export default async function handler(req: any, res: any) {
-  const access = await requireSuperadmin(req);
+type SuperadminDeps = {
+  requireAccess: typeof requireSuperadmin;
+};
+
+export function createSuperadminHandler(
+  deps: SuperadminDeps = {requireAccess: requireSuperadmin},
+) {
+  return async function handler(req: any, res: any) {
+  const access = await deps.requireAccess(req);
   if ('error' in access) return sendJson(res, access.status, {error: access.error});
   const sb = access.admin;
 
@@ -38,6 +46,9 @@ export default async function handler(req: any, res: any) {
   if (!ACTIONS.has(action)) return sendJson(res, 400, {error: 'Invalid action'});
   const shopId = clean(body.shopId, 80);
   const paymentRef = clean(body.paymentRef, 120) || null;
+  const transactionIdInput = String(body.transactionId ?? '').trim();
+  const transactionId =
+    transactionIdInput && transactionIdInput.length <= 160 ? transactionIdInput : null;
 
   let error: any = null;
   if (action === 'approve-application' || action === 'reject-application') {
@@ -64,8 +75,8 @@ export default async function handler(req: any, res: any) {
     ({error} = await sb.rpc('admin_cancel_subscription', {p_shop_id: shopId}));
   } else if (action === 'credit-pack') {
     const purchaseId = clean(body.purchaseId, 80);
-    if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
-    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId}));
+    if (!purchaseId || !transactionId) return sendJson(res, 400, {error:'Missing purchase or transaction id'});
+    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId, p_transaction_id: transactionId}));
   } else if (action === 'reject-pack') {
     const purchaseId = clean(body.purchaseId, 80);
     if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
@@ -75,6 +86,9 @@ export default async function handler(req: any, res: any) {
     ({error} = await sb.from('shops').update({is_active: body.active}).eq('id', shopId));
   }
 
-  if (error) return sendJson(res, 400, {error: error.message || 'Action failed'});
+  if (error) return sendJson(res, 400, {error: mapDbError(error.message, 'Action failed')});
   return sendJson(res, 200, {ok: true});
+  };
 }
+
+export default createSuperadminHandler();
