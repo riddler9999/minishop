@@ -1,5 +1,5 @@
 import {DEFAULT_THEME, THEME_PRESETS, normalizeTheme, resolveThemePresetId, type ThemePresetId} from '../theme.ts';
-import {defaultSectionSettings, isStoreSectionType, supportsTemplate} from './registry.ts';
+import {defaultSectionSettings, getSectionDefinition, isStoreSectionType, supportsTemplate} from './registry.ts';
 import {
   STORE_DESIGN_SCHEMA_VERSION,
   type BuyNowSettings,
@@ -123,10 +123,11 @@ function normalizeSection(value: unknown, template: StoreTemplateName, index: nu
   if (!isStoreSectionType(raw.type) || !supportsTemplate(raw.type, template)) return null;
   const type = raw.type;
   const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim().slice(0, 120) : `${template}-${type}-${index + 1}`;
+  const definition = getSectionDefinition(type);
   return {
     id,
     type,
-    enabled: boolValue(raw.enabled, true),
+    enabled: definition.hideable ? boolValue(raw.enabled, true) : true,
     settings: normalizeSettings(type, raw.settings),
   } as StoreSection;
 }
