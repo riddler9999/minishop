@@ -6,6 +6,7 @@ import {requireSupabase} from '@/core/supabase/client';
 import type {TablesInsert, TablesUpdate} from '@/core/supabase/database.types';
 import type {ShippingZone, ShippingZoneInput, ShippingZonePatch} from '@/domain/shop';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
+import {mapDbError} from '@/domain/dbError';
 
 function mapShippingZone(row: {id: string; region: string; township: string; fee: number}): ShippingZone {
   return {id: row.id, region: row.region, township: row.township, fee: row.fee};
@@ -23,7 +24,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .order('region', {ascending: true})
       .order('township', {ascending: true});
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
     return {zones: (data ?? []).map(mapShippingZone)};
   },
 
@@ -39,7 +40,7 @@ export const shippingAdminApi = {
     const {data, error} = await sb.from('shipping_zones').insert(row).select('id, region, township, fee').maybeSingle();
     if (error || !data) {
       if (error?.code === '23505') throw new Error('ဒီဒေသ/မြို့နယ်အတွက် ပို့ခ ရှိပြီးသားပါ။');
-      throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ဖန်တီး၍မရပါ။');
+      throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ဖန်တီး၍မရပါ။'));
     }
     return {zone: mapShippingZone(data)};
   },
@@ -56,7 +57,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .select('id, region, township, fee')
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။'));
     return {zone: mapShippingZone(data)};
   },
 
@@ -70,7 +71,7 @@ export const shippingAdminApi = {
       .eq('shop_id', shopId)
       .select('id')
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပို့ဆောင်ခ ဇုန် ရှာမတွေ့ပါ။'));
     return {ok: true};
   },
 };

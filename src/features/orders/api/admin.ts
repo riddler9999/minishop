@@ -4,6 +4,7 @@
 import {requireSupabase} from '@/core/supabase/client';
 import type {AdminOrder} from '@/domain/order';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
+import {mapDbError} from '@/domain/dbError';
 
 export const orderAdminApi = {
   async listOrders(): Promise<{orders: AdminOrder[]}> {
@@ -14,7 +15,7 @@ export const orderAdminApi = {
       .select('*, order_items(name, unit_price, qty)')
       .eq('shop_id', shopId)
       .order('created_at', {ascending: false});
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
 
     const orders: AdminOrder[] = (data ?? []).map((o) => ({
       order_id: o.order_no,

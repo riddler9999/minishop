@@ -8,7 +8,7 @@
 
 import {requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
-import {mapUpdateOwnShopError} from '@/domain/dbError';
+import {mapDbError, mapUpdateOwnShopError} from '@/domain/dbError';
 import {recoverCreateShopError} from '@/domain/shopAccess';
 
 export interface OwnShop {
@@ -66,7 +66,7 @@ export async function getOwnShop(userId: string): Promise<OwnShop | null> {
     .select(OWN_SHOP_COLUMNS)
     .eq('owner_id', userId)
     .maybeSingle();
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error.message, 'ဆိုင် အချက်အလက် ရယူ၍မရပါ။'));
   return data ? mapOwnShop(data as ShopRow) : null;
 }
 
