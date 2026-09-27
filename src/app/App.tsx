@@ -12,6 +12,7 @@ import AdminOrders from '@/features/orders/pages/AdminOrders';
 import AdminShipping from '@/features/shipping/pages/AdminShipping';
 import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
+import Themes from '@/features/shop/pages/Themes';
 import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
 import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
@@ -46,6 +47,8 @@ export default function App() {
           <Route path="shipping" element={<AdminShipping />} />
           <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
+          <Route path="online-store/themes" element={<Themes />} />
+          <Route path="online-store/themes/customize" element={<StoreDesign />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />

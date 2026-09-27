@@ -6,6 +6,8 @@ import {
   SellEverywhere,
   StopSellingThroughChat,
   ThemeShowcase,
+  DemoStoreShowcase,
+  ProductFeatures,
   ThreeStepStoreCreation,
 } from '../components/HomeSections';
 import './landing.css';
@@ -21,6 +23,8 @@ export default function Landing() {
         <ThreeStepStoreCreation />
         <SellEverywhere />
         <MyanmarCheckout />
+        <ProductFeatures />
+        <DemoStoreShowcase />
         <ThemeShowcase />
         <PricingSection />
         <DashboardFinalCTA />
