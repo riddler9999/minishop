@@ -13,11 +13,18 @@ type StorefrontDesignClient = {
   };
 };
 
+function isUndeployedLifecycleRpc(error: any): boolean {
+  const code = String(error?.code ?? '');
+  return code === 'PGRST202' || code === '42883';
+}
+
 /**
  * Controlled buyer Store Design read.
  * - lifecycle Published is authoritative when the lifecycle row exists
  * - lifecycle row absence falls back to legacy shops.theme during migration
- * - RPC failures fail closed and never silently serve stale legacy data
+ * - an undeployed lifecycle RPC also falls back to legacy shops.theme so the
+ *   compatibility period works before migration 0024 is applied
+ * - all other RPC failures fail closed and never silently serve stale legacy data
  */
 export async function loadBuyerStoreDesign(
   sb: StorefrontDesignClient,
@@ -28,11 +35,11 @@ export async function loadBuyerStoreDesign(
     {p_shop_slug: input.shopSlug},
   );
 
-  if (publishedError) return {ok: false};
+  if (publishedError && !isUndeployedLifecycleRpc(publishedError)) return {ok: false};
   // The RPC returns null only when no lifecycle row exists. Once a row exists,
   // even an explicitly-null Published document is authoritative and must not
   // resurrect the legacy shops.theme value.
-  if (published !== null && published !== undefined) {
+  if (!publishedError && published !== null && published !== undefined) {
     return {ok: true, document: published.document ?? null};
   }
 
