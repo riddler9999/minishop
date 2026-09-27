@@ -3,13 +3,13 @@
 Date: 2026-09-25
 Repository: `riddler9999/minishop`
 Production Supabase: `fsxdnmnycizjkgstokze` (ap-southeast-1, PostgreSQL 17)
-Audit mode: Production read-only inspection + repository remediation. No Production migration or data mutation was performed.
+Audit mode: Production read-only inspection + repository remediation + approved Production deployment of migration 0023 on 2026-09-28.
 
 ## Executive status
 
-**RUNTIME-PROVEN IN FREE DISPOSABLE LOCAL SUPABASE CI; PRODUCTION DEPLOYMENT STILL NOT APPROVED.**
+**PRODUCTION DEPLOYED + POST-VERIFIED. P0 CROSS-TENANT STOREFRONT POLICY OVERLAP CLOSED.**
 
-The audit confirmed one cross-tenant RLS defect in Production and one branding Storage-policy contract drift. It also found that Extra Order pack credits were idempotent per purchase row but did not have a database-enforced identity for the underlying payment, allowing the same real payment to be represented by multiple purchase rows. Repository migration 0023 remediates these defects, but it has **not** been applied to Production.
+The audit confirmed one cross-tenant RLS defect in Production and one branding Storage-policy contract drift. It also found that Extra Order pack credits were idempotent per purchase row but did not have a database-enforced identity for the underlying payment, allowing the same real payment to be represented by multiple purchase rows. Migration 0023 was applied to Production on 2026-09-28 after a read-only preflight found no blockers. Post-apply verification confirmed the public storefront policies are `anon`-only, authenticated overlap count is 0, Seller A cannot read Seller B shop/product rows, and anonymous storefront reads remain intact.
 
 Production read-only integrity checks found no current negative stock, plan/entitlement mismatch, quota mismatch, duplicate normalized subscription transaction IDs, or duplicate entitlement-ledger sources.
 
@@ -34,14 +34,14 @@ All 12 public base tables inspected have RLS enabled. `shop_monthly_usage` is a 
 
 ### Confirmed object/behavior drift
 
-**P0 — authenticated seller inherits public storefront policies.**
-Production public-read policies for `shops`, `products`, `payment_accounts`, and `shipping_zones` were defined for `public` rather than `anon`. PostgreSQL's `public` role applies to authenticated users too, so permissive public + owner policies OR together. Read-only role simulation proved Seller A could see Seller B's active shop row and active product row. The visible shop row also exposes `owner_id` and `plan`. Migration 0023 recreates storefront policies as `to anon`, leaving authenticated sellers with owner-scoped policies only.
+**P0 — authenticated seller inherited public storefront policies — CLOSED 2026-09-28.**
+Before 0023, Production public-read policies for `shops`, `products`, `payment_accounts`, and `shipping_zones` were defined for `public` rather than `anon`. PostgreSQL's `public` role applies to authenticated users too, so permissive public + owner policies OR together. Pre-fix read-only role simulation proved Seller A could see Seller B's active shop row and active product row. Migration 0023 recreated all four storefront policies as `to anon`. Post-apply Production verification reported authenticated overlap count `0`; Seller A saw `0` foreign shops and `0` foreign products while retaining own-tenant access.
 
-**P1 — Store Branding Storage writes still Business-gated.**
-Production `tenant_media_owner_insert/update/delete` policies require `s.plan='business'` for `shop-logos`. Repository migration 0020 removed the Business gate from `shops.logo_url` updates but did not reconcile Storage policies. Migration 0023 removes only the plan predicate and preserves owner + first-folder-segment tenant scoping.
+**P1 — Store Branding Storage writes were Business-gated — CLOSED 2026-09-28.**
+Before 0023, Production `tenant_media_owner_insert/update/delete` policies required `s.plan='business'` for `shop-logos`. Migration 0023 removed only the plan predicate while preserving owner + first-folder-segment tenant scoping. Post-apply inspection confirmed no remaining Business-plan predicate in those Storage policies.
 
-**P1 — Extra Order underlying payment was not uniquely identifiable.**
-`order_pack_purchases` had only last-5 reference + screenshot and no full transaction ID uniqueness. `admin_credit_order_pack` was retry-idempotent by purchase ID through the entitlement ledger, but two purchase rows representing the same real transfer could each be credited. Migration 0023 adds platform-managed `transaction_id`, normalized uniqueness, an approved-row requirement, and an RPC signature that requires/validates the full transaction ID.
+**P1 — Extra Order underlying payment was not uniquely identifiable — CLOSED 2026-09-28.**
+Before 0023, `order_pack_purchases` had no full transaction ID uniqueness. Production preflight found `0` order-pack rows and `0` approved rows, so there was no dirty-data blocker. Migration 0023 added platform-managed `transaction_id`, normalized uniqueness, the approved-row requirement, and `admin_credit_order_pack(uuid,text)`. Post-apply verification confirmed the column exists, the new signature is active, `anon`/`authenticated` cannot execute it, and `service_role` can.
 
 ### Migration history drift
 
@@ -59,8 +59,8 @@ Legend: **PROVEN** = behavioral read-only Production evidence; **PARTIAL** = pol
 
 | Surface | anon SELECT | Seller own SELECT | Seller cross-tenant SELECT | Seller cross-tenant writes | Status |
 | --- | --- | --- | --- | --- | --- |
-| shops | active rows intentionally visible | yes | **FAILED pre-fix** due public-policy overlap | not mutated in Production | PARTIAL / P0 fix proposed |
-| products | active rows intentionally visible | yes | **FAILED pre-fix** for active rows | not mutated in Production | PARTIAL / P0 fix proposed |
+| shops | active rows intentionally visible | yes | **PASS post-0023: 0 foreign rows** | policy deployment verified | PROVEN / P0 closed |
+| products | active rows intentionally visible | yes | **PASS post-0023: 0 foreign rows** | policy deployment verified | PROVEN / P0 closed |
 | orders | 0 rows visible in Production role test | owner policy | no cross-tenant rows observed | not mutated in Production | PARTIAL |
 | order_items | 0 rows visible anon | parent-order owner policy | Production has no orders | not mutated | BLOCKED for full A/B fixture |
 | payment_proofs | 0 anon | owner-only | no B rows visible | not mutated | PARTIAL |
@@ -78,9 +78,10 @@ A read-only transaction used `SET LOCAL ROLE` and JWT-sub simulation without exp
 - anonymous role saw **0** orders, order_items, payment proofs, entitlements, ledgers, and order-pack rows.
 - anonymous role could read active shop rows and the base-table columns `owner_id` and `plan`.
 - authenticated Seller A saw Seller B active shop and active product rows before migration 0023.
-- current Production has products across 3 distinct shops, making the cross-tenant product read test meaningful.
+- after 0023, Seller A saw exactly 1 own shop, 0 foreign shops, 1 own product, and 0 foreign products; a specifically targeted foreign shop was not visible.
+- anonymous storefront verification still saw all 5/5 active shops and 3/3 active products.
 
-No Production write was attempted.
+The approved 0023 Production migration changed policies/schema/functions only; no application data rows were inserted, updated, or deleted by the verification.
 
 ## Buyer security boundary
 
@@ -123,7 +124,7 @@ The safe runtime harness defines:
 6. product cap final slot concurrency -> 10/100/500 maximum.
 7. same Extra Order payment across different purchase IDs -> one credit only.
 
-None of these mutation/concurrency cases were executed against Production. The original seven were executed in run `36123942215`; the strengthened storefront, logo-write, and missing-transaction cases are merge-gated by a fresh `Database Runtime Integration` check on the exact reconciliation head. Production remains read-only and unchanged.
+Concurrency/mutation stress cases remain intentionally proven in disposable local Supabase rather than against Production. Production 0023 deployment was limited to the reviewed migration plus post-apply authorization/read verification.
 
 ## Product-cap audit
 
@@ -237,7 +238,7 @@ Existing tests such as `entitlementMigration.test.ts`, `final-pricing-migration.
 ## Findings by severity
 
 ### P0
-1. Authenticated sellers inherited public storefront SELECT policies and could read another tenant's active shop/product rows. Confirmed behavior in Production read-only role simulation. 0023 proposed; Production remains affected until applied.
+1. ~~Authenticated sellers inherited public storefront SELECT policies and could read another tenant's active shop/product rows.~~ **CLOSED 2026-09-28:** 0023 applied to Production; authenticated storefront-policy overlap is 0 and Seller A → Seller B shop/product reads return 0 foreign rows.
 
 ### P1
 1. `shop-logos` Storage writes remain Business-only despite Branding being Core on all plans. 0023 proposed.
@@ -253,8 +254,8 @@ Existing tests such as `entitlementMigration.test.ts`, `final-pricing-migration.
 
 ## Production impact
 
-No Production DB mutation was performed by this audit. Until 0023 is reviewed, staged, behaviorally tested, and explicitly approved for Production, the P0 tenant-read overlap remains present.
+Migration 0023 was explicitly approved and applied to Production on 2026-09-28 after a read-only preflight. The P0 authenticated cross-tenant storefront-read overlap is closed. Anonymous buyer storefront reads remained intact after the policy cutover. The migration also reconciled Core shop-logo Storage writes and Extra Order payment identity/RPC hardening.
 
 ## Required next step
 
-Keep the zero-cost `Database Runtime Integration` GitHub Actions gate green, reconcile the remaining PARTIAL rejection/RTO/refund status-model gap if product requirements require distinct persisted transitions, then perform a separate explicit Production migration deployment gate. Do not apply 0023 to Production from this PR.
+Regenerate/reconcile `database.types.ts` from the exact post-0023 Production schema, keep the database runtime integration gate green, and address the remaining non-P0 items separately (buyer-safe base-table exposure hardening, leaked-password protection, and the partial rejection/RTO/refund status-model gap).
