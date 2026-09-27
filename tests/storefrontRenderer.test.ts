@@ -44,3 +44,13 @@ describe('shared storefront renderer plan', () => {
     assert.equal(plan.requiredCommerce.buyNow.disabled, false);
   });
 });
+
+
+describe('buyer page delegation contract', () => {
+  it('keeps Home, Collection and Product templates addressable by the shared renderer plan', () => {
+    const doc = createDefaultStoreDesign('grid-catalog');
+    assert.equal(buildStorefrontRenderPlan(doc, 'home').template, 'home');
+    assert.equal(buildStorefrontRenderPlan(doc, 'collection').template, 'collection');
+    assert.equal(buildStorefrontRenderPlan(doc, 'product').template, 'product');
+  });
+});
