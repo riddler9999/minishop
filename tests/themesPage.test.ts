@@ -13,6 +13,11 @@ describe('Store Builder #112 Themes entry screen', () => {
     assert.match(source, /online-store\/themes\/customize/);
   });
 
+  it('offers a discoverable legacy fallback while migration 0024 may be unavailable', () => {
+    assert.match(source, /to=["']\/admin\/design["']/);
+    assert.match(source, /အဟောင်း Store Design ဖွင့်မည်/);
+  });
+
   it('creates and persists a theme switch as Draft using optimistic concurrency', () => {
     assert.match(source, /createThemeDraft\(lifecycle\.draft, targetThemeId\)/);
     assert.match(source, /expectedRevision\s*=\s*lifecycle\.draftRevision/);
