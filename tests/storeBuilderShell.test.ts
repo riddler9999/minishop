@@ -84,10 +84,13 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(source, /Reload/);
   });
 
-  it('uses the shared storefront renderer in preview instead of legacy StorePreview', () => {
+  it('uses the shared storefront renderer in preview and thins the legacy preview to the same renderer', () => {
     const preview = fs.readFileSync(previewPath, 'utf8');
+    const legacyPreview = fs.readFileSync(new URL('../src/features/shop/components/StorePreview.tsx', import.meta.url), 'utf8');
     assert.match(preview, /StorefrontRenderer|buildStorefrontRenderPlan|shared/i);
     assert.doesNotMatch(preview, /StorePreview/);
+    assert.match(legacyPreview, /StorefrontRenderer/);
+    assert.doesNotMatch(legacyPreview, /function HomePreview|function CategoryPreview|function ProductPreview/);
   });
 
   it('routes lifecycle customize through the new Store Builder shell', () => {
@@ -96,6 +99,7 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(lifecycle, /StoreBuilderShell/);
     assert.match(lifecycle, /loadOwnStoreDesign/);
     assert.match(app, /online-store\/themes\/customize/);
+    assert.match(app, /path="design" element={<LifecycleStoreBuilder \/>}/);
     assert.match(app, /LifecycleStoreBuilder/);
   });
 });
