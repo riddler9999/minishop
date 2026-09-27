@@ -3,9 +3,17 @@
 // explicit .js ESM specifiers. In tests only, if such a local .js target does
 // not exist, resolve the corresponding .ts source file.
 import {registerHooks} from 'node:module';
+import {existsSync, statSync} from 'node:fs';
+import {URL, fileURLToPath} from 'node:url';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier.startsWith('@/')) {
+      let target = new URL(`../src/${specifier.slice(2)}`, import.meta.url);
+      const path = fileURLToPath(target);
+      if (existsSync(path) && statSync(path).isDirectory()) target = new URL(`${target.href.replace(/\/$/, '')}/index.ts`);
+      return nextResolve(target.href, context);
+    }
     try {
       return nextResolve(specifier, context);
     } catch (error) {

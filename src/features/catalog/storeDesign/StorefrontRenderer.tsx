@@ -12,6 +12,8 @@ export type StorefrontRendererProps = {
   product?: Product | null;
   renderProductCard?: (product: Product) => ReactNode;
   renderRequiredCommerce?: (buyNow: StoreDesignDocument['globalSettings']['buyNow']) => ReactNode;
+  selectedSectionId?: string | null;
+  onSectionSelect?: (sectionId: string) => void;
 };
 
 function sectionContent(section: StoreSection, props: StorefrontRendererProps): ReactNode {
@@ -51,7 +53,7 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
     case 'rich-text':
       return section.settings.text ? <section><p>{section.settings.text}</p></section> : null;
     case 'spacer':
-      return <div aria-hidden="true" data-size={section.settings.size} />;
+      return <div aria-hidden="true" data-size={section.settings.size} className={section.settings.size === 'sm' ? 'h-4' : section.settings.size === 'lg' ? 'h-16' : 'h-8'} />;
     case 'product-gallery':
       return props.product ? <section>{props.product.images.map((image) => <img key={image} src={image} alt={props.product?.name ?? ''} />)}</section> : null;
     case 'product-info':
@@ -77,7 +79,26 @@ export function StorefrontRenderer(props: StorefrontRendererProps) {
       style={{backgroundColor: visual.canvas, color: visual.text}}
       className="min-h-full"
     >
-      {plan.sections.map((section) => <div key={section.id} data-store-section-id={section.id}>{sectionContent(section, props)}</div>)}
+      {plan.sections.map((section) => (
+        <div
+          key={section.id}
+          data-store-section-id={section.id}
+          data-selected={props.selectedSectionId === section.id || undefined}
+          role={props.onSectionSelect ? 'button' : undefined}
+          tabIndex={props.onSectionSelect ? 0 : undefined}
+          aria-label={props.onSectionSelect ? `${section.type} ကဏ္ဍကို ရွေးမည်` : undefined}
+          onClick={props.onSectionSelect ? () => props.onSectionSelect?.(section.id) : undefined}
+          onKeyDown={props.onSectionSelect ? (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              props.onSectionSelect?.(section.id);
+            }
+          } : undefined}
+          className={props.selectedSectionId === section.id ? 'outline outline-2 outline-offset-2 outline-brand-500' : undefined}
+        >
+          {sectionContent(section, props)}
+        </div>
+      ))}
       {props.template === 'product' && props.renderRequiredCommerce?.(plan.requiredCommerce.buyNow)}
     </div>
   );

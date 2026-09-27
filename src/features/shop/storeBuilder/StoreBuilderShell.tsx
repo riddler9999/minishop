@@ -1,8 +1,12 @@
 import {useEffect, useMemo, useState} from 'react';
 import type {Product} from '@/domain/product';
-import type {StoreDesignDocument, StoreTemplateName} from '@/domain/storeDesign';
+import type {StoreDesignDocument, StoreSection, StoreSectionType, StoreTemplateName} from '@/domain/storeDesign';
+import {AddSectionPanel} from './AddSectionPanel';
+import {Inspector} from './Inspector';
 import {PreviewCanvas} from './PreviewCanvas';
+import {SectionTree} from './SectionTree';
 import {SAVE_DELAY, applyLocalEdit, createEditorState, debounceSaveIntent, persistEditorState, publishSavedDraft, reconcileSaveResult, type EditorState} from './editorState';
+import {addSection, removeSection, reorderSection, replaceSection, setSectionEnabled} from './sectionOperations';
 
 type Props = {
   initialDocument: StoreDesignDocument;
@@ -34,12 +38,26 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
 
   const sections = editor.document.templates[template].sections;
   const selected = useMemo(() => sections.find((section) => section.id === selectedSectionId) ?? null, [sections, selectedSectionId]);
+  const selectSection = (sectionId: string) => setSelectedSectionId(sectionId);
   const updateDocument = (document: StoreDesignDocument) => setEditor((current) => applyLocalEdit(current, document));
 
-  const toggleSelected = () => {
-    if (!selected) return;
-    updateDocument({...editor.document, templates: {...editor.document.templates, [template]: {sections: sections.map((section) => section.id === selected.id ? {...section, enabled: !section.enabled} : section)}}});
+  useEffect(() => {
+    if (!sections.some((section) => section.id === selectedSectionId)) setSelectedSectionId(sections[0]?.id ?? null);
+  }, [sections, selectedSectionId]);
+
+  const edit = (document: StoreDesignDocument) => updateDocument(document);
+  const add = (type: StoreSectionType) => {
+    const result = addSection(editor.document, template, type);
+    edit(result.document);
+    setSelectedSectionId(result.section.id);
   };
+  const remove = (sectionId: string) => {
+    const index = sections.findIndex((section) => section.id === sectionId);
+    const document = removeSection(editor.document, template, sectionId);
+    edit(document);
+    if (document !== editor.document) setSelectedSectionId(document.templates[template].sections[Math.max(0, index - 1)]?.id ?? null);
+  };
+  const changeSection = (section: StoreSection) => edit(replaceSection(editor.document, template, section));
 
   return (
     <div className="min-h-[720px] overflow-hidden rounded-2xl border border-cream-200 bg-white" data-store-builder="three-pane">
@@ -64,13 +82,22 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
 
       <div className="grid min-h-[660px] grid-cols-[240px_minmax(0,1fr)_280px]" data-layout="three-pane">
         <aside className="border-r border-cream-200 p-3" aria-label="Section tree">
-          <p className="mb-2 text-xs font-bold uppercase text-ink-soft">Sections</p>
-          <div className="space-y-1">{sections.map((section) => <button key={section.id} onClick={() => setSelectedSectionId(section.id)} className="block w-full rounded-lg border px-3 py-2 text-left text-sm">{section.type}</button>)}</div>
+          <p className="mb-2 text-xs font-bold text-ink-soft">ကဏ္ဍများ</p>
+          <SectionTree
+            sections={sections}
+            selectedSectionId={selectedSectionId}
+            blocked={editor.blocked}
+            onSelect={selectSection}
+            onMove={(sectionId, direction) => edit(reorderSection(editor.document, template, sectionId, direction))}
+            onToggle={(sectionId, enabled) => edit(setSectionEnabled(editor.document, template, sectionId, enabled))}
+            onRemove={remove}
+          />
+          <AddSectionPanel template={template} blocked={editor.blocked} onAdd={add} />
         </aside>
-        <main className="min-w-0"><PreviewCanvas document={editor.document} template={template} products={products} categories={categories} viewport={viewport} /></main>
+        <main className="min-w-0"><PreviewCanvas document={editor.document} template={template} products={products} categories={categories} viewport={viewport} selectedSectionId={selectedSectionId} onSectionSelect={selectSection} /></main>
         <aside className="border-l border-cream-200 p-4" aria-label="Inspector">
-          <p className="mb-3 text-xs font-bold uppercase text-ink-soft">Inspector</p>
-          {selected ? <><p className="text-sm font-semibold">{selected.type}</p><button onClick={toggleSelected} disabled={editor.blocked} className="mt-3 rounded-lg border px-3 py-2 text-sm">{selected.enabled ? 'Hide section' : 'Show section'}</button></> : <p className="text-sm text-ink-soft">Select a section from the tree or preview.</p>}
+          <p className="mb-3 text-xs font-bold text-ink-soft">ပြင်ဆင်ရန်</p>
+          <Inspector section={selected} blocked={editor.blocked} onChange={changeSection} />
         </aside>
       </div>
     </div>
