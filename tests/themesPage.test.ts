@@ -21,9 +21,13 @@ describe('Store Builder #112 Themes entry screen', () => {
   });
 
   it('keeps Published separate from Draft after a theme save', () => {
-    assert.match(source, /published:\s*lifecycle\.published/);
     assert.match(source, /draft:\s*saved\.document/);
     assert.match(source, /draftRevision:\s*saved\.revision/);
+    const saveBlock = source.slice(
+      source.indexOf('const saved = await adminApi.saveDraft'),
+      source.indexOf("setStatus({kind: 'saved'"),
+    );
+    assert.doesNotMatch(saveBlock, /published:/);
   });
 
   it('preserves the Published-only buyer read boundary from #108', () => {
