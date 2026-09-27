@@ -5,7 +5,6 @@ import {
   Bell,
   Home,
   LogOut,
-  Megaphone,
   Menu,
   Package,
   Settings,
@@ -33,7 +32,6 @@ const NAV: NavEntry[] = [
   {to: '/admin/orders', end: false, label: 'Orders', icon: ShoppingBag},
   {to: '/admin/products', end: false, label: 'Products', icon: Package},
   {to: '/admin/online-store/themes', end: false, label: 'Online Store', icon: Store},
-  {to: '/admin/marketing', end: false, label: 'Marketing', icon: Megaphone},
   {to: '/admin/analytics', end: false, label: 'Analytics', icon: BarChart3},
   {to: '/admin/shipping', end: false, label: 'Shipping', icon: Truck},
   {to: '/admin/settings', end: false, label: 'Settings', icon: Settings},
@@ -130,7 +128,7 @@ export default function AdminLayout() {
         </div>
       </header>
       {mobileOpen && <MobileDrawer onClose={() => setMobileOpen(false)} />}
-      <main className="lg:pl-64"><div className="mx-auto max-w-5xl px-4 py-5 pb-28 sm:px-5 lg:py-7"><Outlet /></div></main>
+      <main className="lg:pl-64"><div className="mx-auto max-w-5xl px-4 py-5 pb-40 sm:pb-28 sm:px-5 lg:py-7"><Outlet /></div></main>
       <MobileNav />
     </div>
   );
