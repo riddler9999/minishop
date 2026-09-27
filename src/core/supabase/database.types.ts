@@ -1,13 +1,3 @@
-// Auto-generated from the live schema via `mcp__Supabase__generate_typescript_types`
-// against project fsxdnmnycizjkgstokze (Mini Tiktok Shop). Regenerate after any
-// migration under supabase/migrations/ — do not hand-edit.
-//
-// NOTE: the additions for migration 0003 (shops.plan; orders.is_test /
-// is_duplicate / is_billable; the shop_monthly_usage view; the current_shop_usage
-// and usage_tier functions) are hand-authored here so the frontend compiles
-// before 0003 is applied. Once 0003 is applied to fsxdnmnycizjkgstokze,
-// regenerate this file 1:1 to replace this delta (MIGRATION-PLAN-0003.md §7).
-
 export type Json =
   | string
   | number
@@ -24,50 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      shop_applications: {
-        Row: {
-          amount: number
-          created_at: string
-          owner_id: string
-          payment_method: string
-          payment_ref_tail: string | null
-          plan: string
-          review_note: string | null
-          reviewed_at: string | null
-          screenshot_path: string | null
-          status: string
-          transaction_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          owner_id: string
-          payment_method: string
-          payment_ref_tail?: string | null
-          plan: string
-          review_note?: string | null
-          reviewed_at?: string | null
-          screenshot_path?: string | null
-          status?: string
-          transaction_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          owner_id?: string
-          payment_method?: string
-          payment_ref_tail?: string | null
-          plan?: string
-          review_note?: string | null
-          reviewed_at?: string | null
-          screenshot_path?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       entitlement_ledger: {
         Row: {
           created_at: string
@@ -105,99 +51,54 @@ export type Database = {
           source_id?: string | null
           source_type?: string | null
         }
-        Relationships: []
-      }
-      order_pack_purchases: {
-        Row: {
-          amount: number
-          created_at: string
-          id: string
-          payment_method: string
-          payment_ref_tail: string | null
-          transaction_id: string | null
-          qty: number
-          review_note: string | null
-          reviewed_at: string | null
-          screenshot_path: string
-          shop_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          id?: string
-          payment_method: string
-          payment_ref_tail?: string | null
-          transaction_id?: string | null
-          qty: number
-          review_note?: string | null
-          reviewed_at?: string | null
-          screenshot_path: string
-          shop_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          id?: string
-          payment_method?: string
-          payment_ref_tail?: string | null
-          transaction_id?: string | null
-          qty?: number
-          review_note?: string | null
-          reviewed_at?: string | null
-          screenshot_path?: string
-          shop_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      shop_entitlements: {
-        Row: {
-          active: boolean
-          cycle_end: string | null
-          cycle_start: string | null
-          monthly_quota: number
-          monthly_used: number
-          pending_plan: string | null
-          plan: string
-          purchased_balance: number
-          shop_id: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          cycle_end?: string | null
-          cycle_start?: string | null
-          monthly_quota?: number
-          monthly_used?: number
-          pending_plan?: string | null
-          plan: string
-          purchased_balance?: number
-          shop_id: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          cycle_end?: string | null
-          cycle_start?: string | null
-          monthly_quota?: number
-          monthly_used?: number
-          pending_plan?: string | null
-          plan?: string
-          purchased_balance?: number
-          shop_id?: string
-          updated_at?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "entitlement_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entitlement_ledger_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ninjavan_rates: {
-        Row: { id: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label: string; is_active: boolean; created_at: string }
-        Insert: { id?: string; origin_township: string; destination_region: string; destination_township: string; fee: number; source_label?: string; is_active?: boolean; created_at?: string }
-        Update: { id?: string; origin_township?: string; destination_region?: string; destination_township?: string; fee?: number; source_label?: string; is_active?: boolean; created_at?: string }
+        Row: {
+          created_at: string
+          destination_region: string
+          destination_township: string
+          fee: number
+          id: string
+          is_active: boolean
+          origin_township: string
+          source_label: string
+        }
+        Insert: {
+          created_at?: string
+          destination_region: string
+          destination_township: string
+          fee: number
+          id?: string
+          is_active?: boolean
+          origin_township: string
+          source_label?: string
+        }
+        Update: {
+          created_at?: string
+          destination_region?: string
+          destination_township?: string
+          fee?: number
+          id?: string
+          is_active?: boolean
+          origin_township?: string
+          source_label?: string
+        }
         Relationships: []
       }
       order_items: {
@@ -242,6 +143,62 @@ export type Database = {
           },
         ]
       }
+      order_pack_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_method: string
+          payment_ref_tail: string | null
+          qty: number
+          review_note: string | null
+          reviewed_at: string | null
+          screenshot_path: string
+          shop_id: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          payment_ref_tail?: string | null
+          qty: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path: string
+          shop_id: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_ref_tail?: string | null
+          qty?: number
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string
+          shop_id?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_pack_purchases_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -250,15 +207,15 @@ export type Database = {
           customer_phone: string
           delivery_fee: number
           delivery_service: string | null
-          origin_township: string | null
           grand_total: number
           id: string
           idempotency_key: string | null
-          is_billable: boolean
+          is_billable: boolean | null
           is_duplicate: boolean
           is_test: boolean
           item_total: number
           order_no: string
+          origin_township: string | null
           payment_method: string
           payment_ref_tail: string | null
           region: string | null
@@ -274,14 +231,15 @@ export type Database = {
           customer_phone: string
           delivery_fee?: number
           delivery_service?: string | null
-          origin_township?: string | null
           grand_total?: number
           id?: string
           idempotency_key?: string | null
+          is_billable?: boolean | null
           is_duplicate?: boolean
           is_test?: boolean
           item_total?: number
           order_no: string
+          origin_township?: string | null
           payment_method: string
           payment_ref_tail?: string | null
           region?: string | null
@@ -297,14 +255,15 @@ export type Database = {
           customer_phone?: string
           delivery_fee?: number
           delivery_service?: string | null
-          origin_township?: string | null
           grand_total?: number
           id?: string
           idempotency_key?: string | null
+          is_billable?: boolean | null
           is_duplicate?: boolean
           is_test?: boolean
           item_total?: number
           order_no?: string
+          origin_township?: string | null
           payment_method?: string
           payment_ref_tail?: string | null
           region?: string | null
@@ -354,6 +313,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payment_accounts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_proofs: {
+        Row: {
+          amount: number | null
+          confidence: number | null
+          created_at: string
+          detected_plan: string | null
+          id: string
+          owner_id: string
+          paid_at: string | null
+          raw_extraction: Json | null
+          receiver_name: string | null
+          rejection_reason: string | null
+          screenshot_url: string
+          sender_name: string | null
+          shop_id: string
+          status: string
+          transaction_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          confidence?: number | null
+          created_at?: string
+          detected_plan?: string | null
+          id?: string
+          owner_id: string
+          paid_at?: string | null
+          raw_extraction?: Json | null
+          receiver_name?: string | null
+          rejection_reason?: string | null
+          screenshot_url: string
+          sender_name?: string | null
+          shop_id: string
+          status?: string
+          transaction_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          confidence?: number | null
+          created_at?: string
+          detected_plan?: string | null
+          id?: string
+          owner_id?: string
+          paid_at?: string | null
+          raw_extraction?: Json | null
+          receiver_name?: string | null
+          rejection_reason?: string | null
+          screenshot_url?: string
+          sender_name?: string | null
+          shop_id?: string
+          status?: string
+          transaction_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -464,6 +488,98 @@ export type Database = {
           },
         ]
       }
+      shop_applications: {
+        Row: {
+          amount: number
+          created_at: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail: string | null
+          plan: string
+          review_note: string | null
+          reviewed_at: string | null
+          screenshot_path: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          owner_id: string
+          payment_method: string
+          payment_ref_tail?: string | null
+          plan: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          owner_id?: string
+          payment_method?: string
+          payment_ref_tail?: string | null
+          plan?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          screenshot_path?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_entitlements: {
+        Row: {
+          active: boolean
+          cycle_end: string | null
+          cycle_start: string | null
+          monthly_quota: number
+          monthly_used: number
+          pending_plan: string | null
+          plan: string
+          purchased_balance: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cycle_end?: string | null
+          cycle_start?: string | null
+          monthly_quota?: number
+          monthly_used?: number
+          pending_plan?: string | null
+          plan: string
+          purchased_balance?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cycle_end?: string | null
+          cycle_start?: string | null
+          monthly_quota?: number
+          monthly_used?: number
+          pending_plan?: string | null
+          plan?: string
+          purchased_balance?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_entitlements_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           created_at: string
@@ -472,9 +588,9 @@ export type Database = {
           id: string
           is_active: boolean
           logo_url: string | null
+          name: string
           origin_region: string | null
           origin_township: string | null
-          name: string
           owner_id: string
           phone: string | null
           plan: string
@@ -489,9 +605,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          name: string
           origin_region?: string | null
           origin_township?: string | null
-          name: string
           owner_id: string
           phone?: string | null
           plan?: string
@@ -506,9 +622,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           logo_url?: string | null
+          name?: string
           origin_region?: string | null
           origin_township?: string | null
-          name?: string
           owner_id?: string
           phone?: string | null
           plan?: string
@@ -538,18 +654,54 @@ export type Database = {
       }
     }
     Functions: {
+      activate_plan_from_verified_payment: {
+        Args: {
+          p_amount: number
+          p_confidence: number
+          p_paid_at: string
+          p_payment_id: string
+          p_raw_extraction?: Json
+          p_receiver_name: string
+          p_sender_name: string
+          p_transaction_id: string
+        }
+        Returns: Json
+      }
+      admin_activate_subscription: {
+        Args: { p_payment_ref?: string; p_plan: string; p_shop_id: string }
+        Returns: undefined
+      }
+      admin_adjust_entitlement: {
+        Args: {
+          p_monthly_delta: number
+          p_note?: string
+          p_purchased_delta: number
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      admin_cancel_subscription: {
+        Args: { p_shop_id: string }
+        Returns: undefined
+      }
       admin_credit_order_pack: {
         Args: { p_purchase_id: string; p_transaction_id: string }
         Returns: undefined
       }
-      current_shop_entitlement: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
+      admin_renew_subscription: {
+        Args: { p_payment_ref?: string; p_shop_id: string }
+        Returns: undefined
       }
-      current_shop_usage: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
+      admin_schedule_downgrade: {
+        Args: { p_shop_id: string; p_target_plan: string }
+        Returns: undefined
       }
+      admin_upgrade_plan: {
+        Args: { p_payment_ref?: string; p_shop_id: string }
+        Returns: undefined
+      }
+      current_shop_entitlement: { Args: never; Returns: Json }
+      current_shop_usage: { Args: never; Returns: Json }
       lookup_order: {
         Args: { p_order_no: string; p_phone: string; p_shop_slug: string }
         Returns: Json
@@ -570,13 +722,10 @@ export type Database = {
         Returns: Json
       }
       resolve_delivery_fee: {
-        Args: { p_shop_id: string; p_region: string; p_township: string }
+        Args: { p_region: string; p_shop_id: string; p_township: string }
         Returns: number
       }
-      usage_tier: {
-        Args: { p_count: number }
-        Returns: string
-      }
+      usage_tier: { Args: { p_count: number }; Returns: string }
     }
     Enums: {
       [_ in never]: never
