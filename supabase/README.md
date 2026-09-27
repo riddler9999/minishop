@@ -74,10 +74,10 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 (`0007`). Slip upload was dropped for MVP — see `PROJECT.md` D6.
 
 | `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. **Applied to production 2026-09-25 and advisor-verified.** |
-| `0023_database_rls_concurrency_reconciliation.sql` | Narrows storefront reads to `anon`, keeps shared Ninja Van rates visible to sellers, makes shop-logo writes Core while owner/path scoped, and adds unique full transaction identity to Extra Order crediting. **Runtime-proven in disposable local Supabase; not applied to Production.** |
+| `0023_database_rls_concurrency_reconciliation.sql` | Narrows storefront reads to `anon`, keeps shared Ninja Van rates visible to sellers, makes shop-logo writes Core while owner/path scoped, and adds unique full transaction identity to Extra Order crediting. **Applied to Production 2026-09-28 after read-only preflight; post-verified with authenticated overlap = 0, Seller A foreign shop/product reads = 0, and anon storefront visibility preserved.** |
 
 ### Residual advisor decisions (2026-09-25)
 
 - `lookup_order()` and `place_order()` remain intentionally executable by buyer-facing API roles. Both are SECURITY DEFINER RPCs by design; revoking them would break public order lookup/checkout. Keep their internal validation/rate-limit tests as the control.
-- Supabase's multiple-permissive-policy findings are performance advisories, not authorization failures. No policy rewrite was made during this reconciliation to avoid changing access semantics without a dedicated RLS test pass.
+- The 0023 policy cutover removed the prior authenticated/public storefront overlap for `shops`, `products`, `payment_accounts`, and `shipping_zones`. Reassess any remaining multiple-permissive-policy advisor findings against the post-0023 schema before acting on them.
 - Leaked-password protection is an Auth project setting, not a SQL migration. Enable it in Supabase Auth when the project setting is available to the operator/tooling.
