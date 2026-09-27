@@ -1,4 +1,5 @@
-import {describe, expect, it} from 'vitest';
+import assert from 'node:assert/strict';
+import {describe, it} from 'node:test';
 import {createDefaultStoreDesign, normalizeStoreDesign, validatePublishableStoreDesign} from '../src/domain/storeDesign/index.ts';
 import {buildStorefrontRenderPlan} from '../src/features/catalog/storeDesign/renderPlan.ts';
 
@@ -18,14 +19,14 @@ describe('protected Product Buy Now commerce boundary', () => {
 
     const normalized = normalizeStoreDesign(raw);
 
-    expect(normalized.globalSettings.buyNow).toEqual({
+    assert.deepEqual(normalized.globalSettings.buyNow, {
       label: 'Order Now',
       style: 'outline',
       width: 'content',
       disabled: false,
     });
-    expect(Object.keys(normalized.globalSettings.buyNow).sort()).toEqual(['disabled', 'label', 'style', 'width']);
-    expect(validatePublishableStoreDesign(normalized)).toEqual({ok: true, errors: []});
+    assert.deepEqual(Object.keys(normalized.globalSettings.buyNow).sort(), ['disabled', 'label', 'style', 'width']);
+    assert.deepEqual(validatePublishableStoreDesign(normalized), {ok: true, errors: []});
   });
 
   it('restores a non-empty Buy Now label instead of allowing the CTA to disappear', () => {
@@ -34,8 +35,8 @@ describe('protected Product Buy Now commerce boundary', () => {
 
     const normalized = normalizeStoreDesign(raw);
 
-    expect(normalized.globalSettings.buyNow.label.trim().length).toBeGreaterThan(0);
-    expect(normalized.globalSettings.buyNow.disabled).toBe(false);
+    assert.ok(normalized.globalSettings.buyNow.label.trim().length > 0);
+    assert.equal(normalized.globalSettings.buyNow.disabled, false);
   });
 
   it('requires Product commerce even with empty, disabled, or unknown seller sections', () => {
@@ -49,9 +50,9 @@ describe('protected Product Buy Now commerce boundary', () => {
     const normalized = normalizeStoreDesign(raw);
     const plan = buildStorefrontRenderPlan(normalized, 'product');
 
-    expect(plan.sections).toEqual([]);
-    expect(plan.requiredCommerce.buyNow.disabled).toBe(false);
-    expect(plan.requiredCommerce.buyNow.label.trim().length).toBeGreaterThan(0);
+    assert.deepEqual(plan.sections, []);
+    assert.equal(plan.requiredCommerce.buyNow.disabled, false);
+    assert.ok(plan.requiredCommerce.buyNow.label.trim().length > 0);
   });
 
   it('sanitizes an untrusted document at the renderer boundary before composing required commerce', () => {
@@ -61,9 +62,9 @@ describe('protected Product Buy Now commerce boundary', () => {
 
     const plan = buildStorefrontRenderPlan(malicious, 'product');
 
-    expect(plan.requiredCommerce.buyNow.disabled).toBe(false);
-    expect(plan.requiredCommerce.buyNow.label.trim().length).toBeGreaterThan(0);
-    expect(['solid', 'outline']).toContain(plan.requiredCommerce.buyNow.style);
-    expect(['full', 'content']).toContain(plan.requiredCommerce.buyNow.width);
+    assert.equal(plan.requiredCommerce.buyNow.disabled, false);
+    assert.ok(plan.requiredCommerce.buyNow.label.trim().length > 0);
+    assert.ok(['solid', 'outline'].includes(plan.requiredCommerce.buyNow.style));
+    assert.ok(['full', 'content'].includes(plan.requiredCommerce.buyNow.width));
   });
 });
