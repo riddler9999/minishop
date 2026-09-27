@@ -19,7 +19,7 @@ const NAV: NavEntry[] = [
   {to: '/admin', end: true, label: 'Home', icon: Home},
   {to: '/admin/products', end: false, label: 'Products', icon: Package},
   {to: '/admin/orders', end: false, label: 'Orders', icon: ShoppingBag},
-  {to: '/admin/design', end: false, label: 'Design', icon: Palette},
+  {to: '/admin/online-store/themes', end: false, label: 'Store Builder', icon: Palette},
   {to: '/admin/settings', end: false, label: 'Settings', icon: Settings},
 ];
 
