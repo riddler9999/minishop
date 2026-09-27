@@ -1,6 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
+import {loadBuyerStoreDesign} from './storefront-design.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -41,6 +42,11 @@ export default async function handler(req: any, res: any) {
   const {data: shop, error: shopError} = await sb.from('shops').select('id,name,logo_url,default_delivery_fee').eq('slug', slug).eq('is_active', true).maybeSingle();
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
+  if (action === 'store-design') {
+    const design = await loadBuyerStoreDesign(sb as any, {shopId: shop.id, shopSlug: slug});
+    if (!design.ok) return sendJson(res, 502, {error: 'Store design unavailable'});
+    return sendJson(res, 200, {document: design.document}, true);
+  }
   if (action === 'shop') {
     // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
     // core shop payload can never break if the column isn't there yet: on any
