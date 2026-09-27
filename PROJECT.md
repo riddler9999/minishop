@@ -788,3 +788,14 @@ Migration `0023_database_rls_concurrency_reconciliation.sql` is the forward-only
 The behavioral gate replays migrations through `0023` in disposable local Supabase and tests RLS, PostgREST/RPC, Storage, idempotency, stock, entitlement, rollback, product caps, billing, and Extra Order races. Applied historical migration `0007` remains immutable; the local runner applies its hosted-helper compatibility guard only to a temporary migration copy.
 
 Migration `0023` has **not** been applied to Production. Production DDL still requires a separate explicit owner approval and coordinated server/database rollout.
+
+
+## Store Builder Runtime Cutover — #116
+
+Store Builder lifecycle implementation is integrated behind the existing buyer/seller boundaries.
+
+- Buyer runtime prefers the lifecycle Published document from `store_designs` when migration `0024_store_design_lifecycle.sql` is available and a lifecycle row exists.
+- During the compatibility period, an undeployed lifecycle RPC or a missing lifecycle row falls back to the existing `shops.theme` value. Other lifecycle RPC failures fail closed rather than silently serving stale legacy data.
+- `shops.theme` remains intact as the compatibility source; it is not deleted or repurposed.
+- Migration `0024_store_design_lifecycle.sql` is present in the repository but is **not applied to Production by this cutover**. Production migration application requires separate owner approval.
+- Existing Products, Orders, Shipping, Billing, Checkout, Tracking, and `/s/:slug` tenant routing remain on their existing runtime paths.
