@@ -105,7 +105,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
     <div
       data-demo-store={isDemo ? "" : undefined}
       data-store-theme={isDemo ? undefined : theme.presetId}
-      className={`flex min-h-[100dvh] flex-col overflow-x-clip ${isDemo ? 'bg-[#eee6ff] pb-[calc(82px+env(safe-area-inset-bottom))] md:pb-0' : 'pb-[72px] md:pb-0'}`}
+      className={`flex min-h-screen min-h-[100dvh] flex-col overflow-x-clip ${isDemo ? 'bg-[#eee6ff] pb-[calc(82px+env(safe-area-inset-bottom))] md:pb-0' : 'pb-[72px] md:pb-0'}`}
       style={isDemo ? fontPairingStyle(theme.fontPairing) : {...fontPairingStyle(theme.fontPairing), backgroundColor: visual.canvas, color: visual.text}}>
       <AnnouncementBar />
       {!isDemo && (

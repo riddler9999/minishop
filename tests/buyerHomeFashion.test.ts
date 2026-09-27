@@ -205,6 +205,7 @@ test('demo storefront uses fluid responsive layout instead of a phone-only fixed
   assert.match(home, /md:grid-cols-3/);
   assert.match(home, /lg:grid-cols-4/);
   assert.match(home, /clamp\(/);
+  assert.match(layout, /min-h-screen min-h-\[100dvh\]/);
   assert.match(layout, /min-h-\[100dvh\]/);
   assert.match(layout, /safe-area-inset-bottom/);
   assert.match(layout, /max-w-\[430px\]/);
