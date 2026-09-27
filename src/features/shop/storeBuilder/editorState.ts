@@ -22,6 +22,9 @@ export function createEditorState(document: StoreDesignDocument, revision: numbe
 
 export function applyLocalEdit(state: EditorState, document: StoreDesignDocument): EditorState {
   if (state.blocked) return {...state, document};
+  // Do not start a second save while one is in flight. Preserve "saving" and
+  // reconcile this newer document when the first request settles.
+  if (state.status === 'saving') return {...state, document, error: null};
   return {...state, document, status: 'dirty', error: null};
 }
 
@@ -38,6 +41,29 @@ export async function persistEditorState(state: EditorState, saveDraft: SaveDraf
     }
     return {...saving, status: 'retry', error: message};
   }
+}
+
+export function reconcileSaveResult(current: EditorState, savingSnapshot: EditorState, result: EditorState): EditorState {
+  const hasNewerLocalEdit = current.document !== savingSnapshot.document;
+
+  if (result.status === 'conflict') {
+    return {...result, document: hasNewerLocalEdit ? current.document : result.document, blocked: true};
+  }
+  if (result.status === 'retry') {
+    return {...result, document: hasNewerLocalEdit ? current.document : result.document};
+  }
+  if (hasNewerLocalEdit) {
+    return {
+      ...current,
+      status: 'dirty',
+      expectedRevision: result.expectedRevision,
+      savedRevision: result.savedRevision,
+      lastSavedRevision: result.lastSavedRevision,
+      blocked: false,
+      error: null,
+    };
+  }
+  return result;
 }
 
 export function canPublish(state: EditorState) {
