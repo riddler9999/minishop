@@ -84,7 +84,7 @@ function StoreDesignEditor({shopName, logoUrl, lifecycleMode}: {shopName: string
     let alive = true;
     (async () => {
       try {
-        const [{theme, supported: isSupported}, {products: list}] = await Promise.all([
+        const [{theme, supported: isSupported, revision}, {products: list}] = await Promise.all([
           lifecycleMode
             ? adminApi.loadOwnStoreDesign().then((lifecycle) => ({theme: lifecycle.draft as unknown as StorefrontTheme, supported: true, revision: lifecycle.draftRevision}))
             : adminApi.getShopTheme().then((result) => ({...result, revision: null as number | null})),
