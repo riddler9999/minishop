@@ -46,6 +46,9 @@ export function createSuperadminHandler(
   if (!ACTIONS.has(action)) return sendJson(res, 400, {error: 'Invalid action'});
   const shopId = clean(body.shopId, 80);
   const paymentRef = clean(body.paymentRef, 120) || null;
+  const transactionIdInput = String(body.transactionId ?? '').trim();
+  const transactionId =
+    transactionIdInput && transactionIdInput.length <= 160 ? transactionIdInput : null;
 
   let error: any = null;
   if (action === 'approve-application' || action === 'reject-application') {
@@ -72,8 +75,8 @@ export function createSuperadminHandler(
     ({error} = await sb.rpc('admin_cancel_subscription', {p_shop_id: shopId}));
   } else if (action === 'credit-pack') {
     const purchaseId = clean(body.purchaseId, 80);
-    if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
-    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId}));
+    if (!purchaseId || !transactionId) return sendJson(res, 400, {error:'Missing purchase or transaction id'});
+    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId, p_transaction_id: transactionId}));
   } else if (action === 'reject-pack') {
     const purchaseId = clean(body.purchaseId, 80);
     if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});

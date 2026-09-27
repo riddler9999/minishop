@@ -31,6 +31,8 @@ export type DbErrorCode =
   | 'verification_confidence_too_low'
   | 'payment_proof_not_found'
   | 'duplicate_transaction_id'
+  | 'purchase_already_approved'
+  | 'transaction_id_is_platform_managed'
   // Entitlements / pricing V1 (place_order + product/entitlement guards, 0016)
   | 'order_quota_exhausted'
   | 'subscription_inactive'
@@ -39,6 +41,7 @@ export type DbErrorCode =
   // Owner-only entitlement RPC guards (service_role; sellers rarely see these)
   | 'duplicate_payment'
   | 'invalid_credit_quantity'
+  | 'unknown_purchase'
   | 'unknown_shop'
   | 'invalid_plan'
   // place_order() validation
@@ -79,6 +82,8 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   verification_confidence_too_low: 'ငွေလွှဲအထောက်အထားကို အလိုအလျောက် အတည်ပြုရန် မသေချာသေးပါ — လူကိုယ်တိုင် စစ်ဆေးရန် လိုအပ်ပါသည်။',
   payment_proof_not_found: 'ငွေလွှဲအထောက်အထား ရှာမတွေ့ပါ — ပြန်တင်ပြီး ထပ်ကြိုးစားပါ။',
   duplicate_transaction_id: 'ဒီ Transaction ID ကို အသုံးပြုပြီးဖြစ်ပါသည်။',
+  purchase_already_approved: 'ဒီ Extra Orders ဝယ်ယူမှုကို အတည်ပြုပြီးဖြစ်ပါသည်။',
+  transaction_id_is_platform_managed: 'Transaction ID ကို ကိုယ်တိုင် ပြောင်းလဲ၍မရပါ — Platform မှ စီမံခန့်ခွဲပါသည်။',
   order_quota_exhausted:
     'ဆိုင်၏ order လက်ခံနိုင်မှု ကန့်သတ်ချက် ပြည့်သွားပါပြီ — ဆိုင်ရှင်ကို ဆက်သွယ်ပါ။',
   subscription_inactive:
@@ -89,6 +94,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
     'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
   duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',
   invalid_credit_quantity: 'Extra Orders အရေအတွက် မမှန်ပါ။',
+  unknown_purchase: 'Extra Orders ဝယ်ယူမှု ရှာမတွေ့ပါ။',
   unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
   invalid_plan: 'Plan အမျိုးအစား မမှန်ပါ။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',

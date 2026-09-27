@@ -56,7 +56,14 @@ describe('superadmin API behavior', () => {
     });
     const {res, state} = responseRecorder();
     await handler(
-      {method: 'POST', body: {action: 'credit-pack', purchaseId: 'purchase-1'}},
+      {
+        method: 'POST',
+        body: {
+          action: 'credit-pack',
+          purchaseId: 'purchase-1',
+          transactionId: 'verified-transaction-1',
+        },
+      },
       res,
     );
     assert.equal(state.status, 400);
