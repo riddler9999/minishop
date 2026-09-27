@@ -1,4 +1,4 @@
-import {ArrowRight, Check, CreditCard, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, Truck} from 'lucide-react';
+import {ArrowRight, Check, CreditCard, ExternalLink, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, Sparkles, Store, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {PLAN_PRICE_KS} from '@/domain/subscription';
 import {EXTRA_ORDER_UNIT_PRICE_KS, PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
@@ -214,6 +214,66 @@ export function DashboardFinalCTA() {
     <section className="landing-dashboard-section" aria-labelledby="dashboard-title">
       <div className="landing-dashboard-copy"><span className="landing-section-pill">SELLER CONTROL CENTER</span><h2 id="dashboard-title">Order, Product, Delivery — အားလုံး တစ်နေရာထဲမှာ</h2><p>Chat တစ်ခုချင်းစီ ပြန်ရှာ၊ Screenshot တွေ လိုက်ကြည့်၊ စာရင်းစာအုပ်ထဲ ပြန်မှတ်နေစရာ မလိုတော့ဘူး။ ဆိုင်ရဲ့ အရောင်းအခြေအနေကို Dashboard တစ်ခုထဲကနေ ကြည့်ပြီး စီမံနိုင်ပါတယ်။</p><Link to={signupHref()} className="landing-primary-cta">ကိုယ့်ဆိုင် စဖွင့်မယ် <ArrowRight size={18}/></Link></div>
       <div className="landing-dashboard-window"><div className="landing-dashboard-sidebar"><span className="landing-store-brandmark">m</span>{[1,2,3,4].map((item) => <i key={item}/>)}</div><div className="landing-dashboard-main"><div className="landing-dashboard-top"><strong>Dashboard</strong><span>Today</span></div><div className="landing-dashboard-stats"><div><small>Orders</small><strong>24</strong></div><div><small>Revenue</small><strong>480K</strong></div><div><small>Products</small><strong>86</strong></div></div><div className="landing-dashboard-chart"><i/><i/><i/><i/><i/><i/><i/></div></div></div>
+    </section>
+  );
+}
+
+
+export function ProductFeatures() {
+  const features = [
+    ['Online Store', 'Product၊ Category၊ Stock၊ Price နဲ့ Promotion တွေကို ဆိုင်တစ်ခုတည်းထဲ စနစ်တကျ ပြနိုင်မယ်။'],
+    ['Self-service Order', 'Customer က Chat မစောင့်ဘဲ Cart ထည့်၊ လိပ်စာရွေး၊ Payment ရွေးပြီး ကိုယ်တိုင် Order တင်နိုင်မယ်။'],
+    ['Myanmar Checkout', 'Township-based delivery fee၊ KPay၊ WavePay နဲ့ COD flow ကို checkout တစ်ခုတည်းထဲ ထည့်ထားတယ်။'],
+    ['Seller Dashboard', 'Orders၊ Products၊ Shipping၊ Billing နဲ့ Store settings တွေကို Admin Dashboard ကနေ manage လုပ်နိုင်မယ်။'],
+    ['Store Builder', 'Theme၊ Hero၊ Typography၊ Accent color၊ Category rail နဲ့ storefront content တွေကို preview ကြည့်ရင်း ပြင်နိုင်မယ်။'],
+    ['Share Anywhere', 'Facebook၊ TikTok Bio၊ Messenger၊ Telegram မှာ store link တစ်ခုတည်း ချိတ်ပြီး ရောင်းနိုင်မယ်။'],
+  ];
+  return (
+    <section className="landing-features-section" aria-labelledby="features-title">
+      <div className="landing-section-head">
+        <span className="landing-section-pill"><Sparkles size={15}/> WHAT YOU GET</span>
+        <h2 id="features-title">Online ရောင်းဖို့လိုတဲ့ Core Features တွေကို တစ်နေရာတည်းမှာ</h2>
+        <p>MiniShop က landing page သက်သက်မဟုတ်ဘူး။ Storefront၊ Checkout၊ Order management နဲ့ Seller tools တွေကို တစ်ခုတည်းအဖြစ် သုံးနိုင်အောင်ဆောက်ထားတာ။</p>
+      </div>
+      <div className="landing-features-grid">
+        {features.map(([title, body]) => (
+          <article key={title} className="landing-feature-card">
+            <Check size={18}/>
+            <div><h3>{title}</h3><p>{body}</p></div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const demoStores = [
+  {name:'Fashion Store', path:'/fashion-demo', body:'Fashion catalog + promotional storefront layout'},
+  {name:'Furniture Store', path:'/furniture-demo', body:'Furniture-focused product browsing demo'},
+  {name:'Mobile Store', path:'/mobile-store-demo', body:'Mobile & accessories storefront demo'},
+];
+
+export function DemoStoreShowcase() {
+  return (
+    <section className="landing-demo-stores-section" aria-labelledby="demo-stores-title">
+      <div className="landing-section-head">
+        <span className="landing-section-pill"><Store size={15}/> LIVE DEMO STORES</span>
+        <h2 id="demo-stores-title">Mockup မဟုတ်ဘဲ တကယ့် Demo Store Home Page တွေကို Slide နဲ့ကြည့်မယ်</h2>
+        <p>Store တစ်ခုချင်းစီကို card slide အနေနဲ့ preview ကြည့်ပြီး အောက်က Link ကနေ တကယ့် demo storefront ထဲ တန်းဝင်စမ်းလို့ရမယ်။</p>
+      </div>
+      <div className="landing-demo-store-slider" role="list">
+        {demoStores.map((store) => (
+          <article className="landing-demo-store-card" role="listitem" key={store.path}>
+            <Link className="landing-demo-store-preview" to={store.path} aria-label={`${store.name} demo store`}>
+              <iframe src={store.path} title={`${store.name} preview`} loading="lazy" tabIndex={-1} />
+            </Link>
+            <div className="landing-demo-store-meta">
+              <div><strong>{store.name}</strong><span>{store.body}</span></div>
+              <Link to={store.path}>Demo Store ဖွင့်ကြည့်မယ် <ExternalLink size={16}/></Link>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
