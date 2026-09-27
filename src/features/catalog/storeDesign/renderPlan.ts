@@ -1,7 +1,8 @@
-import type {
-  StoreDesignDocument,
-  StoreSection,
-  StoreTemplateName,
+import {
+  normalizeStoreDesign,
+  type StoreDesignDocument,
+  type StoreSection,
+  type StoreTemplateName,
 } from '../../../domain/storeDesign/index.ts';
 
 export interface StorefrontRenderPlan {
@@ -18,13 +19,15 @@ export function buildStorefrontRenderPlan(
   document: StoreDesignDocument,
   template: StoreTemplateName,
 ): StorefrontRenderPlan {
+  const normalized = normalizeStoreDesign(document);
+
   return {
     template,
-    themeId: document.themeId,
-    accentColor: document.globalSettings.accentColor,
-    sections: document.templates[template].sections.filter((section) => section.enabled),
+    themeId: normalized.themeId,
+    accentColor: normalized.globalSettings.accentColor,
+    sections: normalized.templates[template].sections.filter((section) => section.enabled),
     requiredCommerce: {
-      buyNow: document.globalSettings.buyNow,
+      buyNow: normalized.globalSettings.buyNow,
     },
   };
 }
