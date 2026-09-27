@@ -2,11 +2,13 @@ import {useEffect, useState} from 'react';
 import {Search, ShoppingBag, SlidersHorizontal} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
+import type {StoreDesignDocument} from '@/domain/storeDesign';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import AestheticHome from '@/features/catalog/components/AestheticHome';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
+import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
 
 function DemoReferenceHome({products, categories, loading, error}: {products: Product[]; categories: string[]; loading: boolean; error: string}) {
   const nav = useShopNavigate();
@@ -91,6 +93,7 @@ export default function Home() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [storeDesign, setStoreDesign] = useState<StoreDesignDocument | null>(null);
   const slug = useShopSlugParam();
   const theme = getStorefrontTheme();
   const isDemo = useDemoStore();
@@ -103,9 +106,11 @@ export default function Home() {
           api.products({scope: 'active', limit: 12}),
           api.categories(),
         ]);
+        const nextDesign = await api.loadPublishedStoreDesign().catch(() => null);
         if (alive) {
           setProducts(nextProducts);
           setCategories(nextCategories);
+          setStoreDesign(nextDesign);
         }
       } catch (e: any) {
         if (alive) setError(e.message || 'ပစ္စည်းများကို ယခုလောလောဆယ် ဆွဲယူ၍မရပါ။');
@@ -119,6 +124,18 @@ export default function Home() {
   const visibleProducts = products ?? [];
   if (isDemo) {
     return <DemoReferenceHome products={visibleProducts} categories={categories} loading={products === null && !error} error={error} />;
+  }
+
+  if (storeDesign) {
+    return (
+      <StorefrontRenderer
+        document={storeDesign}
+        template="home"
+        products={visibleProducts}
+        categories={categories}
+        renderProductCard={(product) => <ProductCard product={product} variant={theme.presetId} />}
+      />
+    );
   }
 
   return (
