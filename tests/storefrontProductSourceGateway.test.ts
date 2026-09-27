@@ -1,34 +1,11 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
-  aggregateBestSellingDemand,
-  MAX_BEST_SELLING_ORDER_ITEMS,
   MAX_PRODUCT_SOURCE_LIMIT,
   normalizeProductSourceLimit,
 } from '../api/storefront-product-source.ts';
 
-describe('Store Builder #110 best-selling gateway aggregation', () => {
-  it('aggregates created historical demand without subtracting later order statuses', () => {
-    const rows = [
-      {product_id: 'a', qty: 2},
-      {product_id: 'b', qty: 4},
-      {product_id: 'a', qty: 3},
-    ];
-    const result = aggregateBestSellingDemand(rows);
-    assert.deepEqual([...result.entries()], [['a', 5], ['b', 4]]);
-  });
-
-  it('ignores malformed rows and remains bounded by caller-provided query results', () => {
-    const rows = [
-      {product_id: 'a', qty: 2},
-      {product_id: null, qty: 99},
-      {product_id: 'b', qty: 0},
-      {product_id: 'c', qty: -1},
-    ];
-    const result = aggregateBestSellingDemand(rows);
-    assert.deepEqual([...result.entries()], [['a', 2]]);
-  });
-
+describe('Store Builder #110 buyer product-source gateway', () => {
   it('clamps dynamic product-source limits at the buyer gateway boundary', () => {
     assert.equal(normalizeProductSourceLimit(undefined), 12);
     assert.equal(normalizeProductSourceLimit(0), 1);
@@ -36,21 +13,26 @@ describe('Store Builder #110 best-selling gateway aggregation', () => {
     assert.equal(normalizeProductSourceLimit(999), MAX_PRODUCT_SOURCE_LIMIT);
   });
 
-  it('keeps historical demand reads explicitly bounded', () => {
-    assert.ok(MAX_BEST_SELLING_ORDER_ITEMS > MAX_PRODUCT_SOURCE_LIMIT);
-    assert.ok(MAX_BEST_SELLING_ORDER_ITEMS <= 5000);
-  });
-});
-
-describe('Store Builder #110 storefront gateway query contract', () => {
-  it('uses bounded set queries instead of per-product N+1 reads', async () => {
+  it('uses bounded set queries and a public aggregate RPC instead of per-product N+1 reads', async () => {
     const fs = await import('node:fs');
     const source = fs.readFileSync('api/storefront.ts', 'utf8');
 
     assert.match(source, /action === 'section-products'/);
     assert.match(source, /normalizeProductSourceLimit/);
-    assert.match(source, /order_items/);
-    assert.match(source, /\.limit\(MAX_BEST_SELLING_ORDER_ITEMS\)/);
+    assert.match(source, /\.rpc\(\s*'load_best_selling_product_ids'/);
+    assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY|service.?role/i);
     assert.doesNotMatch(source, /for\s*\([^)]*product[^)]*\)[\s\S]{0,300}sb\.from\(/);
+  });
+
+  it('defines the best-selling aggregate in the additive Store Design migration', async () => {
+    const fs = await import('node:fs');
+    const sql = fs.readFileSync('supabase/migrations/0024_store_design_lifecycle.sql', 'utf8');
+
+    assert.match(sql, /create or replace function public\.load_best_selling_product_ids\(\s*p_shop_slug text,\s*p_limit integer/i);
+    assert.match(sql, /sum\(oi\.qty\)/i);
+    assert.match(sql, /group by oi\.product_id/i);
+    assert.match(sql, /least\(greatest\(p_limit,\s*1\),\s*24\)/i);
+    assert.doesNotMatch(sql, /o\.status\s*(=|<>|in|not in)/i);
+    assert.match(sql, /grant execute on function public\.load_best_selling_product_ids\(text,integer\)\s+to anon, authenticated/i);
   });
 });
