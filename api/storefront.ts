@@ -2,11 +2,7 @@ import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
 import {loadBuyerStoreDesign} from './storefront-design.js';
-import {
-  aggregateBestSellingDemand,
-  MAX_BEST_SELLING_ORDER_ITEMS,
-  normalizeProductSourceLimit,
-} from './storefront-product-source.js';
+import {normalizeProductSourceLimit} from './storefront-product-source.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -40,7 +36,6 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, {error: 'Method not allowed'});
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return sendJson(res, 503, {error: 'Backend unavailable'});
   const mediaBucket = String(req.query?.mediaBucket || '');
   const mediaPath = String(req.query?.mediaPath || '');
@@ -106,16 +101,9 @@ export default async function handler(req: any, res: any) {
     if (!PRODUCT_SOURCE_RULES.has(rule)) return sendJson(res, 400, {error: 'Invalid product source'});
 
     if (rule === 'best_selling') {
-      if (!serviceKey) return sendJson(res, 503, {error: 'Best selling source unavailable'});
-      const privileged = createClient(url, serviceKey, {auth: {persistSession: false, autoRefreshToken: false}});
-      const {data: orderRows, error: orderError} = await privileged.from('orders').select('id').eq('shop_id', shop.id).order('created_at', {ascending: false}).limit(MAX_BEST_SELLING_ORDER_ITEMS);
-      if (orderError) return sendJson(res, 502, {error: 'Catalog unavailable'});
-      const orderIds = (orderRows || []).map((row: any) => String(row.id));
-      if (orderIds.length === 0) return sendJson(res, 200, {products: []}, true);
-      const {data: demandRows, error: demandError} = await privileged.from('order_items').select('product_id,qty').in('order_id', orderIds).not('product_id', 'is', null).limit(MAX_BEST_SELLING_ORDER_ITEMS);
-      if (demandError) return sendJson(res, 502, {error: 'Catalog unavailable'});
-      const demand = aggregateBestSellingDemand(demandRows || []);
-      const rankedIds = [...demand.entries()].sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0])).slice(0, limit).map(([id]) => id);
+      const {data: rankedRows, error: rankError} = await sb.rpc('load_best_selling_product_ids', {p_shop_slug: slug, p_limit: limit});
+      if (rankError) return sendJson(res, 502, {error: 'Catalog unavailable'});
+      const rankedIds = (rankedRows || []).map((row: any) => String(row.product_id)).filter(Boolean).slice(0, limit);
       if (rankedIds.length === 0) return sendJson(res, 200, {products: []}, true);
       const {data: productRows, error: productError} = await sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', rankedIds).limit(limit);
       if (productError) return sendJson(res, 502, {error: 'Catalog unavailable'});
