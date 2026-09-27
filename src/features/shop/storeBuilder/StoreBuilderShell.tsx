@@ -2,7 +2,7 @@ import {useEffect, useMemo, useState} from 'react';
 import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreTemplateName} from '@/domain/storeDesign';
 import {PreviewCanvas} from './PreviewCanvas';
-import {SAVE_DELAY, applyLocalEdit, createEditorState, debounceSaveIntent, persistEditorState, publishSavedDraft, type EditorState} from './editorState';
+import {SAVE_DELAY, applyLocalEdit, createEditorState, debounceSaveIntent, persistEditorState, publishSavedDraft, reconcileSaveResult, type EditorState} from './editorState';
 
 type Props = {
   initialDocument: StoreDesignDocument;
@@ -19,15 +19,18 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(initialDocument.templates.home.sections[0]?.id ?? null);
 
+  const runSave = (snapshot: EditorState) => {
+    if (snapshot.blocked || snapshot.status === 'conflict') return;
+    setEditor((current) => current === snapshot ? {...current, status: 'saving', error: null} : current);
+    void persistEditorState(snapshot, saveDraft).then((result) => {
+      setEditor((current) => reconcileSaveResult(current, snapshot, result));
+    });
+  };
+
   useEffect(() => {
     if (editor.status !== 'dirty' || editor.blocked) return;
-    return debounceSaveIntent(() => {
-      setEditor((current) => {
-        void persistEditorState(current, saveDraft).then(setEditor);
-        return {...current, status: 'saving'};
-      });
-    }, SAVE_DELAY);
-  }, [editor.document, editor.status, editor.blocked, saveDraft]);
+    return debounceSaveIntent(() => runSave(editor), SAVE_DELAY);
+  }, [editor, saveDraft]);
 
   const sections = editor.document.templates[template].sections;
   const selected = useMemo(() => sections.find((section) => section.id === selectedSectionId) ?? null, [sections, selectedSectionId]);
@@ -47,11 +50,17 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span data-save-status={editor.status}>{editor.status === 'saving' ? 'Saving…' : editor.status === 'saved' ? 'Saved' : editor.status === 'retry' ? 'Retry' : editor.status === 'conflict' ? 'Conflict' : 'Unsaved'}</span>
+          {editor.status === 'retry' && <button onClick={() => runSave(editor)} className="rounded-lg border px-3 py-2 font-semibold">Retry save</button>}
           <button disabled={editor.status !== 'saved' || editor.blocked} onClick={() => void publishSavedDraft(editor, publishDraft)} className="rounded-lg bg-brand-500 px-4 py-2 font-semibold text-white disabled:opacity-40">Publish</button>
         </div>
       </div>
 
-      {editor.status === 'conflict' && <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Draft changed elsewhere. Reload before editing or saving again.</div>}
+      {editor.status === 'conflict' && (
+        <div className="flex items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>Draft changed elsewhere. Reload before editing or saving again.</span>
+          <button onClick={() => window.location.reload()} className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold">Reload</button>
+        </div>
+      )}
 
       <div className="grid min-h-[660px] grid-cols-[240px_minmax(0,1fr)_280px]" data-layout="three-pane">
         <aside className="border-r border-cream-200 p-3" aria-label="Section tree">
