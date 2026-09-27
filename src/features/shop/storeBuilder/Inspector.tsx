@@ -18,35 +18,50 @@ function TextField({label, value, disabled, multiline, onChange}: FieldProps) {
 export function Inspector({section, blocked, onChange}: Props) {
   if (!section) return <p className="text-sm text-ink-soft">Select a section from the tree or preview.</p>;
   const definition = getSectionDefinition(section.type);
-  const field = (label: string, key: string, value: string, multiline = false) => (
-    <TextField key={key} label={label} value={value} disabled={blocked} multiline={multiline} onChange={(next) => onChange({...section, settings: {...section.settings, [key]: next}} as StoreSection)} />
+  const field = (label: string, value: string, change: (value: string) => void, multiline = false) => (
+    <TextField key={label} label={label} value={value} disabled={blocked} multiline={multiline} onChange={change} />
   );
 
   let controls;
   switch (section.type) {
     case 'hero':
-      controls = <>{field('Headline', 'headline', section.settings.headline)}{field('Subtext', 'subtext', section.settings.subtext, true)}{field('Button label', 'ctaLabel', section.settings.ctaLabel)}{field('Image URL', 'imageUrl', section.settings.imageUrl ?? '')}</>;
+      controls = <>
+        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('Subtext', section.settings.subtext, (subtext) => onChange({...section, settings: {...section.settings, subtext}}), true)}
+        {field('Button label', section.settings.ctaLabel, (ctaLabel) => onChange({...section, settings: {...section.settings, ctaLabel}}))}
+        {field('Image URL', section.settings.imageUrl ?? '', (imageUrl) => onChange({...section, settings: {...section.settings, imageUrl: imageUrl || null}}))}
+      </>;
       break;
     case 'categories':
+      controls = field('Title', section.settings.title, (title) => onChange({...section, settings: {title}}));
+      break;
     case 'featured-products':
     case 'best-selling':
     case 'product-collection':
     case 'new-arrivals':
     case 'sale-products':
     case 'related-products':
-      controls = field('Title', 'title', section.settings.title);
+      controls = field('Title', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}));
       break;
     case 'promotion-banner':
-      controls = <>{field('Headline', 'headline', section.settings.headline)}{field('Body', 'body', section.settings.body, true)}{field('Button label', 'ctaLabel', section.settings.ctaLabel)}</>;
+      controls = <>
+        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('Body', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
+        {field('Button label', section.settings.ctaLabel, (ctaLabel) => onChange({...section, settings: {...section.settings, ctaLabel}}))}
+      </>;
       break;
     case 'image-text':
-      controls = <>{field('Headline', 'headline', section.settings.headline)}{field('Body', 'body', section.settings.body, true)}{field('Image URL', 'imageUrl', section.settings.imageUrl ?? '')}</>;
+      controls = <>
+        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('Body', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
+        {field('Image URL', section.settings.imageUrl ?? '', (imageUrl) => onChange({...section, settings: {...section.settings, imageUrl: imageUrl || null}}))}
+      </>;
       break;
     case 'announcement':
-      controls = field('Text', 'text', section.settings.text);
+      controls = field('Text', section.settings.text, (text) => onChange({...section, settings: {text}}));
       break;
     case 'rich-text':
-      controls = field('Text', 'text', section.settings.text, true);
+      controls = field('Text', section.settings.text, (text) => onChange({...section, settings: {text}}), true);
       break;
     case 'spacer':
       controls = (
@@ -70,7 +85,7 @@ export function Inspector({section, blocked, onChange}: Props) {
       controls = <p className="rounded-lg bg-cream-100 p-3 text-xs leading-5 text-ink-soft">Product title, price and Buy Now are protected commerce content.</p>;
       break;
     case 'product-description':
-      controls = field('Heading', 'heading', section.settings.heading);
+      controls = field('Heading', section.settings.heading, (heading) => onChange({...section, settings: {heading}}));
       break;
   }
 
