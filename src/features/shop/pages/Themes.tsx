@@ -1,6 +1,6 @@
 import {Check, Palette, PencilRuler} from 'lucide-react';
 import {Link} from 'react-router-dom';
-import {THEME_PRESETS} from '@/domain/storeDesign/presets';
+import {THEME_PRESETS} from '@/domain/theme';
 
 export default function Themes() {
   return (
