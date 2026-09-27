@@ -1,6 +1,18 @@
 import {useState} from 'react';
 import {NavLink, Outlet, Link} from 'react-router-dom';
-import {Bell, Home, LogOut, Menu, Package, Palette, Settings, ShoppingBag, Store, X} from 'lucide-react';
+import {
+  BarChart3,
+  Bell,
+  Home,
+  LogOut,
+  Menu,
+  Package,
+  Settings,
+  ShoppingBag,
+  Store,
+  Truck,
+  X,
+} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
 import {APP_INITIAL, APP_NAME, shopInitial} from '@/shared/lib/brand';
@@ -17,22 +29,24 @@ interface NavEntry {
 
 const NAV: NavEntry[] = [
   {to: '/admin', end: true, label: 'Home', icon: Home},
-  {to: '/admin/products', end: false, label: 'Products', icon: Package},
   {to: '/admin/orders', end: false, label: 'Orders', icon: ShoppingBag},
-  {to: '/admin/design', end: false, label: 'Design', icon: Palette},
+  {to: '/admin/products', end: false, label: 'Products', icon: Package},
+  {to: '/admin/online-store/themes', end: false, label: 'Online Store', icon: Store},
+  {to: '/admin/analytics', end: false, label: 'Analytics', icon: BarChart3},
+  {to: '/admin/shipping', end: false, label: 'Shipping', icon: Truck},
   {to: '/admin/settings', end: false, label: 'Settings', icon: Settings},
 ];
 
 function MobileNav() {
   return (
     <nav aria-label="Admin navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden">
-      <div className="mx-auto grid max-w-lg grid-cols-5">
+      <div className="mx-auto grid max-w-2xl grid-cols-4 gap-1 sm:grid-cols-8">
         {NAV.map((entry) => {
           const Icon = entry.icon;
           return (
-            <NavLink key={entry.to} to={entry.to} end={entry.end} className={({isActive}) => cx('flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-inset', isActive ? 'text-brand-500' : 'text-slate-500 hover:text-slate-900')}>
-              <Icon className="h-[22px] w-[22px]" />
-              {entry.label}
+            <NavLink key={entry.to} to={entry.to} end={entry.end} className={({isActive}) => cx('flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[10px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-inset', isActive ? 'text-brand-500' : 'text-slate-500 hover:text-slate-900')}>
+              <Icon className="h-[21px] w-[21px]" />
+              <span className="text-center leading-tight">{entry.label}</span>
             </NavLink>
           );
         })}
@@ -114,7 +128,7 @@ export default function AdminLayout() {
         </div>
       </header>
       {mobileOpen && <MobileDrawer onClose={() => setMobileOpen(false)} />}
-      <main className="lg:pl-64"><div className="mx-auto max-w-5xl px-4 py-5 sm:px-5 lg:py-7"><Outlet /></div></main>
+      <main className="lg:pl-64"><div className="mx-auto max-w-5xl px-4 py-5 pb-40 sm:pb-28 sm:px-5 lg:py-7"><Outlet /></div></main>
       <MobileNav />
     </div>
   );
