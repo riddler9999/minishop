@@ -3,17 +3,31 @@ import {describe, it} from 'node:test';
 import fs from 'node:fs';
 
 const path = new URL('../src/features/shop/pages/Themes.tsx', import.meta.url);
+const source = fs.readFileSync(path, 'utf8');
+const buyerApi = fs.readFileSync(new URL('../src/features/catalog/api/storeDesign.ts', import.meta.url), 'utf8');
 
 describe('Store Builder #112 Themes entry screen', () => {
-  it('has a dedicated Themes page', () => {
-    assert.equal(fs.existsSync(path), true, 'Themes page must exist');
+  it('has a dedicated Themes page with Published and Customize entry points', () => {
+    assert.match(source, /Published/);
+    assert.match(source, /Customize/);
+    assert.match(source, /online-store\/themes\/customize/);
   });
 
-  it('presents Published theme, Customize action, and alternate Draft switching', () => {
-    const source = fs.readFileSync(path, 'utf8');
-    assert.match(source, /Published/i);
-    assert.match(source, /Customize/i);
-    assert.match(source, /createThemeDraft/);
-    assert.match(source, /draftRevision|saveDraft/i);
+  it('creates and persists a theme switch as Draft using optimistic concurrency', () => {
+    assert.match(source, /createThemeDraft\(lifecycle\.draft, targetThemeId\)/);
+    assert.match(source, /expectedRevision\s*=\s*lifecycle\.draftRevision/);
+    assert.match(source, /adminApi\.saveDraft\(\{expectedRevision, document\}\)/);
+    assert.doesNotMatch(source, /publishDraft\(/);
+  });
+
+  it('keeps Published separate from Draft after a theme save', () => {
+    assert.match(source, /published:\s*lifecycle\.published/);
+    assert.match(source, /draft:\s*saved\.document/);
+    assert.match(source, /draftRevision:\s*saved\.revision/);
+  });
+
+  it('preserves the Published-only buyer read boundary from #108', () => {
+    assert.match(buyerApi, /loadPublishedStoreDesign/);
+    assert.doesNotMatch(buyerApi, /draft_document|previous_published_document|loadOwnStoreDesign|saveDraft|publishDraft/);
   });
 });
