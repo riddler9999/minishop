@@ -12,3 +12,4 @@ export {
   validatePublishableStoreDesign,
 } from './normalize.ts';
 export {createThemeDraft} from './migrateTheme.ts';
+export {resolveProductSource, type ProductSourceResolutionContext} from './productSource.ts';
