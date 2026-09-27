@@ -773,3 +773,18 @@ Implementation truth:
 - `CONTEXT.md` + ADR 0002 are canonical.
 - Historical migrations stay immutable; migration 0021 reconciles current DB runtime when explicitly applied.
 - Production migration application still requires owner approval.
+
+### D61 — Database RLS + Extra Order Transaction Reconciliation
+**Date:** 2026-09-27
+**Status:** REPOSITORY-PROVEN / PRODUCTION APPLY PENDING
+
+Migration `0023_database_rls_concurrency_reconciliation.sql` is the forward-only reconciliation for the database audit findings:
+
+- buyer storefront SELECT policies for `shops`, `products`, `payment_accounts`, and `shipping_zones` target `anon` only; authenticated sellers keep owner-scoped visibility,
+- shared active Ninja Van rates remain readable by both `anon` and `authenticated`,
+- `shop-logos` Storage INSERT/UPDATE/DELETE is Core for every plan while remaining owner/path scoped,
+- Extra Order approvals require a normalized full transaction ID with database uniqueness, retry idempotency, and a service-role-only credit RPC.
+
+The behavioral gate replays migrations through `0023` in disposable local Supabase and tests RLS, PostgREST/RPC, Storage, idempotency, stock, entitlement, rollback, product caps, billing, and Extra Order races. Applied historical migration `0007` remains immutable; the local runner applies its hosted-helper compatibility guard only to a temporary migration copy.
+
+Migration `0023` has **not** been applied to Production. Production DDL still requires a separate explicit owner approval and coordinated server/database rollout.

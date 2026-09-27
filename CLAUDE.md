@@ -154,7 +154,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `0011_payment_proof_auto_plan.sql` and `0012_shop_application_transaction_id.sql` (historical
   payment-proof automation foundation), `0013`–`0015` (delivery pricing), `0016_entitlements_and_pricing.sql`
   (Pricing V1: Free Trial, subscription cycles, order entitlements, Extra Orders, idempotent order
-  consumption), and `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), and `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions).
+  consumption), `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions), `0022_production_db_hardening.sql` (trigger-helper privilege and ledger-index hardening), and pending `0023_database_rls_concurrency_reconciliation.sql` (anon-only storefront reads, Core shop-logo writes, and unique Extra Order transaction identity).
   Historical migrations may contain superseded rules; current runtime truth is the latest migration
   plus `CONTEXT.md`. Never infer live migration application state from this file — check the live
   Supabase migration history before applying anything.
@@ -166,7 +166,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches
   amount + last-5 in the admin console. There is no slip upload (`uploadSlip()` is a deliberate
   no-op — in-app WebView file pickers are unreliable).
-- **DB error copy:** the typed exceptions `0007`/`0010`/`0011`/`0016`/`0017` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
+- **DB error copy:** the typed exceptions `0007`/`0010`/`0011`/`0016`/`0017`/`0023` raise (`rate_limit_exceeded`, `duplicate_order_limit`,
   `business_plan_required`, `plan_is_platform_managed`, `application_status_is_platform_managed`,
   `order_quota_exhausted`, `subscription_inactive`, `product_limit_reached`, `extra_orders_not_available`, …) map to Burmese UI copy in
   `src/domain/dbError.ts` — the single source of truth (`DB_ERROR_MESSAGES` + `mapDbError()`),
