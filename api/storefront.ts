@@ -41,6 +41,19 @@ export default async function handler(req: any, res: any) {
   const {data: shop, error: shopError} = await sb.from('shops').select('id,name,logo_url,default_delivery_fee').eq('slug', slug).eq('is_active', true).maybeSingle();
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
+  if (action === 'store-design') {
+    // Buyer-visible Store Design comes only from the Published-only RPC.
+    // If the lifecycle row is not present yet during the compatibility window,
+    // fall back to the already-resolved active shop's legacy shops.theme.
+    const {data: published, error: publishedError} = await sb.rpc('load_published_store_design', {p_shop_slug: slug});
+    if (!publishedError && published?.document) {
+      return sendJson(res, 200, {document: published.document}, true);
+    }
+
+    const {data: legacyRow, error: legacyError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
+    if (legacyError || !legacyRow) return sendJson(res, 502, {error: 'Store design unavailable'});
+    return sendJson(res, 200, {document: (legacyRow as {theme?: unknown}).theme ?? null}, true);
+  }
   if (action === 'shop') {
     // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
     // core shop payload can never break if the column isn't there yet: on any
