@@ -54,7 +54,7 @@ describe('seller Store Design lifecycle adapter', () => {
     assert.equal(result.document.themeId, 'dark-modern');
   });
 
-  it('maps stale revision rejection to StoreDesignConflictError', async () => {
+  it('maps stale revision rejection to StoreDesignConflictError with localized copy', async () => {
     const document = createDefaultStoreDesign('clean-minimal');
     const adapter = createStoreDesignLifecycleAdapter(rpcClient(async () => ({
       data: null,
@@ -63,11 +63,28 @@ describe('seller Store Design lifecycle adapter', () => {
 
     await assert.rejects(
       adapter.saveDraft({expectedRevision: 2, document}),
-      (error: unknown) => error instanceof StoreDesignConflictError,
+      (error: unknown) =>
+        error instanceof StoreDesignConflictError &&
+        /နောက်ဆုံး Draft/.test(error.message),
     );
   });
 
-  it('keeps generic save/network failure distinct from conflict', async () => {
+  it('maps lifecycle backend codes to seller-facing Burmese copy', async () => {
+    const adapter = createStoreDesignLifecycleAdapter(rpcClient(async () => ({
+      data: null,
+      error: {message: 'Postgres error: store_design_not_found', code: 'P0001'},
+    })));
+
+    await assert.rejects(
+      adapter.loadOwnStoreDesign(),
+      (error: unknown) =>
+        error instanceof Error &&
+        /Store Design ရှာမတွေ့ပါ/.test(error.message) &&
+        !/store_design_not_found/.test(error.message),
+    );
+  });
+
+  it('maps generic save/network failure to a localized fallback distinct from conflict', async () => {
     const document = createDefaultStoreDesign('clean-minimal');
     const adapter = createStoreDesignLifecycleAdapter(rpcClient(async () => ({
       data: null,
@@ -76,7 +93,11 @@ describe('seller Store Design lifecycle adapter', () => {
 
     await assert.rejects(
       adapter.saveDraft({expectedRevision: 2, document}),
-      (error: unknown) => error instanceof Error && !(error instanceof StoreDesignConflictError) && /Failed to fetch/.test(error.message),
+      (error: unknown) =>
+        error instanceof Error &&
+        !(error instanceof StoreDesignConflictError) &&
+        /Store Design လုပ်ဆောင်ချက် မအောင်မြင်ပါ/.test(error.message) &&
+        !/Failed to fetch/.test(error.message),
     );
   });
 
