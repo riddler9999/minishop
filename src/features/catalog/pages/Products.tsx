@@ -121,11 +121,14 @@ export default function Products() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([api.categories(), api.loadPublishedStoreDesign()])
-      .then(([categoryResult, design]) => {
-        if (!alive) return;
-        setCategories(categoryResult.categories);
-        setStoreDesign(design);
+    api.categories()
+      .then((categoryResult) => {
+        if (alive) setCategories(categoryResult.categories);
+      })
+      .catch(() => {});
+    api.loadPublishedStoreDesign()
+      .then((design) => {
+        if (alive) setStoreDesign(design);
       })
       .catch(() => {});
     return () => { alive = false; };

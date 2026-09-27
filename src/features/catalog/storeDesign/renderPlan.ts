@@ -6,6 +6,8 @@ import type {
 
 export interface StorefrontRenderPlan {
   template: StoreTemplateName;
+  themeId: StoreDesignDocument['themeId'];
+  accentColor: StoreDesignDocument['globalSettings']['accentColor'];
   sections: StoreSection[];
   requiredCommerce: {
     buyNow: StoreDesignDocument['globalSettings']['buyNow'];
@@ -18,6 +20,8 @@ export function buildStorefrontRenderPlan(
 ): StorefrontRenderPlan {
   return {
     template,
+    themeId: document.themeId,
+    accentColor: document.globalSettings.accentColor,
     sections: document.templates[template].sections.filter((section) => section.enabled),
     requiredCommerce: {
       buyNow: document.globalSettings.buyNow,
