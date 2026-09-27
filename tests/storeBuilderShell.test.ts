@@ -81,8 +81,8 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(source, /PreviewCanvas/);
     assert.match(source, /Inspector/i);
     assert.match(source, /grid-cols|three-pane|3-pane/i);
-    assert.match(source, /Retry save/);
-    assert.match(source, /Reload/);
+    assert.match(source, /ပြန်သိမ်းမည်/);
+    assert.match(source, /ပြန်ဖတ်မည်/);
   });
 
   it('uses the shared storefront renderer in preview and thins the legacy preview to the same renderer', () => {

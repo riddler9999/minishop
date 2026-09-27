@@ -24,7 +24,9 @@ describe('Store Builder #114 section interactions', () => {
     const preview = fs.readFileSync(previewPath, 'utf8');
     assert.match(shell, /selectedSectionId/);
     assert.match(shell, /<SectionTree[\s\S]*onSelect={selectSection}/);
-    assert.match(shell, /<PreviewCanvas[\s\S]*onSectionSelect={selectSection}/);
+    assert.match(shell, /const selectSection = \(sectionId: string\) => {[\s\S]*setSelectedSectionId\(sectionId\)/);
+    assert.match(shell, /const selectPreviewSection = \(sectionId: string\) => {[\s\S]*setSelectedSectionId\(sectionId\)/);
+    assert.match(shell, /<PreviewCanvas[\s\S]*selectedSectionId={selectedSectionId}[\s\S]*onSectionSelect={selectPreviewSection}/);
     assert.match(shell, /<Inspector section={selected}/);
     assert.match(preview, /<StorefrontRenderer[\s\S]*onSectionSelect={onSectionSelect}/);
   });

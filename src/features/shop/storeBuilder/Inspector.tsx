@@ -1,7 +1,9 @@
-import type {StoreSection} from '@/domain/storeDesign';
+import type {Product} from '@/domain/product';
+import type {ProductSource, StoreSection} from '@/domain/storeDesign';
+import {ProductSourceInspector} from './ProductSourceInspector';
 import {SECTION_LABELS} from './sectionCopy';
 
-type Props = {section: StoreSection | null; blocked: boolean; onChange: (section: StoreSection) => void};
+type Props = {section: StoreSection | null; products: Product[]; categories: string[]; blocked: boolean; onChange: (section: StoreSection) => void};
 type FieldProps = {label: string; value: string; disabled: boolean; multiline?: boolean; onChange: (value: string) => void};
 
 function TextField({label, value, disabled, multiline, onChange}: FieldProps) {
@@ -16,7 +18,7 @@ function TextField({label, value, disabled, multiline, onChange}: FieldProps) {
   );
 }
 
-export function Inspector({section, blocked, onChange}: Props) {
+export function Inspector({section, products, categories, blocked, onChange}: Props) {
   if (!section) return <p className="text-sm text-ink-soft">ကဏ္ဍစာရင်း သို့မဟုတ် အစမ်းမြင်ကွင်းမှ ကဏ္ဍတစ်ခုရွေးပါ။</p>;
   const field = (label: string, value: string, change: (value: string) => void, multiline = false) => (
     <TextField key={label} label={label} value={value} disabled={blocked} multiline={multiline} onChange={change} />
@@ -39,7 +41,10 @@ export function Inspector({section, blocked, onChange}: Props) {
     case 'new-arrivals':
     case 'sale-products':
     case 'related-products':
-      controls = field('ခေါင်းစဉ်', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}));
+      controls = <>
+        {field('ခေါင်းစဉ်', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}))}
+        <ProductSourceInspector source={section.settings.productSource} products={products} categories={categories} blocked={blocked} onChange={(productSource: ProductSource) => onChange({...section, settings: {...section.settings, productSource}})} />
+      </>;
       break;
     case 'promotion-banner':
       controls = <>

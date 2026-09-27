@@ -3,11 +3,13 @@ import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreSection, StoreTemplateName} from '@/domain/storeDesign';
 import {getThemeVisual} from '@/domain/theme';
 import {buildStorefrontRenderPlan} from './renderPlan';
+import {resolveSectionProductList, type SectionProductsById} from './sectionProducts';
 
 export type StorefrontRendererProps = {
   document: StoreDesignDocument;
   template: StoreTemplateName;
   products?: Product[];
+  sectionProductsById?: SectionProductsById;
   categories?: string[];
   product?: Product | null;
   renderProductCard?: (product: Product) => ReactNode;
@@ -43,7 +45,7 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
       return (
         <section>
           <h2>{section.settings.title}</h2>
-          <div>{(props.products ?? []).map((product) => <div key={product.id}>{props.renderProductCard?.(product)}</div>)}</div>
+          <div>{resolveSectionProductList(section, props.products ?? [], props.sectionProductsById).map((product) => <div key={product.id}>{props.renderProductCard?.(product)}</div>)}</div>
         </section>
       );
     case 'promotion-banner':
@@ -64,7 +66,7 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
       return (
         <section>
           <h2>{section.settings.title}</h2>
-          <div>{(props.products ?? []).map((product) => <div key={product.id}>{props.renderProductCard?.(product)}</div>)}</div>
+          <div>{resolveSectionProductList(section, props.products ?? [], props.sectionProductsById).map((product) => <div key={product.id}>{props.renderProductCard?.(product)}</div>)}</div>
         </section>
       );
   }

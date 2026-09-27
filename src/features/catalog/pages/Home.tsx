@@ -2,13 +2,15 @@ import {useEffect, useState} from 'react';
 import {Search, ShoppingBag, SlidersHorizontal} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
-import type {StoreDesignDocument} from '@/domain/storeDesign';
+import type {ProductSource, StoreDesignDocument} from '@/domain/storeDesign';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import AestheticHome from '@/features/catalog/components/AestheticHome';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
-import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
+import {ResolvedStorefrontRenderer} from '@/features/catalog/storeDesign/ResolvedStorefrontRenderer';
+
+const loadSectionProducts = (source: ProductSource) => api.sectionProducts(source);
 
 function DemoReferenceHome({products, categories, loading, error}: {products: Product[]; categories: string[]; loading: boolean; error: string}) {
   const nav = useShopNavigate();
@@ -127,11 +129,12 @@ export default function Home() {
 
   if (storeDesign) {
     return (
-      <StorefrontRenderer
+      <ResolvedStorefrontRenderer
         document={storeDesign}
         template="home"
         products={visibleProducts}
         categories={categories}
+        loadSectionProducts={loadSectionProducts}
         renderProductCard={(product) => <ProductCard product={product} variant={theme.presetId} />}
       />
     );

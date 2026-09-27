@@ -3,7 +3,7 @@ import {useNavigate, useParams} from 'react-router-dom';
 import {ArrowLeft, Check, ChevronLeft, ChevronRight, ImageOff, Minus, Plus, ShoppingBag} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
-import type {StoreDesignDocument} from '@/domain/storeDesign';
+import type {ProductSource, StoreDesignDocument} from '@/domain/storeDesign';
 import {useCart} from '@/features/cart/state';
 import {ks} from '@/shared/lib/format';
 import ProductCard from '@/features/catalog/components/ProductCard';
@@ -12,7 +12,9 @@ import {getThemeVisual} from '@/domain/theme';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
 import {DEMO_BEST_SELLING_IDS} from '@/features/demo/merchandising';
-import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
+import {ResolvedStorefrontRenderer} from '@/features/catalog/storeDesign/ResolvedStorefrontRenderer';
+
+const loadSectionProducts = (source: ProductSource) => api.sectionProducts(source);
 
 const COLOR_MAP: Record<string, string> = {
   'အဖြူ': '#ffffff', white: '#ffffff', 'အနက်': '#111111', black: '#111111', 'အနီ': '#ef4444', red: '#ef4444',
@@ -96,11 +98,13 @@ export default function ProductDetail() {
         <button onClick={() => nav(-1)} className="mb-4 inline-flex min-h-10 items-center gap-1.5 px-1 text-sm font-semibold transition" style={{color: visual.muted}}>
           <ArrowLeft className="h-4 w-4" /> နောက်သို့
         </button>
-        <StorefrontRenderer
+        <ResolvedStorefrontRenderer
           document={storeDesign}
           template="product"
           product={product}
           products={related}
+          loadSectionProducts={loadSectionProducts}
+          excludeProductId={product.id}
           renderProductCard={(relatedProduct) => <ProductCard product={relatedProduct} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />}
           renderRequiredCommerce={(buyNowSettings) => (
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

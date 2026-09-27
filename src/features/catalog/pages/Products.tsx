@@ -3,14 +3,16 @@ import {Search} from 'lucide-react';
 import {useSearchParams} from 'react-router-dom';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
-import type {StoreDesignDocument} from '@/domain/storeDesign';
+import type {ProductSource, StoreDesignDocument} from '@/domain/storeDesign';
 import type {ThemePresetId} from '@/domain/theme';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import {cx} from '@/shared/lib/format';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
-import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
+import {ResolvedStorefrontRenderer} from '@/features/catalog/storeDesign/ResolvedStorefrontRenderer';
+
+const loadSectionProducts = (source: ProductSource) => api.sectionProducts(source);
 
 const PAGE = 12;
 
@@ -203,11 +205,12 @@ export default function Products() {
         {err && <div className={cx('mb-5 p-4 text-sm', ui.error)}>{err}</div>}
 
         {storeDesign ? (
-          <StorefrontRenderer
+          <ResolvedStorefrontRenderer
             document={storeDesign}
             template="collection"
             products={products}
             categories={categories}
+            loadSectionProducts={loadSectionProducts}
             renderProductCard={(product) => <ProductCard product={product} variant={ui.card} />}
           />
         ) : (
