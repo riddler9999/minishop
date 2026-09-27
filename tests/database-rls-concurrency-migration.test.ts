@@ -93,7 +93,7 @@ test('disposable runtime covers every reconciled storefront and payment/storage 
     assert.match(runtime, new RegExp(`'${table}'`), `${table} runtime coverage missing`);
   }
   assert.match(runtime, /cross-tenant logo update unexpectedly succeeded/);
-  assert.match(runtime, /cross-tenant logo delete unexpectedly succeeded/);
+  assert.match(runtime, /cross-tenant logo delete removed owner object/);
   assert.match(runtime, /owner logo update/);
   assert.match(runtime, /owner logo delete/);
   assert.match(runtime, /missing transaction id unexpectedly credited purchase/);

@@ -776,8 +776,16 @@ async function main() {
     );
     assert.ok(crossUpdate.error, 'cross-tenant logo update unexpectedly succeeded');
 
-    const crossDelete = await a.seller.client.storage.from('shop-logos').remove([b.logoPath]);
-    assert.ok(crossDelete.error, 'cross-tenant logo delete unexpectedly succeeded');
+    // Storage may report a successful no-op when RLS hides the target row from
+    // DELETE. Verify the protected object still exists through its owner instead
+    // of requiring a transport-level error from the cross-tenant request.
+    await a.seller.client.storage.from('shop-logos').remove([b.logoPath]);
+    const afterCrossDelete = await b.seller.client.storage.from('shop-logos').download(b.logoPath);
+    assert.equal(
+      afterCrossDelete.error,
+      null,
+      `cross-tenant logo delete removed owner object: ${afterCrossDelete.error?.message}`,
+    );
 
     const ownerUpdate = await a.seller.client.storage.from('shop-logos').update(
       a.logoPath,
