@@ -79,6 +79,8 @@ export default function Themes() {
     );
   }
 
+  const currentDraftThemeId = lifecycle.draft.themeId;
+
   return (
     <section className="space-y-8">
       <div>
@@ -100,7 +102,7 @@ export default function Themes() {
         </div>
         {draftThemeId !== lifecycle.published.themeId && (
           <div className="bg-amber-50 px-6 py-4 text-sm text-amber-900">
-            Draft မှာ <strong>{THEME_PRESETS[draftThemeId].label}</strong> ကိုရွေးထားပါတယ်။ Live store ကတော့ <strong>{publishedTheme.label}</strong> အတိုင်းပဲရှိနေပါသေးတယ်။
+            Draft မှာ <strong>{THEME_PRESETS[currentDraftThemeId].label}</strong> ကိုရွေးထားပါတယ်။ Live store ကတော့ <strong>{publishedTheme.label}</strong> အတိုင်းပဲရှိနေပါသေးတယ်။
           </div>
         )}
       </article>
@@ -128,7 +130,7 @@ export default function Themes() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {alternateThemes.map(([themeId, preset]) => {
-            const isDraft = themeId === draftThemeId;
+            const isDraft = themeId === currentDraftThemeId;
             const isPublished = themeId === lifecycle.published.themeId;
             const isSaving = status.kind === 'saving' && status.themeId === themeId;
             return (
