@@ -12,6 +12,8 @@ export type StorefrontRendererProps = {
   product?: Product | null;
   renderProductCard?: (product: Product) => ReactNode;
   renderRequiredCommerce?: (buyNow: StoreDesignDocument['globalSettings']['buyNow']) => ReactNode;
+  selectedSectionId?: string | null;
+  onSectionSelect?: (sectionId: string) => void;
 };
 
 function sectionContent(section: StoreSection, props: StorefrontRendererProps): ReactNode {
@@ -77,7 +79,26 @@ export function StorefrontRenderer(props: StorefrontRendererProps) {
       style={{backgroundColor: visual.canvas, color: visual.text}}
       className="min-h-full"
     >
-      {plan.sections.map((section) => <div key={section.id} data-store-section-id={section.id}>{sectionContent(section, props)}</div>)}
+      {plan.sections.map((section) => (
+        <div
+          key={section.id}
+          data-store-section-id={section.id}
+          data-selected={props.selectedSectionId === section.id || undefined}
+          role={props.onSectionSelect ? 'button' : undefined}
+          tabIndex={props.onSectionSelect ? 0 : undefined}
+          aria-label={props.onSectionSelect ? `Select ${section.type} section` : undefined}
+          onClick={props.onSectionSelect ? () => props.onSectionSelect?.(section.id) : undefined}
+          onKeyDown={props.onSectionSelect ? (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              props.onSectionSelect?.(section.id);
+            }
+          } : undefined}
+          className={props.selectedSectionId === section.id ? 'outline outline-2 outline-offset-2 outline-brand-500' : undefined}
+        >
+          {sectionContent(section, props)}
+        </div>
+      ))}
       {props.template === 'product' && props.renderRequiredCommerce?.(plan.requiredCommerce.buyNow)}
     </div>
   );
