@@ -1,4 +1,5 @@
-import {getSectionDefinition, type StoreSection} from '@/domain/storeDesign';
+import type {StoreSection} from '@/domain/storeDesign';
+import {SECTION_LABELS} from './sectionCopy';
 
 type Props = {section: StoreSection | null; blocked: boolean; onChange: (section: StoreSection) => void};
 type FieldProps = {label: string; value: string; disabled: boolean; multiline?: boolean; onChange: (value: string) => void};
@@ -16,8 +17,7 @@ function TextField({label, value, disabled, multiline, onChange}: FieldProps) {
 }
 
 export function Inspector({section, blocked, onChange}: Props) {
-  if (!section) return <p className="text-sm text-ink-soft">Select a section from the tree or preview.</p>;
-  const definition = getSectionDefinition(section.type);
+  if (!section) return <p className="text-sm text-ink-soft">ကဏ္ဍစာရင်း သို့မဟုတ် အစမ်းမြင်ကွင်းမှ ကဏ္ဍတစ်ခုရွေးပါ။</p>;
   const field = (label: string, value: string, change: (value: string) => void, multiline = false) => (
     <TextField key={label} label={label} value={value} disabled={blocked} multiline={multiline} onChange={change} />
   );
@@ -26,14 +26,12 @@ export function Inspector({section, blocked, onChange}: Props) {
   switch (section.type) {
     case 'hero':
       controls = <>
-        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
-        {field('Subtext', section.settings.subtext, (subtext) => onChange({...section, settings: {...section.settings, subtext}}), true)}
-        {field('Button label', section.settings.ctaLabel, (ctaLabel) => onChange({...section, settings: {...section.settings, ctaLabel}}))}
-        {field('Image URL', section.settings.imageUrl ?? '', (imageUrl) => onChange({...section, settings: {...section.settings, imageUrl: imageUrl || null}}))}
+        {field('ခေါင်းစဉ်', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('စာတန်းငယ်', section.settings.subtext, (subtext) => onChange({...section, settings: {...section.settings, subtext}}), true)}
       </>;
       break;
     case 'categories':
-      controls = field('Title', section.settings.title, (title) => onChange({...section, settings: {title}}));
+      controls = field('ခေါင်းစဉ်', section.settings.title, (title) => onChange({...section, settings: {title}}));
       break;
     case 'featured-products':
     case 'best-selling':
@@ -41,53 +39,51 @@ export function Inspector({section, blocked, onChange}: Props) {
     case 'new-arrivals':
     case 'sale-products':
     case 'related-products':
-      controls = field('Title', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}));
+      controls = field('ခေါင်းစဉ်', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}));
       break;
     case 'promotion-banner':
       controls = <>
-        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
-        {field('Body', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
-        {field('Button label', section.settings.ctaLabel, (ctaLabel) => onChange({...section, settings: {...section.settings, ctaLabel}}))}
+        {field('ခေါင်းစဉ်', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('စာသား', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
       </>;
       break;
     case 'image-text':
       controls = <>
-        {field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
-        {field('Body', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
-        {field('Image URL', section.settings.imageUrl ?? '', (imageUrl) => onChange({...section, settings: {...section.settings, imageUrl: imageUrl || null}}))}
+        {field('ခေါင်းစဉ်', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}
+        {field('စာသား', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}
       </>;
       break;
     case 'announcement':
-      controls = field('Text', section.settings.text, (text) => onChange({...section, settings: {text}}));
+      controls = field('စာသား', section.settings.text, (text) => onChange({...section, settings: {text}}));
       break;
     case 'rich-text':
-      controls = field('Text', section.settings.text, (text) => onChange({...section, settings: {text}}), true);
+      controls = field('စာသား', section.settings.text, (text) => onChange({...section, settings: {text}}), true);
       break;
     case 'spacer':
       controls = (
-        <label className="block text-xs font-semibold text-ink-soft">Size
+        <label className="block text-xs font-semibold text-ink-soft">အရွယ်အစား
           <select value={section.settings.size} disabled={blocked} onChange={(event) => onChange({...section, settings: {size: event.target.value as 'sm' | 'md' | 'lg'}})} className="mt-1 w-full rounded-lg border border-cream-300 px-3 py-2 text-sm">
-            <option value="sm">Small</option><option value="md">Medium</option><option value="lg">Large</option>
+            <option value="sm">အသေး</option><option value="md">အလယ်</option><option value="lg">အကြီး</option>
           </select>
         </label>
       );
       break;
     case 'product-gallery':
       controls = (
-        <label className="block text-xs font-semibold text-ink-soft">Layout
+        <label className="block text-xs font-semibold text-ink-soft">ပုံစံ
           <select value={section.settings.layout} disabled={blocked} onChange={(event) => onChange({...section, settings: {layout: event.target.value as 'stacked' | 'carousel'}})} className="mt-1 w-full rounded-lg border border-cream-300 px-3 py-2 text-sm">
-            <option value="carousel">Carousel</option><option value="stacked">Stacked</option>
+            <option value="carousel">ဘေးတိုက်ကြည့်ရန်</option><option value="stacked">အပေါ်အောက်စီရန်</option>
           </select>
         </label>
       );
       break;
     case 'product-info':
-      controls = <p className="rounded-lg bg-cream-100 p-3 text-xs leading-5 text-ink-soft">Product title, price and Buy Now are protected commerce content.</p>;
+      controls = <p className="rounded-lg bg-cream-100 p-3 text-xs leading-5 text-ink-soft">ပစ္စည်းအမည်၊ ဈေးနှုန်းနဲ့ ဝယ်မည်ခလုတ်တွေက မဖယ်ရှားနိုင်တဲ့ အရောင်းလုပ်ဆောင်ချက်တွေဖြစ်တယ်။</p>;
       break;
     case 'product-description':
-      controls = field('Heading', section.settings.heading, (heading) => onChange({...section, settings: {heading}}));
+      controls = field('ခေါင်းစဉ်', section.settings.heading, (heading) => onChange({...section, settings: {heading}}));
       break;
   }
 
-  return <div className="space-y-3"><h2 className="text-sm font-bold">{definition.label}</h2>{controls}</div>;
+  return <div className="space-y-3"><h2 className="text-sm font-bold">{SECTION_LABELS[section.type]}</h2>{controls}</div>;
 }

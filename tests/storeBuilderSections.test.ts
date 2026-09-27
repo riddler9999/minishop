@@ -16,6 +16,7 @@ const shellPath = new URL('../src/features/shop/storeBuilder/StoreBuilderShell.t
 const previewPath = new URL('../src/features/shop/storeBuilder/PreviewCanvas.tsx', import.meta.url);
 const inspectorPath = new URL('../src/features/shop/storeBuilder/Inspector.tsx', import.meta.url);
 const treePath = new URL('../src/features/shop/storeBuilder/SectionTree.tsx', import.meta.url);
+const rendererPath = new URL('../src/features/catalog/storeDesign/StorefrontRenderer.tsx', import.meta.url);
 
 describe('Store Builder #114 section interactions', () => {
   it('uses the same selected-section state for tree, preview, and inspector', () => {
@@ -80,6 +81,13 @@ describe('Store Builder #114 section interactions', () => {
     const nextHero = updated.templates.home.sections.find(({id}) => id === hero.id);
     assert.equal(nextHero?.type === 'hero' ? nextHero.settings.headline : '', 'New headline');
     assert.doesNotMatch(fs.readFileSync(inspectorPath, 'utf8'), /JSON\.stringify|JSON\.parse|raw JSON/i);
+    assert.doesNotMatch(fs.readFileSync(inspectorPath, 'utf8'), /Image URL|Button label/);
+  });
+
+  it('renders every addable spacer size as visible space', () => {
+    const renderer = fs.readFileSync(rendererPath, 'utf8');
+    assert.match(renderer, /section\.settings\.size === 'sm' \? 'h-4'/);
+    assert.match(renderer, /section\.settings\.size === 'lg' \? 'h-16' : 'h-8'/);
   });
 
   it('routes every section edit through the existing Draft autosave state', async () => {

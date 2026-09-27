@@ -82,7 +82,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
 
       <div className="grid min-h-[660px] grid-cols-[240px_minmax(0,1fr)_280px]" data-layout="three-pane">
         <aside className="border-r border-cream-200 p-3" aria-label="Section tree">
-          <p className="mb-2 text-xs font-bold uppercase text-ink-soft">Sections</p>
+          <p className="mb-2 text-xs font-bold text-ink-soft">ကဏ္ဍများ</p>
           <SectionTree
             sections={sections}
             selectedSectionId={selectedSectionId}
@@ -96,7 +96,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         </aside>
         <main className="min-w-0"><PreviewCanvas document={editor.document} template={template} products={products} categories={categories} viewport={viewport} selectedSectionId={selectedSectionId} onSectionSelect={selectSection} /></main>
         <aside className="border-l border-cream-200 p-4" aria-label="Inspector">
-          <p className="mb-3 text-xs font-bold uppercase text-ink-soft">Inspector</p>
+          <p className="mb-3 text-xs font-bold text-ink-soft">ပြင်ဆင်ရန်</p>
           <Inspector section={selected} blocked={editor.blocked} onChange={changeSection} />
         </aside>
       </div>

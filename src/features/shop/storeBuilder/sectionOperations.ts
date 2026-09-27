@@ -7,7 +7,7 @@ import {
   type StoreSection,
   type StoreSectionType,
   type StoreTemplateName,
-} from '../../../domain/storeDesign/index.ts';
+} from '@/domain/storeDesign';
 
 type IdFactory = () => string;
 
