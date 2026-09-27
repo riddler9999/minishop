@@ -546,3 +546,56 @@ textarea {
     border-radius: 0 !important;
   }
 }
+
+
+/* ---- Auth animated gradient border --------------------------------------- */
+.auth-gradient-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #ec1f62;
+}
+
+.auth-gradient-shell::before {
+  content: '';
+  position: absolute;
+  inset: -55%;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    #ec1f62,
+    #f9578d,
+    #7c3aed,
+    #0ea5e9,
+    #22c55e,
+    #f59e0b,
+    #ec1f62
+  );
+  animation: auth-gradient-spin 6s linear infinite;
+}
+
+.auth-gradient-shell::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: #ffffff;
+}
+
+.auth-gradient-card {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes auth-gradient-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-gradient-shell::before {
+    animation: none;
+  }
+}

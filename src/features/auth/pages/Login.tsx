@@ -143,7 +143,7 @@ export default function AdminLogin() {
           </section>
 
           <section className="mx-auto w-full max-w-md">
-            <div className="rounded-[28px] border border-brand-100 bg-white p-5 shadow-[0_24px_70px_rgba(15,29,49,0.10)] sm:p-8">
+            <div className="auth-gradient-shell rounded-[30px] p-[1.5px] shadow-[0_26px_80px_rgba(15,29,49,0.18)]"><div className="auth-gradient-card rounded-[28px] bg-white p-5 sm:p-8">
               <div className="mb-7">
                 <p className="text-sm font-semibold text-brand-600">
                   {isConfirm ? 'Verify your email' : mode === 'login' ? 'Welcome back' : 'Create seller account'}
@@ -308,6 +308,7 @@ export default function AdminLogin() {
                   </button>
                 )}
               </form>
+              </div>
             </div>
 
             <div className="mt-5 flex items-center justify-center">
