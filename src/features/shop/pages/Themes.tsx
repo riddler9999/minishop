@@ -4,7 +4,6 @@ import {Check, LoaderCircle, Paintbrush, RefreshCw} from 'lucide-react';
 import {THEME_PRESETS, type ThemePresetId} from '@/domain/theme';
 import {createThemeDraft, type StoreDesignLifecycle} from '@/domain/storeDesign';
 import {adminApi} from '@/data/dataSource';
-import {StoreDesignConflictError} from '@/features/shop/api/storeDesign';
 
 type Status =
   | {kind: 'idle'}
@@ -57,7 +56,7 @@ export default function Themes() {
       });
       setStatus({kind: 'saved', themeId: targetThemeId});
     } catch (error) {
-      if (error instanceof StoreDesignConflictError) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'STORE_DESIGN_CONFLICT') {
         setStatus({kind: 'conflict'});
         return;
       }
