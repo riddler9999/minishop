@@ -105,7 +105,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
     <div
       data-demo-store={isDemo ? "" : undefined}
       data-store-theme={isDemo ? undefined : theme.presetId}
-      className={`flex min-h-screen flex-col overflow-x-clip pb-[72px] md:pb-0 ${isDemo ? 'bg-[#eee6ff]' : ''}`}
+      className={`flex min-h-screen min-h-[100dvh] flex-col overflow-x-clip ${isDemo ? 'bg-[#eee6ff] pb-[calc(82px+env(safe-area-inset-bottom))] md:pb-0' : 'pb-[72px] md:pb-0'}`}
       style={isDemo ? fontPairingStyle(theme.fontPairing) : {...fontPairingStyle(theme.fontPairing), backgroundColor: visual.canvas, color: visual.text}}>
       <AnnouncementBar />
       {!isDemo && (
@@ -146,7 +146,7 @@ export default function Layout({children, drawerFooterAction}: {children: React.
       </footer>}
 
       {isDemo ? (
-        <nav className="fixed inset-x-4 bottom-3 z-40 mx-auto grid h-[70px] max-w-[390px] grid-cols-3 rounded-[26px] border border-white/70 bg-[#fbf8ff]/96 px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-2 shadow-[0_18px_48px_rgba(76,29,149,0.18)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+        <nav className="fixed inset-x-[clamp(10px,4vw,24px)] bottom-[max(10px,env(safe-area-inset-bottom))] z-40 mx-auto grid h-[70px] w-auto max-w-[430px] grid-cols-3 rounded-[24px] border border-white/70 bg-[#fbf8ff]/96 px-2 pb-2 pt-2 shadow-[0_18px_48px_rgba(76,29,149,0.18)] backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
           <ShopLink to="/" className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold ${active('/') ? 'text-[#6d28d9]' : 'text-[#6f6280]'}`}>
             <span className={`grid h-8 w-8 place-items-center rounded-full ${active('/') ? 'bg-[#efe5ff]' : ''}`}><Home className="h-[19px] w-[19px]" strokeWidth={2.1} /></span>
             <span>Home</span>
