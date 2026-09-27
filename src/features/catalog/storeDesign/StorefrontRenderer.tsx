@@ -1,6 +1,7 @@
 import type {ReactNode} from 'react';
 import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreSection, StoreTemplateName} from '@/domain/storeDesign';
+import {getThemeVisual} from '@/domain/theme';
 import {buildStorefrontRenderPlan} from './renderPlan';
 
 export type StorefrontRendererProps = {
@@ -69,10 +70,15 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
 
 export function StorefrontRenderer(props: StorefrontRendererProps) {
   const plan = buildStorefrontRenderPlan(props.document, props.template);
+  const visual = getThemeVisual({presetId: plan.themeId, accentColor: plan.accentColor});
   return (
-    <>
+    <div
+      data-store-theme={plan.themeId}
+      style={{backgroundColor: visual.canvas, color: visual.text}}
+      className="min-h-full"
+    >
       {plan.sections.map((section) => <div key={section.id} data-store-section-id={section.id}>{sectionContent(section, props)}</div>)}
       {props.template === 'product' && props.renderRequiredCommerce?.(plan.requiredCommerce.buyNow)}
-    </>
+    </div>
   );
 }
