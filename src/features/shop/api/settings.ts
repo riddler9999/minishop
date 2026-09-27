@@ -6,8 +6,9 @@
 import {requireSupabase} from '@/core/supabase/client';
 import {mapDbError} from '@/domain/dbError';
 import type {Json, TablesUpdate} from '@/core/supabase/database.types';
-import type {ShopPlan, ShopSettings, ShopSettingsPatch} from '@/domain/shop';
+import type {ShopSettings, ShopSettingsPatch} from '@/domain/shop';
 import {normalizeTheme, type StorefrontTheme} from '@/domain/theme';
+import {normalizePlan} from '@/domain/plan';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 
 // Raised when the seller edits Store Design before migration 0009 has been
@@ -31,7 +32,7 @@ export const shopSettingsApi = {
       .select('id, slug, name, phone, logo_url, default_delivery_fee, plan, is_active')
       .eq('id', shopId)
       .maybeSingle();
-    if (error || !data) throw new Error(error?.message || 'ဆိုင် ရှာမတွေ့ပါ။');
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ဆိုင် ရှာမတွေ့ပါ။'));
     return {
       shop: {
         id: data.id,
@@ -40,7 +41,7 @@ export const shopSettingsApi = {
         phone: data.phone,
         logoUrl: data.logo_url,
         defaultDeliveryFee: data.default_delivery_fee,
-        plan: (data.plan as ShopPlan) ?? 'starter',
+        plan: normalizePlan(data.plan),
         isActive: data.is_active,
       },
     };

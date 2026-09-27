@@ -1,0 +1,129 @@
+-- MiniShop behavioral database audit harness
+-- TARGET: disposable/local Supabase, preview branch, or dedicated staging ONLY.
+-- NEVER run against Production project fsxdnmnycizjkgstokze.
+--
+-- This file intentionally contains mutation/concurrency fixtures. It is not part
+-- of npm test and is not evidence until executed against a safe database.
+--
+-- Required execution model:
+--   1. Apply repo migrations through 0023 to an isolated DB.
+--   2. Create two auth users (Seller A/B) and one active shop each.
+--   3. Seed products with fixture-only UUIDs/names.
+--   4. Run the cases below from separate database sessions where concurrency is
+--      required. Roll back/tear down the isolated database afterwards.
+--
+-- PASS criteria are documented as SQL assertions so an operator can reproduce
+-- the audit without relying on UI state.
+
+-- ---------------------------------------------------------------------------
+-- RLS READ ISOLATION (single-session)
+-- ---------------------------------------------------------------------------
+-- Before SET ROLE, set these custom settings to isolated fixture ids:
+--   audit.seller_a, audit.shop_a, audit.shop_b
+--
+-- select set_config('request.jwt.claim.sub', current_setting('audit.seller_a'), true);
+-- set local role authenticated;
+--
+-- Seller A must see exactly its own shop row and zero Seller B rows:
+-- select assert_eq((select count(*) from public.shops
+--                   where id=current_setting('audit.shop_a')::uuid), 1);
+-- select assert_eq((select count(*) from public.shops
+--                   where id=current_setting('audit.shop_b')::uuid), 0);
+-- select assert_eq((select count(*) from public.products
+--                   where shop_id=current_setting('audit.shop_b')::uuid), 0);
+--
+-- Repeat SELECT/INSERT/UPDATE/DELETE attempts for every tenant table:
+-- shops, products, orders, order_items, shipping_zones, payment_accounts,
+-- payment_proofs, shop_entitlements, entitlement_ledger, order_pack_purchases.
+-- Cross-tenant writes must affect 0 rows or raise an RLS error.
+
+-- ---------------------------------------------------------------------------
+-- ANON BUYER BOUNDARY
+-- ---------------------------------------------------------------------------
+-- set local role anon;
+-- Direct table writes to orders/order_items/products/shops/entitlements/ledger
+-- must be rejected by RLS. Public storefront SELECTs may expose only the
+-- intentionally public active rows.
+--
+-- NOTE: place_order() and lookup_order() are intentional anon-callable RPCs.
+-- They must be tested as the only public order mutation/read path.
+
+-- ---------------------------------------------------------------------------
+-- place_order CONCURRENCY
+-- ---------------------------------------------------------------------------
+-- Run each numbered case with two or more independent database/API sessions.
+--
+-- CASE 1: identical retries
+--   Same shop/cart/idempotency UUID submitted concurrently.
+--   Assert one orders row for (shop_id,idempotency_key), one consume_order ledger
+--   row, one stock decrement, and both callers reconcile to the same order_no.
+--
+-- CASE 2: final stock unit
+--   Seed product stock=1. Submit two different idempotency keys concurrently,
+--   qty=1 each. Assert exactly one succeeds, stock=0, never negative, exactly one
+--   order/item/entitlement consumption commits.
+--
+-- CASE 3: final entitlement
+--   Seed monthly_used=monthly_quota-1 and purchased_balance=0. Submit two orders
+--   concurrently. Assert one succeeds, one gets order_quota_exhausted, and
+--   monthly_used=monthly_quota.
+--
+-- CASE 4: timeout/unknown result retry
+--   Commit first request but drop/ignore its client response. Retry same key.
+--   Assert retry returns original order and no counters/stock change a second time.
+--
+-- CASE 5: transactional rollback
+--   Cart contains one valid product followed by an unavailable/insufficient item.
+--   Assert no order, no order_items, no stock delta, no entitlement delta, no
+--   consume_order ledger row after the function raises.
+--
+-- ---------------------------------------------------------------------------
+-- PRODUCT CAP CONCURRENCY
+-- ---------------------------------------------------------------------------
+-- Seed free_trial shop with 9 products. In independent authenticated Seller A
+-- sessions, concurrently insert 2+ products. Assert final count=10, not 11+.
+-- Repeat boundary shape for starter 99->100 and business 499->500 if practical.
+-- Permanent deletion of an owned product must reduce count by one; a Seller A
+-- delete for Seller B product must affect zero rows.
+--
+-- Historical order preservation:
+-- Create an order item snapshot referencing a product, permanently delete the
+-- product, assert order_items.product_id becomes NULL while name/unit_price/qty
+-- remain unchanged.
+--
+-- ---------------------------------------------------------------------------
+-- ENTITLEMENT BOUNDARIES
+-- ---------------------------------------------------------------------------
+-- free_trial: monthly_used 19 -> order succeeds -> 20; next rejected.
+-- starter:    monthly_used 59 -> order succeeds -> 60; next rejected.
+-- business:   monthly_used 199 -> order succeeds -> 200; next rejected.
+-- Change successful order status to cancelled/rejected/RTO/refund-equivalent
+-- application state where represented; assert entitlement is never restored.
+-- Renewal resets paid cycle monthly_used only; free_trial lifetime usage must not
+-- be reset by any seller-accessible operation.
+--
+-- ---------------------------------------------------------------------------
+-- BILLING / PAYMENT / ORDER PACKS
+-- ---------------------------------------------------------------------------
+-- Concurrent activate/renew/upgrade calls with the same payment ref must grant
+-- at most once. activate_plan_from_verified_payment replay of one approved proof
+-- must be idempotent.
+--
+-- Extra Order packs:
+--   * same purchase_id + same transaction_id retry => no second credit
+--   * different purchase_ids + same transaction_id concurrently => exactly one
+--     credit; loser gets unique/duplicate_transaction_id and transaction aborts
+--   * missing transaction_id => transaction_id_required; no credit
+--   * authenticated seller cannot set/alter transaction_id directly
+--
+-- ---------------------------------------------------------------------------
+-- VERIFICATION QUERIES (run after each isolated case)
+-- ---------------------------------------------------------------------------
+-- select stock from public.products where id = :fixture_product;
+-- select monthly_used,purchased_balance from public.shop_entitlements where shop_id=:fixture_shop;
+-- select count(*) from public.orders where shop_id=:fixture_shop and idempotency_key=:key;
+-- select count(*) from public.entitlement_ledger where shop_id=:fixture_shop and source_type='order' and source_id=:order_id::text;
+-- select count(*) from public.order_pack_purchases where btrim(transaction_id)=btrim(:txid);
+--
+-- Record database version, migration head, client/session count, exact result
+-- rows, and transaction errors in docs/production/DATABASE-RLS-CONCURRENCY-AUDIT.md.

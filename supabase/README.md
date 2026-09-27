@@ -74,6 +74,7 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 (`0007`). Slip upload was dropped for MVP — see `PROJECT.md` D6.
 
 | `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. **Applied to production 2026-09-25 and advisor-verified.** |
+| `0023_database_rls_concurrency_reconciliation.sql` | Narrows storefront reads to `anon`, keeps shared Ninja Van rates visible to sellers, makes shop-logo writes Core while owner/path scoped, and adds unique full transaction identity to Extra Order crediting. **Runtime-proven in disposable local Supabase; not applied to Production.** |
 
 ### Residual advisor decisions (2026-09-25)
 

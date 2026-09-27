@@ -61,7 +61,7 @@ export async function listOrderPackPurchases(): Promise<OrderPackPurchase[]> {
     .eq('shop_id', shopId)
     .order('created_at', {ascending: false})
     .limit(20);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error.message));
   return (data ?? []).map((r) => mapPurchase(r as PurchaseRow));
 }
 
