@@ -15,8 +15,8 @@ type StorefrontDesignClient = {
 
 /**
  * Controlled buyer Store Design read.
- * - lifecycle Published is authoritative when present
- * - lifecycle absence falls back to legacy shops.theme during migration
+ * - lifecycle Published is authoritative when the lifecycle row exists
+ * - lifecycle row absence falls back to legacy shops.theme during migration
  * - RPC failures fail closed and never silently serve stale legacy data
  */
 export async function loadBuyerStoreDesign(
@@ -29,7 +29,12 @@ export async function loadBuyerStoreDesign(
   );
 
   if (publishedError) return {ok: false};
-  if (published?.document) return {ok: true, document: published.document};
+  // The RPC returns null only when no lifecycle row exists. Once a row exists,
+  // even an explicitly-null Published document is authoritative and must not
+  // resurrect the legacy shops.theme value.
+  if (published !== null && published !== undefined) {
+    return {ok: true, document: published.document ?? null};
+  }
 
   const {data: legacyRow, error: legacyError} = await sb
     .from('shops')
