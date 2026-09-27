@@ -14,6 +14,7 @@ const statePath = new URL('../src/features/shop/storeBuilder/editorState.ts', im
 const shellPath = new URL('../src/features/shop/storeBuilder/StoreBuilderShell.tsx', import.meta.url);
 const previewPath = new URL('../src/features/shop/storeBuilder/PreviewCanvas.tsx', import.meta.url);
 const lifecyclePath = new URL('../src/features/shop/pages/LifecycleStoreBuilder.tsx', import.meta.url);
+const legacyDesignPath = new URL('../src/features/shop/pages/StoreDesign.tsx', import.meta.url);
 const appPath = new URL('../src/app/App.tsx', import.meta.url);
 
 describe('Store Builder #113 desktop shell and autosave contract', () => {
@@ -93,13 +94,14 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.doesNotMatch(legacyPreview, /function HomePreview|function CategoryPreview|function ProductPreview/);
   });
 
-  it('routes lifecycle customize through the new Store Builder shell', () => {
+  it('routes lifecycle Customize through the new Store Builder shell while keeping legacy design shape isolated', () => {
     const lifecycle = fs.readFileSync(lifecyclePath, 'utf8');
+    const legacyDesign = fs.readFileSync(legacyDesignPath, 'utf8');
     const app = fs.readFileSync(appPath, 'utf8');
     assert.match(lifecycle, /StoreBuilderShell/);
     assert.match(lifecycle, /loadOwnStoreDesign/);
-    assert.match(app, /online-store\/themes\/customize/);
-    assert.match(app, /path="design" element={<LifecycleStoreBuilder \/>}/);
-    assert.match(app, /LifecycleStoreBuilder/);
+    assert.match(app, /online-store\/themes\/customize["'] element={<LifecycleStoreBuilder \/>}/);
+    assert.match(app, /path=["']design["'] element={<StoreDesign \/>}/);
+    assert.doesNotMatch(legacyDesign, /loadOwnStoreDesign|saveDraft|as unknown as StorefrontTheme|lifecycleMode/);
   });
 });
