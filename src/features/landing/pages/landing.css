@@ -34,3 +34,286 @@
 
 @media(max-width:860px){.landing-shell{padding:10px}.landing-hero{border-radius:24px;padding:18px 16px 40px}.landing-hero-copy{margin-top:58px}.landing-story-section,.landing-steps-section,.landing-everywhere-section,.landing-checkout-section,.landing-themes-section,.landing-pricing-section,.landing-dashboard-section{padding:30px 22px}.landing-everywhere-section,.landing-checkout-section,.landing-dashboard-section{grid-template-columns:1fr}.landing-checkout-preview{order:1}.landing-checkout-copy{order:2}.landing-theme-grid{grid-template-columns:repeat(2,1fr)}.landing-pricing-grid{grid-template-columns:1fr}.landing-pricing-card p{min-height:0}.landing-channel-flow{grid-template-columns:1fr;gap:10px}.landing-channel-line{width:2px;height:26px;justify-self:center}.landing-comparison{grid-template-columns:1fr}.landing-comparison-arrow{transform:rotate(90deg);justify-self:center}.landing-steps-grid{grid-template-columns:1fr}.landing-dashboard-window{min-height:280px}}
 @media(max-width:600px){.landing-shell{padding:8px}.landing-hero{padding:14px 12px 32px}.landing-topbar{gap:8px}.landing-wordmark{font-size:18px;gap:7px}.landing-wordmark-mark{width:32px;height:32px;border-radius:9px;font-size:20px}.landing-topbar-actions{gap:4px}.landing-text-link{padding:8px 6px;font-size:12px}.landing-topbar-cta{min-height:36px;padding:0 10px;font-size:12px}.landing-hero-copy{margin-top:42px}.landing-hero-copy h1{font-size:clamp(32px,10vw,48px);line-height:1.32}.landing-hero-lede{font-size:15px;line-height:1.85}.landing-primary-cta,.landing-demo-cta{width:100%;min-height:52px}.landing-hero-visual{min-height:340px;margin-top:34px}.landing-store-animation{width:100%;padding:6px}.landing-store-grid{grid-template-columns:repeat(2,1fr);padding:12px;gap:8px}.landing-store-grid article:nth-child(n+3){display:none}.landing-animation-cart{right:2%;top:2%}.landing-animation-order{bottom:8px}.landing-hero-visual:before{width:360px;height:280px}.landing-phone-shell{width:min(300px,82vw);border-width:8px}.landing-floating-card{min-width:0;padding:10px 12px}.landing-floating-card-top{right:0;top:18%}.landing-floating-card-bottom{left:0;bottom:11%}.landing-story-section,.landing-steps-section,.landing-everywhere-section,.landing-checkout-section,.landing-themes-section,.landing-pricing-section,.landing-dashboard-section{border-radius:22px;padding:28px 16px}.landing-story-heading h2,.landing-section-head h2,.landing-everywhere-copy h2,.landing-checkout-copy h2,.landing-dashboard-copy h2{font-size:30px;line-height:1.48}.landing-story-heading p,.landing-section-head p,.landing-everywhere-copy p,.landing-checkout-copy p,.landing-dashboard-copy p{font-size:14px;line-height:1.9}.landing-checkout-phone{width:min(310px,100%);padding:17px;border-width:7px}.landing-dashboard-window{grid-template-columns:46px 1fr}.landing-dashboard-sidebar{padding:14px 6px}.landing-dashboard-main{padding:16px}.landing-dashboard-stats{grid-template-columns:1fr}.landing-dashboard-chart{height:100px}.landing-theme-grid{grid-template-columns:1fr 1fr}.landing-pricing-card{padding:22px}.landing-plan-price strong{font-size:25px}}
+
+
+/* Apple-inspired retail composition for MiniShop platform landing.
+   Preserve MiniShop Pink as the single action accent. */
+.landing{
+  --apple-canvas:#f5f5f7;
+  --apple-surface:#fff;
+  background:var(--apple-canvas);
+  color:#1d1d1f;
+}
+.landing-shell{
+  max-width:none;
+  margin:0;
+  padding:0;
+}
+.landing-hero{
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:var(--apple-surface);
+  padding:0 24px 64px;
+}
+.landing-topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  min-height:44px;
+  margin:0 -24px;
+  padding:0 max(24px,calc((100vw - 1024px)/2));
+  background:rgba(245,245,247,.82);
+  backdrop-filter:saturate(1.8) blur(20px);
+  -webkit-backdrop-filter:saturate(1.8) blur(20px);
+}
+.landing-wordmark-mark{
+  width:30px;height:30px;border-radius:9px;
+  background:var(--pink);
+  box-shadow:none;
+  font-size:19px;
+}
+.landing-wordmark{font-size:18px}
+.landing-topbar-cta{
+  min-height:36px;
+  border-radius:999px;
+  background:var(--pink);
+  padding:0 16px;
+}
+.landing-topbar-cta:hover{background:var(--pink-dark)}
+.landing-hero-copy{
+  max-width:1024px;
+  margin:84px auto 0;
+}
+.landing-pill,.landing-section-pill{
+  background:transparent;
+  color:var(--pink);
+  padding:0;
+  border-radius:0;
+  letter-spacing:.02em;
+}
+.landing-hero-copy h1{
+  max-width:960px;
+  margin-top:18px;
+  font-size:clamp(48px,6.6vw,76px);
+  line-height:1.18;
+  font-weight:700;
+  letter-spacing:-.03em;
+}
+.landing-hero-lede{
+  max-width:760px;
+  margin-top:16px;
+  color:#6e6e73;
+  font-size:clamp(20px,2.3vw,28px);
+  line-height:1.5;
+}
+.landing-hero-points{
+  max-width:820px;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  margin-top:34px;
+  background:#d2d2d7;
+}
+.landing-hero-points p{
+  border:0;
+  border-radius:0;
+  background:#fff;
+  padding:20px 22px;
+}
+.landing-primary-cta,.landing-demo-cta{
+  min-height:44px;
+  border-radius:999px;
+  padding:0 21px;
+  box-shadow:none;
+}
+.landing-primary-cta{background:var(--pink)}
+.landing-primary-cta:hover{background:var(--pink-dark);box-shadow:none}
+.landing-demo-cta{
+  border:1px solid var(--pink);
+  background:transparent;
+  color:var(--pink);
+}
+.landing-demo-cta:hover{background:var(--pink-soft)}
+.landing-proof-row{margin-top:18px;color:#6e6e73}
+.landing-hero-visual{
+  max-width:1024px;
+  min-height:520px;
+  margin-top:46px;
+}
+.landing-hero-visual:before{display:none}
+.landing-demo-device{
+  transform:scale(1.06);
+  transform-origin:center top;
+}
+
+/* Full-width retail bands: hierarchy comes from surfaces and typography, not cards. */
+.landing-story-section,.landing-steps-section,.landing-everywhere-section,
+.landing-checkout-section,.landing-themes-section,.landing-pricing-section,
+.landing-dashboard-section{
+  width:100%;
+  margin-top:12px;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  padding:64px max(24px,calc((100vw - 1024px)/2));
+  background:#fff;
+}
+.landing-story-section,.landing-themes-section,.landing-pricing-section{
+  background:#f5f5f7;
+}
+.landing-steps-section,.landing-checkout-section{background:#fff}
+.landing-everywhere-section{
+  background:#f5f5f7;
+}
+.landing-dashboard-section{
+  background:#000;
+  color:#fff;
+}
+.landing-story-heading,.landing-section-head{
+  max-width:900px;
+  margin:0 auto;
+  text-align:center;
+}
+.landing-story-heading h2,.landing-section-head h2,.landing-everywhere-copy h2,
+.landing-checkout-copy h2,.landing-dashboard-copy h2{
+  margin:14px 0 12px;
+  font-size:clamp(40px,5.2vw,56px);
+  line-height:1.18;
+  letter-spacing:-.025em;
+  font-weight:700;
+}
+.landing-story-heading p,.landing-section-head p,.landing-everywhere-copy p,
+.landing-checkout-copy p,.landing-dashboard-copy p{
+  color:#6e6e73;
+  font-size:18px;
+  line-height:1.7;
+}
+.landing-comparison{
+  max-width:1024px;
+  margin:42px auto 0;
+  gap:12px;
+}
+.landing-comparison-card{
+  min-height:360px;
+  border:0;
+  border-radius:0;
+  background:#fff;
+  padding:40px 34px;
+}
+.landing-comparison-card-after{background:#fff}
+.landing-chat-bubble,.landing-journey-list>div{
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:#f5f5f7;
+}
+.landing-steps-grid{
+  max-width:1024px;
+  margin:38px auto 0;
+  gap:12px;
+}
+.landing-step-card{
+  border:0;
+  border-radius:0;
+  background:#f5f5f7;
+  padding:42px 32px;
+}
+.landing-step-card h3{margin-top:64px}
+.landing-everywhere-section,.landing-checkout-section,.landing-dashboard-section{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:64px;
+}
+.landing-everywhere-copy,.landing-checkout-copy,.landing-dashboard-copy{
+  align-self:center;
+}
+.landing-channel-list>div,.landing-store-node,.landing-order-node{
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.landing-store-node{background:#fff1f6;color:var(--pink-dark)}
+.landing-order-node{background:#fff}
+.landing-checkout-phone{
+  border:0;
+  border-radius:28px;
+  box-shadow:0 3px 5px rgba(0,0,0,.08),0 18px 42px rgba(0,0,0,.08);
+}
+.landing-checkout-button{border-radius:999px;background:var(--pink)}
+.landing-theme-grid{
+  max-width:1024px;
+  margin:36px auto 0;
+  gap:12px;
+}
+.landing-theme-card{
+  border:0;
+  border-radius:0;
+  background:#fff;
+  padding:20px;
+}
+.landing-theme-hero,.landing-theme-products i{border-radius:0}
+.landing-pricing-grid{
+  max-width:1024px;
+  margin:38px auto 0;
+  gap:12px;
+}
+.landing-pricing-card{
+  border:0;
+  border-radius:0;
+  background:#fff;
+  padding:36px 30px;
+}
+.landing-pricing-card-featured{
+  border:1px solid var(--pink);
+  box-shadow:none;
+}
+.landing-plan-cta{
+  min-height:44px;
+  border-radius:999px;
+}
+.landing-dashboard-window{
+  border:1px solid #2f2f33;
+  border-radius:0;
+  box-shadow:none;
+}
+.landing-dashboard-stats>div{
+  border-radius:0;
+}
+.landing-footer{
+  margin:0;
+  padding:34px 24px 42px;
+  background:#f5f5f7;
+}
+
+/* Motion stays quick and restrained. */
+.landing a,.landing button{
+  transition-duration:.22s;
+  transition-timing-function:cubic-bezier(.4,0,.6,1);
+}
+
+@media(max-width:860px){
+  .landing-shell{padding:0}
+  .landing-hero{border-radius:0;padding:0 18px 48px}
+  .landing-topbar{margin:0 -18px;padding:0 18px}
+  .landing-hero-copy{margin-top:64px}
+  .landing-story-section,.landing-steps-section,.landing-everywhere-section,
+  .landing-checkout-section,.landing-themes-section,.landing-pricing-section,
+  .landing-dashboard-section{padding:52px 22px}
+  .landing-everywhere-section,.landing-checkout-section,.landing-dashboard-section{grid-template-columns:1fr}
+  .landing-hero-points{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .landing-shell{padding:0}
+  .landing-hero{padding:0 14px 38px}
+  .landing-topbar{margin:0 -14px;padding:0 14px}
+  .landing-topbar-cta{min-height:34px}
+  .landing-hero-copy{margin-top:48px}
+  .landing-hero-copy h1{font-size:clamp(38px,11vw,52px);line-height:1.25}
+  .landing-hero-lede{font-size:19px;line-height:1.65}
+  .landing-story-section,.landing-steps-section,.landing-everywhere-section,
+  .landing-checkout-section,.landing-themes-section,.landing-pricing-section,
+  .landing-dashboard-section{border-radius:0;padding:44px 16px}
+  .landing-story-heading h2,.landing-section-head h2,.landing-everywhere-copy h2,
+  .landing-checkout-copy h2,.landing-dashboard-copy h2{font-size:34px;line-height:1.35}
+  .landing-comparison-card,.landing-step-card,.landing-pricing-card{padding:28px 20px}
+  .landing-demo-device{transform:none}
+}
