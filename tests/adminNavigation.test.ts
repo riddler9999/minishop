@@ -6,10 +6,11 @@ const layout = fs.readFileSync(new URL('../src/features/admin/components/AdminLa
 const app = fs.readFileSync(new URL('../src/app/App.tsx', import.meta.url), 'utf8');
 
 describe('Store Builder #112 admin information architecture', () => {
-  it('exposes the approved seller navigation in the admin shell', () => {
-    for (const label of ['Home', 'Orders', 'Products', 'Online Store', 'Marketing', 'Analytics', 'Shipping', 'Settings']) {
+  it('exposes only seller navigation with real destinations in the admin shell', () => {
+    for (const label of ['Home', 'Orders', 'Products', 'Online Store', 'Analytics', 'Shipping', 'Settings']) {
       assert.match(layout, new RegExp(`label: ['"]${label}['"]`), `missing nav label: ${label}`);
     }
+    assert.doesNotMatch(layout, /label: ['"]Marketing['"]/);
   });
 
   it('routes Online Store Themes and Customize separately', () => {
