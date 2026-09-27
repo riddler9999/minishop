@@ -13,13 +13,18 @@ describe('Store Builder #112 admin information architecture', () => {
     assert.doesNotMatch(layout, /label: ['"]Marketing['"]/);
   });
 
-  it('routes Online Store Themes and Customize separately', () => {
+  it('routes Online Store Themes and lifecycle Customize separately', () => {
     assert.match(app, /path=["']online-store\/themes["']/);
-    assert.match(app, /path=["']online-store\/themes\/customize["']/);
+    assert.match(app, /path=["']online-store\/themes\/customize["'] element={<LifecycleStoreBuilder \/>}/);
+  });
+
+  it('preserves the legacy Store Design route until lifecycle migration cutover', () => {
+    assert.match(app, /import StoreDesign from ['"]@\/features\/shop\/pages\/StoreDesign['"]/);
+    assert.match(app, /path=["']design["'] element={<StoreDesign \/>}/);
   });
 
   it('keeps existing business routes addressable', () => {
-    for (const route of ['products', 'orders', 'shipping', 'billing', 'settings']) {
+    for (const route of ['products', 'orders', 'shipping', 'billing', 'design', 'settings']) {
       assert.match(app, new RegExp(`path=["']${route}["']`), `missing existing admin route: ${route}`);
     }
   });

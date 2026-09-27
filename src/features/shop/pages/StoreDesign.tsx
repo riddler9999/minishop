@@ -14,7 +14,6 @@ import {AlertTriangle, Check, Eye, Image as ImageIcon, Loader2, Palette, Pencil,
 import {adminApi} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import {DEFAULT_THEME, THEME_PRESETS, themeFromPreset, type StorefrontTheme, type ThemePresetId} from '@/domain/theme';
-import {normalizeStoreDesign, type StoreDesignDocument} from '@/domain/storeDesign';
 import {FONT_PAIRING_IDS, FONT_PAIRINGS, type FontPairingId} from '@/domain/fontPairing';
 import {usePlan} from '@/features/billing/plan';
 import {PlanBadge} from '@/features/billing/PlanGate';
@@ -34,7 +33,7 @@ const SECTIONS: {id: Section; label: string; preview: PreviewPage}[] = [
   {id: 'checkout', label: 'Checkout', preview: 'checkout'},
 ];
 
-export default function StoreDesign({lifecycleMode = false}: {lifecycleMode?: boolean}) {
+export default function StoreDesign() {
   const {shop, features, loading} = usePlan();
 
   if (loading) return <div className="grid min-h-[40vh] place-items-center text-sm text-ink-soft">Loading…</div>;
@@ -42,7 +41,7 @@ export default function StoreDesign({lifecycleMode = false}: {lifecycleMode?: bo
 
   if (!features.storeDesign) return null;
 
-  return <StoreDesignEditor key={shop.id} shopName={shop.name} logoUrl={shop.logoUrl} lifecycleMode={lifecycleMode} />;
+  return <StoreDesignEditor key={shop.id} shopName={shop.name} logoUrl={shop.logoUrl} />;
 }
 
 function Header() {
@@ -57,7 +56,7 @@ function Header() {
   );
 }
 
-function StoreDesignEditor({shopName, logoUrl, lifecycleMode}: {shopName: string; logoUrl: string | null; lifecycleMode: boolean}) {
+function StoreDesignEditor({shopName, logoUrl}: {shopName: string; logoUrl: string | null}) {
   const [draft, setDraft] = useState<StorefrontTheme>(DEFAULT_THEME);
   const [saved, setSaved] = useState<StorefrontTheme>(DEFAULT_THEME);
   const [supported, setSupported] = useState(true);
@@ -68,7 +67,6 @@ function StoreDesignEditor({shopName, logoUrl, lifecycleMode}: {shopName: string
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState(false);
-  const [draftRevision, setDraftRevision] = useState<number | null>(null);
 
   // Hero-image upload consistency (same invariant as the logo in Settings): an
   // object uploaded but not yet saved is tracked so it can be cleaned up on
@@ -84,17 +82,14 @@ function StoreDesignEditor({shopName, logoUrl, lifecycleMode}: {shopName: string
     let alive = true;
     (async () => {
       try {
-        const [{theme, supported: isSupported, revision}, {products: list}] = await Promise.all([
-          lifecycleMode
-            ? adminApi.loadOwnStoreDesign().then((lifecycle) => ({theme: lifecycle.draft as unknown as StorefrontTheme, supported: true, revision: lifecycle.draftRevision}))
-            : adminApi.getShopTheme().then((result) => ({...result, revision: null as number | null})),
+        const [{theme, supported: isSupported}, {products: list}] = await Promise.all([
+          adminApi.getShopTheme(),
           adminApi.listProducts(),
         ]);
         if (!alive) return;
         setDraft(theme);
         setSaved(theme);
         setSupported(isSupported);
-        setDraftRevision(revision);
         setProducts(list.filter((p) => p.status === 'active').slice(0, 8));
       } catch (e: any) {
         if (alive) setErr(e.message || 'Store Design ဆွဲယူ၍မရပါ။');
@@ -137,16 +132,7 @@ function StoreDesignEditor({shopName, logoUrl, lifecycleMode}: {shopName: string
     setSaving(true);
     const previousHeroUrl = saved.home.heroImageUrl;
     try {
-      if (lifecycleMode) {
-        if (draftRevision == null) throw new Error('Draft revision မရရှိသေးပါ။ ပြန်ဖတ်ပြီး ထပ်စမ်းပါ။');
-        const savedDraft = await adminApi.saveDraft({
-          expectedRevision: draftRevision,
-          document: normalizeStoreDesign(draft as unknown as StoreDesignDocument),
-        });
-        setDraftRevision(savedDraft.revision);
-      } else {
-        await adminApi.updateShopTheme(draft);
-      }
+      await adminApi.updateShopTheme(draft);
       // Only after the write succeeds is it safe to drop the previously-saved
       // hero object (if it changed) — deleting earlier risks a live URL pointing
       // at nothing had the write failed.

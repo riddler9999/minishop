@@ -73,7 +73,11 @@ export default function Themes() {
       <section className="space-y-4">
         <h1 className="text-2xl font-black text-slate-950">Theme များ</h1>
         <p className="text-sm text-rose-600">{status.kind === 'error' ? status.message : 'Theme အချက်အလက် ရယူ၍မရပါ။'}</p>
-        <button type="button" onClick={() => void loadLifecycle()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 font-semibold text-slate-700"><RefreshCw className="h-4 w-4" />ပြန်စမ်းမည်</button>
+        <p className="text-sm leading-6 text-slate-600">Store Builder lifecycle မရသေးတဲ့ environment မှာ အဟောင်း Store Design ကို ဆက်သုံးနိုင်ပါတယ်။</p>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={() => void loadLifecycle()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 font-semibold text-slate-700"><RefreshCw className="h-4 w-4" />ပြန်စမ်းမည်</button>
+          <Link to="/admin/design" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-4 font-bold text-white">အဟောင်း Store Design ဖွင့်မည်</Link>
+        </div>
       </section>
     );
   }
