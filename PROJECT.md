@@ -208,6 +208,15 @@ Design specs တွေကို `design/` အောက်မှာ reference အ
 
 ### P0 — Pilot မစခင် မဖြစ်မနေလုပ်ရန်
 
+- [x] **Production RLS cross-tenant P0 ပိတ်ပြီး — 2026-09-28**
+  - `0023_database_rls_concurrency_reconciliation.sql` ကို read-only preflight ပြီးမှ Production apply လုပ်ထားတယ်
+  - authenticated storefront policy overlap = 0
+  - Seller A → Seller B shop/product reads = 0 foreign rows
+  - anon storefront active shops 5/5, active products 3/3 ဆက်မြင်ရတယ်
+  - shop-logo Storage Business-only gate ဖယ်ပြီး owner/path scope ဆက်ထားတယ်
+  - Extra Order `transaction_id` + `admin_credit_order_pack(uuid,text)` hardening active ဖြစ်တယ်
+
+
 - [ ] **Custom SMTP configure လုပ်ရန်**
   - Supabase default/shared mailer ကို production မှာ မအားကိုးရ
   - Resend ကို အဓိကရွေးချယ်ထားတယ်
