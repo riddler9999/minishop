@@ -5,7 +5,8 @@ import fs from 'node:fs';
 const statePath = new URL('../src/features/shop/storeBuilder/editorState.ts', import.meta.url);
 const shellPath = new URL('../src/features/shop/storeBuilder/StoreBuilderShell.tsx', import.meta.url);
 const previewPath = new URL('../src/features/shop/storeBuilder/PreviewCanvas.tsx', import.meta.url);
-const storeDesignPath = new URL('../src/features/shop/pages/StoreDesign.tsx', import.meta.url);
+const lifecyclePath = new URL('../src/features/shop/pages/LifecycleStoreBuilder.tsx', import.meta.url);
+const appPath = new URL('../src/app/App.tsx', import.meta.url);
 
 describe('Store Builder #113 desktop shell and autosave contract', () => {
   it('defines explicit autosave states and debounced save intent', () => {
@@ -43,8 +44,11 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
   });
 
   it('routes lifecycle customize through the new Store Builder shell', () => {
-    const source = fs.readFileSync(storeDesignPath, 'utf8');
-    assert.match(source, /StoreBuilderShell/);
-    assert.match(source, /lifecycleMode/);
+    const lifecycle = fs.readFileSync(lifecyclePath, 'utf8');
+    const app = fs.readFileSync(appPath, 'utf8');
+    assert.match(lifecycle, /StoreBuilderShell/);
+    assert.match(lifecycle, /loadOwnStoreDesign/);
+    assert.match(app, /online-store\/themes\/customize/);
+    assert.match(app, /LifecycleStoreBuilder/);
   });
 });
