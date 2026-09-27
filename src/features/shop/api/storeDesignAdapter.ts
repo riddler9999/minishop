@@ -1,5 +1,5 @@
-import type {StoreDesignDocument, StoreDesignLifecycle} from '@/domain/storeDesign';
-import {normalizeStoreDesign} from '@/domain/storeDesign';
+import type {StoreDesignDocument, StoreDesignLifecycle} from '../../../domain/storeDesign/index.ts';
+import {normalizeStoreDesign} from '../../../domain/storeDesign/index.ts';
 
 type RpcResult = Promise<{data: unknown; error: unknown}>;
 
