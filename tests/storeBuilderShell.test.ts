@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import fs from 'node:fs';
+import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
+import {
+  applyLocalEdit,
+  createEditorState,
+  persistEditorState,
+  publishSavedDraft,
+  reconcileSaveResult,
+} from '../src/features/shop/storeBuilder/editorState.ts';
 
 const statePath = new URL('../src/features/shop/storeBuilder/editorState.ts', import.meta.url);
 const shellPath = new URL('../src/features/shop/storeBuilder/StoreBuilderShell.tsx', import.meta.url);
@@ -9,6 +17,56 @@ const lifecyclePath = new URL('../src/features/shop/pages/LifecycleStoreBuilder.
 const appPath = new URL('../src/app/App.tsx', import.meta.url);
 
 describe('Store Builder #113 desktop shell and autosave contract', () => {
+  it('keeps a newer local edit after an older save resolves', async () => {
+    const initial = createDefaultStoreDesign();
+    const savingSnapshot = applyLocalEdit(createEditorState(initial, 4), {
+      ...initial,
+      globalSettings: {...initial.globalSettings, accentColor: '#111111'},
+    });
+    const newerLocal = applyLocalEdit({...savingSnapshot, status: 'saving'}, {
+      ...savingSnapshot.document,
+      globalSettings: {...savingSnapshot.document.globalSettings, accentColor: '#222222'},
+    });
+    const saved = await persistEditorState(savingSnapshot, async ({document}) => ({
+      revision: 5,
+      document,
+    }));
+    const reconciled = reconcileSaveResult(newerLocal, savingSnapshot, saved);
+
+    assert.equal(reconciled.document.globalSettings.accentColor, '#222222');
+    assert.equal(reconciled.expectedRevision, 5);
+    assert.equal(reconciled.status, 'dirty');
+  });
+
+  it('blocks silent overwrite after a stale revision conflict', async () => {
+    const initial = createDefaultStoreDesign();
+    const dirty = applyLocalEdit(createEditorState(initial, 2), initial);
+    const conflict = await persistEditorState(dirty, async () => {
+      const error = new Error('conflict') as Error & {code: string};
+      error.code = 'STORE_DESIGN_CONFLICT';
+      throw error;
+    });
+
+    assert.equal(conflict.status, 'conflict');
+    assert.equal(conflict.blocked, true);
+  });
+
+  it('publishes only the latest successfully saved draft revision', async () => {
+    const initial = createDefaultStoreDesign();
+    const state = createEditorState(initial, 7);
+    let publishedRevision = 0;
+    await publishSavedDraft(state, async ({expectedDraftRevision}) => {
+      publishedRevision = expectedDraftRevision;
+      return {};
+    });
+    assert.equal(publishedRevision, 7);
+
+    await assert.rejects(
+      () => publishSavedDraft({...state, status: 'dirty'}, async () => ({})),
+      /Save the latest Draft/,
+    );
+  });
+
   it('defines explicit autosave states and debounced save intent', () => {
     const source = fs.readFileSync(statePath, 'utf8');
     for (const state of ['saving', 'saved', 'retry', 'conflict']) assert.match(source, new RegExp(state));
@@ -16,25 +74,14 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(source, /expectedRevision/);
   });
 
-  it('blocks silent overwrite after a stale revision conflict', () => {
-    const source = fs.readFileSync(statePath, 'utf8');
-    assert.match(source, /STORE_DESIGN_CONFLICT|conflict/);
-    assert.match(source, /blocked|blockSave|canSave/i);
-  });
-
-  it('publishes only the latest successfully saved draft revision', () => {
-    const source = fs.readFileSync(statePath, 'utf8');
-    assert.match(source, /lastSavedRevision|savedRevision/);
-    assert.match(source, /publish/i);
-    assert.match(source, /expectedDraftRevision/);
-  });
-
-  it('renders a three-pane desktop shell', () => {
+  it('renders a three-pane desktop shell with Retry and Conflict recovery controls', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
     assert.match(source, /Section|tree/i);
     assert.match(source, /PreviewCanvas/);
     assert.match(source, /Inspector/i);
     assert.match(source, /grid-cols|three-pane|3-pane/i);
+    assert.match(source, /Retry save/);
+    assert.match(source, /Reload/);
   });
 
   it('uses the shared storefront renderer in preview instead of legacy StorePreview', () => {
