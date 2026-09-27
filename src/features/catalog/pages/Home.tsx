@@ -102,11 +102,11 @@ export default function Home() {
     let alive = true;
     (async () => {
       try {
-        const [{products: nextProducts}, {categories: nextCategories}, nextDesign] = await Promise.all([
+        const [{products: nextProducts}, {categories: nextCategories}] = await Promise.all([
           api.products({scope: 'active', limit: 12}),
           api.categories(),
-          api.loadPublishedStoreDesign(),
         ]);
+        const nextDesign = await api.loadPublishedStoreDesign().catch(() => null);
         if (alive) {
           setProducts(nextProducts);
           setCategories(nextCategories);
