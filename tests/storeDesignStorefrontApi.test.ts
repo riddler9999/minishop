@@ -44,6 +44,18 @@ describe('Published-only Store Design buyer gateway', () => {
     assert.equal(themeReads(), 0);
   });
 
+  it('does not resurrect legacy theme when lifecycle exists with no Published document', async () => {
+    const {client, themeReads} = clientWith({
+      published: {document: null, revision: 0, published_at: null},
+      legacyTheme: {presetId: 'street-bold'},
+    });
+
+    const result = await loadBuyerStoreDesign(client, {shopId: 'shop-1', shopSlug: 'demo-shop'});
+
+    assert.deepEqual(result, {ok: true, document: null});
+    assert.equal(themeReads(), 0);
+  });
+
   it('falls back to legacy shops.theme only when the lifecycle row is absent', async () => {
     const legacy = {presetId: 'minimal', home: {heroHeadline: 'Legacy'}};
     const {client, themeReads} = clientWith({published: null, legacyTheme: legacy});
