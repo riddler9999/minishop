@@ -57,3 +57,34 @@ describe('Store Design lifecycle migration contract', () => {
     assert.match(sql, /revoke all on function store_design_private\.init_store_design_lifecycle\(\)/i);
   });
 });
+
+
+describe('Store Builder #116 security cutover contract', () => {
+  it('keeps lifecycle rows owner-readable only and blocks direct writes', async () => {
+    const sql = await readFile(migrationPath, 'utf8');
+
+    assert.match(sql, /create policy store_designs_owner_select[\s\S]*s\.owner_id\s*=\s*\(select auth\.uid\(\)\)/i);
+    assert.match(sql, /revoke all on table public\.store_designs from anon, authenticated/i);
+    assert.match(sql, /grant select on table public\.store_designs to authenticated/i);
+    assert.doesNotMatch(sql, /grant\s+(insert|update|delete)[\s\S]*public\.store_designs/i);
+  });
+
+  it('scopes seller lifecycle mutations to the authenticated owner', async () => {
+    const sql = await readFile(migrationPath, 'utf8');
+
+    assert.match(sql, /save_store_design_draft_internal[\s\S]*join public\.shops s on s\.id = sd\.shop_id[\s\S]*s\.owner_id\s*=\s*\(select auth\.uid\(\)\)/i);
+    assert.match(sql, /publish_store_design_draft_internal[\s\S]*join public\.shops s on s\.id = sd\.shop_id[\s\S]*s\.owner_id\s*=\s*\(select auth\.uid\(\)\)/i);
+    assert.match(sql, /rollback_store_design_published_internal[\s\S]*join public\.shops s on s\.id = sd\.shop_id[\s\S]*s\.owner_id\s*=\s*\(select auth\.uid\(\)\)/i);
+  });
+
+  it('exposes only Published design for active buyer shops', async () => {
+    const sql = await readFile(migrationPath, 'utf8');
+
+    assert.match(sql, /load_published_store_design_internal[\s\S]*'document',\s*sd\.published_document/i);
+    assert.match(sql, /where s\.slug = p_shop_slug[\s\S]*s\.is_active = true/i);
+    assert.doesNotMatch(
+      sql.match(/create or replace function store_design_private\.load_published_store_design_internal[\s\S]*?\$\$;/i)?.[0] ?? '',
+      /draft_document/i,
+    );
+  });
+});

@@ -234,3 +234,8 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
 Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
 
 Do not add a new preset that merely recolors the same layout. A distinct preset must materially change composition/density/card language. Keep compatibility for persisted legacy IDs in `normalizeTheme()`. See `design/themes/aesthetic-themes.md`.
+
+
+## Store Builder compatibility cutover (#116)
+
+The Store Design lifecycle is additive. `supabase/migrations/0024_store_design_lifecycle.sql` creates `store_designs` and lifecycle RPCs, but this migration must not be applied to Production without separate explicit owner approval. Buyer Store Design reads are lifecycle-first when the RPC is deployed; if the lifecycle RPC is not deployed yet (PostgREST missing-function / PostgreSQL undefined-function) or no lifecycle row exists, the buyer gateway falls back to `shops.theme`. Other lifecycle RPC errors fail closed. Do not remove `shops.theme` while this compatibility contract exists.

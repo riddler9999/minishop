@@ -83,3 +83,10 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 - Leaked-password protection is an Auth project setting, not a SQL migration. Enable it in Supabase Auth when the project setting is available to the operator/tooling.
 
 | `0024_store_design_lifecycle.sql` | Additive Store Builder lifecycle: one `store_designs` row per shop, owner-only lifecycle access, optimistic Draft saves, atomic Publish/Rollback, and Published-only buyer RPC. Preserves `shops.theme`. **Pending — repository implementation only; NOT applied to production without separate owner approval.** |
+
+
+### Store Design lifecycle migration status
+
+`0024_store_design_lifecycle.sql` is an additive Store Builder lifecycle migration that creates `store_designs`, seller Draft/Publish/Rollback RPCs, the published buyer read RPC, product-source support, and initialization from the existing `shops.theme` compatibility value. It deliberately preserves `shops.theme`.
+
+**Production status:** not applied by Store Builder #116. Applying `0024` to Production requires separate explicit owner approval. Until then, the buyer gateway treats an undeployed lifecycle RPC as a compatibility condition and reads `shops.theme`; once the lifecycle RPC and row exist, the Published lifecycle document is authoritative. Non-missing RPC failures remain fail-closed.
