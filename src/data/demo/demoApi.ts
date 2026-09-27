@@ -9,6 +9,7 @@
 import type {AdminOrder, OrderResult, TrackedOrder} from '@/domain/order';
 import type {Product, ProductPatch} from '@/domain/product';
 import type {MerchantAccount} from '@/domain/shop';
+import {createDefaultStoreDesign} from '@/domain/storeDesign';
 
 // Loaded lazily to avoid a static import cycle with data/products.ts.
 import {DEMO_MERCHANT_ACCOUNTS, DEMO_PRODUCTS, demoCategories} from '@/data/demo/fixtures';
@@ -94,6 +95,10 @@ function normPhone(p: string): string {
 }
 
 export const api = {
+  async loadPublishedStoreDesign() {
+    return createDefaultStoreDesign();
+  },
+
   async products(opts: {
     scope?: 'active' | 'all';
     featured?: boolean;
