@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFileSync} from 'node:fs';
+import {signupHref} from '../src/features/landing/pricing.ts';
 
 const authSource = readFileSync(new URL('../src/features/auth/adminAuth.tsx', import.meta.url), 'utf8');
 const loginSource = readFileSync(new URL('../src/features/auth/pages/Login.tsx', import.meta.url), 'utf8');
-const landingSource = readFileSync(new URL('../src/features/landing/components/HomeSections.tsx', import.meta.url), 'utf8');
 const subscribeSource = readFileSync(new URL('../src/features/billing/pages/Subscribe.tsx', import.meta.url), 'utf8');
 const onboardingSource = readFileSync(new URL('../src/features/auth/pages/Onboarding.tsx', import.meta.url), 'utf8');
 
 describe('signup plan routing contract', () => {
   it('preserves Free Trial through signup into the subscribe gate', () => {
-    assert.match(landingSource, /`\/admin\/subscribe\?plan=\$\{plan\}`/);
+    assert.equal(signupHref('free_trial'), '/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe%3Fplan%3Dfree_trial');
     assert.match(loginSource, /signUp\(email, password, from\)/);
     assert.match(authSource, /allowed = \['\/admin', '\/admin\/subscribe', '\/admin\/onboarding'\]/);
     assert.match(subscribeSource, /requestedPlan=\{searchParams\.get\('plan'\)\}/);
@@ -20,7 +20,8 @@ describe('signup plan routing contract', () => {
   });
 
   it('preserves Starter and Business through signup into subscribe', () => {
-    assert.match(landingSource, /\/admin\/subscribe\?plan=\$\{plan\}/);
+    assert.equal(signupHref('starter'), '/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe%3Fplan%3Dstarter');
+    assert.equal(signupHref('business'), '/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe%3Fplan%3Dbusiness');
     assert.match(loginSource, /signInWithGoogle\(from\)/);
     assert.match(authSource, /redirectTo: `\$\{window\.location\.origin\}\$\{safeRedirectPath\(redirectPath\)\}`/);
   });

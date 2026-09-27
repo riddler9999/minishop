@@ -1,8 +1,7 @@
 import {ArrowRight, Check, CreditCard, ExternalLink, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, Sparkles, Store, Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
-import {PLAN_PRICE_KS} from '@/domain/subscription';
-import {EXTRA_ORDER_UNIT_PRICE_KS, PLAN_MONTHLY_QUOTA, PLAN_PRODUCT_LIMIT} from '@/domain/entitlement';
-import type {Plan} from '@/domain/plan';
+import {motion, useReducedMotion, type Variants} from 'motion/react';
+import {formatKs, pricingPlans, signupHref} from '@/features/landing/pricing';
 
 const channels = ['Facebook', 'TikTok', 'Messenger', 'Telegram'];
 
@@ -19,70 +18,6 @@ const themes = [
   {name: 'Food', tone: 'theme-food'},
   {name: 'Bold', tone: 'theme-bold'},
 ];
-
-const pricingPlans: Array<{
-  plan: Plan;
-  name: string;
-  eyebrow: string;
-  priceSuffix: string;
-  description: string;
-  features: string[];
-  cta: string;
-}> = [
-  {
-    plan: 'free_trial',
-    name: 'Free Trial',
-    eyebrow: 'အစမ်းသုံးကြည့်ချင်သူများအတွက်',
-    priceSuffix: '',
-    description: 'ဆိုင်စမ်းဖွင့်ပြီး MiniShop ဘယ်လို အလုပ်လုပ်လဲဆိုတာ စမ်းသပ်ကြည့်နိုင်ပါတယ်။',
-    features: [
-      `Order ${PLAN_MONTHLY_QUOTA.free_trial} ခု (တစ်သက်တာ)`,
-      `Product ${PLAN_PRODUCT_LIMIT.free_trial} ခုအထိ`,
-      'Core ecommerce features',
-      'Credit Card မလို',
-    ],
-    cta: 'အခမဲ့ စမ်းသုံးမယ်',
-  },
-  {
-    plan: 'starter',
-    name: 'Starter',
-    eyebrow: 'အရောင်းမှန်နေတဲ့ အွန်လိုင်းရှော့ပ်များအတွက် (အသင့်တော်ဆုံး)',
-    priceSuffix: '/ လ',
-    description: 'တစ်နေ့ အော်ဒါ ၁ ခု၊ ၂ ခု ပုံမှန်ရှိနေတဲ့ Seller တွေအတွက် အချိန်ကုန်သက်သာပြီး စနစ်ကျစေမယ့် Plan',
-    features: [
-      `Order ${PLAN_MONTHLY_QUOTA.starter} ခု / လ`,
-      `Product ${PLAN_PRODUCT_LIMIT.starter} ခုအထိ`,
-      'ရောင်းဖို့လိုတဲ့ Core features အားလုံး',
-      `Extra Orders = ${EXTRA_ORDER_UNIT_PRICE_KS.toLocaleString()} Ks / order`,
-    ],
-    cta: 'Starter ဖြင့် စတင်မယ်',
-  },
-  {
-    plan: 'business',
-    name: 'Business',
-    eyebrow: 'နေ့စဉ် အော်ဒါများတဲ့ Brand ကြီးများအတွက်',
-    priceSuffix: '/ လ',
-    description: 'အော်ဒါများပြားပြီး လူအင်အား သက်သက်သာသာနဲ့ အလုပ်သွက်သွက် လုပ်ချင်တဲ့ ဆိုင်ကြီးများအတွက်',
-    features: [
-      `Order ${PLAN_MONTHLY_QUOTA.business} ခု / လ`,
-      `Product ${PLAN_PRODUCT_LIMIT.business} ခုအထိ`,
-      'Starter selling features အားလုံး',
-      'Productivity / automation capabilities',
-    ],
-    cta: 'Business သို့ အဆင့်မြှင့်မယ်',
-  },
-];
-
-function formatKs(amount: number) {
-  return amount === 0 ? '0 Ks' : `${amount.toLocaleString()} Ks`;
-}
-
-function signupHref(plan?: Plan) {
-  const destination = plan
-    ? `/admin/subscribe?plan=${plan}`
-    : '/admin/subscribe';
-  return `/admin/login?mode=signup&from=${encodeURIComponent(destination)}`;
-}
 
 export function StopSellingThroughChat() {
   return (
@@ -198,13 +133,108 @@ export function ThemeShowcase() {
   );
 }
 
+const pricingContainerVariants: Variants = {
+  hidden: {},
+  visible: {transition: {staggerChildren: 0.1, delayChildren: 0.15}},
+};
+
+const pricingCardVariants: Variants = {
+  hidden: {opacity: 0, y: 32},
+  visible: {opacity: 1, y: 0, transition: {duration: 0.5, ease: [0.22, 1, 0.36, 1]}},
+};
+
 export function PricingSection() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <section className="landing-pricing-section" id="pricing" aria-labelledby="pricing-title">
-      <div className="landing-section-head"><span className="landing-section-pill">SIMPLE PRICING</span><h2 id="pricing-title">ဆိုင်အရွယ်အစားနဲ့ အော်ဒါအရေအတွက်အလိုက် ရွေးပါ</h2><p>အစမ်းသုံးကြည့်လို့ရတယ်။ အဆင်ပြေမှ ကိုယ့်အရောင်းနဲ့ ကိုက်တဲ့ Plan ကို ရွေးပါ။</p></div>
-      <div className="landing-pricing-grid">
-        {pricingPlans.map(({plan, name, eyebrow, priceSuffix, description, features, cta}) => <article key={plan} className={`landing-pricing-card ${plan === 'starter' ? 'landing-pricing-card-featured' : ''}`}>{plan === 'starter' && <span className="landing-popular-badge">အသင့်တော်ဆုံး</span>}<span className="landing-plan-eyebrow">{eyebrow}</span><h3>{name}</h3><div className="landing-plan-price"><strong>{formatKs(PLAN_PRICE_KS[plan])}</strong><span>{priceSuffix}</span></div><p>{description}</p><ul>{features.map((feature) => <li key={feature}><Check size={17}/><span>{feature}</span></li>)}</ul><Link to={signupHref(plan)} className="landing-plan-cta">{cta}<ArrowRight size={17}/></Link></article>)}
-      </div>
+    <section className="landing-pricing-section px-4 py-24" id="pricing" aria-labelledby="pricing-title">
+      <motion.div
+        initial={shouldReduceMotion ? false : {opacity: 0, y: -20}}
+        whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
+        viewport={{once: true, amount: 0.35}}
+        transition={{duration: 0.55, ease: [0.22, 1, 0.36, 1]}}
+        className="landing-section-head mb-14"
+      >
+        <span className="landing-section-pill">SIMPLE PRICING</span>
+        <h2 id="pricing-title">ဆိုင်အရွယ်အစားနဲ့ အော်ဒါအရေအတွက်အလိုက် ရွေးပါ</h2>
+        <p>အစမ်းသုံးကြည့်လို့ရတယ်။ အဆင်ပြေမှ ကိုယ့်အရောင်းနဲ့ ကိုက်တဲ့ Plan ကို ရွေးပါ။</p>
+      </motion.div>
+
+      <motion.div
+        variants={pricingContainerVariants}
+        initial={shouldReduceMotion ? false : 'hidden'}
+        whileInView={shouldReduceMotion ? undefined : 'visible'}
+        viewport={{once: true, amount: 0.2}}
+        className="mx-auto grid w-full max-w-5xl grid-cols-1 items-end gap-4 md:grid-cols-3"
+      >
+        {pricingPlans.map(({plan, name, eyebrow, price, priceSuffix, description, features, cta}) => {
+          const featured = plan === 'starter';
+          return (
+            <div key={plan} className={`h-full ${featured ? 'md:-translate-y-3.5' : ''}`}>
+              <motion.article
+                variants={pricingCardVariants}
+                whileHover={shouldReduceMotion ? undefined : {y: featured ? -14 : -6, boxShadow: featured ? '0 20px 50px rgba(0,0,0,0.28)' : '0 12px 36px rgba(0,0,0,0.10)'}}
+                className={`relative flex h-full flex-col rounded-2xl p-7 ${featured ? 'bg-black text-white' : 'border border-black/10 bg-white text-black'}`}
+              >
+              {featured && (
+                <motion.div
+                  initial={shouldReduceMotion ? false : {opacity: 0, y: -8}}
+                  whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
+                  viewport={{once: true}}
+                  transition={{delay: 0.35}}
+                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-green-300 bg-green-100 px-3 py-0.5 text-[10px] font-bold tracking-widest text-green-700 uppercase"
+                >
+                  အသင့်တော်ဆုံး
+                </motion.div>
+              )}
+
+              <div className="mb-5 flex items-center gap-2">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm font-semibold ${featured ? 'bg-white/10 text-white' : 'bg-black/5 text-black'}`}>
+                  {plan === 'free_trial' ? '○' : plan === 'starter' ? '◇' : '⊕'}
+                </span>
+                <span className="text-sm font-semibold">{name}</span>
+              </div>
+
+              <span className={`mb-3 text-xs font-semibold ${featured ? 'text-white/60' : 'text-black/50'}`}>{eyebrow}</span>
+              <div className="mb-2 flex items-end gap-1">
+                <strong className="text-4xl leading-none font-bold tracking-tight md:text-5xl">{formatKs(price)}</strong>
+                {priceSuffix && <span className={`mb-1.5 text-xs ${featured ? 'text-white/50' : 'text-black/50'}`}>{priceSuffix}</span>}
+              </div>
+
+              <p className={`mb-6 text-sm leading-7 ${featured ? 'text-white/60' : 'text-black/60'}`}>{description}</p>
+              <div className={`mb-6 h-px w-full ${featured ? 'bg-white/10' : 'bg-black/8'}`} />
+
+              <ul className="mb-8 flex flex-1 flex-col gap-3">
+                {features.map((feature, index) => (
+                  <motion.li
+                    key={feature}
+                    initial={shouldReduceMotion ? false : {opacity: 0, x: -8}}
+                    whileInView={shouldReduceMotion ? undefined : {opacity: 1, x: 0}}
+                    viewport={{once: true}}
+                    transition={{delay: 0.2 + index * 0.06, duration: 0.3}}
+                    className={`flex items-start gap-2.5 text-sm ${featured ? 'text-white/80' : 'text-black/75'}`}
+                  >
+                    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${featured ? 'bg-white/10' : 'bg-black/5'}`}>
+                      <Check size={10} strokeWidth={2.5}/>
+                    </span>
+                    <span>{feature}</span>
+                  </motion.li>
+                ))}
+              </ul>
+
+              <motion.div whileHover={shouldReduceMotion ? undefined : {scale: 1.02}} whileTap={shouldReduceMotion ? undefined : {scale: 0.98}}>
+                <Link
+                  to={signupHref(plan)}
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 ${featured ? 'border-white bg-white text-black hover:bg-white/90' : 'border-black/10 bg-black/5 text-black hover:bg-black/10'}`}
+                >
+                  {cta}<ArrowRight size={16}/>
+                </Link>
+              </motion.div>
+              </motion.article>
+            </div>
+          );
+        })}
+      </motion.div>
     </section>
   );
 }
