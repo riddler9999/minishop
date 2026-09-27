@@ -7,9 +7,9 @@ const source = fs.readFileSync(path, 'utf8');
 const buyerApi = fs.readFileSync(new URL('../src/features/catalog/api/storeDesign.ts', import.meta.url), 'utf8');
 
 describe('Store Builder #112 Themes entry screen', () => {
-  it('has a dedicated Themes page with Published and Customize entry points', () => {
-    assert.match(source, /Published/);
-    assert.match(source, /Customize/);
+  it('has a dedicated localized Themes page with Published and Customize semantics', () => {
+    assert.match(source, /လက်ရှိအသုံးပြုနေသည်/);
+    assert.match(source, /ပြင်ဆင်မည်/);
     assert.match(source, /online-store\/themes\/customize/);
   });
 
