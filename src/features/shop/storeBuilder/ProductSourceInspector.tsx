@@ -1,5 +1,6 @@
 import type {Product} from '@/domain/product';
-import type {ProductSource, ProductSourceRule} from '@/domain/storeDesign';
+import {MAX_PRODUCT_SOURCE_PRODUCTS, type ProductSource, type ProductSourceRule} from '@/domain/storeDesign';
+import {removeManualProductId, unavailableManualProductIds} from './manualProductSelection';
 
 type Props = {
   source: ProductSource;
@@ -15,9 +16,9 @@ const RULE_LABELS: Record<ProductSourceRule, string> = {
   sale: 'လျှော့ဈေးပစ္စည်း',
   category: 'အမျိုးအစားအလိုက်',
 };
-const MAX_SOURCE_PRODUCTS = 24;
 
 export function ProductSourceInspector({source, products, categories, blocked, onChange}: Props) {
+  const unavailableProductIds = unavailableManualProductIds(source, products);
   const setMode = (mode: ProductSource['mode']) => {
     if (mode === source.mode) return;
     onChange(mode === 'manual'
@@ -36,9 +37,19 @@ export function ProductSourceInspector({source, products, categories, blocked, o
       {source.mode === 'manual' ? (
         <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-cream-200 p-2" aria-label="ပစ္စည်းများရွေးရန်">
           {products.length === 0 && <p className="p-2 text-xs text-ink-soft">ရွေးချယ်နိုင်တဲ့ ပစ္စည်းမရှိသေးပါ။</p>}
+          {unavailableProductIds.map((productId) => (
+            <label key={productId} className="flex min-h-10 items-center gap-2 rounded-lg bg-amber-50 px-2 text-sm text-amber-800">
+              <input
+                type="checkbox"
+                checked
+                onChange={() => onChange(removeManualProductId(source, productId))}
+              />
+              <span className="min-w-0 truncate">မရှိတော့သောပစ္စည်း ({productId})</span>
+            </label>
+          ))}
           {products.map((product) => {
             const checked = source.productIds.includes(product.id);
-            const atLimit = source.productIds.length >= MAX_SOURCE_PRODUCTS;
+            const atLimit = source.productIds.length >= MAX_PRODUCT_SOURCE_PRODUCTS;
             return (
               <label key={product.id} className="flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm hover:bg-cream-100">
                 <input
@@ -51,7 +62,7 @@ export function ProductSourceInspector({source, products, categories, blocked, o
               </label>
             );
           })}
-          <p className="px-2 pt-1 text-xs text-ink-soft">{source.productIds.length}/{MAX_SOURCE_PRODUCTS} ခု ရွေးထားသည်</p>
+          <p className="px-2 pt-1 text-xs text-ink-soft">{source.productIds.length}/{MAX_PRODUCT_SOURCE_PRODUCTS} ခု ရွေးထားသည်</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -72,7 +83,7 @@ export function ProductSourceInspector({source, products, categories, blocked, o
             </label>
           )}
           <label className="block text-xs font-semibold text-ink-soft">ပြမည့်အရေအတွက်
-            <input type="number" min={1} max={MAX_SOURCE_PRODUCTS} value={source.limit} onChange={(event) => onChange({...source, limit: Math.min(MAX_SOURCE_PRODUCTS, Math.max(1, Number(event.target.value) || 1))})} className="mt-1 w-full rounded-lg border border-cream-300 px-3 py-2 text-sm" />
+            <input type="number" min={1} max={MAX_PRODUCT_SOURCE_PRODUCTS} value={source.limit} onChange={(event) => onChange({...source, limit: Math.min(MAX_PRODUCT_SOURCE_PRODUCTS, Math.max(1, Number(event.target.value) || 1))})} className="mt-1 w-full rounded-lg border border-cream-300 px-3 py-2 text-sm" />
           </label>
         </div>
       )}

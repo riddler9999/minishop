@@ -1,8 +1,24 @@
 import type {Product} from '../product.ts';
-import type {ProductSource} from './types.ts';
+import type {ProductSource, StoreSection} from './types.ts';
+
+export const MAX_PRODUCT_SOURCE_PRODUCTS = 24;
 
 export interface ProductSourceResolutionContext {
   demandByProductId?: ReadonlyMap<string, number>;
+}
+
+export function getSectionProductSource(section: StoreSection): ProductSource | null {
+  switch (section.type) {
+    case 'featured-products':
+    case 'best-selling':
+    case 'product-collection':
+    case 'new-arrivals':
+    case 'sale-products':
+    case 'related-products':
+      return section.settings.productSource;
+    default:
+      return null;
+  }
 }
 
 function isActive(product: Product): boolean {

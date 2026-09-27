@@ -76,8 +76,8 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
           {(['home', 'collection', 'product'] as const).map((value) => <button key={value} onClick={() => setTemplate(value)} className="rounded-lg border px-3 py-1.5 text-sm">{value}</button>)}
           <button type="button" onClick={() => setViewport((v) => v === 'desktop' ? 'mobile' : 'desktop')} className="hidden rounded-lg border px-3 py-1.5 text-sm lg:inline-flex">{viewport} preview</button>
-          <button type="button" onClick={() => setMobilePanel('tree')} className="shrink-0 rounded-lg border px-3 py-1.5 text-sm lg:hidden">ကဏ္ဍများ</button>
-          <button type="button" onClick={() => setMobilePanel('inspector')} className="shrink-0 rounded-lg border px-3 py-1.5 text-sm lg:hidden">ပြင်ဆင်ရန်</button>
+          <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'tree'} aria-controls="store-builder-section-drawer" onClick={() => setMobilePanel('tree')} className="shrink-0 rounded-lg border px-3 py-1.5 text-sm lg:hidden">ကဏ္ဍများ</button>
+          <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'inspector'} aria-controls="store-builder-inspector-sheet" onClick={() => setMobilePanel('inspector')} className="shrink-0 rounded-lg border px-3 py-1.5 text-sm lg:hidden">ပြင်ဆင်ရန်</button>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="shrink-0" data-save-status={editor.status}>{editor.status === 'saving' ? 'သိမ်းနေသည်…' : editor.status === 'saved' ? 'သိမ်းပြီး' : editor.status === 'retry' ? 'ပြန်သိမ်းရန်' : editor.status === 'conflict' ? 'မူကွဲတိုက်ဆိုင်မှု' : 'မသိမ်းရသေး'}</span>

@@ -1,5 +1,6 @@
 import {DEFAULT_THEME, THEME_PRESETS, normalizeTheme, resolveThemePresetId, type ThemePresetId} from '../theme.ts';
 import {defaultSectionSettings, getSectionDefinition, isStoreSectionType, supportsTemplate} from './registry.ts';
+import {MAX_PRODUCT_SOURCE_PRODUCTS} from './productSource.ts';
 import {
   STORE_DESIGN_SCHEMA_VERSION,
   type BuyNowSettings,
@@ -39,11 +40,11 @@ function colorValue(value: unknown, fallback: string): string {
   return typeof value === 'string' && HEX.test(value.trim()) ? value.trim().toLowerCase() : fallback;
 }
 function limitValue(value: unknown, fallback = 8): number {
-  return typeof value === 'number' && Number.isInteger(value) ? Math.min(24, Math.max(1, value)) : fallback;
+  return typeof value === 'number' && Number.isInteger(value) ? Math.min(MAX_PRODUCT_SOURCE_PRODUCTS, Math.max(1, value)) : fallback;
 }
 function uniqueStrings(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim()))].slice(0, 24);
+  return [...new Set(value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim()))].slice(0, MAX_PRODUCT_SOURCE_PRODUCTS);
 }
 
 function normalizeProductSource(value: unknown, fallback: ProductSource): ProductSource {
