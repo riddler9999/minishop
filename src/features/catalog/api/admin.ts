@@ -18,7 +18,7 @@ export const catalogAdminApi = {
       .select('*')
       .eq('shop_id', shopId)
       .order('arrival_date', {ascending: false, nullsFirst: false});
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error.message));
     return {products: (data ?? []).map(mapProduct)};
   },
 
