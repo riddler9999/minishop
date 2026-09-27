@@ -1,6 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
+import {loadBuyerStoreDesign} from './storefront-design.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -42,17 +43,9 @@ export default async function handler(req: any, res: any) {
   if (shopError || !shop) return sendJson(res, 404, {error: 'Shop not found'});
   const action = String(req.query?.action || 'shop');
   if (action === 'store-design') {
-    // Buyer-visible Store Design comes only from the Published-only RPC.
-    // If the lifecycle row is not present yet during the compatibility window,
-    // fall back to the already-resolved active shop's legacy shops.theme.
-    const {data: published, error: publishedError} = await sb.rpc('load_published_store_design', {p_shop_slug: slug});
-    if (!publishedError && published?.document) {
-      return sendJson(res, 200, {document: published.document}, true);
-    }
-
-    const {data: legacyRow, error: legacyError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
-    if (legacyError || !legacyRow) return sendJson(res, 502, {error: 'Store design unavailable'});
-    return sendJson(res, 200, {document: (legacyRow as {theme?: unknown}).theme ?? null}, true);
+    const design = await loadBuyerStoreDesign(sb as any, {shopId: shop.id, shopSlug: slug});
+    if (!design.ok) return sendJson(res, 502, {error: 'Store design unavailable'});
+    return sendJson(res, 200, {document: design.document}, true);
   }
   if (action === 'shop') {
     // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
