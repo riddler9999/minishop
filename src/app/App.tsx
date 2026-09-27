@@ -48,8 +48,7 @@ export default function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
           <Route path="online-store/themes" element={<Themes />} />
-          <Route path="online-store/themes/customize" element={<StoreDesign />} />
-          <Route path="marketing" element={<Dashboard />} />
+          <Route path="online-store/themes/customize" element={<StoreDesign lifecycleMode />} />
           <Route path="analytics" element={<Dashboard />} />
           <Route path="settings" element={<Settings />} />
         </Route>
