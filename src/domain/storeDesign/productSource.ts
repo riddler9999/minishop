@@ -9,15 +9,21 @@ function isActive(product: Product): boolean {
   return product.status === 'active';
 }
 
+function productTimestamp(product: Product): number {
+  const raw = product.createdAt ?? product.arrivalDate;
+  if (!raw) return 0;
+  const parsed = Date.parse(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function newestFirst(a: Product, b: Product): number {
-  const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
-  const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
-  if (aTime !== bTime) return bTime - aTime;
+  const timeDelta = productTimestamp(b) - productTimestamp(a);
+  if (timeDelta !== 0) return timeDelta;
   return a.id.localeCompare(b.id);
 }
 
 function isSaleProduct(product: Product): boolean {
-  return product.isPromotion === true && product.promoPrice != null && product.promoPrice > 0 && product.promoPrice < product.price;
+  return product.isPromotion === true && product.promoPrice != null && product.promoPrice > 0;
 }
 
 export function resolveProductSource(
