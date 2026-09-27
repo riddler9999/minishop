@@ -1,5 +1,6 @@
-import type {StoreDesignDocument, StoreDesignLifecycle} from '../../../domain/storeDesign/index.ts';
-import {normalizeStoreDesign} from '../../../domain/storeDesign/index.ts';
+import type {StoreDesignDocument, StoreDesignLifecycle} from '@/domain/storeDesign';
+import {normalizeStoreDesign} from '@/domain/storeDesign';
+import {mapDbError} from '@/domain/dbError';
 
 type RpcResult = Promise<{data: unknown; error: unknown}>;
 
@@ -24,8 +25,9 @@ function errorMessage(error: unknown): string {
 
 function throwRpcError(error: unknown): never {
   const message = errorMessage(error);
-  if (message.includes('store_design_conflict')) throw new StoreDesignConflictError();
-  throw new Error(message);
+  const localized = mapDbError(message, 'Store Design လုပ်ဆောင်ချက် မအောင်မြင်ပါ။ ပြန်စမ်းပါ။');
+  if (message.includes('store_design_conflict')) throw new StoreDesignConflictError(localized);
+  throw new Error(localized);
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
