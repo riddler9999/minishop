@@ -13,12 +13,10 @@
 
 begin;
 
--- Privileged implementations live outside the exposed public Data API schema.
 create schema if not exists store_design_private;
 revoke all on schema store_design_private from public;
 grant usage on schema store_design_private to anon, authenticated;
 
--- ---- 1. Lifecycle row -------------------------------------------------------
 create table if not exists public.store_designs (
   shop_id                      uuid primary key references public.shops(id) on delete cascade,
   draft_document               jsonb not null,
@@ -32,25 +30,18 @@ create table if not exists public.store_designs (
 
 alter table public.store_designs enable row level security;
 
--- Seller may inspect only the lifecycle belonging to their own Shop.
 drop policy if exists store_designs_owner_select on public.store_designs;
 create policy store_designs_owner_select on public.store_designs
   for select to authenticated
   using (exists (
-    select 1
-    from public.shops s
+    select 1 from public.shops s
     where s.id = shop_id
       and s.owner_id = (select auth.uid())
   ));
 
--- No direct seller/anon writes. Mutations are RPC-only.
 revoke all on table public.store_designs from anon, authenticated;
 grant select on table public.store_designs to authenticated;
 
--- ---- 2. Validation boundary -------------------------------------------------
--- Publish/save accept only normalized Store Design v1. The application domain
--- performs richer typed normalization; this DB predicate independently enforces
--- the load-bearing persistence + Buy Now invariants.
 create or replace function store_design_private.is_store_design_document_valid(
   p_document jsonb
 ) returns boolean
@@ -78,8 +69,6 @@ $$;
 revoke all on function store_design_private.is_store_design_document_valid(jsonb)
   from public, anon, authenticated;
 
--- Legacy shops.theme is allowed only as a transitional Previous Published slot.
--- Buyer/domain normalization remains fail-safe during the compatibility window.
 create or replace function store_design_private.is_legacy_store_theme_compatible(
   p_document jsonb
 ) returns boolean
@@ -95,8 +84,6 @@ $$;
 revoke all on function store_design_private.is_legacy_store_theme_compatible(jsonb)
   from public, anon, authenticated;
 
-
--- Convert legacy shops.theme into Store Design v1 for lifecycle backfill.
 create or replace function store_design_private.legacy_theme_to_store_design(
   p_theme jsonb
 ) returns jsonb
@@ -211,32 +198,18 @@ $legacy$;
 revoke all on function store_design_private.legacy_theme_to_store_design(jsonb)
   from public, anon, authenticated;
 
--- ---- 3. Existing-shop backfill ---------------------------------------------
--- Copy, never delete or rewrite, shops.theme. Runtime/domain compatibility
--- normalization turns these legacy-shaped initial documents into Store Design v1.
 insert into public.store_designs (
-  shop_id,
-  draft_document,
-  published_document,
-  previous_published_document,
-  draft_revision,
-  published_revision,
-  updated_at,
-  published_at
+  shop_id, draft_document, published_document, previous_published_document,
+  draft_revision, published_revision, updated_at, published_at
 )
 select
   s.id,
   store_design_private.legacy_theme_to_store_design(s.theme),
   store_design_private.legacy_theme_to_store_design(s.theme),
-  null,
-  1,
-  1,
-  now(),
-  now()
+  null, 1, 1, now(), now()
 from public.shops s
 on conflict (shop_id) do nothing;
 
--- Future shops receive the same additive lifecycle initialization.
 create or replace function store_design_private.init_store_design_lifecycle()
 returns trigger
 language plpgsql
@@ -245,23 +218,13 @@ set search_path = ''
 as $$
 begin
   insert into public.store_designs (
-    shop_id,
-    draft_document,
-    published_document,
-    previous_published_document,
-    draft_revision,
-    published_revision,
-    updated_at,
-    published_at
+    shop_id, draft_document, published_document, previous_published_document,
+    draft_revision, published_revision, updated_at, published_at
   ) values (
     new.id,
     store_design_private.legacy_theme_to_store_design(new.theme),
     store_design_private.legacy_theme_to_store_design(new.theme),
-    null,
-    1,
-    1,
-    now(),
-    now()
+    null, 1, 1, now(), now()
   )
   on conflict (shop_id) do nothing;
   return new;
@@ -276,7 +239,6 @@ create trigger init_store_design_lifecycle_after_shop
   after insert on public.shops
   for each row execute function store_design_private.init_store_design_lifecycle();
 
--- ---- 4. Private owner-resolved lifecycle operations -------------------------
 create or replace function store_design_private.load_own_store_design_internal()
 returns jsonb
 language plpgsql
@@ -293,9 +255,7 @@ begin
   where s.owner_id = (select auth.uid())
   limit 1;
 
-  if not found then
-    raise exception 'store_design_not_found';
-  end if;
+  if not found then raise exception 'store_design_not_found'; end if;
 
   return jsonb_build_object(
     'shop_id', v_design.shop_id,
@@ -331,13 +291,8 @@ begin
   where s.owner_id = (select auth.uid())
   for update of sd;
 
-  if not found then
-    raise exception 'store_design_not_found';
-  end if;
-
-  if v_design.draft_revision <> p_expected_revision then
-    raise exception 'store_design_conflict';
-  end if;
+  if not found then raise exception 'store_design_not_found'; end if;
+  if v_design.draft_revision <> p_expected_revision then raise exception 'store_design_conflict'; end if;
 
   update public.store_designs
   set draft_document = p_document,
@@ -370,17 +325,9 @@ begin
   where s.owner_id = (select auth.uid())
   for update of sd;
 
-  if not found then
-    raise exception 'store_design_not_found';
-  end if;
-
-  if v_design.draft_revision <> p_expected_draft_revision then
-    raise exception 'store_design_conflict';
-  end if;
-
-  if not store_design_private.is_store_design_document_valid(v_design.draft_document) then
-    raise exception 'store_design_invalid';
-  end if;
+  if not found then raise exception 'store_design_not_found'; end if;
+  if v_design.draft_revision <> p_expected_draft_revision then raise exception 'store_design_conflict'; end if;
+  if not store_design_private.is_store_design_document_valid(v_design.draft_document) then raise exception 'store_design_invalid'; end if;
 
   update public.store_designs
   set previous_published_document = published_document,
@@ -419,13 +366,8 @@ begin
   where s.owner_id = (select auth.uid())
   for update of sd;
 
-  if not found then
-    raise exception 'store_design_not_found';
-  end if;
-
-  if v_design.previous_published_document is null then
-    raise exception 'store_design_previous_missing';
-  end if;
+  if not found then raise exception 'store_design_not_found'; end if;
+  if v_design.previous_published_document is null then raise exception 'store_design_previous_missing'; end if;
 
   if not store_design_private.is_store_design_document_valid(v_design.previous_published_document)
      and not store_design_private.is_legacy_store_theme_compatible(v_design.previous_published_document) then
@@ -454,7 +396,6 @@ begin
 end;
 $$;
 
--- Buyer path exposes Published only. It accepts a public slug, never shop_id.
 create or replace function store_design_private.load_published_store_design_internal(
   p_shop_slug text
 ) returns jsonb
@@ -475,8 +416,32 @@ as $$
   limit 1;
 $$;
 
--- Internal functions are not exposed by PostgREST. Grant only the exact callers
--- needed by the public SECURITY INVOKER wrappers below.
+-- Historical demand is defined by order creation. Later cancellation/RTO/refund
+-- state does not subtract quantity. Aggregate in Postgres so the public gateway
+-- receives only a bounded ranked id set and never needs order/order-item N+1 reads.
+create or replace function store_design_private.load_best_selling_product_ids_internal(
+  p_shop_slug text,
+  p_limit integer
+) returns table(product_id uuid, quantity bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select oi.product_id, sum(oi.qty)::bigint as quantity
+  from public.order_items oi
+  join public.orders o on o.id = oi.order_id
+  join public.shops s on s.id = o.shop_id
+  join public.products p on p.id = oi.product_id and p.shop_id = s.id
+  where s.slug = p_shop_slug
+    and s.is_active = true
+    and p.status = 'active'
+    and oi.product_id is not null
+  group by oi.product_id
+  order by quantity desc, oi.product_id asc
+  limit least(greatest(p_limit, 1), 24);
+$$;
+
 revoke all on function store_design_private.load_own_store_design_internal()
   from public, anon, authenticated;
 revoke all on function store_design_private.save_store_design_draft_internal(bigint,jsonb)
@@ -486,6 +451,8 @@ revoke all on function store_design_private.publish_store_design_draft_internal(
 revoke all on function store_design_private.rollback_store_design_published_internal()
   from public, anon, authenticated;
 revoke all on function store_design_private.load_published_store_design_internal(text)
+  from public, anon, authenticated;
+revoke all on function store_design_private.load_best_selling_product_ids_internal(text,integer)
   from public, anon, authenticated;
 
 grant execute on function store_design_private.load_own_store_design_internal()
@@ -498,8 +465,9 @@ grant execute on function store_design_private.rollback_store_design_published_i
   to authenticated;
 grant execute on function store_design_private.load_published_store_design_internal(text)
   to anon, authenticated;
+grant execute on function store_design_private.load_best_selling_product_ids_internal(text,integer)
+  to anon, authenticated;
 
--- ---- 5. Narrow public RPC wrappers ------------------------------------------
 create or replace function public.load_own_store_design()
 returns jsonb
 language sql
@@ -551,6 +519,21 @@ as $$
   select store_design_private.load_published_store_design_internal(p_shop_slug);
 $$;
 
+create or replace function public.load_best_selling_product_ids(
+  p_shop_slug text,
+  p_limit integer default 12
+) returns table(product_id uuid, quantity bigint)
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select * from store_design_private.load_best_selling_product_ids_internal(
+    p_shop_slug,
+    least(greatest(p_limit, 1), 24)
+  );
+$$;
+
 revoke all on function public.load_own_store_design()
   from public, anon, authenticated;
 revoke all on function public.save_store_design_draft(bigint,jsonb)
@@ -560,6 +543,8 @@ revoke all on function public.publish_store_design_draft(bigint)
 revoke all on function public.rollback_store_design_published()
   from public, anon, authenticated;
 revoke all on function public.load_published_store_design(text)
+  from public, anon, authenticated;
+revoke all on function public.load_best_selling_product_ids(text,integer)
   from public, anon, authenticated;
 
 grant execute on function public.load_own_store_design()
@@ -571,6 +556,8 @@ grant execute on function public.publish_store_design_draft(bigint)
 grant execute on function public.rollback_store_design_published()
   to authenticated;
 grant execute on function public.load_published_store_design(text)
+  to anon, authenticated;
+grant execute on function public.load_best_selling_product_ids(text,integer)
   to anon, authenticated;
 
 commit;

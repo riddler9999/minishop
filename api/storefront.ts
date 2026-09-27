@@ -2,14 +2,34 @@ import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
 import {loadBuyerStoreDesign} from './storefront-design.js';
+import {normalizeProductSourceLimit} from './storefront-product-source.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,item_code,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
+const PRODUCT_SOURCE_RULES = new Set(['new_arrivals', 'sale', 'category', 'best_selling']);
+const MAX_MANUAL_PRODUCT_IDS = 24;
 
 function media(url: string | null) {
   if (!url) return null;
   const m = url.match(/\/storage\/v1\/object\/public\/(product-images|shop-logos)\/(.+)$/);
   return m ? `/api/storefront/${m[1]}/${m[2]}` : url;
+}
+
+function productTimestamp(row: any): number {
+  const raw = row?.created_at ?? row?.arrival_date;
+  if (!raw) return 0;
+  const parsed = Date.parse(String(raw));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function newestRowsFirst(a: any, b: any): number {
+  const delta = productTimestamp(b) - productTimestamp(a);
+  return delta || String(a.id).localeCompare(String(b.id));
+}
+
+function parseManualProductIds(raw: unknown): string[] {
+  const values = Array.isArray(raw) ? raw : String(raw ?? '').split(',');
+  return Array.from(new Set(values.map((value) => String(value).trim()).filter(Boolean))).slice(0, MAX_MANUAL_PRODUCT_IDS);
 }
 
 export default async function handler(req: any, res: any) {
@@ -48,11 +68,6 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 200, {document: design.document}, true);
   }
   if (action === 'shop') {
-    // Store Design theme (migration 0009). Fetched with a SEPARATE query so the
-    // core shop payload can never break if the column isn't there yet: on any
-    // error (e.g. column missing before 0009 is applied) theme resolves to null
-    // and the storefront falls back to its defaults (domain/theme.ts). The blob
-    // is passed through raw — the browser re-validates it via normalizeTheme().
     let theme: unknown = null;
     const {data: themeRow, error: themeError} = await sb.from('shops').select('theme').eq('id', shop.id).maybeSingle();
     if (!themeError && themeRow) theme = (themeRow as {theme?: unknown}).theme ?? null;
@@ -68,6 +83,44 @@ export default async function handler(req: any, res: any) {
     const {data, error} = await sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('id', id).eq('shop_id', shop.id).eq('status', 'active').maybeSingle();
     if (error || !data) return sendJson(res, 404, {error: 'Product not found'});
     return sendJson(res, 200, {product: mapProductRow(data)}, true);
+  }
+  if (action === 'section-products') {
+    const mode = String(req.query?.mode || 'dynamic');
+    const limit = normalizeProductSourceLimit(req.query?.limit);
+
+    if (mode === 'manual') {
+      const ids = parseManualProductIds(req.query?.productIds);
+      if (ids.length === 0) return sendJson(res, 200, {products: []}, true);
+      const {data, error} = await sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', ids).limit(MAX_MANUAL_PRODUCT_IDS);
+      if (error) return sendJson(res, 502, {error: 'Catalog unavailable'});
+      const byId = new Map((data || []).map((row: any) => [String(row.id), row]));
+      return sendJson(res, 200, {products: ids.flatMap((id) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
+    }
+
+    const rule = String(req.query?.rule || 'new_arrivals');
+    if (!PRODUCT_SOURCE_RULES.has(rule)) return sendJson(res, 400, {error: 'Invalid product source'});
+
+    if (rule === 'best_selling') {
+      const {data: rankedRows, error: rankError} = await sb.rpc('load_best_selling_product_ids', {p_shop_slug: slug, p_limit: limit});
+      if (rankError) return sendJson(res, 502, {error: 'Catalog unavailable'});
+      const rankedIds = (rankedRows || []).map((row: any) => String(row.product_id)).filter(Boolean).slice(0, limit);
+      if (rankedIds.length === 0) return sendJson(res, 200, {products: []}, true);
+      const {data: productRows, error: productError} = await sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', rankedIds).limit(limit);
+      if (productError) return sendJson(res, 502, {error: 'Catalog unavailable'});
+      const byId = new Map((productRows || []).map((row: any) => [String(row.id), row]));
+      return sendJson(res, 200, {products: rankedIds.flatMap((id) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
+    }
+
+    let sourceQuery = sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active');
+    if (rule === 'sale') sourceQuery = sourceQuery.eq('is_promotion', true).not('promo_price', 'is', null).gt('promo_price', 0);
+    if (rule === 'category') {
+      const category = String(req.query?.category || '').trim();
+      if (!category) return sendJson(res, 200, {products: []}, true);
+      sourceQuery = sourceQuery.eq('category', category);
+    }
+    const {data, error} = await sourceQuery.order('created_at', {ascending: false}).order('id', {ascending: true}).limit(limit);
+    if (error) return sendJson(res, 502, {error: 'Catalog unavailable'});
+    return sendJson(res, 200, {products: (data || []).sort(newestRowsFirst).map(mapProductRow)}, true);
   }
   if (action === 'products') {
     let q = sb.from('products').select(PUBLIC_PRODUCT_COLUMNS, {count: 'exact'}).eq('shop_id', shop.id).eq('status', 'active');

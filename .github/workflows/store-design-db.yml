@@ -70,6 +70,26 @@ jobs:
             theme jsonb not null default '{}'::jsonb
           );
 
+          -- Minimal commerce tables required for Store Builder #110's
+          -- best-selling aggregate to compile in the disposable DB.
+          create table public.products (
+            id uuid primary key,
+            shop_id uuid not null references public.shops(id) on delete cascade,
+            status text not null default 'active'
+          );
+
+          create table public.orders (
+            id uuid primary key,
+            shop_id uuid not null references public.shops(id) on delete cascade
+          );
+
+          create table public.order_items (
+            id uuid primary key,
+            order_id uuid not null references public.orders(id) on delete cascade,
+            product_id uuid references public.products(id) on delete set null,
+            qty integer not null check (qty > 0)
+          );
+
           grant usage on schema public to anon, authenticated;
           grant select on public.shops to anon, authenticated;
 

@@ -3,6 +3,7 @@ import {useNavigate, useParams} from 'react-router-dom';
 import {ArrowLeft, Check, ChevronLeft, ChevronRight, ImageOff, Minus, Plus, ShoppingBag} from 'lucide-react';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
+import type {StoreDesignDocument} from '@/domain/storeDesign';
 import {useCart} from '@/features/cart/state';
 import {ks} from '@/shared/lib/format';
 import ProductCard from '@/features/catalog/components/ProductCard';
@@ -11,6 +12,7 @@ import {getThemeVisual} from '@/domain/theme';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
 import {DEMO_BEST_SELLING_IDS} from '@/features/demo/merchandising';
+import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
 
 const COLOR_MAP: Record<string, string> = {
   'အဖြူ': '#ffffff', white: '#ffffff', 'အနက်': '#111111', black: '#111111', 'အနီ': '#ef4444', red: '#ef4444',
@@ -33,12 +35,19 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false);
   const [related, setRelated] = useState<Product[]>([]);
   const [bestSelling, setBestSelling] = useState<Product[]>([]);
+  const [storeDesign, setStoreDesign] = useState<StoreDesignDocument | null>(null);
 
   useEffect(() => {
     let alive = true; setProduct(null); setErr(''); setActive(0); setQty(1);
     api.product(id!).then((r) => alive && setProduct(r.product)).catch((e) => alive && setErr(e.message || 'ပစ္စည်း ရှာမတွေ့ပါ'));
     return () => {alive = false;};
   }, [id, slug]);
+
+  useEffect(() => {
+    let alive = true;
+    api.loadPublishedStoreDesign().then((design) => alive && setStoreDesign(design)).catch(() => {});
+    return () => { alive = false; };
+  }, [slug]);
 
   useEffect(() => {
     if (!product?.category) return;
@@ -80,6 +89,33 @@ export default function ProductDetail() {
   const buyNow = () => {add(product, qty); shopNav('/checkout');};
 
   const visual = getThemeVisual(theme);
+
+  if (!isDemo && storeDesign) {
+    return (
+      <div className="mx-auto max-w-[1320px] px-4 pb-14 pt-6 sm:px-8 sm:pt-10">
+        <button onClick={() => nav(-1)} className="mb-4 inline-flex min-h-10 items-center gap-1.5 px-1 text-sm font-semibold transition" style={{color: visual.muted}}>
+          <ArrowLeft className="h-4 w-4" /> နောက်သို့
+        </button>
+        <StorefrontRenderer
+          document={storeDesign}
+          template="product"
+          product={product}
+          products={related}
+          renderProductCard={(relatedProduct) => <ProductCard product={relatedProduct} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />}
+          renderRequiredCommerce={(buyNowSettings) => (
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{borderColor: visual.accent, color: visual.accent}}>
+                {added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}
+              </button>
+              <button disabled={!product.inStock} onClick={buyNow} className="min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{backgroundColor: visual.accent, color: visual.accentText}}>
+                {buyNowSettings.label}
+              </button>
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
 
   if (isDemo) {
     const imageCount = product.images.length;

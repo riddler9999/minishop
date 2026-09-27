@@ -3,12 +3,14 @@ import {Search} from 'lucide-react';
 import {useSearchParams} from 'react-router-dom';
 import {api} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
+import type {StoreDesignDocument} from '@/domain/storeDesign';
 import type {ThemePresetId} from '@/domain/theme';
 import ProductCard, {ProductCardSkeleton} from '@/features/catalog/components/ProductCard';
 import {cx} from '@/shared/lib/format';
 import {getStorefrontTheme} from '@/features/tenancy/shopResolver';
 import {useShopSlugParam} from '@/features/tenancy/ShopLink';
 import {useDemoStore} from '@/features/demo/DemoStoreContext';
+import {StorefrontRenderer} from '@/features/catalog/storeDesign/StorefrontRenderer';
 
 const PAGE = 12;
 
@@ -110,6 +112,7 @@ export default function Products() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [storeDesign, setStoreDesign] = useState<StoreDesignDocument | null>(null);
   const slug = useShopSlugParam();
   const theme = getStorefrontTheme();
   const isDemo = useDemoStore();
@@ -118,7 +121,16 @@ export default function Products() {
 
   useEffect(() => {
     let alive = true;
-    api.categories().then((r) => alive && setCategories(r.categories)).catch(() => {});
+    api.categories()
+      .then((categoryResult) => {
+        if (alive) setCategories(categoryResult.categories);
+      })
+      .catch(() => {});
+    api.loadPublishedStoreDesign()
+      .then((design) => {
+        if (alive) setStoreDesign(design);
+      })
+      .catch(() => {});
     return () => { alive = false; };
   }, [slug]);
 
@@ -188,13 +200,22 @@ export default function Products() {
         </div>
 
         <CategoryChips categories={categories} category={category} update={update} base={ui.chip} active={ui.chipActive} />
-
         {err && <div className={cx('mb-5 p-4 text-sm', ui.error)}>{err}</div>}
 
-        <div className={ui.grid}>
-          {products.map((p) => <ProductCard key={p.id} product={p} variant={ui.card} />)}
-          {loading && products.length === 0 && Array.from({length: theme.presetId === 'grid-catalog' ? 12 : 8}).map((_, i) => <ProductCardSkeleton key={i} compact />)}
-        </div>
+        {storeDesign ? (
+          <StorefrontRenderer
+            document={storeDesign}
+            template="collection"
+            products={products}
+            categories={categories}
+            renderProductCard={(product) => <ProductCard product={product} variant={ui.card} />}
+          />
+        ) : (
+          <div className={ui.grid}>
+            {products.map((p) => <ProductCard key={p.id} product={p} variant={ui.card} />)}
+            {loading && products.length === 0 && Array.from({length: theme.presetId === 'grid-catalog' ? 12 : 8}).map((_, i) => <ProductCardSkeleton key={i} compact />)}
+          </div>
+        )}
 
         {!loading && products.length === 0 && !err && <p className={cx('my py-16 text-center text-sm', ui.muted)}>ရှာဖွေမှုနှင့် ကိုက်ညီသော ပစ္စည်းမရှိပါ။</p>}
         {products.length < total && <LoadMore loading={loading} onClick={() => fetchPage(products.length, false)} className={ui.load} />}
