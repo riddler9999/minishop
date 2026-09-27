@@ -12,6 +12,7 @@ import AdminOrders from '@/features/orders/pages/AdminOrders';
 import AdminShipping from '@/features/shipping/pages/AdminShipping';
 import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
+import LifecycleStoreBuilder from '@/features/shop/pages/LifecycleStoreBuilder';
 import Themes from '@/features/shop/pages/Themes';
 import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
@@ -48,7 +49,7 @@ export default function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
           <Route path="online-store/themes" element={<Themes />} />
-          <Route path="online-store/themes/customize" element={<StoreDesign lifecycleMode />} />
+          <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
           <Route path="analytics" element={<Dashboard />} />
           <Route path="settings" element={<Settings />} />
         </Route>
