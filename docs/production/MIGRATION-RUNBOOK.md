@@ -21,13 +21,15 @@ Repository migrations are source-controlled intent. Supabase live migration hist
 
 ## Staging reconciliation
 
-A Production-derived Supabase branch already contains the parent's schema/history and no Production row data by default. **Do not blindly replay `0001..0023`.**
+The repository currently contains the ordered migration chain through `0023_database_rls_concurrency_reconciliation.sql`. That repository fact does **not** prove migration 0023, or any other migration, has been applied to Staging or Production.
 
-1. List Staging and Production migration history.
+For a Production-derived Supabase branch, do not blindly replay the repository chain: a derived branch may already contain parent schema/history. For a separate blank staging project, replay from the beginning only when clean bootstrap is explicitly intended.
+
+1. List current Staging and Production migration history from the target systems.
 2. Compare repository files with live recorded/superseding migrations.
 3. Identify only genuinely pending/applicable migrations.
 4. Apply those in repository order.
-5. For a separate blank staging project, replay from the beginning only when clean bootstrap is explicitly intended.
+5. Record the mapping between repository numeric filenames and Supabase migration records.
 
 Repository numeric filenames and Supabase timestamp/name records are different identifiers; record the mapping in evidence.
 
@@ -61,6 +63,6 @@ Do not casually down-migrate Production. Stop dependent releases, capture the ex
 
 Restore/PITR is disaster recovery, not routine rollback. If recovery capability is not verified for a destructive/data rewrite, the migration is not eligible for Production.
 
-## Current reconciliation note
+## Historical audit note — 2026-09-25
 
-At the 2026-09-25 audit Production reported 19 migration records through `production_db_hardening`, while the repository contains `0001..0023`. Earlier delivery files remain historical source artifacts while later production-safe reconciliation migrations are live evidence. Never infer Production state from filename count.
+The PR #94 audit recorded 19 Production migration records through `production_db_hardening` at that time. This is **historical evidence only**, not a current migration count or proof of current Production state. Re-read live migration history for every release. In particular, do not infer that repository migration `0023_database_rls_concurrency_reconciliation.sql` is applied to Production unless current verified evidence proves it.
