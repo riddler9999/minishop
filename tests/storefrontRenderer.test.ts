@@ -54,3 +54,15 @@ describe('buyer page delegation contract', () => {
     assert.equal(buildStorefrontRenderPlan(doc, 'product').template, 'product');
   });
 });
+
+
+describe('Store Builder #109 remediation regressions', () => {
+  it('binds the render plan to the Store Design aesthetic family', () => {
+    const clean = createDefaultStoreDesign('clean-minimal');
+    const dark = createDefaultStoreDesign('dark-modern');
+
+    assert.equal(buildStorefrontRenderPlan(clean, 'home').themeId, 'clean-minimal');
+    assert.equal(buildStorefrontRenderPlan(dark, 'collection').themeId, 'dark-modern');
+    assert.equal(buildStorefrontRenderPlan(dark, 'product').accentColor, dark.globalSettings.accentColor);
+  });
+});
