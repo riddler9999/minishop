@@ -3,7 +3,7 @@ import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreSection, StoreTemplateName} from '@/domain/storeDesign';
 import {buildStorefrontRenderPlan} from './renderPlan';
 
-type Props = {
+export type StorefrontRendererProps = {
   document: StoreDesignDocument;
   template: StoreTemplateName;
   products?: Product[];
@@ -13,7 +13,7 @@ type Props = {
   renderRequiredCommerce?: (buyNow: StoreDesignDocument['globalSettings']['buyNow']) => ReactNode;
 };
 
-function sectionContent(section: StoreSection, props: Props): ReactNode {
+function sectionContent(section: StoreSection, props: StorefrontRendererProps): ReactNode {
   switch (section.type) {
     case 'announcement':
       return section.settings.text ? <div>{section.settings.text}</div> : null;
@@ -67,7 +67,7 @@ function sectionContent(section: StoreSection, props: Props): ReactNode {
   }
 }
 
-export function StorefrontRenderer(props: Props) {
+export function StorefrontRenderer(props: StorefrontRendererProps) {
   const plan = buildStorefrontRenderPlan(props.document, props.template);
   return (
     <>
