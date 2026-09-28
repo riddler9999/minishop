@@ -29,6 +29,7 @@ function isUndeployedLifecycleRpc(error: any): boolean {
 export async function loadBuyerStoreDesign(
   sb: StorefrontDesignClient,
   input: {shopId: string; shopSlug: string},
+  shopRelation = 'buyer_public_shops',
 ): Promise<PublishedDesignResult> {
   const {data: published, error: publishedError} = await sb.rpc(
     'load_published_store_design',
@@ -44,7 +45,7 @@ export async function loadBuyerStoreDesign(
   }
 
   const {data: legacyRow, error: legacyError} = await sb
-    .from('shops')
+    .from(shopRelation)
     .select('theme')
     .eq('id', input.shopId)
     .maybeSingle();

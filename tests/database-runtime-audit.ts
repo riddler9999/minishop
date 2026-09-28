@@ -222,7 +222,7 @@ async function main() {
     assert.equal(legacyOpenAttempt.data?.is_active, false, 'legacy seller open bypassed platform suspension');
     assert.equal(legacyOpenAttempt.data?.platform_suspended, true);
 
-    const anonSuspendedShop = await anon.from('shops').select('id').eq('id', shopA.id);
+    const anonSuspendedShop = await anon.from('buyer_public_shops').select('id').eq('id', shopA.id);
     assert.equal(anonSuspendedShop.error, null, errorText(anonSuspendedShop.error));
     assert.deepEqual(anonSuspendedShop.data, [], 'anonymous buyer could read a platform-suspended shop');
 
@@ -298,33 +298,29 @@ async function main() {
     evidence.delete_recreate_trial_reset_blocked = 'PASS';
   }
 
-  // RLS SELECT: anon can read active storefront rows; authenticated Seller A
-  // can read owner-scoped rows but must not inherit Seller B's anon visibility.
+  // RLS SELECT: authenticated sellers keep owner-scoped base-table reads,
+  // while anonymous buyers use narrow storefront projections only.
   {
-    for (const [label, ownQuery, crossQuery, anonQuery] of [
+    for (const [label, ownQuery, crossQuery] of [
       [
         'shops',
         sellerA.client.from('shops').select('id').eq('id', shopA.id),
         sellerA.client.from('shops').select('id').eq('id', shopB.id),
-        anon.from('shops').select('id').eq('id', shopB.id),
       ],
       [
         'products',
         sellerA.client.from('products').select('id').eq('id', productA.id),
         sellerA.client.from('products').select('id').eq('id', productB.id),
-        anon.from('products').select('id').eq('id', productB.id),
       ],
       [
         'payment_accounts',
         sellerA.client.from('payment_accounts').select('id').eq('id', paymentAccountA.id),
         sellerA.client.from('payment_accounts').select('id').eq('id', paymentAccountB.id),
-        anon.from('payment_accounts').select('id').eq('id', paymentAccountB.id),
       ],
       [
         'shipping_zones',
         sellerA.client.from('shipping_zones').select('id').eq('id', shippingZoneA.id),
         sellerA.client.from('shipping_zones').select('id').eq('id', shippingZoneB.id),
-        anon.from('shipping_zones').select('id').eq('id', shippingZoneB.id),
       ],
     ] as const) {
       const own = await ownQuery;
@@ -334,14 +330,57 @@ async function main() {
       const cross = await crossQuery;
       assert.equal(cross.error, null, `${label} cross-tenant read: ${errorText(cross.error)}`);
       assert.deepEqual(cross.data, [], `${label} leaked cross-tenant row`);
-
-      const publicRow = await anonQuery;
-      assert.equal(publicRow.error, null, `${label} anon read: ${errorText(publicRow.error)}`);
-      assert.equal(publicRow.data?.length, 1, `${label} active anon row missing`);
     }
+
+    for (const table of ['shops', 'products', 'payment_accounts', 'shipping_zones'] as const) {
+      const direct = await anon.from(table).select('*').limit(1);
+      assert.ok(direct.error, `${table} remained directly readable by anon`);
+      assert.match(errorText(direct.error), /permission denied|42501/i);
+    }
+
+    const publicShop = await anon.from('buyer_public_shops')
+      .select('id,slug,name,logo_url,default_delivery_fee,delivery_service,origin_region,origin_township,theme')
+      .eq('id', shopB.id)
+      .single();
+    assert.equal(publicShop.error, null, errorText(publicShop.error));
+    assert.equal(publicShop.data?.id, shopB.id);
+
+    for (const forbidden of ['owner_id', 'plan', 'phone', 'created_at', 'updated_at']) {
+      const leaked = await anon.from('buyer_public_shops').select(forbidden).eq('id', shopB.id);
+      assert.ok(leaked.error, `buyer_public_shops unexpectedly exposes ${forbidden}`);
+    }
+
+    const publicProduct = await anon.from('buyer_public_products')
+      .select('id,shop_id,name,price,stock,status,images')
+      .eq('id', productB.id)
+      .single();
+    assert.equal(publicProduct.error, null, errorText(publicProduct.error));
+    assert.equal(publicProduct.data?.id, productB.id);
+    for (const forbidden of ['item_code', 'updated_at']) {
+      const productInternal = await anon.from('buyer_public_products').select(forbidden).eq('id', productB.id);
+      assert.ok(productInternal.error, `buyer_public_products unexpectedly exposes ${forbidden}`);
+    }
+
+    const publicPayment = await anon.from('buyer_public_payment_accounts')
+      .select('shop_id,provider,account_name,phone')
+      .eq('shop_id', shopB.id)
+      .single();
+    assert.equal(publicPayment.error, null, errorText(publicPayment.error));
+    const paymentInternal = await anon.from('buyer_public_payment_accounts').select('id,is_active,created_at').eq('shop_id', shopB.id);
+    assert.ok(paymentInternal.error, 'buyer_public_payment_accounts exposes internal columns');
+
+    const publicZone = await anon.from('buyer_public_shipping_zones')
+      .select('shop_id,region,township,fee')
+      .eq('shop_id', shopB.id)
+      .single();
+    assert.equal(publicZone.error, null, errorText(publicZone.error));
+    const zoneInternal = await anon.from('buyer_public_shipping_zones').select('id,created_at').eq('shop_id', shopB.id);
+    assert.ok(zoneInternal.error, 'buyer_public_shipping_zones exposes internal columns');
+
     evidence.storefront_rls_reads = {
-      tables: ['shops', 'products', 'payment_accounts', 'shipping_zones'],
-      anon_active_rows: 'PASS',
+      anon_base_tables: 'BLOCKED',
+      buyer_safe_views: 'PASS',
+      private_shop_fields: 'BLOCKED',
       owner_rows: 'PASS',
       authenticated_cross_tenant_rows: 'PASS',
     };
@@ -380,7 +419,7 @@ async function main() {
 
   // Anonymous buyer boundary: public catalog yes; private seller/order tables no direct writes.
   {
-    const publicProduct = await anon.from('products').select('id').eq('id', productA.id);
+    const publicProduct = await anon.from('buyer_public_products').select('id').eq('id', productA.id);
     assert.equal(publicProduct.error, null, errorText(publicProduct.error));
     assert.equal(publicProduct.data?.length, 1);
 
