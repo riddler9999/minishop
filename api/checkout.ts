@@ -5,7 +5,7 @@ import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
 import {normalizeCheckoutInput} from './checkout-input.js';
 import {forwardedClientIp} from './_client-ip.js';
-import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection} from './_buyer-relations.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
 
 type CheckoutDeps = {
   createClient: typeof createClient;
@@ -28,7 +28,7 @@ export function createCheckoutHandler(
     if (req.method === 'GET') {
       const slug = clean(req.query?.slug, 100);
       if (!slug) return sendJson(res, 400, {error: 'Missing shop'});
-      let buyerRelations = BUYER_SAFE_RELATIONS;
+      let buyerRelations: BuyerRelations = BUYER_SAFE_RELATIONS;
       let shopResult = await sb
         .from(buyerRelations.shops)
         .select('id,default_delivery_fee,delivery_service,origin_region,origin_township')
