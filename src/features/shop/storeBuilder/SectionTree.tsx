@@ -14,26 +14,27 @@ type Props = {
 
 export function SectionTree({sections, selectedSectionId, blocked, onSelect, onMove, onToggle, onRemove}: Props) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {sections.map((section, index) => {
         const definition = getSectionDefinition(section.type);
         const label = SECTION_LABELS[section.type];
         const selected = section.id === selectedSectionId;
         return (
-          <div key={section.id} className={`rounded-xl border p-2 ${selected ? 'border-brand-400 bg-brand-50' : 'border-cream-200 bg-white'}`}>
-            <button type="button" onClick={() => onSelect(section.id)} className="block w-full truncate px-1 py-1 text-left text-sm font-semibold">
-              {label}
+          <div key={section.id} className={`group rounded-lg border p-2 transition ${selected ? 'border-slate-900 bg-slate-100' : 'border-transparent bg-white hover:border-slate-200 hover:bg-slate-50'}`}>
+            <button type="button" onClick={() => onSelect(section.id)} aria-current={selected ? 'true' : undefined} className="flex min-h-8 w-full items-center gap-2 truncate px-1 text-left text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700">
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${section.enabled ? 'bg-emerald-600' : 'bg-slate-300'}`} />
+              <span className={`truncate ${section.enabled ? 'text-slate-800' : 'text-slate-400'}`}>{label}</span>
             </button>
-            <div className="mt-1 flex gap-1">
-              <button type="button" aria-label={`${label} အပေါ်ရွှေ့မည်`} disabled={blocked || index === 0} onClick={() => onMove(section.id, -1)} className="rounded-md border p-1 disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button>
-              <button type="button" aria-label={`${label} အောက်ရွှေ့မည်`} disabled={blocked || index === sections.length - 1} onClick={() => onMove(section.id, 1)} className="rounded-md border p-1 disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button>
+            <div className="mt-1 flex gap-1 pl-3">
+              <button type="button" aria-label={`${label} အပေါ်ရွှေ့မည်`} disabled={blocked || index === 0} onClick={() => onMove(section.id, -1)} className="grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button>
+              <button type="button" aria-label={`${label} အောက်ရွှေ့မည်`} disabled={blocked || index === sections.length - 1} onClick={() => onMove(section.id, 1)} className="grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button>
               {definition.hideable && (
-                <button type="button" aria-label={`${label} ${section.enabled ? 'ဖျောက်မည်' : 'ပြမည်'}`} disabled={blocked} onClick={() => onToggle(section.id, !section.enabled)} className="rounded-md border p-1 disabled:opacity-30">
+                <button type="button" aria-label={`${label} ${section.enabled ? 'ဖျောက်မည်' : 'ပြမည်'}`} disabled={blocked} onClick={() => onToggle(section.id, !section.enabled)} className="grid h-8 w-8 place-items-center rounded-md text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30">
                   {section.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               )}
               {definition.removable && (
-                <button type="button" aria-label={`${label} ဖယ်ရှားမည်`} disabled={blocked} onClick={() => onRemove(section.id)} className="ml-auto rounded-md border border-red-200 p-1 text-red-600 disabled:opacity-30"><Trash2 className="h-4 w-4" /></button>
+                <button type="button" aria-label={`${label} ဖယ်ရှားမည်`} disabled={blocked} onClick={() => onRemove(section.id)} className="ml-auto grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-700 disabled:opacity-30"><Trash2 className="h-4 w-4" /></button>
               )}
             </div>
           </div>
