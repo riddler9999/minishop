@@ -222,7 +222,7 @@ async function main() {
     assert.equal(legacyOpenAttempt.data?.is_active, false, 'legacy seller open bypassed platform suspension');
     assert.equal(legacyOpenAttempt.data?.platform_suspended, true);
 
-    const anonSuspendedShop = await anon.from('shops').select('id').eq('id', shopA.id);
+    const anonSuspendedShop = await anon.from('buyer_public_shops').select('id').eq('id', shopA.id);
     assert.equal(anonSuspendedShop.error, null, errorText(anonSuspendedShop.error));
     assert.deepEqual(anonSuspendedShop.data, [], 'anonymous buyer could read a platform-suspended shop');
 
