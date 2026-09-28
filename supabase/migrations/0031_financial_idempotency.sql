@@ -19,6 +19,7 @@ create unique index if not exists financial_admin_requests_idempotency_key_uidx
 create unique index if not exists financial_admin_requests_payment_identity_uidx
   on public.financial_admin_requests (lower(btrim(payment_identity)));
 
+alter table public.financial_admin_requests enable row level security;
 revoke all on public.financial_admin_requests from anon, authenticated;
 grant select, insert on public.financial_admin_requests to service_role;
 
@@ -66,10 +67,35 @@ begin
     raise exception 'duplicate_payment_identity';
   end if;
 
-  insert into public.financial_admin_requests
-    (idempotency_key,payment_identity,action,shop_id,purchase_id,request_fingerprint,result)
-  values
-    (p_idempotency_key,v_payment_identity,p_action,p_shop_id,p_purchase_id,p_request_fingerprint,'{}'::jsonb);
+  begin
+    insert into public.financial_admin_requests
+      (idempotency_key,payment_identity,action,shop_id,purchase_id,request_fingerprint,result)
+    values
+      (p_idempotency_key,v_payment_identity,p_action,p_shop_id,p_purchase_id,p_request_fingerprint,'{}'::jsonb);
+  exception when unique_violation then
+    select * into v_existing
+    from public.financial_admin_requests
+    where idempotency_key = p_idempotency_key;
+
+    if found then
+      if lower(btrim(v_existing.payment_identity)) = lower(v_payment_identity)
+         and v_existing.action = p_action
+         and v_existing.shop_id = p_shop_id
+         and v_existing.purchase_id is not distinct from p_purchase_id
+         and v_existing.request_fingerprint = p_request_fingerprint then
+        return jsonb_build_object('status','replay','result',v_existing.result);
+      end if;
+      raise exception 'idempotency_conflict';
+    end if;
+
+    if exists (
+      select 1 from public.financial_admin_requests
+      where lower(btrim(payment_identity)) = lower(v_payment_identity)
+    ) then
+      raise exception 'duplicate_payment_identity';
+    end if;
+    raise;
+  end;
 
   return jsonb_build_object('status','claimed');
 end;
