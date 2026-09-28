@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
-const migrationPath = new URL('../supabase/migrations/0029_store_design_schema_revision_safety.sql', import.meta.url);
+const migrationPath = new URL('../supabase/migrations/0030_store_design_schema_revision_safety.sql', import.meta.url);
 
 describe('Task 7 Store Design schema and revision safety migration contract', () => {
   it('uses a forward-only hardening migration and keeps historical 0024 untouched', async () => {
