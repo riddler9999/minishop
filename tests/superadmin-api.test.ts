@@ -39,7 +39,7 @@ describe('superadmin API behavior', () => {
     });
     const {res, state} = responseRecorder();
     await handler(
-      {method: 'POST', body: {action: 'activate', shopId: 'shop-1', plan: 'starter'}},
+      {method: 'POST', body: {action: 'activate', shopId: 'shop-1', plan: 'starter', paymentIdentity: 'TX-UNKNOWN', idempotencyKey: '11111111-1111-4111-8111-111111111111'}},
       res,
     );
     assert.equal(state.status, 400);
@@ -96,7 +96,8 @@ describe('superadmin API behavior', () => {
         body: {
           action: 'credit-pack',
           purchaseId: 'purchase-1',
-          transactionId: 'verified-transaction-1',
+          paymentIdentity: 'verified-transaction-1',
+          idempotencyKey: '22222222-2222-4222-8222-222222222222',
         },
       },
       res,
