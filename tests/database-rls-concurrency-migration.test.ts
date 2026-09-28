@@ -67,18 +67,19 @@ test('migration does not apply destructive data operations', () => {
   assert.doesNotMatch(sql, /\bdelete from\b/i);
 });
 
-test('superadmin credit-pack action requires and forwards a full transaction id', () => {
+test('superadmin credit-pack action requires payment identity plus idempotency key', () => {
   const source = fs.readFileSync('api/superadmin.ts', 'utf8');
-  assert.match(source, /const transactionIdInput = String\(body\.transactionId \?\? ''\)\.trim\(\)/);
-  assert.match(source, /transactionIdInput\.length <= 160/);
-  assert.match(source, /Missing purchase or transaction id/);
-  assert.match(source, /p_transaction_id: transactionId/);
+  assert.match(source, /const paymentIdentity = clean\(body\.paymentIdentity, 160\)/);
+  assert.match(source, /const idempotencyKey = clean\(body\.idempotencyKey, 80\)/);
+  assert.match(source, /Missing purchase, payment identity, or idempotency key/);
+  assert.match(source, /p_payment_identity: packPaymentIdentity/);
+  assert.match(source, /p_idempotency_key: idempotencyKey/);
 });
 
-test('maintained database types include pack transaction identity and hardened RPC signature', () => {
+test('maintained database types include pack transaction identity and Task 8 RPC signature', () => {
   const source = fs.readFileSync('src/core/supabase/database.types.ts', 'utf8');
   assert.match(source, /order_pack_purchases:[\s\S]*transaction_id: string \| null/);
-  assert.match(source, /admin_credit_order_pack:[\s\S]*p_purchase_id: string; p_transaction_id: string/);
+  assert.match(source, /admin_credit_order_pack:[\s\S]*p_idempotency_key: string; p_payment_identity: string; p_purchase_id: string/);
 });
 
 
