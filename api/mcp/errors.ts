@@ -10,19 +10,27 @@ export type McpErrorCode =
   | 'PUBLISH_VALIDATION_FAILED'
   | 'INVALID_DATE_RANGE'
   | 'INVALID_CURSOR'
+  | 'INVALID_ARGUMENTS'
   | 'RESOURCE_NOT_FOUND'
   | 'RATE_LIMITED'
   | 'INTERNAL_ERROR';
 
 export class McpError extends Error {
+  readonly code: McpErrorCode;
+  readonly status: number;
+  readonly requestId?: string;
+
   constructor(
-    readonly code: McpErrorCode,
-    readonly status: number,
+    code: McpErrorCode,
+    status: number,
     message: string,
-    readonly requestId?: string,
+    requestId?: string,
   ) {
     super(message);
     this.name = 'McpError';
+    this.code = code;
+    this.status = status;
+    this.requestId = requestId;
   }
 }
 

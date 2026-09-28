@@ -1,5 +1,5 @@
-import type {McpToolName, SellerContext} from './contracts.ts';
-import {McpError} from './errors.ts';
+import type {McpToolName, SellerContext} from './contracts.js';
+import {McpError} from './errors.js';
 
 export function createRateLimiter(options:{max:number;windowMs:number;now?:()=>number}){
   const now=options.now??Date.now;

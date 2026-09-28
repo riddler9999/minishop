@@ -11,9 +11,9 @@ import {
   type StoreSection,
   type StoreSectionType,
   type StoreTemplateName,
-} from '../../src/domain/storeDesign/index.ts';
-import type {ThemePresetId} from '../../src/domain/theme.ts';
-import {McpError} from './errors.ts';
+} from '../../src/domain/storeDesign/index.js';
+import {isThemePresetId, type ThemePresetId} from '../../src/domain/theme.js';
+import {McpError} from './errors.js';
 
 export interface StoreDesignLifecyclePort {
   loadOwnStoreDesign(): Promise<{
@@ -114,6 +114,9 @@ export function createStoreDesignMcpService(adapter: StoreDesignLifecyclePort) {
     },
 
     async updateStoreTheme(input: {themeId: ThemePresetId}) {
+      if (!isThemePresetId(input.themeId)) {
+        throw new McpError('INVALID_SECTION', 422, 'Unsupported Store Design theme.');
+      }
       return saveMutation((document) => createThemeDraft(document, input.themeId));
     },
 

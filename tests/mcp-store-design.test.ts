@@ -54,6 +54,13 @@ describe('MiniShop MCP StoreDesign commands', () => {
     assert.equal(state().published.themeId,before);
   });
 
+  it('rejects unsupported theme ids without changing the Draft', async () => {
+    const {svc,state}=service();
+    await assert.rejects(svc.updateStoreTheme({themeId:'unknown-theme' as any}), (e:unknown)=>e instanceof McpError&&e.code==='INVALID_SECTION');
+    assert.equal(state().draftRevision,3);
+    assert.equal(state().draft.themeId,'clean-minimal');
+  });
+
   it('adds only registered sections supported by the target template', async () => {
     const {svc,state}=service();
     await svc.addStoreSection({template:'home',type:'rich-text'});

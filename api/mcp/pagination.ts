@@ -1,4 +1,4 @@
-import {McpError} from './errors.ts';
+import {McpError} from './errors.js';
 
 export interface CursorPayload {createdAt:string;id:string}
 
@@ -14,8 +14,9 @@ export function decodeCursor(value: string): CursorPayload {
   try{
     const parsed=JSON.parse(Buffer.from(value,'base64url').toString('utf8'));
     if(!parsed||typeof parsed.createdAt!=='string'||typeof parsed.id!=='string') throw new Error();
-    if(!Number.isFinite(Date.parse(parsed.createdAt))) throw new Error();
-    return parsed;
+    const timestamp=Date.parse(parsed.createdAt);
+    if(!Number.isFinite(timestamp)||! /^[A-Za-z0-9_-]{1,128}$/.test(parsed.id)) throw new Error();
+    return {createdAt:new Date(timestamp).toISOString(),id:parsed.id};
   }catch{
     throw new McpError('INVALID_CURSOR',400,'Invalid cursor.');
   }

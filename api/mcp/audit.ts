@@ -1,6 +1,6 @@
 import type {SupabaseClient} from '@supabase/supabase-js';
-import type {AuditEntry, AuditSink, SellerContext} from './contracts.ts';
-import {McpError} from './errors.ts';
+import type {AuditEntry, AuditSink, SellerContext} from './contracts.js';
+import {McpError} from './errors.js';
 
 export function createAuditSink(client: SupabaseClient, context: SellerContext): AuditSink {
   return {

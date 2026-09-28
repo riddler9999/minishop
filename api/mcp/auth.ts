@@ -1,7 +1,7 @@
 import {createClient, type SupabaseClient} from '@supabase/supabase-js';
-import type {MiniShopCapability, SellerContext} from './contracts.ts';
-import {MINI_SHOP_CAPABILITIES} from './contracts.ts';
-import {McpError} from './errors.ts';
+import type {MiniShopCapability, SellerContext} from './contracts.js';
+import {MINI_SHOP_CAPABILITIES} from './contracts.js';
+import {McpError} from './errors.js';
 
 export interface AuthDeps {
   createAuthClient(): SupabaseClient;

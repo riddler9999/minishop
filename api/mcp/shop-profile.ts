@@ -1,6 +1,6 @@
 import type {SupabaseClient} from '@supabase/supabase-js';
-import type {SellerContext} from './contracts.ts';
-import {McpError} from './errors.ts';
+import type {SellerContext} from './contracts.js';
+import {McpError} from './errors.js';
 
 const WRITABLE = new Set([
   'name',
