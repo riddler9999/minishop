@@ -1,8 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "allowImportingTsExtensions": false,
-    "noEmit": true
-  },
-  "include": ["api/**/*.ts", "api/**/*.d.ts", "src/domain/dbError.ts"]
+  "include": ["api/**/*.ts", "api/**/*.d.ts"]
 }
