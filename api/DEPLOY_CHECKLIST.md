@@ -22,7 +22,7 @@ Before any Production deploy, complete the canonical checklist and record eviden
 
 ## Environment safety
 
-For the Vercel runtime, `SUPABASE_URL` and `SUPABASE_ANON_KEY` are server-side gateway values. `SUPABASE_SERVICE_ROLE_KEY` and `SUPERADMIN_EMAILS` are server-only and are used only by the authenticated superadmin boundary. Never create a `VITE_*` service-role variable.
+For the Vercel runtime, `SUPABASE_URL` and `SUPABASE_ANON_KEY` are server-side gateway values. `SUPABASE_SERVICE_ROLE_KEY` and `SUPERADMIN_EMAILS` are server-only. The service-role key is used only by the authenticated superadmin boundary and the fixed-purpose order-lookup backend helper; it must never be exposed to browser code or proxied from buyer input. Never create a `VITE_*` service-role variable.
 
 Preview must use Staging Supabase. Production Supabase credentials are prohibited in Preview.
 
