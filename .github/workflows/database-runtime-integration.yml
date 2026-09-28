@@ -55,7 +55,17 @@ jobs:
           sed -n '1,220p' "${runtime_workdir}/supabase/config.toml"
 
       - name: Start disposable local Supabase
-        run: supabase start --workdir "$RUNTIME_WORKDIR"
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! supabase start --workdir "$RUNTIME_WORKDIR" 2>&1 | tee /tmp/supabase-start.log; then
+            echo "::group::Supabase startup diagnostics"
+            docker ps -a || true
+            docker compose ls || true
+            docker logs supabase_db_minishop 2>&1 || true
+            echo "::endgroup::"
+            exit 1
+          fi
 
       - name: Replay full migration chain through current task
         run: supabase db reset --workdir "$RUNTIME_WORKDIR"
