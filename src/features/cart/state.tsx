@@ -1,4 +1,5 @@
 import {createContext, useContext, useEffect, useMemo, useState, type ReactNode} from 'react';
+import {useLocation} from 'react-router-dom';
 import type {Product} from '@/domain/product';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 
@@ -30,9 +31,9 @@ function storageKey(storageScope?: string): string {
   return `minishop_cart:${storageScope ?? getShopSlug() ?? 'demo'}`;
 }
 
-function load(storageScope?: string): CartItem[] {
+function loadByKey(key: string): CartItem[] {
   try {
-    const raw = localStorage.getItem(storageKey(storageScope));
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as CartItem[]) : [];
   } catch {
     return [];
@@ -47,7 +48,7 @@ export function CartProvider({
   storageScope?: string;
 }) {
   const key = storageKey(storageScope);
-  const [items, setItems] = useState<CartItem[]>(() => load(storageScope));
+  const [items, setItems] = useState<CartItem[]>(() => loadByKey(key));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -101,4 +102,19 @@ export function useCart(): CartCtx {
   const c = useContext(Ctx);
   if (!c) throw new Error('useCart must be used within CartProvider');
   return c;
+}
+
+export function routeCartScope(pathname: string): string {
+  const live = pathname.match(/^\/s\/([^/]+)(?:\/|$)/);
+  if (live) return decodeURIComponent(live[1]);
+  if (pathname.startsWith('/fashion-demo')) return 'fashion-demo';
+  if (pathname.startsWith('/furniture-demo')) return 'furniture-demo';
+  if (pathname.startsWith('/mobile-store-demo')) return 'mobile-demo';
+  return 'demo';
+}
+
+export function RouteScopedCartProvider({children}: {children: ReactNode}) {
+  const {pathname} = useLocation();
+  const scope = routeCartScope(pathname);
+  return <CartProvider key={scope} storageScope={scope}>{children}</CartProvider>;
 }

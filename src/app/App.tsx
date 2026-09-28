@@ -18,6 +18,7 @@ import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
 import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
 import MobileDemo from '@/features/mobile-demo/pages/MobileDemo';
+import {RouteScopedCartProvider} from '@/features/cart/state';
 import AdminConsole from './routes/AdminConsole';
 import RequireAdmin from './routes/RequireAdmin';
 import ShopRoute, {RootStorefront} from './routes/ShopRoute';
@@ -25,7 +26,8 @@ import ShopRoute, {RootStorefront} from './routes/ShopRoute';
 export default function App() {
   return (
     <AdminAuthProvider>
-      <Routes>
+      <RouteScopedCartProvider>
+        <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/demo/*" element={<RootStorefront />} />
         <Route path="/fashion-demo/*" element={<FashionDemo />} />
@@ -55,7 +57,8 @@ export default function App() {
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />
         <Route path="*" element={<RootStorefront />} />
-      </Routes>
+        </Routes>
+      </RouteScopedCartProvider>
     </AdminAuthProvider>
   );
 }
