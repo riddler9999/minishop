@@ -1,6 +1,33 @@
 -- Task 5 / F3: one server-authoritative checkout quote shared by display and order creation.
 begin;
 
+-- Serialize seller-managed custom-zone mutations with quote/order transactions.
+-- This closes the fallback phantom: while a default-fee quote holds the shop row
+-- FOR SHARE, a new matching zone cannot appear before that same transaction
+-- persists the order.
+create or replace function private.serialize_shipping_zone_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_shop_id uuid;
+begin
+  v_shop_id := case when tg_op = 'DELETE' then old.shop_id else new.shop_id end;
+  perform 1 from public.shops where id = v_shop_id for update;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.serialize_shipping_zone_change() from public, anon, authenticated;
+
+drop trigger if exists shipping_zones_serialize_quote_change on public.shipping_zones;
+create trigger shipping_zones_serialize_quote_change
+before insert or update or delete on public.shipping_zones
+for each row execute function private.serialize_shipping_zone_change();
+
 create or replace function public.quote_order(
   p_shop_slug text,
   p_region text,
