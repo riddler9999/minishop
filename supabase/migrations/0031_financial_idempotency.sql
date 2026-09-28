@@ -13,6 +13,9 @@ create table if not exists public.financial_admin_requests (
   created_at timestamptz not null default now()
 );
 
+create unique index if not exists financial_admin_requests_idempotency_key_uidx
+  on public.financial_admin_requests (idempotency_key);
+
 create unique index if not exists financial_admin_requests_payment_identity_uidx
   on public.financial_admin_requests (lower(btrim(payment_identity)));
 
