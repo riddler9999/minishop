@@ -22,7 +22,8 @@ export type StorefrontRendererProps = {
 };
 
 function scrollToProducts() {
-  document.querySelector('[data-store-products="true"]')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelector('[data-store-products="true"]')?.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block: 'start'});
 }
 
 function ProductGallery({product}: {product: Product}) {
