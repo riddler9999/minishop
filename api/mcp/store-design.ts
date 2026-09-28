@@ -41,7 +41,14 @@ function mapError(error: unknown): never {
   throw error;
 }
 
+function assertTemplate(document: StoreDesignDocument, template: StoreTemplateName): void {
+  if (!Object.prototype.hasOwnProperty.call(document.templates, template)) {
+    throw new McpError('UNSUPPORTED_TEMPLATE', 422, 'Unsupported Store Design template.');
+  }
+}
+
 function findSection(document: StoreDesignDocument, template: StoreTemplateName, sectionId: string): StoreSection {
+  assertTemplate(document, template);
   const section = document.templates[template].sections.find((item) => item.id === sectionId);
   if (!section) throw new McpError('INVALID_SECTION', 422, 'Store section was not found.');
   return section;
@@ -58,11 +65,22 @@ function nextSectionId(document: StoreDesignDocument, template: StoreTemplateNam
   return candidate;
 }
 
+function validatePrimitiveTypes(current: Record<string, unknown>, patch: Record<string, unknown>): void {
+  for (const [key, value] of Object.entries(patch)) {
+    if (!(key in current)) throw new McpError('INVALID_SECTION', 422, 'Unsupported section setting.');
+    const expected = current[key];
+    if (expected !== null && typeof expected !== 'object' && typeof value !== typeof expected) {
+      throw new McpError('INVALID_SECTION', 422, 'Invalid section setting type.');
+    }
+  }
+}
+
 function mergedSettings<T extends StoreSectionType>(
   type: T,
   current: SectionSettingsByType[T],
   patch: Partial<SectionSettingsByType[T]>,
 ): SectionSettingsByType[T] {
+  validatePrimitiveTypes(current as unknown as Record<string, unknown>, patch as Record<string, unknown>);
   const next = {...current, ...patch} as SectionSettingsByType[T];
   if ('productSource' in next) {
     const source = (next as any).productSource;
@@ -107,6 +125,7 @@ export function createStoreDesignMcpService(adapter: StoreDesignLifecyclePort) {
         throw new McpError('UNSUPPORTED_TEMPLATE', 422, 'This section is not supported by the selected template.');
       }
       return saveMutation((document) => {
+        assertTemplate(document, input.template);
         const section = {
           id: nextSectionId(document, input.template, input.type),
           type: input.type,
@@ -138,6 +157,7 @@ export function createStoreDesignMcpService(adapter: StoreDesignLifecyclePort) {
 
     async moveStoreSection(input: {template: StoreTemplateName; sectionId: string; toIndex: number}) {
       return saveMutation((document) => {
+        assertTemplate(document, input.template);
         const sections = document.templates[input.template].sections;
         const index = sections.findIndex((section) => section.id === input.sectionId);
         if (index < 0) throw new McpError('INVALID_SECTION', 422, 'Store section was not found.');
@@ -150,6 +170,7 @@ export function createStoreDesignMcpService(adapter: StoreDesignLifecyclePort) {
 
     async removeStoreSection(input: {template: StoreTemplateName; sectionId: string}) {
       return saveMutation((document) => {
+        assertTemplate(document, input.template);
         const sections = document.templates[input.template].sections;
         const index = sections.findIndex((section) => section.id === input.sectionId);
         if (index < 0) throw new McpError('INVALID_SECTION', 422, 'Store section was not found.');
