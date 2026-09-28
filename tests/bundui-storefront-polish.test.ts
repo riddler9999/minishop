@@ -77,3 +77,11 @@ test('tenant storefront hero does not force MiniShop branding or English fallbac
   assert.doesNotMatch(source, />MiniShop Store</);
   assert.doesNotMatch(source, />Hero image</);
 });
+
+
+test('hero product scroll respects reduced-motion preference', async () => {
+  const source = await readFile(rendererPath, 'utf8');
+
+  assert.match(source, /prefers-reduced-motion/);
+  assert.match(source, /behavior:\s*reduceMotion\s*\?\s*'auto'\s*:\s*'smooth'/);
+});
