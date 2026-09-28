@@ -634,6 +634,47 @@ export type Database = {
         }
         Relationships: []
       }
+      store_designs: {
+        Row: {
+          draft_document: Json
+          draft_revision: number
+          previous_published_document: Json | null
+          published_at: string | null
+          published_document: Json
+          published_revision: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          draft_document: Json
+          draft_revision?: number
+          previous_published_document?: Json | null
+          published_at?: string | null
+          published_document: Json
+          published_revision?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          draft_document?: Json
+          draft_revision?: number
+          previous_published_document?: Json | null
+          published_at?: string | null
+          published_document?: Json
+          published_revision?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_designs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       shop_monthly_usage: {
@@ -702,6 +743,18 @@ export type Database = {
       }
       current_shop_entitlement: { Args: never; Returns: Json }
       current_shop_usage: { Args: never; Returns: Json }
+      load_best_selling_product_ids: {
+        Args: { p_limit?: number; p_shop_slug: string }
+        Returns: {
+          product_id: string
+          quantity: number
+        }[]
+      }
+      load_own_store_design: { Args: never; Returns: Json }
+      load_published_store_design: {
+        Args: { p_shop_slug: string }
+        Returns: Json
+      }
       lookup_order: {
         Args: { p_order_no: string; p_phone: string; p_shop_slug: string }
         Returns: Json
@@ -721,9 +774,18 @@ export type Database = {
         }
         Returns: Json
       }
+      publish_store_design_draft: {
+        Args: { p_expected_draft_revision: number }
+        Returns: Json
+      }
       resolve_delivery_fee: {
         Args: { p_region: string; p_shop_id: string; p_township: string }
         Returns: number
+      }
+      rollback_store_design_published: { Args: never; Returns: Json }
+      save_store_design_draft: {
+        Args: { p_document: Json; p_expected_revision: number }
+        Returns: Json
       }
       usage_tier: { Args: { p_count: number }; Returns: string }
     }
