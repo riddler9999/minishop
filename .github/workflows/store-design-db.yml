@@ -4,13 +4,17 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/0024_store_design_lifecycle.sql'
+      - 'supabase/migrations/0028_store_design_schema_revision_safety.sql'
       - 'tests/storeDesignDatabaseRuntime.sql'
+      - 'tests/storeDesignSafetyRuntime.sql'
       - '.github/workflows/store-design-db.yml'
   push:
     branches: [main]
     paths:
       - 'supabase/migrations/0024_store_design_lifecycle.sql'
+      - 'supabase/migrations/0028_store_design_schema_revision_safety.sql'
       - 'tests/storeDesignDatabaseRuntime.sql'
+      - 'tests/storeDesignSafetyRuntime.sql'
       - '.github/workflows/store-design-db.yml'
 
 permissions:
@@ -111,5 +115,11 @@ jobs:
       - name: Apply migration 0024 to disposable PostgreSQL only
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0024_store_design_lifecycle.sql
 
-      - name: Verify RLS, concurrency, Publish, Rollback, and buyer privacy
+      - name: Verify 0024 baseline RLS, concurrency, Publish, Rollback, and buyer privacy
         run: psql -v ON_ERROR_STOP=1 -f tests/storeDesignDatabaseRuntime.sql
+
+      - name: Apply Task 7 forward-only Store Design safety migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0028_store_design_schema_revision_safety.sql
+
+      - name: Verify Task 7 schema, revision, limits, rollback retry, and RLS safety
+        run: psql -v ON_ERROR_STOP=1 -f tests/storeDesignSafetyRuntime.sql
