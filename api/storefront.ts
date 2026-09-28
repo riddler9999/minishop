@@ -103,12 +103,12 @@ export default async function handler(req: any, res: any) {
     if (rule === 'best_selling') {
       const {data: rankedRows, error: rankError} = await sb.rpc('load_best_selling_product_ids', {p_shop_slug: slug, p_limit: limit});
       if (rankError) return sendJson(res, 502, {error: 'Catalog unavailable'});
-      const rankedIds = (rankedRows || []).map((row: any) => String(row.product_id)).filter(Boolean).slice(0, limit);
+      const rankedIds: string[] = (rankedRows || []).map((row: any) => String(row.product_id)).filter(Boolean).slice(0, limit);
       if (rankedIds.length === 0) return sendJson(res, 200, {products: []}, true);
       const {data: productRows, error: productError} = await sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', rankedIds).limit(limit);
       if (productError) return sendJson(res, 502, {error: 'Catalog unavailable'});
       const byId = new Map((productRows || []).map((row: any) => [String(row.id), row]));
-      return sendJson(res, 200, {products: rankedIds.flatMap((id) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
+      return sendJson(res, 200, {products: rankedIds.flatMap((id: string) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
     }
 
     let sourceQuery = sb.from('products').select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active');

@@ -12,9 +12,10 @@
     "preview": "vite preview",
     "lint": "tsc --noEmit && eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck:api": "tsc --noEmit -p tsconfig.api.json",
     "test": "node --import ./tests/register-source-resolver.mjs --experimental-strip-types --test tests/*.test.ts",
     "test:database-runtime": "node --experimental-strip-types tests/database-runtime-audit.ts",
-    "check": "npm run lint && npm test && npm run build"
+    "check": "npm run lint && npm run typecheck:api && npm test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",

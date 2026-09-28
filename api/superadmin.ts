@@ -14,7 +14,7 @@ export function createSuperadminHandler(
 ) {
   return async function handler(req: any, res: any) {
   const access = await deps.requireAccess(req);
-  if ('error' in access) return sendJson(res, access.status, {error: access.error});
+  if ('error' in access) return sendJson(res, access.status ?? 403, {error: access.error});
   const sb = access.admin;
 
   if (req.method === 'GET') {
