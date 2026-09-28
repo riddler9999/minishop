@@ -3,7 +3,7 @@ import {describe, it} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
 const hardening = new URL('../supabase/migrations/0007_production_hardening.sql', import.meta.url);
-const lookupFix = new URL('../supabase/migrations/0027_failed_lookup_rate_limit.sql', import.meta.url);
+const lookupFix = new URL('../supabase/migrations/0028_failed_lookup_rate_limit.sql', import.meta.url);
 const checkoutApi = new URL('../api/checkout.ts', import.meta.url);
 const lookupApi = new URL('../api/storefront-orders.ts', import.meta.url);
 const lookupBackend = new URL('../api/_storefront-lookup-backend.ts', import.meta.url);
