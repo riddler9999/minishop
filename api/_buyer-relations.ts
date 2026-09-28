@@ -1,16 +1,23 @@
-export const BUYER_SAFE_RELATIONS = {
+export type BuyerRelations = {
+  shops: string;
+  products: string;
+  paymentAccounts: string;
+  shippingZones: string;
+};
+
+export const BUYER_SAFE_RELATIONS: BuyerRelations = {
   shops: 'buyer_public_shops',
   products: 'buyer_public_products',
   paymentAccounts: 'buyer_public_payment_accounts',
   shippingZones: 'buyer_public_shipping_zones',
-} as const;
+};
 
-export const BUYER_LEGACY_RELATIONS = {
+export const BUYER_LEGACY_RELATIONS: BuyerRelations = {
   shops: 'shops',
   products: 'products',
   paymentAccounts: 'payment_accounts',
   shippingZones: 'shipping_zones',
-} as const;
+};
 
 export function isMissingBuyerProjection(error: any): boolean {
   const code = String(error?.code ?? '');
