@@ -7,8 +7,8 @@ const api = fs.readFileSync('api/superadmin.ts', 'utf8');
 
 test('Task 8 requires immutable payment identity and request idempotency for financial grants', () => {
   assert.match(migration, /financial_admin_requests/);
-  assert.match(migration, /payment_identity.*unique/i);
-  assert.match(migration, /idempotency_key.*unique/i);
+  assert.match(migration, /financial_admin_requests_payment_identity_uidx/);
+  assert.match(migration, /financial_admin_requests_idempotency_key_uidx/);
   assert.match(migration, /payment_identity_required/);
   assert.match(migration, /idempotency_key_required/);
 });
