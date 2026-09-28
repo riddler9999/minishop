@@ -17,6 +17,8 @@ function validBody(overrides: Record<string, unknown> = {}) {
     paymentRefTail: '',
     items: [{id: '11111111-1111-4111-8111-111111111111', qty: 2}],
     idempotencyKey: '22222222-2222-4222-8222-222222222222',
+    expectedItemTotal: 20000,
+    expectedDeliveryFee: 3000,
     ...overrides,
   };
 }
@@ -96,7 +98,54 @@ describe('checkout API regression contract', () => {
     assert.equal(state.status, 200);
     assert.equal(call?.name, 'place_order');
     assert.equal(call?.args.p_idempotency_key, '22222222-2222-4222-8222-222222222222');
+    assert.equal(call?.args.p_expected_item_total, 20000);
+    assert.equal(call?.args.p_expected_delivery_fee, 3000);
     assert.equal(getClientOptions().global.headers['x-forwarded-for'], '203.0.113.7');
+  });
+
+
+  it('serves an authoritative quote without requiring customer/payment fields', async () => {
+    const calls: {name: string; args: any}[] = [];
+    const {handler} = handlerWithRpc(async (name, args) => {
+      calls.push({name, args});
+      return {data: {item_total: 20000, delivery_fee: 3000, grand_total: 23000, delivery_service: 'custom'}, error: null};
+    });
+    const {res, state} = responseRecorder();
+    await handler({
+      method: 'POST',
+      body: {
+        action: 'quote',
+        slug: 'demo-shop',
+        region: 'Yangon',
+        township: 'Thanlyin',
+        items: [{id: '11111111-1111-4111-8111-111111111111', qty: 2}],
+      },
+      headers: {},
+      socket: {remoteAddress: '203.0.113.7'},
+    }, res);
+    assert.equal(state.status, 200);
+    assert.equal(calls[0]?.name, 'quote_order');
+    assert.deepEqual((state.body as any).quote, {
+      item_total: 20000,
+      delivery_fee: 3000,
+      grand_total: 23000,
+      delivery_service: 'custom',
+    });
+  });
+
+  it('returns 409 and a fresh quote when accepted checkout pricing is stale', async () => {
+    let count = 0;
+    const {handler} = handlerWithRpc(async (name) => {
+      count += 1;
+      if (name === 'place_order') return {data: null, error: {message: 'quote_stale'}};
+      return {data: {item_total: 21000, delivery_fee: 3500, grand_total: 24500, delivery_service: 'custom'}, error: null};
+    });
+    const {res, state} = responseRecorder();
+    await handler({method: 'POST', body: validBody(), headers: {}, socket: {remoteAddress: '203.0.113.7'}}, res);
+    assert.equal(state.status, 409);
+    assert.equal((state.body as any).code, 'quote_stale');
+    assert.equal((state.body as any).freshQuote.grand_total, 24500);
+    assert.equal(count, 2);
   });
 
   it('maps database throttling to HTTP 429', async () => {
