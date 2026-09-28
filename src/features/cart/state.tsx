@@ -52,11 +52,6 @@ export function CartProvider({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    setItems(loadByKey(key));
-    setDrawerOpen(false);
-  }, [key]);
-
-  useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(items));
     } catch {
@@ -120,5 +115,6 @@ export function routeCartScope(pathname: string): string {
 
 export function RouteScopedCartProvider({children}: {children: ReactNode}) {
   const {pathname} = useLocation();
-  return <CartProvider storageScope={routeCartScope(pathname)}>{children}</CartProvider>;
+  const scope = routeCartScope(pathname);
+  return <CartProvider key={scope} storageScope={scope}>{children}</CartProvider>;
 }
