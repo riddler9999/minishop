@@ -117,6 +117,6 @@ $$;
 revoke all on function public.lookup_order(text,text,text)
   from public, anon, authenticated;
 grant execute on function public.lookup_order(text,text,text)
-  to anon, authenticated;
+  to service_role;
 
 commit;
