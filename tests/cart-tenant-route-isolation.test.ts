@@ -24,11 +24,11 @@ test('route cart scope distinguishes live shops and demo surfaces', async () => 
   assert.match(source, /demo/);
 });
 
-test('cart provider rehydrates when the route-derived storage key changes', () => {
+test('cart provider remounts when the route-derived storage scope changes', () => {
   const source = fs.readFileSync('src/features/cart/state.tsx', 'utf8');
 
-  assert.match(source, /setItems\(loadByKey\(key\)\)/);
-  assert.match(source, /\[key\]/);
+  assert.match(source, /const scope = routeCartScope\(pathname\)/);
+  assert.match(source, /<CartProvider key=\{scope\} storageScope=\{scope\}>/);
 });
 
 test('cart operations remain present after route scoping', () => {
