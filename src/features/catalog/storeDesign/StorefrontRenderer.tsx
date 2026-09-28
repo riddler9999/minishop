@@ -274,7 +274,7 @@ function sectionFrame(section: StoreSection, props: StorefrontRendererProps, con
   );
 }
 
-function ProductTemplate(props: StorefrontRendererProps, sections: StoreSection[], visual: ThemeVisualProfile, buyNow: StoreDesignDocument['globalSettings']['buyNow']) {
+function ProductTemplate({props, sections, visual, buyNow}: {props: StorefrontRendererProps; sections: StoreSection[]; visual: ThemeVisualProfile; buyNow: StoreDesignDocument['globalSettings']['buyNow']}) {
   const gallery = sections.find((section) => section.type === 'product-gallery');
   const info = sections.find((section) => section.type === 'product-info');
   const primaryIds = new Set([gallery?.id, info?.id].filter((id): id is string => Boolean(id)));
