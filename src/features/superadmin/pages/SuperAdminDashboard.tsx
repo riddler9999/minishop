@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Navigate} from 'react-router-dom';
 import {Activity, CreditCard, RefreshCw, ShieldCheck, Store, WalletCards} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
@@ -18,6 +18,7 @@ export default function SuperAdminDashboard() {
   const [busy,setBusy]=useState('');
   const [packTransactionIds,setPackTransactionIds]=useState<Record<string,string>>({});
   const [subscriptionPaymentIds,setSubscriptionPaymentIds]=useState<Record<string,string>>({});
+  const requestKeys=useRef<Record<string,string>>({});
   const token=session?.access_token;
 
   const load=useCallback(async()=>{
@@ -32,15 +33,26 @@ export default function SuperAdminDashboard() {
   useEffect(()=>{void load()},[load]);
   const ent=useMemo(()=>new Map((data?.entitlements||[]).map((e:any)=>[e.shop_id,e])),[data]);
 
+  function requestKey(key:string){
+    requestKeys.current[key] ||= crypto.randomUUID();
+    return requestKeys.current[key];
+  }
+
   async function act(key:string, body:Record<string,unknown>, confirmText?:string){
     if(confirmText && !window.confirm(confirmText)) return;
     if(!token) return;
     setBusy(key); setError('');
-    const r=await fetch('/api/superadmin',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
-    const j=await r.json().catch(()=>({}));
-    setBusy('');
-    if(!r.ok){setError(j.error||'Action failed');return;}
-    await load();
+    try {
+      const r=await fetch('/api/superadmin',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){setError(j.error||'Action failed');return;}
+      delete requestKeys.current[key];
+      await load();
+    } catch {
+      setError('Network result is unknown. Retry the same action to safely reconcile it.');
+    } finally {
+      setBusy('');
+    }
   }
 
   if(loading) return <div className="grid min-h-screen place-items-center">Loading…</div>;
@@ -80,8 +92,8 @@ export default function SuperAdminDashboard() {
         <div className="border-b p-4"><h2 className="font-bold">Shops & subscriptions</h2><p className="text-xs text-slate-500">Platform-owner controls. Destructive actions require confirmation.</p></div>
         <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th className="p-3">Shop</th><th>Plan</th><th>Usage</th><th>Extra</th><th>Cycle end</th><th>Status</th><th>Actions</th></tr></thead><tbody>
           {(data?.shops||[]).map((s:any)=>{const e:any=ent.get(s.id);return <tr key={s.id} className="border-t align-top"><td className="p-3"><p className="font-bold">{s.name}</p><p className="text-xs text-slate-400">/{s.slug}</p></td><td className="capitalize">{e?.plan||s.plan}{e?.pending_plan&&<p className="text-xs text-amber-600">→ {e.pending_plan}</p>}</td><td>{e?`${e.monthly_used}/${e.monthly_quota}`:'—'}</td><td>{e?.purchased_balance??'—'}</td><td>{e?.cycle_end?new Date(e.cycle_end).toLocaleDateString():'—'}</td><td><span className={`rounded-full px-2 py-1 text-xs font-semibold ${!s.platform_suspended&&s.seller_is_active!==false&&e?.active!==false?'bg-emerald-50 text-emerald-700':'bg-slate-100 text-slate-500'}`}>{s.platform_suspended?'Suspended':s.seller_is_active===false?'Closed by seller':e?.active===false?'Subscription inactive':'Active'}</span></td><td className="py-2"><div className="flex flex-wrap gap-1.5">
-            <input aria-label={`Verified payment ID for ${s.name}`} value={subscriptionPaymentIds[s.id]||''} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setSubscriptionPaymentIds((current)=>({...current,[s.id]:e.target.value}))} placeholder="Verified transaction ID" className="min-w-[190px] rounded-lg border px-2.5 py-1.5 text-xs"/><button disabled={!!busy||!(subscriptionPaymentIds[s.id]||'').trim()} onClick={()=>void act(s.id+'renew',{action:'renew',shopId:s.id,paymentIdentity:(subscriptionPaymentIds[s.id]||'').trim(),idempotencyKey:crypto.randomUUID()})} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">Renew</button>
-            {s.plan==='starter'&&<button disabled={!!busy||!(subscriptionPaymentIds[s.id]||'').trim()} onClick={()=>void act(s.id+'up',{action:'upgrade',shopId:s.id,paymentIdentity:(subscriptionPaymentIds[s.id]||'').trim(),idempotencyKey:crypto.randomUUID()})} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">Upgrade</button>}
+            <input aria-label={`Verified payment ID for ${s.name}`} value={subscriptionPaymentIds[s.id]||''} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setSubscriptionPaymentIds((current)=>({...current,[s.id]:e.target.value}))} placeholder="Verified transaction ID" className="min-w-[190px] rounded-lg border px-2.5 py-1.5 text-xs"/><button disabled={!!busy||!(subscriptionPaymentIds[s.id]||'').trim()} onClick={()=>void act(s.id+'renew',{action:'renew',shopId:s.id,paymentIdentity:(subscriptionPaymentIds[s.id]||'').trim(),idempotencyKey:requestKey(s.id+'renew')})} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">Renew</button>
+            {s.plan==='starter'&&<button disabled={!!busy||!(subscriptionPaymentIds[s.id]||'').trim()} onClick={()=>void act(s.id+'up',{action:'upgrade',shopId:s.id,paymentIdentity:(subscriptionPaymentIds[s.id]||'').trim(),idempotencyKey:requestKey(s.id+'up')})} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">Upgrade</button>}
             <button disabled={!!busy} onClick={()=>void act(s.id+'toggle',{action:'toggle-shop',shopId:s.id,active:!!s.platform_suspended},`${s.platform_suspended?'Activate':'Suspend'} ${s.name}?`)} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">{s.platform_suspended?'Activate shop':'Suspend shop'}</button>
             {e?.active!==false&&<button disabled={!!busy} onClick={()=>void act(s.id+'cancel',{action:'cancel',shopId:s.id},`Cancel subscription for ${s.name}?`)} className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600">Cancel sub</button>}
           </div></td></tr>})}
@@ -90,7 +102,7 @@ export default function SuperAdminDashboard() {
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4"><h2 className="font-bold">Extra-order purchase requests</h2></div>
-        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=>{const transactionId=packTransactionIds[p.id]||''; const creditRequest=buildCreditPackRequest(p.id,transactionId); return <div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex flex-col gap-2 md:items-end"><label className="text-xs font-semibold text-slate-600">Verified full transaction ID<input aria-label={`Full transaction ID for purchase ${p.id}`} value={transactionId} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setPackTransactionIds((current)=>({...current,[p.id]:e.target.value}))} placeholder="Enter full transaction ID" className="mt-1 block w-full min-w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal text-slate-950" /></label><div className="flex gap-2">{p.proofUrl&&<a href={p.proofUrl} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-sm font-semibold">View proof</a>}<button disabled={!!busy||!creditRequest} onClick={()=>{if(creditRequest) void act(p.id,creditRequest,"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div></div>})}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
+        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=>{const transactionId=packTransactionIds[p.id]||''; const creditRequest=buildCreditPackRequest(p.id,transactionId,requestKey(p.id)); return <div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex flex-col gap-2 md:items-end"><label className="text-xs font-semibold text-slate-600">Verified full transaction ID<input aria-label={`Full transaction ID for purchase ${p.id}`} value={transactionId} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setPackTransactionIds((current)=>({...current,[p.id]:e.target.value}))} placeholder="Enter full transaction ID" className="mt-1 block w-full min-w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal text-slate-950" /></label><div className="flex gap-2">{p.proofUrl&&<a href={p.proofUrl} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-sm font-semibold">View proof</a>}<button disabled={!!busy||!creditRequest} onClick={()=>{if(creditRequest) void act(p.id,creditRequest,"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div></div>})}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
       </section>
     </div>
   </main>;
