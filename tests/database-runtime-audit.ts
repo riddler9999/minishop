@@ -547,8 +547,8 @@ async function main() {
     assert.ok(directAnon.error, 'direct anonymous lookup RPC must be denied');
     assert.match(errorText(directAnon.error), /permission denied|42501/i);
 
-    const gateway = apiClient(serviceKey!, '198.51.100.123');
-    const valid = await gateway.rpc('lookup_order', {
+    const validGateway = apiClient(serviceKey!, '198.51.100.123');
+    const valid = await validGateway.rpc('lookup_order', {
       p_shop_slug: lookupShop.slug,
       p_order_no: placed.order_no,
       p_phone: '0900000121',
@@ -556,8 +556,9 @@ async function main() {
     assert.equal(valid.error, null, errorText(valid.error));
     assert.equal((valid.data as Record<string, unknown>).order_no, placed.order_no);
 
+    const attackerGateway = apiClient(serviceKey!, '198.51.100.125');
     for (let i = 0; i < 5; i += 1) {
-      const invalid = await gateway.rpc('lookup_order', {
+      const invalid = await attackerGateway.rpc('lookup_order', {
         p_shop_slug: 'x',
         p_order_no: 'bad',
         p_phone: '1',
@@ -567,7 +568,7 @@ async function main() {
     }
 
     for (let i = 0; i < 25; i += 1) {
-      const miss = await gateway.rpc('lookup_order', {
+      const miss = await attackerGateway.rpc('lookup_order', {
         p_shop_slug: lookupShop.slug,
         p_order_no: `ORD-INVALID-${String(i).padStart(2, '0')}`,
         p_phone: '0900000121',
@@ -576,7 +577,7 @@ async function main() {
       assert.equal((miss.data as Record<string, unknown>)?.error, 'order_not_found');
     }
 
-    const throttled = await gateway.rpc('lookup_order', {
+    const throttled = await attackerGateway.rpc('lookup_order', {
       p_shop_slug: lookupShop.slug,
       p_order_no: 'ORD-INVALID-31',
       p_phone: '0900000121',
