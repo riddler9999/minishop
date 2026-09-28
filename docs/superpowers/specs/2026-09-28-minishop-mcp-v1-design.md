@@ -7,7 +7,7 @@ Status: Approved design
 
 MiniShop will expose a seller-facing MCP server that can be connected to ChatGPT as a custom connector, similar to connecting an n8n instance. The connector is an agent-facing interface over MiniShop; it is not a second implementation of MiniShop business logic.
 
-V1 is production-shaped from the start: seller authentication, tenant isolation, scoped authorization, auditability, and concurrency protection are required even while initial end-to-end testing uses a single seller account.
+V1 is production-shaped from the start: seller authentication, tenant isolation, capability authorization, auditability, and concurrency protection are required even while initial end-to-end testing uses a single seller account.
 
 ## 2. Product Decisions
 
@@ -20,6 +20,7 @@ V1 is production-shaped from the start: seller authentication, tenant isolation,
 - Seller commands may perform write and publish operations without a second MiniShop-specific confirmation when the seller explicitly requested the action.
 - Preview is not a mandatory gate. Store Design still uses Draft/Published lifecycle internally.
 - No Gemini or other MiniShop-hosted LLM is required. ChatGPT supplies the reasoning layer; MiniShop supplies MCP capabilities.
+- Authentication uses Supabase OAuth 2.1 to avoid adding a separate MiniShop authorization server and its associated infrastructure/maintenance cost.
 
 ## 3. Architecture
 
@@ -31,8 +32,8 @@ ChatGPT Custom Connector
         v
 MiniShop MCP Endpoint
         |
-        +-- OAuth token validation
-        +-- scope enforcement
+        +-- Supabase OAuth token validation
+        +-- MiniShop capability enforcement
         +-- seller-context resolution
         |
         v
@@ -76,13 +77,13 @@ MCP must not directly mutate Store Design persistence tables.
 
 ### 5.1 User experience
 
-ChatGPT Custom Connector -> MiniShop authorization -> seller login -> authorize requested scopes -> connector receives authorized access and refresh capability.
+ChatGPT Custom Connector -> Supabase OAuth authorization -> seller login -> authorize connection -> connector receives authorized access and refresh capability.
 
 The desired UX is connection-based; sellers are not expected to copy/paste personal API keys.
 
 ### 5.2 Identity
 
-Every MCP request derives identity from a validated access token. Request-supplied `user_id`, `owner_id`, or `shop_id` is never an authorization source.
+Every MCP request derives identity from a validated Supabase access token. Request-supplied `user_id`, `owner_id`, or `shop_id` is never an authorization source.
 
 V1 resolves:
 
@@ -90,7 +91,7 @@ V1 resolves:
 SellerContext {
   userId
   shopId
-  scopes
+  capabilities
 }
 ```
 
@@ -98,9 +99,11 @@ Because V1 is one account -> one shop, tools do not require a caller-selected sh
 
 ### 5.3 Token policy
 
-Use short-lived access tokens plus refresh capability and revocation. Do not expose Supabase service-role credentials to ChatGPT. Secrets and authorization headers must not be logged.
+Use Supabase OAuth 2.1 short-lived access tokens plus refresh-token rotation/revocation. Do not expose Supabase service-role credentials to ChatGPT. Secrets and authorization headers must not be logged.
 
-### 5.4 Scopes
+### 5.4 MiniShop capabilities
+
+Supabase OAuth custom protocol scopes are not required for V1. MiniShop enforces its own tool capabilities server-side after validating the Supabase identity. These capability names remain the stable MiniShop authorization vocabulary:
 
 ```text
 store:read
@@ -114,7 +117,9 @@ inventory:read
 analytics:read
 ```
 
-Rollback requires `store:publish`, because it changes live storefront state. Future commerce mutations can add `products:write`, `orders:write`, and `inventory:write` without redesigning the authorization model.
+Capabilities may be derived from a MiniShop grants table and/or trusted custom JWT claims. They are not treated as arbitrary caller-supplied fields. RLS remains a defense-in-depth tenant boundary.
+
+Rollback requires `store:publish`, because it changes live storefront state. Future commerce mutations can add `products:write`, `orders:write`, and `inventory:write` without redesigning the MiniShop authorization vocabulary.
 
 ## 6. MCP V1 Tools
 
@@ -246,10 +251,12 @@ RATE_LIMITED
 INTERNAL_ERROR
 ```
 
+`INSUFFICIENT_SCOPE` is retained as a stable external MiniShop error code for compatibility/readability even though V1 permissions are MiniShop capabilities rather than Supabase custom OAuth scopes.
+
 Suggested HTTP semantics where applicable:
 
 - 401 invalid/expired authentication
-- 403 insufficient scope
+- 403 insufficient capability
 - 404 seller resource/shop missing
 - 409 StoreDesign revision conflict
 - 422 domain validation failure
@@ -310,7 +317,7 @@ Merge-blocking cases:
 - Seller A cannot access Seller B resources
 - unauthenticated requests are denied
 - expired/revoked tokens are denied
-- missing scopes are denied
+- missing MiniShop capabilities are denied
 - `products:read` cannot mutate Store Design
 - `store:write` cannot publish/rollback
 - fake request `shop_id` cannot switch tenant
@@ -369,6 +376,7 @@ Production smoke verification covers MCP endpoint/discovery, authorization flow,
 ## 14. Explicit V1 Non-Goals
 
 - MiniShop-hosted Gemini/LLM inference
+- custom MiniShop OAuth Authorization Server
 - public ChatGPT connector-directory launch
 - Superadmin MCP tools
 - product/order/inventory writes
@@ -381,7 +389,7 @@ Production smoke verification covers MCP endpoint/discovery, authorization flow,
 
 ## 15. Success Criteria
 
-V1 is successful when a seller can connect MiniShop to ChatGPT as a custom connector, authenticate securely, and have ChatGPT:
+V1 is successful when a seller can connect MiniShop to ChatGPT as a custom connector, authenticate securely through Supabase OAuth, and have ChatGPT:
 
 1. read the seller's Store Design and public Shop Profile;
 2. change supported theme/section/profile settings without escaping domain rules;
