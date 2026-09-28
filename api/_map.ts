@@ -6,7 +6,7 @@ export function mapProductRow(row: any) {
   const images = (row.images || []).map(media);
   return {
     id: row.id,
-    itemCode: row.item_code ?? '',
+    itemCode: '',
     name: row.name,
     category: row.category,
     color: row.color,
