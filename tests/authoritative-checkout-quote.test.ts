@@ -16,6 +16,8 @@ test('Task 5 exposes one server-authoritative quote contract for Ninja Van, cust
   assert.match(sql, /item_total/i);
   assert.match(sql, /delivery_fee/i);
   assert.match(sql, /grand_total/i);
+  assert.match(sql, /shipping_zones_serialize_quote_change/i);
+  assert.match(sql, /for update/i);
 });
 
 test('place_order validates the accepted server quote inside the same order transaction', async () => {
