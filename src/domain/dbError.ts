@@ -57,6 +57,7 @@ export type DbErrorCode =
   | 'invalid_payment_reference'
   | 'shop_not_found'
   | 'duplicate_order_limit'
+  | 'quote_stale'
   | 'ninjavan_origin_missing'
   | 'ninjavan_route_unavailable'
   | 'ninjavan_rates_missing'
@@ -118,6 +119,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   invalid_payment_reference: 'ငွေလွှဲ လုပ်ဆောင်မှုနံပါတ်၏ နောက်ဆုံး ဂဏန်း ၅ လုံးကို မှန်ကန်စွာ ဖြည့်ပါ။',
   shop_not_found: 'ဆိုင် ရှာမတွေ့ပါ။',
   duplicate_order_limit: 'ဒီ Order ကို ထပ်တင်ထားပြီးဖြစ်နိုင်ပါတယ်။',
+  quote_stale: 'ဈေးနှုန်း သို့မဟုတ် ပို့ဆောင်ခ ပြောင်းလဲသွားပါပြီ။ စုစုပေါင်းအသစ်ကို စစ်ပြီး ထပ်အတည်ပြုပါ။',
   ninjavan_origin_missing: 'ဆိုင်၏ Ninja Van ပို့မည့်နေရာ မသတ်မှတ်ရသေးပါ။',
   ninjavan_route_unavailable: 'ဒီနေရာအတွက် Ninja Van ပို့ခ မရရှိသေးပါ — အခြားပို့ဆောင်မှုကို ရွေးပါ။',
   ninjavan_rates_missing: 'Ninja Van ပို့ခဒေတာ မရရှိသေးပါ — Platform Admin ကိုဆက်သွယ်ပါ။',
