@@ -565,6 +565,82 @@ async function main() {
     evidence.transaction_rollback = 'PASS';
   }
 
+  // Direct anonymous callers must not be able to bypass the first-party trust boundary.
+  // The gateway uses a narrow server-only backend credential and forwards the client
+  // identity only after api/_client-ip.ts has normalized it.
+  {
+    const lookupSeller = await createSeller('lookup-rate-limit');
+    const lookupShop = await createShop(lookupSeller.id, 'starter', 'lookup-rate-limit');
+    await setEntitlement(lookupShop.id, 'starter', 60, 0, 0);
+    const lookupProduct = await createProduct(lookupShop.id, 'lookup-rate-limit', { stock: 3 });
+    const placed = await callOrder(
+      apiClient(anonKey!, '198.51.100.121'),
+      orderArgs(lookupShop.slug, lookupProduct.id, randomUUID(), '0900000121'),
+    );
+
+    const directAnon = await apiClient(anonKey!, '198.51.100.122').rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.ok(directAnon.error, 'direct anonymous lookup RPC must be denied');
+    assert.match(errorText(directAnon.error), /permission denied|42501/i);
+
+    const validGateway = apiClient(serviceKey!, '198.51.100.123');
+    const valid = await validGateway.rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.equal(valid.error, null, errorText(valid.error));
+    assert.equal((valid.data as Record<string, unknown>).order_no, placed.order_no);
+
+    const attackerGateway = apiClient(serviceKey!, '198.51.100.125');
+    for (let i = 0; i < 5; i += 1) {
+      const invalid = await attackerGateway.rpc('lookup_order', {
+        p_shop_slug: 'x',
+        p_order_no: 'bad',
+        p_phone: '1',
+      });
+      assert.equal(invalid.error, null, errorText(invalid.error));
+      assert.equal((invalid.data as Record<string, unknown>)?.error, 'invalid_lookup');
+    }
+
+    for (let i = 0; i < 25; i += 1) {
+      const miss = await attackerGateway.rpc('lookup_order', {
+        p_shop_slug: lookupShop.slug,
+        p_order_no: `ORD-INVALID-${String(i).padStart(2, '0')}`,
+        p_phone: '0900000121',
+      });
+      assert.equal(miss.error, null, errorText(miss.error));
+      assert.equal((miss.data as Record<string, unknown>)?.error, 'order_not_found');
+    }
+
+    const throttled = await attackerGateway.rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: 'ORD-INVALID-31',
+      p_phone: '0900000121',
+    });
+    assert.ok(throttled.error, '31st gateway lookup attempt should be throttled by the database');
+    assert.match(errorText(throttled.error), /rate_limit_exceeded/);
+
+    const independentGateway = await apiClient(serviceKey!, '198.51.100.124').rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.equal(independentGateway.error, null, errorText(independentGateway.error));
+    assert.equal((independentGateway.data as Record<string, unknown>).order_no, placed.order_no);
+
+    evidence.failed_lookup_rate_limit = {
+      direct_anon_denied: 'PASS',
+      failed_attempts_persist: 'PASS',
+      trusted_gateway_throttled: 'PASS',
+      valid_lookup: 'PASS',
+      caller_isolation: 'PASS',
+    };
+  }
+
   // Product-cap concurrency at 10 / 100 / 500. Seed to limit-1 with service role,
   // then let two authenticated seller sessions race through the real trigger/RLS path.
   {

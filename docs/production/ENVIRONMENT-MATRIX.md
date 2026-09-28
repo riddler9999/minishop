@@ -34,7 +34,7 @@ Browser/public:
 Server:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` — privileged, superadmin boundary only
+- `SUPABASE_SERVICE_ROLE_KEY` — privileged, server-only; used by the authenticated superadmin boundary and the fixed-purpose order-lookup backend helper. It must never be exposed to browser code or accepted from a request.
 - `SUPERADMIN_EMAILS` — server-only allowlist
 
 The gateway temporarily accepts public `VITE_SUPABASE_*` values as a server fallback. A service-role key must never have a `VITE_` prefix.
