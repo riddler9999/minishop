@@ -49,3 +49,12 @@ test('cart drawer keeps item totals, subtotal and continue-shopping affordance v
   assert.match(source, /ဆက်ဝယ်မယ်/);
   assert.match(source, /commerce-secondary/);
 });
+
+
+test('product template preserves seller section order instead of hoisting required sections', async () => {
+  const source = await readFile(rendererPath, 'utf8');
+
+  assert.doesNotMatch(source, /sections\.find\(\(section\) => section\.type === 'product-gallery'\)/);
+  assert.doesNotMatch(source, /sections\.find\(\(section\) => section\.type === 'product-info'\)/);
+  assert.match(source, /groupProductTemplateSections/);
+});
