@@ -526,6 +526,77 @@ async function main() {
     evidence.transaction_rollback = 'PASS';
   }
 
+  // Failed lookup attempts must commit their rate-limit hit even when the business lookup fails.
+  // This uses the anonymous RPC directly so the gateway cannot mask a database rollback.
+  {
+    const lookupSeller = await createSeller('lookup-rate-limit');
+    const lookupShop = await createShop(lookupSeller.id, 'starter', 'lookup-rate-limit');
+    await setEntitlement(lookupShop.id, 'starter', 60, 0, 0);
+    const lookupProduct = await createProduct(lookupShop.id, 'lookup-rate-limit', { stock: 3 });
+    const placed = await callOrder(
+      apiClient(anonKey!, '198.51.100.121'),
+      orderArgs(lookupShop.slug, lookupProduct.id, randomUUID(), '0900000121'),
+    );
+
+    const validClient = apiClient(anonKey!, '198.51.100.122');
+    const valid = await validClient.rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.equal(valid.error, null, errorText(valid.error));
+    assert.equal((valid.data as Record<string, unknown>).order_no, placed.order_no);
+
+    const attacker = apiClient(anonKey!, '198.51.100.123');
+
+    // Malformed business inputs are attempts too. They must commit their limiter hit
+    // instead of rolling it back with an exception.
+    for (let i = 0; i < 5; i += 1) {
+      const invalid = await attacker.rpc('lookup_order', {
+        p_shop_slug: 'x',
+        p_order_no: 'bad',
+        p_phone: '1',
+      });
+      assert.equal(invalid.error, null, errorText(invalid.error));
+      assert.equal((invalid.data as Record<string, unknown>)?.error, 'invalid_lookup');
+    }
+
+    // Well-formed credentials that do not match an order must consume the same
+    // caller budget. Together with the five malformed attempts this reaches 30.
+    for (let i = 0; i < 25; i += 1) {
+      const miss = await attacker.rpc('lookup_order', {
+        p_shop_slug: lookupShop.slug,
+        p_order_no: `ORD-INVALID-${String(i).padStart(2, '0')}`,
+        p_phone: '0900000121',
+      });
+      assert.equal(miss.error, null, errorText(miss.error));
+      assert.equal((miss.data as Record<string, unknown>)?.error, 'order_not_found');
+    }
+
+    const throttled = await attacker.rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: 'ORD-INVALID-31',
+      p_phone: '0900000121',
+    });
+    assert.ok(throttled.error, '31st failed lookup should be throttled by the database');
+    assert.match(errorText(throttled.error), /rate_limit_exceeded/);
+
+    const independentCaller = await apiClient(anonKey!, '198.51.100.124').rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.equal(independentCaller.error, null, errorText(independentCaller.error));
+    assert.equal((independentCaller.data as Record<string, unknown>).order_no, placed.order_no);
+
+    evidence.failed_lookup_rate_limit = {
+      failed_attempts_persist: 'PASS',
+      direct_anon_rpc_throttled: 'PASS',
+      valid_lookup: 'PASS',
+      caller_isolation: 'PASS',
+    };
+  }
+
   // Product-cap concurrency at 10 / 100 / 500. Seed to limit-1 with service role,
   // then let two authenticated seller sessions race through the real trigger/RLS path.
   {
