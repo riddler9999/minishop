@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
-const migration = new URL('../supabase/migrations/0027_failed_lookup_rate_limit.sql', import.meta.url);
+const migration = new URL('../supabase/migrations/0028_failed_lookup_rate_limit.sql', import.meta.url);
 const backend = new URL('../api/_storefront-lookup-backend.ts', import.meta.url);
 const gateway = new URL('../api/storefront-orders.ts', import.meta.url);
 
