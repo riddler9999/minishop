@@ -3,7 +3,7 @@ import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
 import {loadBuyerStoreDesign} from './storefront-design.js';
 import {normalizeProductSourceLimit} from './storefront-product-source.js';
-import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection} from './_buyer-relations.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
   const slug = String(req.query?.slug || '').trim();
   if (!slug) return sendJson(res, 400, {error: 'Missing shop slug'});
   const sb = createClient(url, key, {auth: {persistSession: false, autoRefreshToken: false}});
-  let buyerRelations = BUYER_SAFE_RELATIONS;
+  let buyerRelations: BuyerRelations = BUYER_SAFE_RELATIONS;
   let shopResult = await sb.from(buyerRelations.shops).select('id,name,logo_url,default_delivery_fee').eq('slug', slug).maybeSingle();
   if (isMissingBuyerProjection(shopResult.error)) {
     buyerRelations = BUYER_LEGACY_RELATIONS;
