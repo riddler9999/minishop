@@ -2,14 +2,15 @@
 
 Repository: `riddler9999/minishop`  
 Reference assessment: `MiniShop-Technical-Assessment-2026-09-28.md`  
-Purpose: Moe can send **`@GitHub Task 5`** (or any task number below) and the agent must open this file, use that task's prompt, and execute it. Moe does not need to paste the prompt again.
+Path in this repository: `docs/superpowers/plans/2026-09-28-minishop-production-readiness-task-prompts.md`  
+Purpose: Moe can send **`@GitHub Task 5`** (or any task number below) and the agent must open this exact file, use that task's prompt, and execute it. Moe does not need to paste the prompt again.
 
 ## How to invoke
 
 Invoke with only `@GitHub Task 0`, `@GitHub Task 1`, ... `@GitHub Task 16`. GitHub identifies the repository; this file selects the exact execution prompt and Superpowers workflow. Do not ask Moe to paste the prompt. The agent must:
 
 1. Read this file and select exactly that numbered task.
-2. Read the referenced assessment and relevant repository instructions/specs.
+2. Read the referenced assessment if it is available in the current session or repository, plus relevant repository instructions/specs. The task prompts also contain the assessment findings needed for their own scope; do not block just because the original report is not checked into GitHub.
 3. Re-fetch the current repository, branch, PR, and CI state; this plan is not permission to trust a stale SHA or stale PR status.
 4. Execute only the selected task and its necessary verification. Do not start the next task automatically.
 5. Give a concise report with changed files, evidence, test results, remaining blockers, and exact next task number.
