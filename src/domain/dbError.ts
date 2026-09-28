@@ -41,6 +41,7 @@ export type DbErrorCode =
   | 'extra_orders_not_available'
   // Store Design lifecycle (0024)
   | 'store_design_conflict'
+  | 'store_design_revision_invalid'
   | 'store_design_invalid'
   | 'store_design_not_found'
   | 'store_design_previous_missing'
@@ -102,6 +103,8 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
     'Extra Orders ဝယ်ယူခြင်းကို Starter / Business plan (active) တွင်သာ အသုံးပြုနိုင်ပါသည်။',
   store_design_conflict:
     'Store Design ကို တခြားနေရာမှာ ပြင်ထားပါတယ်။ နောက်ဆုံး Draft ကို ပြန်ဖွင့်ပြီး ထပ်လုပ်ပါ။',
+  store_design_revision_invalid:
+    'Store Design revision မမှန်ပါ။ နောက်ဆုံး Design ကို ပြန်ဖွင့်ပြီး ထပ်လုပ်ပါ။',
   store_design_invalid:
     'Store Design အချက်အလက် မမှန်ပါ။ ပြင်ဆင်ပြီး ပြန်ကြိုးစားပါ။',
   store_design_not_found:
