@@ -154,7 +154,7 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   `0011_payment_proof_auto_plan.sql` and `0012_shop_application_transaction_id.sql` (historical
   payment-proof automation foundation), `0013`–`0015` (delivery pricing), `0016_entitlements_and_pricing.sql`
   (Pricing V1: Free Trial, subscription cycles, order entitlements, Extra Orders, idempotent order
-  consumption), `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions), `0022_production_db_hardening.sql` (trigger-helper privilege and ledger-index hardening), and pending `0023_database_rls_concurrency_reconciliation.sql` (anon-only storefront reads, Core shop-logo writes, and unique Extra Order transaction identity).
+  consumption), `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions), `0022_production_db_hardening.sql` (trigger-helper privilege and ledger-index hardening), `0023_database_rls_concurrency_reconciliation.sql` (anon-only storefront reads, Core shop-logo writes, and unique Extra Order transaction identity), `0024_store_design_lifecycle.sql` (Draft/Published Store Design lifecycle), and pending `0026_platform_shop_lifecycle.sql` (seller operational state separated from platform suspension; seller shop lifecycle deletion blocked).
   Historical migrations may contain superseded rules; current runtime truth is the latest migration
   plus `CONTEXT.md`. Never infer live migration application state from this file — check the live
   Supabase migration history before applying anything.
@@ -234,10 +234,10 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
 The Store Builder lifecycle contract is in `src/domain/storeDesign/` and
 `supabase/migrations/0024_store_design_lifecycle.sql`. Seller Draft writes and
 Publish use revision-aware RPCs; buyers receive Published only via the
-`/api/storefront?action=store-design` gateway. Until 0024 reaches Production,
-the gateway can read the legacy `shops.theme` value. Keep the applied 0023 RLS
-policy and the Production-generated `database.types.ts` intact during this
-compatibility period. Migration 0024 is not yet applied to Production.
+`/api/storefront?action=store-design` gateway. Migration 0024 is applied to Production. The gateway may still read the legacy
+`shops.theme` value only as the documented compatibility fallback when the lifecycle
+RPC is absent or returns no lifecycle row. Keep the applied 0023 RLS policy and the
+Production-generated `database.types.ts` intact during this compatibility period.
 
 Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
 

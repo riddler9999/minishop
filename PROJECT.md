@@ -810,3 +810,18 @@ after 0023 but remains **unapplied to Production**. Until the separate Productio
 0024 rollout, the buyer Store Design gateway falls back to `shops.theme` only
 when the lifecycle RPC is absent or no lifecycle row exists. Published-only
 bypass and seller tenant isolation remain guarded by the lifecycle contract.
+
+### D63 — Platform suspension is separate from seller storefront state
+**Date:** 2026-09-28  
+**Status:** REPOSITORY-READY — migration 0026 is not applied to Production by this task.
+
+Migration `0026_platform_shop_lifecycle.sql` separates two different controls that previously shared `shops.is_active`:
+
+- `seller_is_active` records the seller's operational open/close intent.
+- `platform_suspended` is platform-managed and cannot be changed by an authenticated seller.
+- `is_active` remains the buyer-facing effective compatibility flag and is derived as `seller_is_active AND NOT platform_suspended`, so existing storefront, checkout, shipping, and Store Design gates continue to fail closed.
+- The legacy `shops_owner_all FOR ALL` policy is replaced with owner SELECT/INSERT/UPDATE policies only. Sellers have no shop DELETE policy, preventing a lifecycle-row cascade from erasing entitlement/ledger history and recreating a fresh Free Trial.
+- Superadmin Suspend/Activate changes only `platform_suspended`; removing a platform suspension preserves the seller's own open/closed intent.
+
+Disposable local Supabase runtime evidence reproduced both pre-fix defects: seller reactivation of a suspended shop and seller delete → cascade → recreate with fresh Free Trial counters. The final migration/runtime suite must remain the merge gate. Production rollout remains a separate owner-approved migration task.
+

@@ -47,6 +47,41 @@ describe('superadmin API behavior', () => {
     assert.doesNotMatch(state.body.error, /shops_slug_key|duplicate key/i);
   });
 
+  it('maps platform suspend/activate actions to the platform-only suspension field', async () => {
+    const updates: Array<Record<string, unknown>> = [];
+    const admin = {
+      from(table: string) {
+        assert.equal(table, 'shops');
+        return {
+          update(patch: Record<string, unknown>) {
+            updates.push(patch);
+            return {
+              async eq(column: string, value: string) {
+                assert.equal(column, 'id');
+                assert.equal(value, 'shop-1');
+                return {error: null};
+              },
+            };
+          },
+        };
+      },
+    };
+    const handler = createSuperadminHandler({
+      requireAccess: (async () => ({admin, user: {id: 'owner'}} as any)) as any,
+    });
+
+    for (const [active, expectedSuspended] of [[false, true], [true, false]] as const) {
+      const {res, state} = responseRecorder();
+      await handler(
+        {method: 'POST', body: {action: 'toggle-shop', shopId: 'shop-1', active}},
+        res,
+      );
+      assert.equal(state.status, 200);
+      assert.deepEqual(state.body, {ok: true});
+      assert.deepEqual(updates.at(-1), {platform_suspended: expectedSuspended});
+    }
+  });
+
   it('maps known typed database errors without leaking raw diagnostics', async () => {
     const admin = {
       rpc: async () => ({data: null, error: {message: 'duplicate_payment'}}),

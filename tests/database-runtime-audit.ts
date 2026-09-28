@@ -206,6 +206,98 @@ async function main() {
   const shippingZoneA = shippingZones.find((row) => row.shop_id === shopA.id)!;
   const shippingZoneB = shippingZones.find((row) => row.shop_id === shopB.id)!;
 
+  // Task 2: platform suspension is independent from seller operational intent.
+  {
+    const suspended = await service.from('shops').update({ platform_suspended: true }).eq('id', shopA.id).select('id,is_active,seller_is_active,platform_suspended').single();
+    assert.equal(suspended.error, null, errorText(suspended.error));
+    assert.equal(suspended.data?.is_active, false);
+    assert.equal(suspended.data?.seller_is_active, true);
+    assert.equal(suspended.data?.platform_suspended, true);
+
+    const bypassPlatformField = await sellerA.client.from('shops').update({ platform_suspended: false }).eq('id', shopA.id).select('id');
+    assert.ok(bypassPlatformField.error || bypassPlatformField.data?.length === 0, 'seller cleared platform suspension');
+
+    const legacyOpenAttempt = await sellerA.client.from('shops').update({ is_active: true }).eq('id', shopA.id).select('is_active,seller_is_active,platform_suspended').single();
+    assert.equal(legacyOpenAttempt.error, null, errorText(legacyOpenAttempt.error));
+    assert.equal(legacyOpenAttempt.data?.is_active, false, 'legacy seller open bypassed platform suspension');
+    assert.equal(legacyOpenAttempt.data?.platform_suspended, true);
+
+    const anonSuspendedShop = await anon.from('shops').select('id').eq('id', shopA.id);
+    assert.equal(anonSuspendedShop.error, null, errorText(anonSuspendedShop.error));
+    assert.deepEqual(anonSuspendedShop.data, [], 'anonymous buyer could read a platform-suspended shop');
+
+    const sellerClose = await sellerA.client.from('shops').update({ seller_is_active: false }).eq('id', shopA.id).select('is_active,seller_is_active,platform_suspended').single();
+    assert.equal(sellerClose.error, null, errorText(sellerClose.error));
+    assert.equal(sellerClose.data?.is_active, false);
+    assert.equal(sellerClose.data?.seller_is_active, false);
+    assert.equal(sellerClose.data?.platform_suspended, true);
+
+    const unsuspendedClosed = ok(
+      await service.from('shops').update({ platform_suspended: false }).eq('id', shopA.id).select('is_active,seller_is_active,platform_suspended').single(),
+      'unsuspend seller-closed shop',
+    );
+    assert.equal(unsuspendedClosed.platform_suspended, false);
+    assert.equal(unsuspendedClosed.seller_is_active, false);
+    assert.equal(unsuspendedClosed.is_active, false, 'unsuspend erased seller close intent');
+
+    const sellerOpen = await sellerA.client.from('shops').update({ seller_is_active: true }).eq('id', shopA.id).select('is_active,seller_is_active,platform_suspended').single();
+    assert.equal(sellerOpen.error, null, errorText(sellerOpen.error));
+    assert.equal(sellerOpen.data?.seller_is_active, true);
+    assert.equal(sellerOpen.data?.platform_suspended, false);
+    assert.equal(sellerOpen.data?.is_active, true);
+
+    evidence.platform_suspension_bypass = 'PASS';
+    evidence.seller_operational_state = 'PASS';
+  }
+
+  // Task 2: a seller cannot delete the lifecycle root and cascade away quota,
+  // entitlements, or ledger history before recreating a fresh trial.
+  {
+    const lifecycleSeller = await createSeller('lifecycle-delete');
+    const lifecycleShop = await createShop(lifecycleSeller.id, 'free_trial', 'lifecycle-delete');
+    await setEntitlement(lifecycleShop.id, 'free_trial', 20, 7, 3);
+    const seededLedger = await service.from('entitlement_ledger').insert({
+      shop_id: lifecycleShop.id,
+      event_type: 'adjust',
+      monthly_delta: 0,
+      purchased_delta: 0,
+      source_type: 'manual',
+      source_id: `task2-${randomUUID()}`,
+      note: 'task2 lifecycle history',
+    });
+    assert.equal(seededLedger.error, null, errorText(seededLedger.error));
+
+    const deletion = await lifecycleSeller.client.from('shops').delete().eq('id', lifecycleShop.id).select('id');
+    assert.equal(deletion.error, null, errorText(deletion.error));
+    assert.deepEqual(deletion.data, [], 'seller deleted own shop lifecycle row');
+
+    const preservedShop = await service.from('shops').select('id').eq('id', lifecycleShop.id).maybeSingle();
+    assert.equal(preservedShop.error, null, errorText(preservedShop.error));
+    assert.ok(preservedShop.data, 'shop lifecycle row was deleted');
+
+    const ent = ok(
+      await service.from('shop_entitlements').select('monthly_used,purchased_balance').eq('shop_id', lifecycleShop.id).single(),
+      'preserved lifecycle entitlement',
+    );
+    assert.equal(ent.monthly_used, 7);
+    assert.equal(ent.purchased_balance, 3);
+
+    const ledger = await service.from('entitlement_ledger').select('id').eq('shop_id', lifecycleShop.id);
+    assert.equal(ledger.error, null, errorText(ledger.error));
+    assert.equal(ledger.data?.length, 2, 'lifecycle ledger history was erased');
+
+    const recreate = await lifecycleSeller.client.from('shops').insert({
+      owner_id: lifecycleSeller.id,
+      slug: `rt-recreated-${randomUUID().slice(0, 8)}`,
+      name: 'Lifecycle Recreated',
+    }).select('id');
+    assert.ok(recreate.error, 'seller recreated a second lifecycle after blocked delete');
+
+    evidence.seller_shop_delete_blocked = 'PASS';
+    evidence.lifecycle_history_preserved = 'PASS';
+    evidence.delete_recreate_trial_reset_blocked = 'PASS';
+  }
+
   // RLS SELECT: anon can read active storefront rows; authenticated Seller A
   // can read owner-scoped rows but must not inherit Seller B's anon visibility.
   {

@@ -75,7 +75,8 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 
 | `0022_production_db_hardening.sql` | Revokes direct API execution of trigger-only `init_shop_entitlement()` and adds the missing `entitlement_ledger(order_id)` covering index. **Applied to production 2026-09-25 and advisor-verified.** |
 | `0023_database_rls_concurrency_reconciliation.sql` | Narrows storefront reads to `anon`, keeps shared Ninja Van rates visible to sellers, makes shop-logo writes Core while owner/path scoped, and adds unique full transaction identity to Extra Order crediting. **Applied to Production 2026-09-28 after read-only preflight; post-verified with authenticated overlap = 0, Seller A foreign shop/product reads = 0, and anon storefront visibility preserved.** |
-| `0024_store_design_lifecycle.sql` | Adds tenant-scoped Draft/Published Store Design lifecycle RPCs and buyer Published-only read while retaining `shops.theme` compatibility. **Not applied to Production.** Run a separate Production preflight and obtain explicit approval before applying. |
+| `0024_store_design_lifecycle.sql` | Adds tenant-scoped Draft/Published Store Design lifecycle RPCs and buyer Published-only read while retaining `shops.theme` compatibility. **Applied to Production 2026-09-28** (confirmed by live migration history). |
+| `0026_platform_shop_lifecycle.sql` | Separates seller operational state from platform suspension, keeps `shops.is_active` as the derived buyer-facing effective flag, and removes seller DELETE permission on the shop lifecycle root. **Not applied to Production.** Requires a separate reviewed Production rollout. |
 
 ### Residual advisor decisions (2026-09-25)
 
