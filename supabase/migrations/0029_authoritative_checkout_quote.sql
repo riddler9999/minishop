@@ -139,7 +139,36 @@ set search_path = pg_catalog, public
 as $$
 declare
   v_quote jsonb;
+  v_shop public.shops%rowtype;
+  v_existing public.orders%rowtype;
 begin
+  -- Preserve the established idempotency contract: an ambiguous/lost-response
+  -- retry with the same key returns the already-created order even if catalog
+  -- pricing changed after that order committed.
+  if p_idempotency_key is not null then
+    select * into v_shop
+    from public.shops
+    where slug = p_shop_slug and is_active = true;
+
+    if found then
+      select * into v_existing
+      from public.orders
+      where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
+
+      if found then
+        return jsonb_build_object(
+          'order_no', v_existing.order_no,
+          'item_total', v_existing.item_total,
+          'delivery_fee', v_existing.delivery_fee,
+          'grand_total', v_existing.grand_total,
+          'payment_method', v_existing.payment_method,
+          'amount_now', case when v_existing.payment_method = 'cod' then 0 else v_existing.grand_total end,
+          'status', v_existing.status
+        );
+      end if;
+    end if;
+  end if;
+
   v_quote := public.quote_order(p_shop_slug, p_region, p_township, p_items);
 
   if p_expected_item_total is null
