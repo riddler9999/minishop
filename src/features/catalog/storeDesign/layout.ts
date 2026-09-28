@@ -1,3 +1,4 @@
+import type {StoreSection} from '@/domain/storeDesign';
 import type {ThemeLayoutStyle, ThemeVisualProfile} from '@/domain/theme';
 
 export function heroLayoutClass(hero: ThemeVisualProfile['hero']): string {
@@ -36,4 +37,38 @@ export function productDetailGridClass(layout: ThemeLayoutStyle): string {
     tech: 'md:grid-cols-[1.05fr_0.95fr] md:gap-12',
   };
   return layouts[layout];
+}
+
+
+export type ProductTemplateGroup =
+  | {kind: 'pair'; sections: [StoreSection, StoreSection]}
+  | {kind: 'single'; sections: [StoreSection]};
+
+function isPrimaryProductSection(section: StoreSection): boolean {
+  return section.type === 'product-gallery' || section.type === 'product-info';
+}
+
+function areComplementaryPrimarySections(first: StoreSection, second: StoreSection): boolean {
+  return isPrimaryProductSection(first)
+    && isPrimaryProductSection(second)
+    && first.type !== second.type;
+}
+
+export function groupProductTemplateSections(sections: StoreSection[]): ProductTemplateGroup[] {
+  const groups: ProductTemplateGroup[] = [];
+
+  for (let index = 0; index < sections.length; index += 1) {
+    const current = sections[index];
+    const next = sections[index + 1];
+
+    if (next && areComplementaryPrimarySections(current, next)) {
+      groups.push({kind: 'pair', sections: [current, next]});
+      index += 1;
+      continue;
+    }
+
+    groups.push({kind: 'single', sections: [current]});
+  }
+
+  return groups;
 }
