@@ -788,7 +788,7 @@ export type Database = {
         Args: { p_region: string; p_shop_id: string; p_township: string }
         Returns: number
       }
-      rollback_store_design_published: { Args: never; Returns: Json }
+      rollback_store_design_published: { Args: { p_expected_published_revision: number }; Returns: Json }
       save_store_design_draft: {
         Args: { p_document: Json; p_expected_revision: number }
         Returns: Json
