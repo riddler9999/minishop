@@ -825,3 +825,16 @@ Migration `0026_platform_shop_lifecycle.sql` separates two different controls th
 
 Disposable local Supabase runtime evidence reproduced both pre-fix defects: seller reactivation of a suspended shop and seller delete → cascade → recreate with fresh Free Trial counters. The final migration/runtime suite must remain the merge gate. Production rollout remains a separate owner-approved migration task.
 
+
+
+### D64 — Anonymous buyer projection boundary
+**Date:** 2026-09-28
+**Status:** REPOSITORY-READY — migration 0027 is not applied to Production by this task.
+
+Migration `0027_anonymous_storefront_projection.sql` replaces direct anonymous SELECT on tenant base tables with narrow buyer-safe projection views: `buyer_public_shops`, `buyer_public_products`, `buyer_public_payment_accounts`, and `buyer_public_shipping_zones`. Owner/admin paths continue to use their authenticated/service-role base-table boundaries.
+
+Only fields required by the current storefront and checkout are projected. Seller-only/internal fields such as `shops.owner_id`, `shops.plan`, product `item_code`, internal row IDs on payment/shipping configuration, and audit timestamps are not buyer-readable.
+
+Production rollout is non-breaking: buyer gateways prefer the projection views, but if PostgREST specifically reports the new views as undeployed they fall back to the pre-0027 active-row base-table reads. All other projection errors fail closed. Once 0027 is applied, direct anon SELECT on the four base tables is revoked and the fallback is no longer reachable.
+
+`0027` has **not** been applied to Production by this task. Applying it still requires explicit owner approval and the normal migration preflight.
