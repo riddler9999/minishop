@@ -47,6 +47,13 @@ export type DbErrorCode =
   | 'store_design_previous_missing'
   // Owner-only entitlement RPC guards (service_role; sellers rarely see these)
   | 'duplicate_payment'
+  | 'payment_identity_required'
+  | 'duplicate_payment_identity'
+  | 'idempotency_key_required'
+  | 'idempotency_conflict'
+  | 'invalid_financial_action'
+  | 'invalid_financial_request'
+  | 'financial_request_not_found'
   | 'invalid_credit_quantity'
   | 'unknown_purchase'
   | 'unknown_shop'
@@ -112,6 +119,13 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   store_design_previous_missing:
     'ပြန်ပြောင်းနိုင်မယ့် အရင် Published Design မရှိသေးပါ။',
   duplicate_payment: 'ဤငွေပေးချေမှုကို ထည့်သွင်းပြီးဖြစ်ပါသည်။',
+  payment_identity_required: 'အတည်ပြုထားသော Transaction ID လိုအပ်ပါသည်။',
+  duplicate_payment_identity: 'ဒီ Transaction ID ကို အခြားငွေကြေးလုပ်ဆောင်ချက်မှာ အသုံးပြုပြီးဖြစ်ပါသည်။',
+  idempotency_key_required: 'တောင်းဆိုမှု ID မရှိပါ — ပြန်ကြိုးစားပါ။',
+  idempotency_conflict: 'ဒီတောင်းဆိုမှု ID ကို မတူညီသောလုပ်ဆောင်ချက်အတွက် အသုံးပြုပြီးဖြစ်ပါသည်။',
+  invalid_financial_action: 'ငွေကြေးလုပ်ဆောင်ချက် မမှန်ပါ။',
+  invalid_financial_request: 'ငွေကြေးတောင်းဆိုမှု အချက်အလက် မပြည့်စုံပါ။',
+  financial_request_not_found: 'ငွေကြေးတောင်းဆိုမှု ရှာမတွေ့ပါ။',
   invalid_credit_quantity: 'Extra Orders အရေအတွက် မမှန်ပါ။',
   unknown_purchase: 'Extra Orders ဝယ်ယူမှု ရှာမတွေ့ပါ။',
   unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
