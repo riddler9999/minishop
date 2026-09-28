@@ -49,7 +49,7 @@ test('checkout semantics are themed without changing order/payment contracts', a
 
   assert.match(source, /api\.createOrder/);
   assert.match(source, /idempotencyKey/);
-  assert.match(source, /resolveShippingFee/);
+  assert.match(source, /api\.quoteOrder/);
   assert.match(source, /PAYMENT_METHODS/);
   assert.match(source, /paymentAccounts/);
 });
