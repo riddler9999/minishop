@@ -5,6 +5,7 @@ import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
 import {normalizeCheckoutInput} from './checkout-input.js';
 import {forwardedClientIp} from './_client-ip.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection} from './_buyer-relations.js';
 
 type CheckoutDeps = {
   createClient: typeof createClient;
@@ -27,17 +28,29 @@ export function createCheckoutHandler(
     if (req.method === 'GET') {
       const slug = clean(req.query?.slug, 100);
       if (!slug) return sendJson(res, 400, {error: 'Missing shop'});
-      const {data: shop} = await sb
-        .from('shops')
+      let buyerRelations = BUYER_SAFE_RELATIONS;
+      let shopResult = await sb
+        .from(buyerRelations.shops)
         .select('id,default_delivery_fee,delivery_service,origin_region,origin_township')
         .eq('slug', slug)
-        .eq('is_active', true)
         .maybeSingle();
+      if (isMissingBuyerProjection(shopResult.error)) {
+        buyerRelations = BUYER_LEGACY_RELATIONS;
+        shopResult = await sb
+          .from(buyerRelations.shops)
+          .select('id,default_delivery_fee,delivery_service,origin_region,origin_township')
+          .eq('slug', slug)
+          .eq('is_active', true)
+          .maybeSingle();
+      }
+      const {data: shop} = shopResult;
       if (!shop) return sendJson(res, 404, {error: 'Shop not found'});
 
+      let accountsQuery: any = sb.from(buyerRelations.paymentAccounts).select('provider,account_name,phone').eq('shop_id', shop.id);
+      if (buyerRelations === BUYER_LEGACY_RELATIONS) accountsQuery = accountsQuery.eq('is_active', true);
       const [{data: accounts, error: ae}, {data: zones, error: ze}] = await Promise.all([
-        sb.from('payment_accounts').select('provider,account_name,phone').eq('shop_id', shop.id).eq('is_active', true),
-        sb.from('shipping_zones').select('region,township,fee').eq('shop_id', shop.id),
+        accountsQuery,
+        sb.from(buyerRelations.shippingZones).select('region,township,fee').eq('shop_id', shop.id),
       ]);
       if (ae || ze) return sendJson(res, 502, {error: 'Checkout configuration unavailable'});
 
