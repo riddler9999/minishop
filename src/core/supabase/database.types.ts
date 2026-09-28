@@ -320,6 +320,39 @@ export type Database = {
           },
         ]
       }
+      financial_admin_requests: {
+        Row: {
+          action: string
+          created_at: string
+          idempotency_key: string
+          payment_identity: string
+          purchase_id: string | null
+          request_fingerprint: string
+          result: Json
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          idempotency_key: string
+          payment_identity: string
+          purchase_id?: string | null
+          request_fingerprint: string
+          result?: Json
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          idempotency_key?: string
+          payment_identity?: string
+          purchase_id?: string | null
+          request_fingerprint?: string
+          result?: Json
+          shop_id?: string
+        }
+        Relationships: []
+      }
       payment_proofs: {
         Row: {
           amount: number | null
@@ -715,8 +748,8 @@ export type Database = {
         Returns: Json
       }
       admin_activate_subscription: {
-        Args: { p_payment_ref?: string; p_plan: string; p_shop_id: string }
-        Returns: undefined
+        Args: { p_idempotency_key: string; p_payment_identity: string; p_plan: string; p_shop_id: string }
+        Returns: Json
       }
       admin_adjust_entitlement: {
         Args: {
@@ -732,20 +765,20 @@ export type Database = {
         Returns: undefined
       }
       admin_credit_order_pack: {
-        Args: { p_purchase_id: string; p_transaction_id: string }
-        Returns: undefined
+        Args: { p_idempotency_key: string; p_payment_identity: string; p_purchase_id: string }
+        Returns: Json
       }
       admin_renew_subscription: {
-        Args: { p_payment_ref?: string; p_shop_id: string }
-        Returns: undefined
+        Args: { p_idempotency_key: string; p_payment_identity: string; p_shop_id: string }
+        Returns: Json
       }
       admin_schedule_downgrade: {
         Args: { p_shop_id: string; p_target_plan: string }
         Returns: undefined
       }
       admin_upgrade_plan: {
-        Args: { p_payment_ref?: string; p_shop_id: string }
-        Returns: undefined
+        Args: { p_idempotency_key: string; p_payment_identity: string; p_shop_id: string }
+        Returns: Json
       }
       current_shop_entitlement: { Args: never; Returns: Json }
       current_shop_usage: { Args: never; Returns: Json }
