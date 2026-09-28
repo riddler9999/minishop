@@ -27,8 +27,8 @@ test('place_order validates the accepted server quote inside the same order tran
   assert.match(sql, /p_expected_item_total bigint/i);
   assert.match(sql, /p_expected_delivery_fee bigint/i);
   assert.match(sql, /quote_stale/i);
-  assert.match(sql, /v_item_total <> p_expected_item_total/i);
-  assert.match(sql, /v_delivery <> p_expected_delivery_fee/i);
+  assert.match(sql, /\(v_quote->>'item_total'\)::bigint <> p_expected_item_total/i);
+  assert.match(sql, /\(v_quote->>'delivery_fee'\)::bigint <> p_expected_delivery_fee/i);
 });
 
 test('checkout API has a quote action and maps stale quotes to HTTP 409 with the fresh authoritative quote', async () => {
