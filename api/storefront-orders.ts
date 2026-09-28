@@ -32,5 +32,17 @@ export default async function handler(req: any, res: any) {
     }
     return sendJson(res, 502, {error: 'Order lookup unavailable'});
   }
+
+  const lookupError =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? String((data as Record<string, unknown>).error ?? '')
+      : '';
+  if (lookupError === 'invalid_lookup') {
+    return sendJson(res, 400, {error: mapDbError(lookupError)});
+  }
+  if (lookupError === 'order_not_found') {
+    return sendJson(res, 404, {error: mapDbError(lookupError)});
+  }
+
   return sendJson(res, 200, {order: data}, false);
 }
