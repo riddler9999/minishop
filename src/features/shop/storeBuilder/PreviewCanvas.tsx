@@ -14,6 +14,15 @@ type Props = {
   onSectionSelect: (sectionId: string) => void;
 };
 
+function PreviewProductCard({product}: {product: Product}) {
+  return (
+    <article className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
+      <div className="aspect-square bg-slate-100">{product.image && <img src={product.image} alt="" className="h-full w-full object-cover" />}</div>
+      <div className="space-y-1 p-3"><p className="truncate text-sm font-semibold">{product.name}</p><p className="text-xs">{product.price.toLocaleString()} ကျပ်</p></div>
+    </article>
+  );
+}
+
 export function PreviewCanvas({document, template, products, categories, shopName, viewport, selectedSectionId, onSectionSelect}: Props) {
   const visual = getThemeVisual({presetId: document.themeId, accentColor: document.globalSettings.accentColor});
   return (
@@ -23,7 +32,17 @@ export function PreviewCanvas({document, template, products, categories, shopNam
         <div className="flex min-h-16 items-center justify-between gap-3 border-b border-black/5 px-5 sm:px-7" style={{backgroundColor: visual.canvas, color: visual.text}}>
           <span className="truncate text-sm font-bold">{shopName}</span><span className="text-xs font-medium opacity-60">☰</span>
         </div>
-        <StorefrontRenderer document={document} template={template} products={products} categories={categories} product={products[0] ?? null} renderProductCard={(product) => <article className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm"><div className="aspect-square bg-slate-100">{product.image && <img src={product.image} alt="" className="h-full w-full object-cover" />}</div><div className="space-y-1 p-3"><p className="truncate text-sm font-semibold">{product.name}</p><p className="text-xs">{product.price.toLocaleString()} ကျပ်</p></div></article>} renderRequiredCommerce={(buyNow) => <div className="px-5 pb-6"><div className="rounded-lg px-4 py-3 text-center text-sm font-semibold text-white" style={{backgroundColor: visual.accent}}>{buyNow.label}</div></div>} selectedSectionId={selectedSectionId} onSectionSelect={onSectionSelect} />
+        <StorefrontRenderer
+          document={document}
+          template={template}
+          products={products}
+          categories={categories}
+          product={products[0] ?? null}
+          renderProductCard={(product) => <PreviewProductCard product={product} />}
+          renderRequiredCommerce={(buyNow) => <div className="px-5 pb-6"><div className="rounded-lg px-4 py-3 text-center text-sm font-semibold text-white" style={{backgroundColor: visual.accent}}>{buyNow.label}</div></div>}
+          selectedSectionId={selectedSectionId}
+          onSectionSelect={onSectionSelect}
+        />
         {products.length === 0 && <p className="border-t border-slate-100 px-5 py-6 text-center text-xs text-slate-500">ပစ္စည်းထည့်ပြီးတာနဲ့ ဒီနေရာမှာ အစမ်းမြင်ရပါမယ်။</p>}
       </div>
     </div>

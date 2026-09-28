@@ -80,7 +80,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         <Link to="/admin/online-store/themes" onClick={(event) => { if (editor.status !== 'saved' && !window.confirm('မူကြမ်း မသိမ်းပြီးသေးပါ။ ပြန်သွားမလား။')) event.preventDefault(); }} aria-label="Theme များသို့ ပြန်သွားမည်" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0 flex-1 lg:flex-none">
           <p className="truncate text-sm font-bold leading-tight">ဆိုင်ဒီဇိုင်း ပြင်ဆင်ရန်</p>
-          <p className="mt-0.5 text-[11px] font-medium text-slate-500">Store Builder · မူကြမ်း</p>
+          <p className="mt-0.5 text-[11px] font-medium text-slate-500" role="status">မူကြမ်း · {saveLabel}</p>
         </div>
         <div className="order-3 flex w-full min-w-0 items-center gap-2 sm:order-none sm:w-auto sm:flex-1 sm:justify-center">
           <label className="relative min-w-0 flex-1 sm:max-w-[220px] sm:flex-none">
@@ -96,7 +96,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="hidden items-center gap-1.5 text-xs font-medium text-slate-500 sm:inline-flex" role="status" data-save-status={editor.status}><Check className="h-3.5 w-3.5" />{saveLabel}</span>
+          <span className="hidden items-center gap-1.5 text-xs font-medium text-slate-500 sm:inline-flex" data-save-status={editor.status}>{editor.status === 'saved' && <Check className="h-3.5 w-3.5" />}{saveLabel}</span>
           {editor.status === 'retry' && <button type="button" onClick={() => runSave(editor)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold">ပြန်သိမ်းမည်</button>}
           <button type="button" disabled={editor.status !== 'saved' || editor.blocked} onClick={() => void publishSavedDraft(editor, publishDraft)} className="min-h-10 shrink-0 rounded-lg bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm">ထုတ်ပြမည်</button>
         </div>
