@@ -11,6 +11,7 @@
 import {billingApi} from '@/features/billing/api';
 import {catalogAdminApi} from '@/features/catalog/api/admin';
 import {catalogStorefrontApi} from '@/features/catalog/api/storefront';
+import {catalogStoreDesignApi} from '@/features/catalog/api/storeDesign';
 import {checkoutApi} from '@/features/checkout/api';
 import {orderAdminApi} from '@/features/orders/api/admin';
 import {orderLookupApi} from '@/features/orders/api/storefront';
@@ -18,10 +19,12 @@ import {shippingAdminApi} from '@/features/shipping/api';
 import {paymentAccountsApi} from '@/features/shop/api/paymentAccounts';
 import {shopSettingsApi} from '@/features/shop/api/settings';
 import {shopStorageApi} from '@/features/shop/api/storage';
+import {storeDesignAdminApi} from '@/features/shop/api/storeDesign';
 
 /** Buyer-facing surface: catalog reads, checkout, order lookup. */
 export const api = {
   ...catalogStorefrontApi,
+  ...catalogStoreDesignApi,
   ...checkoutApi,
   ...orderLookupApi,
 };
@@ -34,5 +37,6 @@ export const adminApi = {
   ...shopSettingsApi,
   ...paymentAccountsApi,
   ...shopStorageApi,
+  ...storeDesignAdminApi,
   ...billingApi,
 };

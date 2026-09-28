@@ -9,6 +9,7 @@
 import type {AdminOrder, OrderResult, TrackedOrder} from '@/domain/order';
 import type {Product, ProductPatch} from '@/domain/product';
 import type {MerchantAccount} from '@/domain/shop';
+import {createDefaultStoreDesign, resolveProductSource, type ProductSource} from '@/domain/storeDesign';
 
 // Loaded lazily to avoid a static import cycle with data/products.ts.
 import {DEMO_MERCHANT_ACCOUNTS, DEMO_PRODUCTS, demoCategories} from '@/data/demo/fixtures';
@@ -23,12 +24,6 @@ function unit(p: Product): number {
   return p.isPromotion && p.promoPrice ? p.promoPrice : p.price;
 }
 
-// ---- PRODUCT OVERRIDE LAYER ------------------------------------------------
-// The demo catalog (DEMO_PRODUCTS) is a compile-time constant, so admin edits
-// can't mutate it. Instead we persist a per-id patch to localStorage and merge
-// it over the catalog on every read. This keeps ONE product source of truth
-// that both the storefront and the admin console read through, so an edit made
-// in /admin is immediately visible on the shop.
 function loadOverrides(): Record<string, ProductPatch> {
   try {
     const raw = localStorage.getItem(OVERRIDES_KEY);
@@ -46,8 +41,6 @@ function saveOverrides(all: Record<string, ProductPatch>) {
   }
 }
 
-// Apply a stored patch over a base product, re-deriving the computed fields
-// (inStock, image) so the merged product is always internally consistent.
 function applyOverride(base: Product, patch: ProductPatch | undefined): Product {
   if (!patch) return base;
   const price = patch.price ?? base.price;
@@ -66,7 +59,6 @@ function applyOverride(base: Product, patch: ProductPatch | undefined): Product 
   };
 }
 
-// The resolved catalog — DEMO_PRODUCTS with any admin overrides applied.
 function resolvedProducts(): Product[] {
   const overrides = loadOverrides();
   return DEMO_PRODUCTS.map((p) => applyOverride(p, overrides[p.id]));
@@ -93,7 +85,24 @@ function normPhone(p: string): string {
   return p.replace(/[^0-9]/g, '');
 }
 
+function demoDemand(): Map<string, number> {
+  const demand = new Map<string, number>();
+  for (const orders of Object.values(loadOrders())) {
+    for (const order of orders) {
+      for (const item of order.items) {
+        const product = resolvedProducts().find((candidate) => candidate.name === item.name);
+        if (product) demand.set(product.id, (demand.get(product.id) ?? 0) + item.qty);
+      }
+    }
+  }
+  return demand;
+}
+
 export const api = {
+  async loadPublishedStoreDesign() {
+    return createDefaultStoreDesign();
+  },
+
   async products(opts: {
     scope?: 'active' | 'all';
     featured?: boolean;
@@ -115,12 +124,16 @@ export const api = {
           (p.color ?? '').toLowerCase().includes(q),
       );
     }
-    // Newest first by arrivalDate.
     list = [...list].sort((a, b) => (b.arrivalDate ?? '').localeCompare(a.arrivalDate ?? ''));
     const total = list.length;
     const offset = opts.offset ?? 0;
     const limit = opts.limit ?? total;
     return {products: list.slice(offset, offset + limit), total};
+  },
+
+  async sectionProducts(source: ProductSource): Promise<{products: Product[]}> {
+    await delay(120);
+    return {products: resolveProductSource(source, resolvedProducts(), {demandByProductId: demoDemand()})};
   },
 
   async product(id: string): Promise<{product: Product}> {
@@ -140,9 +153,6 @@ export const api = {
     return {accounts: DEMO_MERCHANT_ACCOUNTS};
   },
 
-  // Demo storefront computes fees from the static locations table (Checkout
-  // branches on isLiveBackend), so this is unused — present only for type
-  // compatibility with the live `api` (see @/data/dataSource.ts's Proxy).
   async shippingConfig(): Promise<{zones: {region: string; township: string; fee: number}[]; defaultFee: number}> {
     return {zones: [], defaultFee: 0};
   },
@@ -156,7 +166,6 @@ export const api = {
       shippingFee: number;
     };
 
-    // Re-price server-side style: trust the (resolved) demo catalog, not the client.
     const catalog = resolvedProducts();
     const lines = b.items.map((it) => {
       const p = catalog.find((x) => x.id === it.id);
@@ -171,11 +180,9 @@ export const api = {
     const deliveryFee = b.shippingFee || 0;
     const grandTotal = itemTotal + deliveryFee;
     const paymentMethod = b.paymentMethod === 'kpay' || b.paymentMethod === 'wave' ? b.paymentMethod : 'cod';
-    // Cash on Delivery pays on delivery, so nothing is due now.
     const amountNow = paymentMethod === 'cod' ? 0 : grandTotal;
     const methodLabel =
       paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod === 'wave' ? 'WavePay' : 'KBZPay';
-    // COD orders are simply awaiting delivery; online orders await payment check.
     const status = paymentMethod === 'cod' ? 'cod_pending' : 'pending_payment';
 
     const orderId = 'DEMO-' + Date.now().toString(36).toUpperCase().slice(-6);
@@ -207,7 +214,6 @@ export const api = {
 
   async uploadSlip(orderId: string, _imageBase64: string, _filename?: string): Promise<{ok: boolean; slipUrl: string}> {
     await delay(300);
-    // Demo: mark the stored order as having a slip (no real upload).
     const all = loadOrders();
     for (const key of Object.keys(all)) {
       const o = all[key].find((x) => x.order_id === orderId);
@@ -232,18 +238,9 @@ export const api = {
   },
 };
 
-// ---- ADMIN API -------------------------------------------------------------
-// Client-side admin surface over the SAME demo data. Product edits write to the
-// override layer; order edits write to the per-phone order store. Everything is
-// localStorage-backed, so it's per-browser demo state — there is no real server
-// here. (The admin console's login gate is real Supabase Auth — see
-// @/features/auth/adminAuth.tsx — and the admin console never reaches this
-// module: @/data/dataSource.ts re-exports the LIVE adminApi unconditionally.)
 export const adminApi = {
-  // --- Products ---
   async listProducts(): Promise<{products: Product[]}> {
     await delay(120);
-    // Admin sees ALL products (including hidden), newest first.
     const list = [...resolvedProducts()].sort((a, b) =>
       (b.arrivalDate ?? '').localeCompare(a.arrivalDate ?? ''),
     );
@@ -267,7 +264,6 @@ export const adminApi = {
     return {ok: true};
   },
 
-  // --- Orders ---
   async listOrders(): Promise<{orders: AdminOrder[]}> {
     await delay(160);
     const all = loadOrders();

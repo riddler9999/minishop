@@ -785,7 +785,7 @@ Implementation truth:
 
 ### D61 — Database RLS + Extra Order Transaction Reconciliation
 **Date:** 2026-09-27
-**Status:** REPOSITORY-PROVEN / PRODUCTION APPLY PENDING
+**Status:** APPLIED TO PRODUCTION 2026-09-28
 
 Migration `0023_database_rls_concurrency_reconciliation.sql` is the forward-only reconciliation for the database audit findings:
 
@@ -796,4 +796,17 @@ Migration `0023_database_rls_concurrency_reconciliation.sql` is the forward-only
 
 The behavioral gate replays migrations through `0023` in disposable local Supabase and tests RLS, PostgREST/RPC, Storage, idempotency, stock, entitlement, rollback, product caps, billing, and Extra Order races. Applied historical migration `0007` remains immutable; the local runner applies its hosted-helper compatibility guard only to a temporary migration copy.
 
-Migration `0023` has **not** been applied to Production. Production DDL still requires a separate explicit owner approval and coordinated server/database rollout.
+Migration `0023` has been applied to Production and its anon-only storefront
+policies and seller tenant isolation were post-verified. The generated database
+types on main reflect the post-0023 Production schema.
+
+### D62 — Store Builder reconciliation onto current main
+**Date:** 2026-09-28
+
+Store Builder #104–#116 is reconciled onto the current main while retaining the
+Production-applied 0023 migration, its regenerated `database.types.ts`, and the
+newer pricing, authentication, and landing changes. Migration 0024 is committed
+after 0023 but remains **unapplied to Production**. Until the separate Production
+0024 rollout, the buyer Store Design gateway falls back to `shops.theme` only
+when the lifecycle RPC is absent or no lifecycle row exists. Published-only
+bypass and seller tenant isolation remain guarded by the lifecycle contract.
