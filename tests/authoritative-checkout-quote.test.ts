@@ -49,7 +49,7 @@ test('live checkout displays server quote totals and submits the accepted quote 
   assert.match(source, /api\.quoteOrder/);
   assert.match(source, /expectedItemTotal/);
   assert.match(source, /expectedDeliveryFee/);
-  assert.match(source, /quote\.grandTotal/);
+  assert.match(source, /quote\?\.grandTotal/);
   assert.doesNotMatch(source, /shippingFee:\s*fee/);
 });
 
