@@ -204,7 +204,8 @@ export default function Products() {
         <CategoryChips categories={categories} category={category} update={update} base={ui.chip} active={ui.chipActive} />
         {err && <div className={cx('mb-5 p-4 text-sm', ui.error)}>{err}</div>}
 
-        {storeDesign ? (
+        {/* The catalog grid owns search, category filtering, and pagination. */}
+        {storeDesign && !category && !q && total <= PAGE ? (
           <ResolvedStorefrontRenderer
             document={storeDesign}
             template="collection"

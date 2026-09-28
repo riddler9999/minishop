@@ -13,6 +13,13 @@ begin
   if (select count(*) from public.shops where theme is not null) is distinct from 2 then
     raise exception 'legacy shops.theme must remain untouched';
   end if;
+  if exists (
+    select 1 from public.store_designs sd
+    where sd.published_document #>> '{templates,home,sections,2,settings,productSource,rule}' is distinct from 'new_arrivals'
+       or sd.published_document #>> '{templates,collection,sections,0,settings,productSource,rule}' is distinct from 'new_arrivals'
+  ) then
+    raise exception 'legacy backfill must retain visible home and collection products';
+  end if;
 end;
 $$;
 
