@@ -17,7 +17,7 @@ test('cart storage follows the active storefront route instead of a one-time glo
 test('route cart scope distinguishes live shops and demo surfaces', async () => {
   const source = fs.readFileSync('src/features/cart/state.tsx', 'utf8');
 
-  assert.match(source, /\/s\/([^/]+)/);
+  assert.match(source, /pathname\.match\(\/\^\\\/s\\\/\(\[\^\/\]\+\)/);
   assert.match(source, /fashion-demo/);
   assert.match(source, /furniture-demo/);
   assert.match(source, /mobile-store-demo/);
