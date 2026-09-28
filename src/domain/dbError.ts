@@ -18,6 +18,7 @@ export type DbErrorCode =
   // Platform-managed field guards (shops / orders triggers)
   | 'plan_is_platform_managed'
   | 'owner_is_platform_managed'
+  | 'platform_suspension_is_platform_managed'
   | 'business_plan_required'
   | 'billing_fields_are_platform_managed'
   // Shop-application gate guards (shop_applications trigger, 0010)
@@ -73,6 +74,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   rate_limit_exceeded: 'တောင်းဆိုမှုများလွန်းနေပါတယ်။ ခဏနားပြီး ပြန်ကြိုးစားပါ။',
   plan_is_platform_managed: 'Plan ပြောင်းရန် Platform Admin ကိုဆက်သွယ်ပါ။',
   owner_is_platform_managed: 'ဆိုင်ပိုင်ရှင် အချက်အလက်ကို ပြောင်းလဲ၍မရပါ — Platform Admin ကိုဆက်သွယ်ပါ။',
+  platform_suspension_is_platform_managed: 'ဆိုင်၏ Platform Suspension အခြေအနေကို ကိုယ်တိုင် ပြောင်းလဲ၍မရပါ — Platform Admin ကိုဆက်သွယ်ပါ။',
   business_plan_required: 'ဒီလုပ်ဆောင်ချက်ကို Business Plan မှာသာ အသုံးပြုနိုင်ပါတယ်။',
   billing_fields_are_platform_managed:
     'ငွေတောင်းခံမှုဆိုင်ရာ အချက်အလက်ကို ပြောင်းလဲ၍မရပါ — Platform မှ စီမံခန့်ခွဲပါသည်။',

@@ -587,6 +587,8 @@ export type Database = {
           delivery_service: string
           id: string
           is_active: boolean
+          platform_suspended: boolean
+          seller_is_active: boolean
           logo_url: string | null
           name: string
           origin_region: string | null
@@ -604,6 +606,8 @@ export type Database = {
           delivery_service?: string
           id?: string
           is_active?: boolean
+          platform_suspended?: boolean
+          seller_is_active?: boolean
           logo_url?: string | null
           name: string
           origin_region?: string | null
@@ -621,6 +625,8 @@ export type Database = {
           delivery_service?: string
           id?: string
           is_active?: boolean
+          platform_suspended?: boolean
+          seller_is_active?: boolean
           logo_url?: string | null
           name?: string
           origin_region?: string | null
