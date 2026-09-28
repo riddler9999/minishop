@@ -526,8 +526,9 @@ async function main() {
     evidence.transaction_rollback = 'PASS';
   }
 
-  // Failed lookup attempts must commit their rate-limit hit even when the business lookup fails.
-  // This uses the anonymous RPC directly so the gateway cannot mask a database rollback.
+  // Direct anonymous callers must not be able to bypass the first-party trust boundary.
+  // The gateway uses a narrow server-only backend credential and forwards the client
+  // identity only after api/_client-ip.ts has normalized it.
   {
     const lookupSeller = await createSeller('lookup-rate-limit');
     const lookupShop = await createShop(lookupSeller.id, 'starter', 'lookup-rate-limit');
@@ -538,8 +539,16 @@ async function main() {
       orderArgs(lookupShop.slug, lookupProduct.id, randomUUID(), '0900000121'),
     );
 
-    const validClient = apiClient(anonKey!, '198.51.100.122');
-    const valid = await validClient.rpc('lookup_order', {
+    const directAnon = await apiClient(anonKey!, '198.51.100.122').rpc('lookup_order', {
+      p_shop_slug: lookupShop.slug,
+      p_order_no: placed.order_no,
+      p_phone: '0900000121',
+    });
+    assert.ok(directAnon.error, 'direct anonymous lookup RPC must be denied');
+    assert.match(errorText(directAnon.error), /permission denied|42501/i);
+
+    const gateway = apiClient(serviceKey!, '198.51.100.123');
+    const valid = await gateway.rpc('lookup_order', {
       p_shop_slug: lookupShop.slug,
       p_order_no: placed.order_no,
       p_phone: '0900000121',
@@ -547,12 +556,8 @@ async function main() {
     assert.equal(valid.error, null, errorText(valid.error));
     assert.equal((valid.data as Record<string, unknown>).order_no, placed.order_no);
 
-    const attacker = apiClient(anonKey!, '198.51.100.123');
-
-    // Malformed business inputs are attempts too. They must commit their limiter hit
-    // instead of rolling it back with an exception.
     for (let i = 0; i < 5; i += 1) {
-      const invalid = await attacker.rpc('lookup_order', {
+      const invalid = await gateway.rpc('lookup_order', {
         p_shop_slug: 'x',
         p_order_no: 'bad',
         p_phone: '1',
@@ -561,10 +566,8 @@ async function main() {
       assert.equal((invalid.data as Record<string, unknown>)?.error, 'invalid_lookup');
     }
 
-    // Well-formed credentials that do not match an order must consume the same
-    // caller budget. Together with the five malformed attempts this reaches 30.
     for (let i = 0; i < 25; i += 1) {
-      const miss = await attacker.rpc('lookup_order', {
+      const miss = await gateway.rpc('lookup_order', {
         p_shop_slug: lookupShop.slug,
         p_order_no: `ORD-INVALID-${String(i).padStart(2, '0')}`,
         p_phone: '0900000121',
@@ -573,25 +576,26 @@ async function main() {
       assert.equal((miss.data as Record<string, unknown>)?.error, 'order_not_found');
     }
 
-    const throttled = await attacker.rpc('lookup_order', {
+    const throttled = await gateway.rpc('lookup_order', {
       p_shop_slug: lookupShop.slug,
       p_order_no: 'ORD-INVALID-31',
       p_phone: '0900000121',
     });
-    assert.ok(throttled.error, '31st failed lookup should be throttled by the database');
+    assert.ok(throttled.error, '31st gateway lookup attempt should be throttled by the database');
     assert.match(errorText(throttled.error), /rate_limit_exceeded/);
 
-    const independentCaller = await apiClient(anonKey!, '198.51.100.124').rpc('lookup_order', {
+    const independentGateway = await apiClient(serviceKey!, '198.51.100.124').rpc('lookup_order', {
       p_shop_slug: lookupShop.slug,
       p_order_no: placed.order_no,
       p_phone: '0900000121',
     });
-    assert.equal(independentCaller.error, null, errorText(independentCaller.error));
-    assert.equal((independentCaller.data as Record<string, unknown>).order_no, placed.order_no);
+    assert.equal(independentGateway.error, null, errorText(independentGateway.error));
+    assert.equal((independentGateway.data as Record<string, unknown>).order_no, placed.order_no);
 
     evidence.failed_lookup_rate_limit = {
+      direct_anon_denied: 'PASS',
       failed_attempts_persist: 'PASS',
-      direct_anon_rpc_throttled: 'PASS',
+      trusted_gateway_throttled: 'PASS',
       valid_lookup: 'PASS',
       caller_isolation: 'PASS',
     };
