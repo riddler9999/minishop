@@ -6,6 +6,7 @@ const hardening = new URL('../supabase/migrations/0007_production_hardening.sql'
 const lookupFix = new URL('../supabase/migrations/0027_failed_lookup_rate_limit.sql', import.meta.url);
 const checkoutApi = new URL('../api/checkout.ts', import.meta.url);
 const lookupApi = new URL('../api/storefront-orders.ts', import.meta.url);
+const lookupBackend = new URL('../api/_storefront-lookup-backend.ts', import.meta.url);
 
 describe('distributed API rate limiting', () => {
   it('stores request hits in Postgres and serializes concurrent counters', async () => {
@@ -31,15 +32,17 @@ describe('distributed API rate limiting', () => {
     assert.doesNotMatch(lookup, /_rate-limit|new Map<.*count/i);
   });
 
-  it('forwards the requester IP across the Vercel-to-Supabase hop', async () => {
-    const [checkout, lookup, clientIp] = await Promise.all([
+  it('forwards the requester IP across the trusted Vercel-to-Supabase lookup hop', async () => {
+    const [checkout, lookup, backend, clientIp] = await Promise.all([
       readFile(checkoutApi, 'utf8'),
       readFile(lookupApi, 'utf8'),
+      readFile(lookupBackend, 'utf8'),
       readFile(new URL('../api/_client-ip.ts', import.meta.url), 'utf8'),
     ]);
     assert.match(clientIp, /x-forwarded-for/);
     assert.match(checkout, /'x-forwarded-for': forwardedClientIp\(req\)/);
-    assert.match(lookup, /'x-forwarded-for': forwardedClientIp\(req\)/);
+    assert.match(lookup, /clientIp: forwardedClientIp\(req\)/);
+    assert.match(backend, /'x-forwarded-for': args\.clientIp/);
   });
 
   it('maps database rate-limit failures to HTTP 429 at both API boundaries', async () => {
