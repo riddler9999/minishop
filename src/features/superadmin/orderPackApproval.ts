@@ -10,7 +10,7 @@ export type CreditPackRequest = {
 export function buildCreditPackRequest(
   purchaseId: string,
   transactionId: string,
-  idempotencyKey = crypto.randomUUID(),
+  idempotencyKey: string,
 ): CreditPackRequest | null {
   const cleanPurchaseId = purchaseId.trim();
   const cleanTransactionId = transactionId.trim();
