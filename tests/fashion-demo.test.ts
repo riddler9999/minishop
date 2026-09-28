@@ -44,7 +44,7 @@ test('fashion collection keeps mobile-first grid search filters and CTA hierarch
 
 test('fashion checkout preserves existing order security contracts but stays inside fashion routes', async () => {
   const source = await readFile(fashionCheckoutPath, 'utf8');
-  assert.match(source, /api\.shippingConfig/);
+  assert.match(source, /api\.quoteOrder/);
   assert.match(source, /api\.merchantAccounts/);
   assert.match(source, /api\.createOrder/);
   assert.match(source, /idempotencyKey/);
