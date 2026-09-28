@@ -92,7 +92,6 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps, v
       return (
         <section className={`storefront-bundui-hero mx-auto max-w-[1320px] px-4 py-10 sm:px-8 sm:py-14 lg:py-20 ${heroLayoutClass(visual.hero)}`}>
           <div className={heroCopyClass(visual.hero)}>
-            <p className="commerce-kicker mb-3 text-xs font-bold uppercase tracking-[0.18em]">MiniShop Store</p>
             <h1 className="commerce-title text-4xl font-black leading-[1.04] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
               {section.settings.headline}
             </h1>
@@ -109,8 +108,8 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps, v
             {section.settings.imageUrl ? (
               <img src={section.settings.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="absolute inset-0 grid place-items-center px-8 text-center">
-                <span className="commerce-muted text-sm">Hero image</span>
+              <div className="absolute inset-0 grid place-items-center" aria-hidden="true">
+                <ImageOff className="commerce-muted h-10 w-10" />
               </div>
             )}
           </div>
