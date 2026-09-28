@@ -20,7 +20,7 @@ function clientWith(opts: {
   let themeReads = 0;
   const client: any = {
     from(table: string) {
-      assert.equal(table, 'shops');
+      assert.equal(table, 'buyer_public_shops');
       themeReads += 1;
       return queryResult({theme: opts.legacyTheme ?? {presetId: 'clean-minimal'}});
     },
@@ -56,7 +56,7 @@ describe('Published-only Store Design buyer gateway', () => {
     assert.equal(themeReads(), 0);
   });
 
-  it('falls back to legacy shops.theme only when the lifecycle row is absent', async () => {
+  it('falls back to legacy buyer-safe shops.theme only when the lifecycle row is absent', async () => {
     const legacy = {presetId: 'minimal', home: {heroHeadline: 'Legacy'}};
     const {client, themeReads} = clientWith({published: null, legacyTheme: legacy});
 
