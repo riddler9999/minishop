@@ -69,3 +69,11 @@ test('cart drawer keeps item totals, subtotal and continue-shopping affordance v
   assert.match(source, /ဆက်ဝယ်မယ်/);
   assert.match(source, /commerce-secondary/);
 });
+
+
+test('tenant storefront hero does not force MiniShop branding or English fallback copy', async () => {
+  const source = await readFile(rendererPath, 'utf8');
+
+  assert.doesNotMatch(source, />MiniShop Store</);
+  assert.doesNotMatch(source, />Hero image</);
+});
