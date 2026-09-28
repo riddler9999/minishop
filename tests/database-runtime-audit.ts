@@ -465,6 +465,155 @@ async function main() {
     evidence.authoritative_pricing = 'PASS';
   }
 
+
+  // Task 5 / F3: buyer-visible quote and persisted order share one authoritative
+  // pricing source. Cover custom exact/default, Ninja Van available/unavailable,
+  // stale quote rejection, and successful confirmation of the refreshed quote.
+  {
+    const seller = await createSeller('task5-quote');
+    const shop = await createShop(seller.id, 'starter', 'task5-quote');
+    await setEntitlement(shop.id, 'starter', 60, 0, 0);
+    const product = await createProduct(shop.id, 'task5-quote', {price: 7000, stock: 5});
+    const buyer = apiClient(anonKey!, '198.51.100.41');
+
+    const zoneSeed = await service.from('shipping_zones').insert({
+      shop_id: shop.id,
+      region: 'Yangon',
+      township: 'Hlaing',
+      fee: 1800,
+    });
+    assert.equal(zoneSeed.error, null, errorText(zoneSeed.error));
+
+    const customExact = await buyer.rpc('quote_order', {
+      p_shop_slug: shop.slug,
+      p_region: 'Yangon',
+      p_township: 'Hlaing',
+      p_items: [{product_id: product.id, qty: 1}],
+    });
+    assert.equal(customExact.error, null, errorText(customExact.error));
+    assert.equal((customExact.data as Record<string, unknown>).item_total, 7000);
+    assert.equal((customExact.data as Record<string, unknown>).delivery_fee, 1800);
+    assert.equal((customExact.data as Record<string, unknown>).grand_total, 8800);
+
+    const customDefault = await buyer.rpc('quote_order', {
+      p_shop_slug: shop.slug,
+      p_region: 'Yangon',
+      p_township: 'Runtime',
+      p_items: [{product_id: product.id, qty: 1}],
+    });
+    assert.equal(customDefault.error, null, errorText(customDefault.error));
+    assert.equal((customDefault.data as Record<string, unknown>).delivery_fee, 2500);
+
+    const changedProduct = await service.from('products')
+      .update({price: 8000})
+      .eq('id', product.id);
+    assert.equal(changedProduct.error, null, errorText(changedProduct.error));
+
+    const staleKey = randomUUID();
+    const stale = await buyer.rpc('place_order', {
+      ...orderArgs(shop.slug, product.id, staleKey, '0900000041'),
+      p_region: 'Yangon',
+      p_township: 'Hlaing',
+      p_expected_item_total: 7000,
+      p_expected_delivery_fee: 1800,
+    });
+    assert.ok(stale.error, 'stale checkout quote unexpectedly created an order');
+    assert.match(errorText(stale.error), /quote_stale/);
+
+    const afterStaleProduct = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task5 stock after stale quote',
+    );
+    const afterStaleEnt = ok(
+      await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(),
+      'task5 entitlement after stale quote',
+    );
+    assert.equal(afterStaleProduct.stock, 5);
+    assert.equal(afterStaleEnt.monthly_used, 0);
+
+    const fresh = await buyer.rpc('quote_order', {
+      p_shop_slug: shop.slug,
+      p_region: 'Yangon',
+      p_township: 'Hlaing',
+      p_items: [{product_id: product.id, qty: 1}],
+    });
+    assert.equal(fresh.error, null, errorText(fresh.error));
+    const freshQuote = fresh.data as Record<string, number>;
+    assert.equal(freshQuote.item_total, 8000);
+    assert.equal(freshQuote.delivery_fee, 1800);
+    assert.equal(freshQuote.grand_total, 9800);
+
+    const confirmed = await buyer.rpc('place_order', {
+      ...orderArgs(shop.slug, product.id, staleKey, '0900000041'),
+      p_region: 'Yangon',
+      p_township: 'Hlaing',
+      p_expected_item_total: freshQuote.item_total,
+      p_expected_delivery_fee: freshQuote.delivery_fee,
+    });
+    assert.equal(confirmed.error, null, errorText(confirmed.error));
+    const confirmedOrder = confirmed.data as Record<string, unknown>;
+    assert.equal(confirmedOrder.item_total, freshQuote.item_total);
+    assert.equal(confirmedOrder.delivery_fee, freshQuote.delivery_fee);
+    assert.equal(confirmedOrder.grand_total, freshQuote.grand_total);
+    const persisted = ok(
+      await service.from('orders')
+        .select('item_total,delivery_fee,grand_total')
+        .eq('order_no', confirmedOrder.order_no)
+        .single(),
+      'task5 persisted confirmed order',
+    );
+    assert.equal(persisted.item_total, freshQuote.item_total);
+    assert.equal(persisted.delivery_fee, freshQuote.delivery_fee);
+    assert.equal(persisted.grand_total, freshQuote.grand_total);
+
+    const ninjaSeller = await createSeller('task5-ninja');
+    const ninjaShop = await createShop(ninjaSeller.id, 'starter', 'task5-ninja');
+    await setEntitlement(ninjaShop.id, 'starter', 60, 0, 0);
+    const ninjaProduct = await createProduct(ninjaShop.id, 'task5-ninja', {price: 5000, stock: 2});
+    const ninjaConfig = await service.from('shops').update({
+      delivery_service: 'ninjavan',
+      origin_region: 'Yangon',
+      origin_township: 'Insein',
+    }).eq('id', ninjaShop.id);
+    assert.equal(ninjaConfig.error, null, errorText(ninjaConfig.error));
+    const ninjaRate = await service.from('ninjavan_rates').insert({
+      origin_township: 'Insein',
+      destination_region: 'Yangon',
+      destination_township: 'Bahan',
+      fee: 4000,
+      source_label: 'runtime task5',
+      is_active: true,
+    });
+    assert.equal(ninjaRate.error, null, errorText(ninjaRate.error));
+
+    const ninjaQuote = await buyer.rpc('quote_order', {
+      p_shop_slug: ninjaShop.slug,
+      p_region: 'Yangon',
+      p_township: 'Bahan',
+      p_items: [{product_id: ninjaProduct.id, qty: 1}],
+    });
+    assert.equal(ninjaQuote.error, null, errorText(ninjaQuote.error));
+    assert.equal((ninjaQuote.data as Record<string, unknown>).delivery_fee, 4000);
+
+    const unavailable = await buyer.rpc('quote_order', {
+      p_shop_slug: ninjaShop.slug,
+      p_region: 'Yangon',
+      p_township: 'Hlaing',
+      p_items: [{product_id: ninjaProduct.id, qty: 1}],
+    });
+    assert.ok(unavailable.error, 'unavailable Ninja Van route returned a misleading quote');
+    assert.match(errorText(unavailable.error), /ninjavan_route_unavailable/);
+
+    evidence.authoritative_checkout_quote = {
+      custom_zone: 'PASS',
+      custom_default: 'PASS',
+      ninjavan_route: 'PASS',
+      ninjavan_unavailable: 'PASS',
+      stale_quote_no_mutation: 'PASS',
+      refreshed_quote_persisted_total: 'PASS',
+    };
+  }
+
   // Same idempotency key: independent API clients hit PostgREST simultaneously.
   {
     const raceProduct = await createProduct(shopA.id, 'idem-race', { stock: 4 });
