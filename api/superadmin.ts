@@ -45,12 +45,14 @@ export function createSuperadminHandler(
   const action = clean(body.action, 40);
   if (!ACTIONS.has(action)) return sendJson(res, 400, {error: 'Invalid action'});
   const shopId = clean(body.shopId, 80);
-  const paymentRef = clean(body.paymentRef, 120) || null;
+  const paymentIdentity = clean(body.paymentIdentity, 160) || null;
+  const idempotencyKey = clean(body.idempotencyKey, 80) || null;
   const transactionIdInput = String(body.transactionId ?? '').trim();
   const transactionId =
     transactionIdInput && transactionIdInput.length <= 160 ? transactionIdInput : null;
 
   let error: any = null;
+  let data: any = null;
   if (action === 'approve-application' || action === 'reject-application') {
     const ownerId = clean(body.ownerId, 80);
     if (!ownerId) return sendJson(res, 400, {error:'Missing owner'});
@@ -59,13 +61,16 @@ export function createSuperadminHandler(
   } else if (action === 'activate') {
     const plan = clean(body.plan, 30);
     if (!shopId || !['starter','business'].includes(plan)) return sendJson(res, 400, {error:'Invalid activation'});
-    ({error} = await sb.rpc('admin_activate_subscription', {p_shop_id: shopId, p_plan: plan, p_payment_ref: paymentRef}));
+    if (!paymentIdentity || !idempotencyKey) return sendJson(res, 400, {error:'Payment identity and idempotency key are required'});
+    ({data, error} = await sb.rpc('admin_activate_subscription', {p_shop_id: shopId, p_plan: plan, p_payment_identity: paymentIdentity, p_idempotency_key: idempotencyKey}));
   } else if (action === 'renew') {
     if (!shopId) return sendJson(res, 400, {error:'Missing shop'});
-    ({error} = await sb.rpc('admin_renew_subscription', {p_shop_id: shopId, p_payment_ref: paymentRef}));
+    if (!paymentIdentity || !idempotencyKey) return sendJson(res, 400, {error:'Payment identity and idempotency key are required'});
+    ({data, error} = await sb.rpc('admin_renew_subscription', {p_shop_id: shopId, p_payment_identity: paymentIdentity, p_idempotency_key: idempotencyKey}));
   } else if (action === 'upgrade') {
     if (!shopId) return sendJson(res, 400, {error:'Missing shop'});
-    ({error} = await sb.rpc('admin_upgrade_plan', {p_shop_id: shopId, p_payment_ref: paymentRef}));
+    if (!paymentIdentity || !idempotencyKey) return sendJson(res, 400, {error:'Payment identity and idempotency key are required'});
+    ({data, error} = await sb.rpc('admin_upgrade_plan', {p_shop_id: shopId, p_payment_identity: paymentIdentity, p_idempotency_key: idempotencyKey}));
   } else if (action === 'downgrade') {
     const plan = clean(body.plan, 30);
     if (!shopId || !['free_trial','starter'].includes(plan)) return sendJson(res, 400, {error:'Invalid downgrade'});
@@ -75,8 +80,9 @@ export function createSuperadminHandler(
     ({error} = await sb.rpc('admin_cancel_subscription', {p_shop_id: shopId}));
   } else if (action === 'credit-pack') {
     const purchaseId = clean(body.purchaseId, 80);
-    if (!purchaseId || !transactionId) return sendJson(res, 400, {error:'Missing purchase or transaction id'});
-    ({error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId, p_transaction_id: transactionId}));
+    const packPaymentIdentity = paymentIdentity || transactionId;
+    if (!purchaseId || !packPaymentIdentity || !idempotencyKey) return sendJson(res, 400, {error:'Missing purchase, payment identity, or idempotency key'});
+    ({data, error} = await sb.rpc('admin_credit_order_pack', {p_purchase_id: purchaseId, p_payment_identity: packPaymentIdentity, p_idempotency_key: idempotencyKey}));
   } else if (action === 'reject-pack') {
     const purchaseId = clean(body.purchaseId, 80);
     if (!purchaseId) return sendJson(res, 400, {error:'Missing purchase'});
@@ -87,7 +93,7 @@ export function createSuperadminHandler(
   }
 
   if (error) return sendJson(res, 400, {error: mapDbError(error.message, 'Action failed')});
-  return sendJson(res, 200, {ok: true});
+  return sendJson(res, 200, data && typeof data === 'object' ? data : {ok: true});
   };
 }
 
