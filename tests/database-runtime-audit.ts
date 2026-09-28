@@ -892,7 +892,8 @@ async function main() {
     await setEntitlement(shop.id, 'starter', 60, 37, 9);
     const renewed = await service.rpc('admin_renew_subscription', {
       p_shop_id: shop.id,
-      p_payment_ref: `renew-${randomUUID()}`,
+      p_payment_identity: `renew-${randomUUID()}`,
+      p_idempotency_key: randomUUID(),
     });
     assert.equal(renewed.error, null, errorText(renewed.error));
     const ent = ok(await service.from('shop_entitlements').select('monthly_quota,monthly_used,purchased_balance,active').eq('shop_id', shop.id).single(), 'renewed entitlement');
@@ -903,25 +904,59 @@ async function main() {
     evidence.renewal_behavior = 'PASS';
   }
 
-  // Subscription activation payment identity is race-safe and duplicate payment is rejected.
+  // Task 8: same financial request key is replay-safe under concurrency.
   {
     const seller = await createSeller('billing-race');
     const shop = await createShop(seller.id, 'free_trial', 'billing-race');
-    const paymentRef = `activation-${randomUUID()}`;
+    const paymentIdentity = `activation-${randomUUID()}`;
+    const idempotencyKey = randomUUID();
     const clients = [apiClient(serviceKey!, '198.51.100.111'), apiClient(serviceKey!, '198.51.100.112')];
     const results = await race(clients.map((client) => async () => {
       const response = await client.rpc('admin_activate_subscription', {
         p_shop_id: shop.id,
         p_plan: 'starter',
-        p_payment_ref: paymentRef,
+        p_payment_identity: paymentIdentity,
+        p_idempotency_key: idempotencyKey,
       });
       if (response.error) throw new Error(errorText(response.error));
       return response.data;
     }));
-    assert.equal(countFulfilled(results), 1, JSON.stringify(results));
-    assert.equal(countRejected(results), 1, JSON.stringify(results));
-    const ledger = ok(await service.from('entitlement_ledger').select('id').eq('shop_id', shop.id).eq('source_type', 'manual').eq('source_id', paymentRef), 'activation ledger');
+    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    const ledger = ok(await service.from('entitlement_ledger').select('id').eq('shop_id', shop.id).eq('source_type', 'financial_request').eq('source_id', idempotencyKey), 'activation ledger');
     assert.equal(ledger.length, 1);
+    const requests = ok(await service.from('financial_admin_requests').select('idempotency_key').eq('idempotency_key', idempotencyKey), 'activation request');
+    assert.equal(requests.length, 1);
+
+    const differentKey = await service.rpc('admin_renew_subscription', {
+      p_shop_id: shop.id,
+      p_payment_identity: paymentIdentity,
+      p_idempotency_key: randomUUID(),
+    });
+    assert.ok(differentKey.error, 'same payment identity with a different key unexpectedly granted');
+    assert.match(errorText(differentKey.error), /duplicate_payment_identity/);
+
+    const conflictKey = randomUUID();
+    const first = await service.rpc('admin_renew_subscription', {
+      p_shop_id: shop.id,
+      p_payment_identity: `renew-${randomUUID()}`,
+      p_idempotency_key: conflictKey,
+    });
+    assert.equal(first.error, null, errorText(first.error));
+    const conflict = await service.rpc('admin_upgrade_plan', {
+      p_shop_id: shop.id,
+      p_payment_identity: `upgrade-${randomUUID()}`,
+      p_idempotency_key: conflictKey,
+    });
+    assert.ok(conflict.error, 'conflicting idempotency-key reuse unexpectedly succeeded');
+    assert.match(errorText(conflict.error), /idempotency_conflict/);
+
+    const missing = await service.rpc('admin_renew_subscription', {
+      p_shop_id: shop.id,
+      p_payment_identity: '',
+      p_idempotency_key: randomUUID(),
+    });
+    assert.ok(missing.error, 'missing payment identity unexpectedly granted');
+    assert.match(errorText(missing.error), /payment_identity_required/);
     evidence.connections = { ...(evidence.connections as object), billing_activation_race: 2 };
     evidence.billing_idempotency = 'PASS';
   }
@@ -981,7 +1016,8 @@ async function main() {
 
     const missing = await service.rpc('admin_credit_order_pack', {
       p_purchase_id: purchaseId,
-      p_transaction_id: '',
+      p_payment_identity: '',
+      p_idempotency_key: randomUUID(),
     });
     assert.ok(missing.error, 'missing transaction id unexpectedly credited purchase');
     assert.match(errorText(missing.error), /transaction_id_required/);
@@ -1010,13 +1046,14 @@ async function main() {
     });
     assert.equal(seeded.error, null, errorText(seeded.error));
     const tx = `PACK-${randomUUID()}`;
+    const packKey = randomUUID();
     for (let i = 0; i < 2; i++) {
-      const result = await service.rpc('admin_credit_order_pack', { p_purchase_id: purchaseId, p_transaction_id: tx });
+      const result = await service.rpc('admin_credit_order_pack', { p_purchase_id: purchaseId, p_payment_identity: tx, p_idempotency_key: packKey });
       assert.equal(result.error, null, errorText(result.error));
     }
     const ent = ok(await service.from('shop_entitlements').select('purchased_balance').eq('shop_id', shop.id).single(), 'pack retry balance');
     assert.equal(ent.purchased_balance, 5);
-    const ledger = ok(await service.from('entitlement_ledger').select('id').eq('shop_id', shop.id).eq('source_type', 'order_pack').eq('source_id', purchaseId), 'pack retry ledger');
+    const ledger = ok(await service.from('entitlement_ledger').select('id').eq('shop_id', shop.id).eq('source_type', 'financial_request').eq('source_id', packKey), 'pack retry ledger');
     assert.equal(ledger.length, 1);
     evidence.extra_order_same_purchase_retry = 'PASS';
   }
@@ -1042,7 +1079,8 @@ async function main() {
     const results = await race(clients.map((client, i) => async () => {
       const response = await client.rpc('admin_credit_order_pack', {
         p_purchase_id: purchaseIds[i],
-        p_transaction_id: tx,
+        p_payment_identity: tx,
+        p_idempotency_key: randomUUID(),
       });
       if (response.error) throw new Error(errorText(response.error));
       return response.data;
@@ -1083,9 +1121,9 @@ async function main() {
   {
     const seller = await createSeller('rpc-permissions');
     const shop = await createShop(seller.id, 'starter', 'rpc-permissions');
-    const unauth = await anon.rpc('admin_renew_subscription', { p_shop_id: shop.id, p_payment_ref: 'forbidden-anon' });
+    const unauth = await anon.rpc('admin_renew_subscription', { p_shop_id: shop.id, p_payment_identity: 'forbidden-anon', p_idempotency_key: randomUUID() });
     assert.ok(unauth.error, 'anon privileged RPC unexpectedly succeeded');
-    const authenticated = await seller.client.rpc('admin_renew_subscription', { p_shop_id: shop.id, p_payment_ref: 'forbidden-auth' });
+    const authenticated = await seller.client.rpc('admin_renew_subscription', { p_shop_id: shop.id, p_payment_identity: 'forbidden-auth', p_idempotency_key: randomUUID() });
     assert.ok(authenticated.error, 'authenticated privileged RPC unexpectedly succeeded');
     evidence.security_definer_rpc_permissions = 'PASS';
   }
