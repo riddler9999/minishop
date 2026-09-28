@@ -25,7 +25,8 @@ function service() {
       publishedRevision += 1;
       return {draft,published,previousPublished,draftRevision,publishedRevision,updatedAt:null,publishedAt:null};
     },
-    async rollbackPublished() {
+    async rollbackPublished(input: {expectedPublishedRevision:number}) {
+      if (input.expectedPublishedRevision !== publishedRevision) throw Object.assign(new Error('conflict'), {code:'STORE_DESIGN_CONFLICT'});
       if (!previousPublished) throw new Error('missing previous');
       const current = published;
       published = previousPublished;

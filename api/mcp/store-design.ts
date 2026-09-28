@@ -27,7 +27,7 @@ export interface StoreDesignLifecyclePort {
   }>;
   saveDraft(input: {expectedRevision: number; document: StoreDesignDocument}): Promise<{revision: number; document: StoreDesignDocument}>;
   publishDraft(input: {expectedDraftRevision: number}): Promise<any>;
-  rollbackPublished(): Promise<any>;
+  rollbackPublished(input: {expectedPublishedRevision: number}): Promise<any>;
 }
 
 function copyDocument(document: StoreDesignDocument): StoreDesignDocument {
@@ -206,8 +206,9 @@ export function createStoreDesignMcpService(adapter: StoreDesignLifecyclePort) {
     },
 
     async rollbackStoreDesign() {
+      const lifecycle = await adapter.loadOwnStoreDesign();
       try {
-        const result = await adapter.rollbackPublished();
+        const result = await adapter.rollbackPublished({expectedPublishedRevision: lifecycle.publishedRevision});
         return {
           changed: true as const,
           draftRevision: result.draftRevision,
