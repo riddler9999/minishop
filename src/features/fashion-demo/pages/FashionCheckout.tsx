@@ -6,7 +6,7 @@ import type {MerchantAccount} from '@/domain/shop';
 import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
-import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, resolveShippingFee, type PayMethod} from '@/features/checkout/checkoutLogic';
+import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
 
 export default function FashionCheckout() {
   const {items, subtotal, clear} = useCart();
@@ -23,9 +23,9 @@ export default function FashionCheckout() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
   const live = isLiveBackend();
-  const [shipCfg, setShipCfg] = useState<Awaited<ReturnType<typeof api.shippingConfig>> | null>(null);
+  const [quote, setQuote] = useState<Awaited<ReturnType<typeof api.quoteOrder>> | null>(null);
   const [shipErr, setShipErr] = useState(false);
-  const [shipReload, setShipReload] = useState(0);
+  const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
 
   useEffect(() => {
@@ -35,22 +35,36 @@ export default function FashionCheckout() {
   }, []);
 
   useEffect(() => {
+    if (!region || !township) {
+      setQuote(null);
+      setShipErr(false);
+      return;
+    }
     if (!live) {
-      setShipCfg(null);
+      setQuote(null);
       setShipErr(false);
       return;
     }
     let alive = true;
-    setShipCfg(null);
+    setQuote(null);
     setShipErr(false);
-    api.shippingConfig().then((c) => alive && setShipCfg(c)).catch(() => alive && setShipErr(true));
+    api.quoteOrder({
+      region,
+      township,
+      items: items.map((item) => ({id: item.id, qty: item.qty})),
+    }).then((nextQuote) => {
+      if (alive) setQuote(nextQuote);
+    }).catch(() => {
+      if (alive) setShipErr(true);
+    });
     return () => {alive = false;};
-  }, [live, shipReload]);
+  }, [live, region, township, items, quoteReload]);
 
   const townships = useMemo(() => townshipsOf(region), [region]);
   const demoFee = useMemo(() => shippingFee(region, township), [region, township]);
-  const fee = useMemo(() => resolveShippingFee({region, township, live, shippingConfig: shipCfg, demoFee}), [region, township, live, shipCfg, demoFee]);
-  const grandTotal = subtotal + (fee ?? 0);
+  const fee = live ? quote?.deliveryFee ?? null : demoFee ?? 0;
+  const displaySubtotal = live ? quote?.itemTotal ?? subtotal : subtotal;
+  const grandTotal = live ? quote?.grandTotal ?? 0 : subtotal + (fee ?? 0);
   const online = isOnlinePayment(method);
   const providerAccounts = paymentAccounts(accounts, method);
   const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
@@ -75,7 +89,8 @@ export default function FashionCheckout() {
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
         items: items.map((i) => ({id: i.id, qty: i.qty})),
         paymentMethod: method,
-        shippingFee: fee ?? 0,
+        expectedItemTotal: live ? quote?.itemTotal ?? subtotal : subtotal,
+        expectedDeliveryFee: fee ?? 0,
         paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
@@ -83,7 +98,9 @@ export default function FashionCheckout() {
       clear();
       nav(`/fashion-demo/order/${encodeURIComponent(res.orderId)}`, {state: {result: res, method, name: name.trim(), phone: phone.trim()}});
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ');
+      const checkoutError = e as Error & {code?: string; freshQuote?: Awaited<ReturnType<typeof api.quoteOrder>> | null};
+      if (checkoutError.code === 'quote_stale' && checkoutError.freshQuote) setQuote(checkoutError.freshQuote);
+      setErr(checkoutError instanceof Error ? checkoutError.message : 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ');
       setSubmitting(false);
     }
   };
@@ -110,7 +127,7 @@ export default function FashionCheckout() {
               <div><label htmlFor="fashion-township" className={label}>မြို့နယ်</label><select id="fashion-township" className={cx(input, !region && 'cursor-not-allowed opacity-60')} value={township} disabled={!region} onChange={(e) => setTownship(e.target.value)}><option value="">{region ? '— ရွေးချယ်ပါ —' : 'တိုင်းအရင်ရွေးပါ'}</option>{townships.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}</select></div>
             </div>
             {fee != null && <p className="my mt-3 rounded-xl bg-[#fff0f5] px-3 py-2 text-xs text-[#6f4e5c]">ပို့ဆောင်ခ <span className="font-bold text-[#f43f70]">{ks(fee)}</span></p>}
-            {live && shipErr && <div className="my mt-3 flex items-center justify-between rounded-xl bg-rose-50 px-3 py-2 text-xs text-[#d22e5d]"><span>ပို့ဆောင်ခ တင်ယူ၍မရပါ။</span><button type="button" onClick={() => setShipReload((n) => n + 1)} className="font-bold underline">ပြန်ကြိုးစားရန်</button></div>}
+            {live && shipErr && <div className="my mt-3 flex items-center justify-between rounded-xl bg-rose-50 px-3 py-2 text-xs text-[#d22e5d]"><span>ပို့ဆောင်ခ တင်ယူ၍မရပါ။</span><button type="button" onClick={() => setQuoteReload((n) => n + 1)} className="font-bold underline">ပြန်ကြိုးစားရန်</button></div>}
           </section>
 
           <section className="rounded-[20px] bg-white p-4 shadow-[0_10px_28px_rgba(88,52,64,0.07)] sm:p-5">
@@ -128,7 +145,7 @@ export default function FashionCheckout() {
         <aside className="h-fit rounded-[20px] bg-white p-4 shadow-[0_10px_28px_rgba(88,52,64,0.07)] lg:sticky lg:top-20 sm:p-5">
           <h2 className="text-sm font-bold">Order summary</h2>
           <div className="my mt-3 max-h-60 space-y-2 overflow-auto">{items.map((it) => <div key={it.id} className="flex items-center gap-2 text-xs"><div className="h-11 w-9 overflow-hidden rounded-lg bg-rose-50">{it.image ? <img src={it.image} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><ImageOff className="h-4 w-4 text-slate-400" /></div>}</div><span className="my flex-1 truncate">{it.name} ×{it.qty}</span><span className="font-semibold">{ks(it.price * it.qty)}</span></div>)}</div>
-          <div className="my mt-4 space-y-2 border-t border-[#f3e3e9] pt-4 text-xs"><div className="flex justify-between"><span className="text-slate-500">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(subtotal)}</span></div><div className="flex justify-between"><span className="text-slate-500">ပို့ဆောင်ခ</span><span className="font-semibold">{fee != null ? ks(fee) : '—'}</span></div><div className="flex justify-between border-t border-[#f3e3e9] pt-2 text-base"><span className="font-bold">စုစုပေါင်း</span><span className="font-black text-[#f43f70]">{fee != null ? ks(grandTotal) : '—'}</span></div></div>
+          <div className="my mt-4 space-y-2 border-t border-[#f3e3e9] pt-4 text-xs"><div className="flex justify-between"><span className="text-slate-500">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(displaySubtotal)}</span></div><div className="flex justify-between"><span className="text-slate-500">ပို့ဆောင်ခ</span><span className="font-semibold">{fee != null ? ks(fee) : '—'}</span></div><div className="flex justify-between border-t border-[#f3e3e9] pt-2 text-base"><span className="font-bold">စုစုပေါင်း</span><span className="font-black text-[#f43f70]">{fee != null ? ks(grandTotal) : '—'}</span></div></div>
           {err && <div className="my mt-3 rounded-xl bg-rose-50 p-3 text-xs text-[#d22e5d]">{err}</div>}
           <button type="button" disabled={!ready || submitting} onClick={submit} className="mt-4 min-h-14 w-full rounded-[15px] bg-[#f43f70] px-5 text-sm font-black text-white shadow-[0_12px_28px_rgba(244,63,112,0.24)] disabled:cursor-not-allowed disabled:opacity-50">{submitting ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> တင်နေသည်…</span> : <>အော်ဒါတင်မည် {fee != null && `· ${ks(grandTotal)}`}</>}</button>
         </aside>

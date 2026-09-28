@@ -6,7 +6,7 @@ import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
-import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, resolveShippingFee, type PayMethod} from '@/features/checkout/checkoutLogic';
+import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
 
 export default function Checkout() {
   const {items, subtotal, clear} = useCart();
@@ -26,9 +26,9 @@ export default function Checkout() {
   const [err, setErr] = useState('');
   const slug = useShopSlugParam();
   const live = isLiveBackend();
-  const [shipCfg, setShipCfg] = useState<Awaited<ReturnType<typeof api.shippingConfig>> | null>(null);
+  const [quote, setQuote] = useState<Awaited<ReturnType<typeof api.quoteOrder>> | null>(null);
   const [shipErr, setShipErr] = useState(false);
-  const [shipReload, setShipReload] = useState(0);
+  const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
 
   useEffect(() => {
@@ -39,34 +39,39 @@ export default function Checkout() {
     };
   }, [slug]);
 
-  // Live: load the shop's real delivery-fee zones so the SHOWN fee matches what
-  // place_order() will CHARGE (zone by region+township, else the shop default).
-  // Demo: fees come from the static locations table (see the fee memo below).
   useEffect(() => {
+    if (!region || !township) {
+      setQuote(null);
+      setShipErr(false);
+      return;
+    }
     if (!live) {
-      setShipCfg(null);
+      setQuote(null);
       setShipErr(false);
       return;
     }
     let alive = true;
-    setShipCfg(null); // clear the previous shop's zones so a cross-shop SPA nav can't submit with a stale fee while the new shop's config loads
+    setQuote(null);
     setShipErr(false);
-    api
-      .shippingConfig()
-      .then((c) => alive && setShipCfg(c))
-      .catch(() => alive && setShipErr(true)); // surface, don't silently fall back to default (would re-introduce the shown≠charged mismatch)
+    api.quoteOrder({
+      region,
+      township,
+      items: items.map((item) => ({id: item.id, qty: item.qty})),
+    }).then((nextQuote) => {
+      if (alive) setQuote(nextQuote);
+    }).catch(() => {
+      if (alive) setShipErr(true);
+    });
     return () => {
       alive = false;
     };
-  }, [slug, live, shipReload]);
+  }, [slug, live, region, township, items, quoteReload]);
 
   const townships = useMemo(() => townshipsOf(region), [region]);
   const demoFee = useMemo(() => shippingFee(region, township), [region, township]);
-  const fee = useMemo(
-    () => resolveShippingFee({region, township, live, shippingConfig: shipCfg, demoFee}),
-    [region, township, live, shipCfg, demoFee],
-  );
-  const grandTotal = subtotal + (fee ?? 0);
+  const fee = live ? quote?.deliveryFee ?? null : demoFee ?? 0;
+  const displaySubtotal = live ? quote?.itemTotal ?? subtotal : subtotal;
+  const grandTotal = live ? quote?.grandTotal ?? 0 : subtotal + (fee ?? 0);
   const online = isOnlinePayment(method);
   const providerAccounts = paymentAccounts(accounts, method);
   const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
@@ -94,7 +99,8 @@ export default function Checkout() {
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
         items: items.map((i) => ({id: i.id, qty: i.qty})),
         paymentMethod: method,
-        shippingFee: fee ?? 0,
+        expectedItemTotal: live ? quote?.itemTotal ?? subtotal : subtotal,
+        expectedDeliveryFee: fee ?? 0,
         paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
@@ -104,6 +110,9 @@ export default function Checkout() {
         state: {result: res, method, name: name.trim(), phone: phone.trim()},
       });
     } catch (e: any) {
+      if (e?.code === 'quote_stale' && e?.freshQuote) {
+        setQuote(e.freshQuote);
+      }
       setErr(e.message || 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ');
       setSubmitting(false);
     }
@@ -186,7 +195,7 @@ export default function Checkout() {
             {live && shipErr && (
               <div className="commerce-error my mt-3 flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm">
                 <span>ပို့ဆောင်ခ တင်ယူ၍မရပါ။</span>
-                <button type="button" onClick={() => setShipReload((n) => n + 1)} className="font-semibold underline">
+                <button type="button" onClick={() => setQuoteReload((n) => n + 1)} className="font-semibold underline">
                   ပြန်ကြိုးစားရန်
                 </button>
               </div>
@@ -272,7 +281,7 @@ export default function Checkout() {
               ))}
             </div>
             <div className="commerce-divider my mt-4 space-y-2 border-t pt-4 text-sm">
-              <div className="flex justify-between"><span className="commerce-muted">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(subtotal)}</span></div>
+              <div className="flex justify-between"><span className="commerce-muted">ပစ္စည်းဖိုး</span><span className="font-semibold">{ks(displaySubtotal)}</span></div>
               <div className="flex justify-between"><span className="commerce-muted">ပို့ဆောင်ခ</span><span className="font-semibold">{fee != null ? ks(fee) : '—'}</span></div>
               <div className="commerce-divider flex justify-between border-t pt-2 text-base">
                 <span className="font-bold">စုစုပေါင်း</span>

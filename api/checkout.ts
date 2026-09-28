@@ -3,7 +3,7 @@ import {mapDbError} from '../src/domain/dbError.js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
-import {normalizeCheckoutInput} from './checkout-input.js';
+import {normalizeCheckoutInput, normalizeCheckoutQuoteInput} from './checkout-input.js';
 import {forwardedClientIp} from './_client-ip.js';
 import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
 
@@ -20,8 +20,6 @@ export function createCheckoutHandler(
     if (!env) return sendJson(res, 503, {error: 'Backend unavailable'});
     const sb = deps.createClient(env.url, env.key, {
       auth: {persistSession: false, autoRefreshToken: false},
-      // Preserve Vercel's requester IP across the server-to-Supabase hop so
-      // private.enforce_rate_limit() keys by buyer instead of Vercel egress.
       global: {headers: {'x-forwarded-for': forwardedClientIp(req)}},
     });
 
@@ -74,6 +72,26 @@ export function createCheckoutHandler(
       );
     }
 
+    if (req.method === 'POST' && req.body?.action === 'quote') {
+      const input = normalizeCheckoutQuoteInput(req.body);
+      if (!input) return sendJson(res, 400, {error: 'Invalid quote payload'});
+
+      const {data, error} = await sb.rpc('quote_order', {
+        p_shop_slug: input.slug,
+        p_region: input.region,
+        p_township: input.township,
+        p_items: input.items,
+      });
+      if (error) {
+        return sendJson(
+          res,
+          400,
+          {error: mapDbError(error.message, 'ပို့ဆောင်ခနှင့် စုစုပေါင်းဈေးနှုန်း တွက်ချက်၍မရပါ။')},
+        );
+      }
+      return sendJson(res, 200, {quote: data});
+    }
+
     if (req.method === 'POST') {
       const input = normalizeCheckoutInput(req.body);
       if (!input) {
@@ -90,15 +108,32 @@ export function createCheckoutHandler(
         p_payment_method: input.paymentMethod,
         p_payment_ref_tail: input.paymentRefTail,
         p_items: input.items,
+        p_expected_item_total: input.expectedItemTotal,
+        p_expected_delivery_fee: input.expectedDeliveryFee,
         p_idempotency_key: input.idempotencyKey,
       });
 
       if (error) {
-        const status = String(error.message).includes('rate_limit_exceeded') ? 429 : 400;
+        const message = String(error.message);
+        if (message.includes('quote_stale')) {
+          const {data: freshQuote, error: quoteError} = await sb.rpc('quote_order', {
+            p_shop_slug: input.slug,
+            p_region: input.customer.region,
+            p_township: input.customer.township,
+            p_items: input.items,
+          });
+          return sendJson(res, 409, {
+            code: 'quote_stale',
+            error: 'ဈေးနှုန်း သို့မဟုတ် ပို့ဆောင်ခ ပြောင်းလဲသွားပါပြီ။ စုစုပေါင်းအသစ်ကို စစ်ပြီး ထပ်အတည်ပြုပါ။',
+            freshQuote: quoteError ? null : freshQuote,
+          });
+        }
+
+        const status = message.includes('rate_limit_exceeded') ? 429 : 400;
         return sendJson(
           res,
           status,
-          {error: mapDbError(error.message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။')},
+          {error: mapDbError(message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။')},
         );
       }
       return sendJson(res, 200, {order: data});

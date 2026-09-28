@@ -1,3 +1,10 @@
+export interface CheckoutQuoteInput {
+  slug: string;
+  region: string;
+  township: string;
+  items: {product_id: string; qty: number}[];
+}
+
 export interface CheckoutInput {
   slug: string;
   customer: {
@@ -11,10 +18,38 @@ export interface CheckoutInput {
   paymentRefTail: string;
   items: {product_id: string; qty: number}[];
   idempotencyKey: string | null;
+  expectedItemTotal: number | null;
+  expectedDeliveryFee: number | null;
 }
 
 const clean = (value: unknown, max = 200): string =>
   String(value ?? '').trim().slice(0, max);
+
+function normalizeItems(value: unknown): {product_id: string; qty: number}[] {
+  const rawItems = Array.isArray(value) ? value.slice(0, 25) : [];
+  return rawItems
+    .map((item: any) => ({
+      product_id: clean(item?.id ?? item?.product_id, 100),
+      qty: Math.min(Math.max(Math.floor(Number(item?.qty) || 0), 0), 100),
+    }))
+    .filter((item: {product_id: string; qty: number}) => item.product_id && item.qty > 0);
+}
+
+function safeMoney(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+export function normalizeCheckoutQuoteInput(body: unknown): CheckoutQuoteInput | null {
+  const b = (body && typeof body === 'object' ? body : {}) as Record<string, any>;
+  const slug = clean(b.slug, 100);
+  const region = clean(b.region, 100);
+  const township = clean(b.township, 100);
+  const items = normalizeItems(b.items);
+
+  if (!slug || !region || !township || items.length === 0) return null;
+  return {slug, region, township, items};
+}
 
 export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
   const b = (body && typeof body === 'object' ? body : {}) as Record<string, any>;
@@ -40,13 +75,9 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
       ? rawKey
       : null;
 
-  const rawItems = Array.isArray(b.items) ? b.items.slice(0, 25) : [];
-  const items = rawItems
-    .map((item: any) => ({
-      product_id: clean(item?.id, 100),
-      qty: Math.min(Math.max(Math.floor(Number(item?.qty) || 0), 0), 100),
-    }))
-    .filter((item: {product_id: string; qty: number}) => item.product_id && item.qty > 0);
+  const items = normalizeItems(b.items);
+  const expectedItemTotal = safeMoney(b.expectedItemTotal);
+  const expectedDeliveryFee = safeMoney(b.expectedDeliveryFee);
 
   if (
     !slug ||
@@ -56,7 +87,9 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
     !customer.region ||
     !customer.township ||
     !paymentMethod ||
-    items.length === 0
+    items.length === 0 ||
+    expectedItemTotal == null ||
+    expectedDeliveryFee == null
   ) {
     return null;
   }
@@ -68,5 +101,7 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
     paymentRefTail,
     items,
     idempotencyKey,
+    expectedItemTotal,
+    expectedDeliveryFee,
   };
 }
