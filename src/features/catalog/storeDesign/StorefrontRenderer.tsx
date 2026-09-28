@@ -6,7 +6,7 @@ import {getThemeVisual, type ThemeVisualProfile} from '@/domain/theme';
 import {ks} from '@/shared/lib/format';
 import {buildStorefrontRenderPlan} from './renderPlan';
 import {resolveSectionProductList, type SectionProductsById} from './sectionProducts';
-import {heroCopyClass, heroLayoutClass, heroMediaClass, productDetailGridClass} from './layout';
+import {groupProductTemplateSections, heroCopyClass, heroLayoutClass, heroMediaClass, productDetailGridClass} from './layout';
 
 export type StorefrontRendererProps = {
   document: StoreDesignDocument;
@@ -238,29 +238,55 @@ function sectionFrame(section: StoreSection, props: StorefrontRendererProps, con
 }
 
 function ProductTemplate({props, sections, visual, buyNow}: {props: StorefrontRendererProps; sections: StoreSection[]; visual: ThemeVisualProfile; buyNow: StoreDesignDocument['globalSettings']['buyNow']}) {
-  const gallery = sections.find((section) => section.type === 'product-gallery');
-  const info = sections.find((section) => section.type === 'product-info');
-  const primaryIds = new Set([gallery?.id, info?.id].filter((id): id is string => Boolean(id)));
-  const remaining = sections.filter((section) => !primaryIds.has(section.id));
+  const groups = groupProductTemplateSections(sections);
+
+  const renderProductSection = (section: StoreSection, paired: boolean) => {
+    const content = sectionContent(section, props, visual);
+
+    if (section.type === 'product-info') {
+      return (
+        <div className={paired ? '' : 'mx-auto max-w-[1180px] px-4 py-7 sm:px-6 sm:py-9'}>
+          {sectionFrame(section, props, content)}
+          {props.renderRequiredCommerce && (
+            <div className="mt-6">
+              {props.renderRequiredCommerce(buyNow)}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (section.type === 'product-gallery' && !paired) {
+      return (
+        <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-10">
+          {sectionFrame(section, props, content)}
+        </div>
+      );
+    }
+
+    return sectionFrame(section, props, content);
+  };
 
   return (
     <>
-      {(gallery || info) && (
-        <div className={`product-detail-shell mx-auto grid max-w-[1180px] gap-8 px-4 pb-8 pt-6 sm:px-6 sm:pt-10 ${productDetailGridClass(visual.layout)}`}>
-          <div>
-            {gallery ? sectionFrame(gallery, props, sectionContent(gallery, props, visual)) : null}
-          </div>
-          <div className="self-start md:sticky md:top-24">
-            {info ? sectionFrame(info, props, sectionContent(info, props, visual)) : null}
-            {props.renderRequiredCommerce && (
-              <div className="mt-6">
-                {props.renderRequiredCommerce(buyNow)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {remaining.map((section) => sectionFrame(section, props, sectionContent(section, props, visual)))}
+      {groups.map((group) => {
+        if (group.kind === 'pair') {
+          return (
+            <div
+              key={group.sections.map((section) => section.id).join(':')}
+              className={`product-detail-shell mx-auto grid max-w-[1180px] gap-8 px-4 pb-8 pt-6 sm:px-6 sm:pt-10 ${productDetailGridClass(visual.layout)}`}
+            >
+              {group.sections.map((section) => (
+                <div key={section.id} className="self-start md:sticky md:top-24">
+                  {renderProductSection(section, true)}
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        return <div key={group.sections[0].id}>{renderProductSection(group.sections[0], false)}</div>;
+      })}
     </>
   );
 }
