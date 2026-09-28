@@ -97,11 +97,11 @@ export default function CartDrawer() {
                     <span className="commerce-price mt-0.5 text-sm font-bold">{ks(it.price)}</span>
                     <div className="mt-auto flex items-center justify-between">
                       <div className="commerce-qty flex items-center">
-                        <button onClick={() => setQty(it.id, it.qty - 1)} className="commerce-accent grid h-8 w-8 place-items-center"><Minus className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setQty(it.id, it.qty - 1)} className="commerce-accent grid h-8 w-8 place-items-center" aria-label="အရေအတွက်လျှော့ရန်"><Minus className="h-3.5 w-3.5" /></button>
                         <span className="w-7 text-center text-sm font-semibold">{it.qty}</span>
-                        <button onClick={() => setQty(it.id, it.qty + 1)} className={isDemo ? "grid h-8 w-8 place-items-center text-[#6d28d9]" : "grid h-8 w-8 place-items-center text-[#e11d48]"}><Plus className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setQty(it.id, it.qty + 1)} className="commerce-accent grid h-8 w-8 place-items-center" aria-label="အရေအတွက်တိုးရန်"><Plus className="h-3.5 w-3.5" /></button>
                       </div>
-                      <span className="commerce-strong text-sm font-semibold">{ks(it.price * it.qty)}</span>
+                      <div className="text-right"><span className="commerce-muted block text-[11px]">ပစ္စည်းစုစုပေါင်း</span><span className="commerce-strong text-sm font-semibold">{ks(it.price * it.qty)}</span></div>
                     </div>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default function CartDrawer() {
                 className="commerce-primary w-full min-h-12 px-6 py-3 font-bold transition">
                 Order တင်မယ်
               </button>
-              {isDemo && <button onClick={() => go('/cart')} className="commerce-secondary mt-2 w-full min-h-11 px-6 py-2.5 text-sm font-bold">View cart</button>}
+              {isDemo ? <button onClick={() => go('/cart')} className="commerce-secondary mt-2 w-full min-h-11 px-6 py-2.5 text-sm font-bold">View cart</button> : <button onClick={() => go('/products')} className="commerce-secondary mt-2 w-full min-h-11 px-6 py-2.5 text-sm font-bold">ဆက်ဝယ်မယ်</button>}
             </footer>
           </>
         )}
