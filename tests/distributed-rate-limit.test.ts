@@ -3,6 +3,7 @@ import {describe, it} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
 const hardening = new URL('../supabase/migrations/0007_production_hardening.sql', import.meta.url);
+const lookupFix = new URL('../supabase/migrations/0027_failed_lookup_rate_limit.sql', import.meta.url);
 const checkoutApi = new URL('../api/checkout.ts', import.meta.url);
 const lookupApi = new URL('../api/storefront-orders.ts', import.meta.url);
 
@@ -14,10 +15,11 @@ describe('distributed API rate limiting', () => {
     assert.match(sql, /raise exception 'rate_limit_exceeded'/i);
   });
 
-  it('enforces limits inside both public anonymous RPCs', async () => {
-    const sql = await readFile(hardening, 'utf8');
-    assert.match(sql, /enforce_rate_limit\('place_order',\s*10,\s*interval '5 minutes'\)/i);
-    assert.match(sql, /enforce_rate_limit\('lookup_order',\s*30,\s*interval '5 minutes'\)/i);
+  it('enforces distributed limits at checkout and the trusted lookup RPC boundary', async () => {
+    const [baseSql, lookupSql] = await Promise.all([readFile(hardening, 'utf8'), readFile(lookupFix, 'utf8')]);
+    assert.match(baseSql, /enforce_rate_limit\('place_order',\s*10,\s*interval '5 minutes'\)/i);
+    assert.match(lookupSql, /enforce_rate_limit\('lookup_order',\s*30,\s*interval '5 minutes'\)/i);
+    assert.match(lookupSql, /grant execute on function public\.lookup_order\(text,text,text\)[\s\S]*?to service_role/i);
   });
 
   it('does not reintroduce a process-local API limiter', async () => {
