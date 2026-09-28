@@ -1,5 +1,6 @@
 // ---- CATALOG: buyer-facing queries ------------------------------------------
 import type {Product} from '@/domain/product';
+import type {ProductSource} from '@/domain/storeDesign';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 
 async function request(params: Record<string, string | number | boolean | undefined>) {
@@ -15,6 +16,18 @@ async function request(params: Record<string, string | number | boolean | undefi
 export const catalogStorefrontApi = {
   async products(opts: {scope?: 'active' | 'all'; featured?: boolean; category?: string; q?: string; limit?: number; offset?: number} = {}): Promise<{products: Product[]; total: number}> {
     return request({action: 'products', featured: opts.featured, category: opts.category, q: opts.q, limit: opts.limit, offset: opts.offset}) as Promise<{products: Product[]; total: number}>;
+  },
+  async sectionProducts(source: ProductSource): Promise<{products: Product[]}> {
+    if (source.mode === 'manual') {
+      return request({action: 'section-products', mode: 'manual', productIds: source.productIds.join(',')}) as Promise<{products: Product[]}>;
+    }
+    return request({
+      action: 'section-products',
+      mode: 'dynamic',
+      rule: source.rule,
+      category: source.category,
+      limit: source.limit,
+    }) as Promise<{products: Product[]}>;
   },
   async product(id: string): Promise<{product: Product}> {
     return request({action: 'product', id}) as Promise<{product: Product}>;

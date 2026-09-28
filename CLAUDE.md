@@ -231,6 +231,14 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
 
 ## Storefront aesthetic theme architecture
 
+The Store Builder lifecycle contract is in `src/domain/storeDesign/` and
+`supabase/migrations/0024_store_design_lifecycle.sql`. Seller Draft writes and
+Publish use revision-aware RPCs; buyers receive Published only via the
+`/api/storefront?action=store-design` gateway. Until 0024 reaches Production,
+the gateway can read the legacy `shops.theme` value. Keep the applied 0023 RLS
+policy and the Production-generated `database.types.ts` intact during this
+compatibility period. Migration 0024 is not yet applied to Production.
+
 Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
 
 Do not add a new preset that merely recolors the same layout. A distinct preset must materially change composition/density/card language. Keep compatibility for persisted legacy IDs in `normalizeTheme()`. See `design/themes/aesthetic-themes.md`.
