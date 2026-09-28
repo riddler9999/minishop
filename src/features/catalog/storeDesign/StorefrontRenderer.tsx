@@ -2,7 +2,7 @@ import {useState, type ReactNode} from 'react';
 import {ChevronLeft, ChevronRight, ImageOff} from 'lucide-react';
 import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreSection, StoreTemplateName} from '@/domain/storeDesign';
-import {getThemeVisual} from '@/domain/theme';
+import {getThemeVisual, type ThemeLayoutStyle, type ThemeVisualProfile} from '@/domain/theme';
 import {ks} from '@/shared/lib/format';
 import {buildStorefrontRenderPlan} from './renderPlan';
 import {resolveSectionProductList, type SectionProductsById} from './sectionProducts';
@@ -24,6 +24,44 @@ function scrollToProducts() {
   document.querySelector('[data-store-products="true"]')?.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
+function heroLayoutClass(hero: ThemeVisualProfile['hero']): string {
+  const layouts: Record<ThemeVisualProfile['hero'], string> = {
+    split: 'hero-split grid items-center gap-8 md:grid-cols-2 md:gap-12',
+    poster: 'hero-poster grid items-end gap-6 border-y-4 border-[var(--commerce-border)] md:grid-cols-[1.25fr_0.75fr] md:gap-8',
+    centered: 'hero-centered flex flex-col items-center gap-8 text-center',
+    utility: 'hero-utility grid items-center gap-5 border border-[var(--commerce-border)] md:grid-cols-[0.72fr_1.28fr]',
+    glass: 'hero-glass relative grid items-end gap-8 overflow-hidden md:min-h-[520px] md:grid-cols-[0.9fr_1.1fr]',
+  };
+  return layouts[hero];
+}
+
+function heroCopyClass(hero: ThemeVisualProfile['hero']): string {
+  if (hero === 'centered') return 'mx-auto max-w-2xl';
+  if (hero === 'glass') return 'relative z-10 max-w-xl bg-[var(--commerce-surface)]/90 p-6 backdrop-blur sm:p-8';
+  if (hero === 'poster') return 'max-w-2xl py-8 sm:py-12';
+  if (hero === 'utility') return 'max-w-xl p-5 sm:p-7';
+  return 'max-w-xl';
+}
+
+function heroMediaClass(hero: ThemeVisualProfile['hero']): string {
+  if (hero === 'centered') return 'relative min-h-[280px] w-full max-w-4xl overflow-hidden bg-[var(--commerce-surface-soft)] sm:min-h-[420px]';
+  if (hero === 'glass') return 'relative min-h-[320px] overflow-hidden bg-[var(--commerce-surface-soft)] md:absolute md:inset-0 md:min-h-0';
+  if (hero === 'poster') return 'relative min-h-[360px] overflow-hidden bg-[var(--commerce-surface-soft)] sm:min-h-[480px]';
+  if (hero === 'utility') return 'relative min-h-[260px] overflow-hidden bg-[var(--commerce-surface-soft)] sm:min-h-[340px]';
+  return 'relative min-h-[320px] overflow-hidden bg-[var(--commerce-surface-soft)] sm:min-h-[420px]';
+}
+
+function productDetailGridClass(layout: ThemeLayoutStyle): string {
+  const layouts: Record<ThemeLayoutStyle, string> = {
+    editorial: 'md:grid-cols-[1.15fr_0.85fr] md:gap-14',
+    poster: 'md:grid-cols-[0.9fr_1.1fr] md:gap-10',
+    boutique: 'md:grid-cols-2 md:gap-12',
+    catalog: 'md:grid-cols-[0.8fr_1.2fr] md:gap-8',
+    tech: 'md:grid-cols-[1.05fr_0.95fr] md:gap-12',
+  };
+  return layouts[layout];
+}
+
 function ProductGallery({product}: {product: Product}) {
   const [active, setActive] = useState(0);
   const images = product.images ?? [];
@@ -31,9 +69,9 @@ function ProductGallery({product}: {product: Product}) {
 
   if (images.length === 0) {
     return (
-      <section className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-10">
-        <div className="commerce-panel grid aspect-[4/5] place-items-center overflow-hidden md:aspect-square">
-          <ImageOff className="h-10 w-10 commerce-muted" aria-hidden="true" />
+      <section className="h-full">
+        <div className="commerce-panel grid aspect-[4/5] h-full place-items-center overflow-hidden md:aspect-square">
+          <ImageOff className="commerce-muted h-10 w-10" aria-hidden="true" />
         </div>
       </section>
     );
@@ -43,7 +81,7 @@ function ProductGallery({product}: {product: Product}) {
   const next = () => setActive((index) => (index + 1) % images.length);
 
   return (
-    <section className="mx-auto max-w-[1180px] px-4 pt-6 sm:px-6 sm:pt-10">
+    <section>
       <div className="relative overflow-hidden bg-[var(--commerce-surface-soft)]">
         <div className="aspect-[4/5] md:aspect-square">
           <img src={image} alt={`${product.name} — ပုံ ${active + 1}`} className="h-full w-full object-contain p-3 sm:p-6" />
@@ -63,7 +101,7 @@ function ProductGallery({product}: {product: Product}) {
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
           {images.map((thumbnail, index) => (
             <button
-              key={thumbnail}
+              key={`${thumbnail}-${index}`}
               type="button"
               onClick={() => setActive(index)}
               aria-label={`ပုံ ${index + 1} ကြည့်ရန်`}
@@ -79,7 +117,7 @@ function ProductGallery({product}: {product: Product}) {
   );
 }
 
-function sectionContent(section: StoreSection, props: StorefrontRendererProps): ReactNode {
+function sectionContent(section: StoreSection, props: StorefrontRendererProps, visual: ThemeVisualProfile): ReactNode {
   switch (section.type) {
     case 'announcement':
       return section.settings.text ? (
@@ -89,8 +127,8 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
       ) : null;
     case 'hero':
       return (
-        <section className="storefront-bundui-hero mx-auto grid max-w-[1320px] items-center gap-8 px-4 py-10 sm:px-8 sm:py-14 md:grid-cols-2 md:gap-12 lg:py-20">
-          <div className="max-w-xl">
+        <section className={`storefront-bundui-hero mx-auto max-w-[1320px] px-4 py-10 sm:px-8 sm:py-14 lg:py-20 ${heroLayoutClass(visual.hero)}`}>
+          <div className={heroCopyClass(visual.hero)}>
             <p className="commerce-kicker mb-3 text-xs font-bold uppercase tracking-[0.18em]">MiniShop Store</p>
             <h1 className="commerce-title text-4xl font-black leading-[1.04] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
               {section.settings.headline}
@@ -104,7 +142,7 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
               </button>
             )}
           </div>
-          <div className="relative min-h-[320px] overflow-hidden bg-[var(--commerce-surface-soft)] sm:min-h-[420px]">
+          <div className={heroMediaClass(visual.hero)}>
             {section.settings.imageUrl ? (
               <img src={section.settings.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
             ) : (
@@ -173,7 +211,7 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
       if (!props.product) return null;
       const currentPrice = props.product.isPromotion && props.product.promoPrice != null ? props.product.promoPrice : props.product.price;
       return (
-        <section className="mx-auto max-w-[1180px] px-4 pb-2 pt-7 sm:px-6 sm:pt-9">
+        <section className="product-info-panel">
           {props.product.category && <p className="commerce-kicker text-xs font-bold uppercase tracking-[0.15em]">{props.product.category}</p>}
           <h1 className="commerce-title mt-2 text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl">{props.product.name}</h1>
           {section.settings.showPrice && (
@@ -213,40 +251,70 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps): 
   }
 }
 
+function sectionFrame(section: StoreSection, props: StorefrontRendererProps, content: ReactNode) {
+  return (
+    <div
+      key={section.id}
+      data-store-section-id={section.id}
+      data-selected={props.selectedSectionId === section.id || undefined}
+      role={props.onSectionSelect ? 'button' : undefined}
+      tabIndex={props.onSectionSelect ? 0 : undefined}
+      aria-label={props.onSectionSelect ? `${section.type} ကဏ္ဍကို ရွေးမည်` : undefined}
+      onClick={props.onSectionSelect ? () => props.onSectionSelect?.(section.id) : undefined}
+      onKeyDown={props.onSectionSelect ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          props.onSectionSelect?.(section.id);
+        }
+      } : undefined}
+      className={props.selectedSectionId === section.id ? 'outline outline-2 outline-offset-2 outline-brand-500' : undefined}
+    >
+      {content}
+    </div>
+  );
+}
+
+function ProductTemplate(props: StorefrontRendererProps, sections: StoreSection[], visual: ThemeVisualProfile, buyNow: StoreDesignDocument['globalSettings']['buyNow']) {
+  const gallery = sections.find((section) => section.type === 'product-gallery');
+  const info = sections.find((section) => section.type === 'product-info');
+  const primaryIds = new Set([gallery?.id, info?.id].filter((id): id is string => Boolean(id)));
+  const remaining = sections.filter((section) => !primaryIds.has(section.id));
+
+  return (
+    <>
+      {(gallery || info) && (
+        <div className={`product-detail-shell mx-auto grid max-w-[1180px] gap-8 px-4 pb-8 pt-6 sm:px-6 sm:pt-10 ${productDetailGridClass(visual.layout)}`}>
+          <div>
+            {gallery ? sectionFrame(gallery, props, sectionContent(gallery, props, visual)) : null}
+          </div>
+          <div className="self-start md:sticky md:top-24">
+            {info ? sectionFrame(info, props, sectionContent(info, props, visual)) : null}
+            {props.renderRequiredCommerce && (
+              <div className="mt-6">
+                {props.renderRequiredCommerce(buyNow)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {remaining.map((section) => sectionFrame(section, props, sectionContent(section, props, visual)))}
+    </>
+  );
+}
+
 export function StorefrontRenderer(props: StorefrontRendererProps) {
   const plan = buildStorefrontRenderPlan(props.document, props.template);
   const visual = getThemeVisual({presetId: plan.themeId, accentColor: plan.accentColor});
+
   return (
     <div
       data-store-theme={plan.themeId}
       style={{backgroundColor: visual.canvas, color: visual.text}}
       className="min-h-full"
     >
-      {plan.sections.map((section) => (
-        <div
-          key={section.id}
-          data-store-section-id={section.id}
-          data-selected={props.selectedSectionId === section.id || undefined}
-          role={props.onSectionSelect ? 'button' : undefined}
-          tabIndex={props.onSectionSelect ? 0 : undefined}
-          aria-label={props.onSectionSelect ? `${section.type} ကဏ္ဍကို ရွေးမည်` : undefined}
-          onClick={props.onSectionSelect ? () => props.onSectionSelect?.(section.id) : undefined}
-          onKeyDown={props.onSectionSelect ? (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              props.onSectionSelect?.(section.id);
-            }
-          } : undefined}
-          className={props.selectedSectionId === section.id ? 'outline outline-2 outline-offset-2 outline-brand-500' : undefined}
-        >
-          {sectionContent(section, props)}
-          {props.template === 'product' && section.type === 'product-info' && (
-            <div className="mx-auto max-w-[1180px] px-4 pb-8 sm:px-6">
-              {props.renderRequiredCommerce?.(plan.requiredCommerce.buyNow)}
-            </div>
-          )}
-        </div>
-      ))}
+      {props.template === 'product'
+        ? <ProductTemplate props={props} sections={plan.sections} visual={visual} buyNow={plan.requiredCommerce.buyNow} />
+        : plan.sections.map((section) => sectionFrame(section, props, sectionContent(section, props, visual)))}
     </div>
   );
 }
