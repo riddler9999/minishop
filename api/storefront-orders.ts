@@ -1,14 +1,10 @@
-import {createClient} from '@supabase/supabase-js';
 import {mapDbError} from '../src/domain/dbError.js';
-import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {forwardedClientIp} from './_client-ip.js';
+import {lookupOrderBackend} from './_storefront-lookup-backend.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return sendJson(res, 405, {error: 'Method not allowed'});
-  const env = supabaseEnv();
-  if (!env) return sendJson(res, 503, {error: 'Backend unavailable'});
-
   const slug = String(req.query?.slug || '').trim();
   const orderNo = String(req.query?.orderNo || '').trim();
   const phone = String(req.query?.phone || '').trim();
@@ -16,15 +12,14 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 400, {error: 'Missing lookup fields'});
   }
 
-  const sb = createClient(env.url, env.key, {
-    auth: {persistSession: false, autoRefreshToken: false},
-    global: {headers: {'x-forwarded-for': forwardedClientIp(req)}},
+  const backend = await lookupOrderBackend({
+    slug,
+    orderNo,
+    phone,
+    clientIp: forwardedClientIp(req),
   });
-  const {data, error} = await sb.rpc('lookup_order', {
-    p_shop_slug: slug,
-    p_order_no: orderNo,
-    p_phone: phone,
-  });
+  if (!backend.configured) return sendJson(res, 503, {error: 'Backend unavailable'});
+  const {data, error} = backend;
 
   if (error) {
     if (String(error.message).includes('rate_limit_exceeded')) {
