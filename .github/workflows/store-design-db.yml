@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/0024_store_design_lifecycle.sql'
-      - 'supabase/migrations/0029_store_design_schema_revision_safety.sql'
+      - 'supabase/migrations/0030_store_design_schema_revision_safety.sql'
       - 'tests/storeDesignDatabaseRuntime.sql'
       - 'tests/storeDesignSafetyRuntime.sql'
       - '.github/workflows/store-design-db.yml'
@@ -12,7 +12,7 @@ on:
     branches: [main]
     paths:
       - 'supabase/migrations/0024_store_design_lifecycle.sql'
-      - 'supabase/migrations/0029_store_design_schema_revision_safety.sql'
+      - 'supabase/migrations/0030_store_design_schema_revision_safety.sql'
       - 'tests/storeDesignDatabaseRuntime.sql'
       - 'tests/storeDesignSafetyRuntime.sql'
       - '.github/workflows/store-design-db.yml'
@@ -119,7 +119,7 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f tests/storeDesignDatabaseRuntime.sql
 
       - name: Apply Task 7 forward-only Store Design safety migration
-        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0029_store_design_schema_revision_safety.sql
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0030_store_design_schema_revision_safety.sql
 
       - name: Verify Task 7 schema, revision, limits, rollback retry, and RLS safety
         run: psql -v ON_ERROR_STOP=1 -f tests/storeDesignSafetyRuntime.sql
