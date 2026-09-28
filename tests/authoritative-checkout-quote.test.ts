@@ -52,3 +52,15 @@ test('live checkout displays server quote totals and submits the accepted quote 
   assert.match(source, /quote\.grandTotal/);
   assert.doesNotMatch(source, /shippingFee:\s*fee/);
 });
+
+
+test('same idempotency key returns the committed order before stale-quote validation', async () => {
+  const sql = await readFile(
+    new URL('../supabase/migrations/0029_authoritative_checkout_quote.sql', import.meta.url),
+    'utf8',
+  );
+  const retryLookup = sql.indexOf('where shop_id = v_shop.id and idempotency_key = p_idempotency_key');
+  const staleCheck = sql.indexOf("raise exception 'quote_stale'");
+  assert.ok(retryLookup >= 0);
+  assert.ok(staleCheck > retryLookup);
+});
