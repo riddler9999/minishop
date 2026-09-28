@@ -36,10 +36,7 @@ production without the owner's explicit go-ahead — see
 
 ## Security model (read before touching)
 
-- **Storefront is anonymous.** Buyers are not logged in. `shops`, `products`,
-  `payment_accounts`, `shipping_zones` are readable by `anon` **only for active
-  shops** (and products only when `status='active'`). Sellers additionally see
-  their own hidden rows via an owner policy.
+- **Storefront is anonymous.** Buyers are not logged in. After migration `0027`, anon does **not** have direct SELECT on `shops`, `products`, `payment_accounts`, or `shipping_zones`. Buyer reads go through `buyer_public_shops`, `buyer_public_products`, `buyer_public_payment_accounts`, and `buyer_public_shipping_zones`, which expose only storefront/checkout fields and active rows. Authenticated sellers keep owner-scoped base-table reads. Before 0027 is applied, the API gateways use the prior active-row base-table path only when PostgREST reports that the projection views do not exist.
 - **Buyers never write tables directly.** The only anon write path is the
   `place_order()` RPC (SECURITY DEFINER). It **re-prices every line from the
   `products` table** — client-sent prices are ignored — validates stock/shop
@@ -77,6 +74,7 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 | `0023_database_rls_concurrency_reconciliation.sql` | Narrows storefront reads to `anon`, keeps shared Ninja Van rates visible to sellers, makes shop-logo writes Core while owner/path scoped, and adds unique full transaction identity to Extra Order crediting. **Applied to Production 2026-09-28 after read-only preflight; post-verified with authenticated overlap = 0, Seller A foreign shop/product reads = 0, and anon storefront visibility preserved.** |
 | `0024_store_design_lifecycle.sql` | Adds tenant-scoped Draft/Published Store Design lifecycle RPCs and buyer Published-only read while retaining `shops.theme` compatibility. **Applied to Production 2026-09-28** (confirmed by live migration history). |
 | `0026_platform_shop_lifecycle.sql` | Separates seller operational state from platform suspension, keeps `shops.is_active` as the derived buyer-facing effective flag, and removes seller DELETE permission on the shop lifecycle root. **Not applied to Production.** Requires a separate reviewed Production rollout. |
+| `0027_anonymous_storefront_projection.sql` | Adds narrow buyer-safe projection views for shops/products/payment accounts/shipping zones, removes seller-only product SKU exposure, and revokes anon SELECT on those base tables. **Not applied to Production.** API gateways retain a missing-view-only compatibility fallback until this migration is explicitly approved and applied. |
 
 ### Residual advisor decisions (2026-09-25)
 
