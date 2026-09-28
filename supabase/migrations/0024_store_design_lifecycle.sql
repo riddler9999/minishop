@@ -151,7 +151,7 @@ as $legacy$
             'enabled', true,
             'settings', jsonb_build_object(
               'title', coalesce(t #>> '{home,featuredTitle}', 'ရွေးချယ်ထားသော ပစ္စည်းများ'),
-              'productSource', jsonb_build_object('mode', 'manual', 'productIds', jsonb_build_array())
+              'productSource', jsonb_build_object('mode', 'dynamic', 'rule', 'new_arrivals', 'limit', 8)
             )
           )
         )
@@ -166,8 +166,7 @@ as $legacy$
               'title', coalesce(t #>> '{category,heading}', 'စုစည်းမှု'),
               'productSource', jsonb_build_object(
                 'mode', 'dynamic',
-                'rule', 'category',
-                'category', '',
+                'rule', 'new_arrivals',
                 'limit', 12
               )
             )

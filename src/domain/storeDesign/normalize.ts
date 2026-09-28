@@ -140,12 +140,12 @@ function defaultSections(themeId: ThemePresetId): StoreDesignDocument['templates
       {id: 'home-announcement-1', type: 'announcement', enabled: theme.announcement.enabled, settings: {text: theme.announcement.text}},
       {id: 'home-hero-2', type: 'hero', enabled: theme.home.heroEnabled, settings: {headline: theme.home.heroHeadline, subtext: theme.home.heroSubtext, ctaLabel: theme.home.heroCtaLabel, imageUrl: theme.home.heroImageUrl}},
       {id: 'home-categories-3', type: 'categories', enabled: theme.home.categoriesEnabled, settings: {title: 'အမျိုးအစားများ'}},
-      {id: 'home-featured-products-4', type: 'featured-products', enabled: true, settings: {title: theme.home.featuredTitle, productSource: {mode: 'manual', productIds: []}}},
+      {id: 'home-featured-products-4', type: 'featured-products', enabled: true, settings: {title: theme.home.featuredTitle, productSource: {mode: 'dynamic', rule: 'new_arrivals', limit: 8}}},
       {id: 'home-best-selling-5', type: 'best-selling', enabled: true, settings: {title: 'အရောင်းရဆုံး', productSource: {mode: 'dynamic', rule: 'best_selling', limit: 8}}},
     ]},
     collection: {sections: [
       {id: 'collection-rich-text-1', type: 'rich-text', enabled: true, settings: {text: ''}},
-      {id: 'collection-product-collection-2', type: 'product-collection', enabled: true, settings: {title: theme.category.heading, productSource: {mode: 'dynamic', rule: 'category', category: '', limit: 12}}},
+      {id: 'collection-product-collection-2', type: 'product-collection', enabled: true, settings: {title: theme.category.heading, productSource: {mode: 'dynamic', rule: 'new_arrivals', limit: 12}}},
     ]},
     product: {sections: [
       {id: 'product-product-gallery-1', type: 'product-gallery', enabled: true, settings: {layout: 'carousel'}},

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import type {Product} from '../src/domain/product.ts';
 import {resolveProductSource} from '../src/domain/storeDesign/productSource.ts';
+import {normalizeStoreDesign} from '../src/domain/storeDesign/normalize.ts';
 
 function product(id: string, patch: Partial<Product> = {}): Product {
   return {
@@ -27,6 +28,18 @@ function product(id: string, patch: Partial<Product> = {}): Product {
 }
 
 describe('Store Builder #110 deterministic product-source resolution', () => {
+  it('keeps products visible when an existing shop theme becomes a Store Design', () => {
+    const document = normalizeStoreDesign({presetId: 'clean-minimal'});
+    const home = document.templates.home.sections.find((section) => section.type === 'featured-products');
+    const collection = document.templates.collection.sections.find((section) => section.type === 'product-collection');
+    const available = [product('active')];
+    assert.equal(home?.type, 'featured-products');
+    assert.equal(collection?.type, 'product-collection');
+    if (home?.type !== 'featured-products' || collection?.type !== 'product-collection') return;
+    assert.deepEqual(resolveProductSource(home.settings.productSource, available).map((item) => item.id), ['active']);
+    assert.deepEqual(resolveProductSource(collection.settings.productSource, available).map((item) => item.id), ['active']);
+  });
+
   it('Manual preserves configured order while dropping unavailable products', () => {
     const available = [product('b'), product('a'), product('c', {status: 'hidden'})];
     const result = resolveProductSource({mode: 'manual', productIds: ['a', 'missing', 'b', 'c']}, available);
