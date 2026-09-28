@@ -16,7 +16,7 @@ describe('MiniShop MCP endpoint E2E lifecycle',()=>{
       async loadOwnStoreDesign(){return{draft,published,previousPublished,draftRevision,publishedRevision,updatedAt:null,publishedAt:null};},
       async saveDraft({expectedRevision,document}){assert.equal(expectedRevision,draftRevision);draft=document;draftRevision++;return{revision:draftRevision,document:draft};},
       async publishDraft({expectedDraftRevision}){assert.equal(expectedDraftRevision,draftRevision);previousPublished=published;published=draft;publishedRevision++;return{draft,published,previousPublished,draftRevision,publishedRevision,updatedAt:null,publishedAt:null};},
-      async rollbackPublished(){const current=published;published=previousPublished;previousPublished=current;publishedRevision++;return{draft,published,previousPublished,draftRevision,publishedRevision,updatedAt:null,publishedAt:null};},
+      async rollbackPublished({expectedPublishedRevision}){assert.equal(expectedPublishedRevision,publishedRevision);const current=published;published=previousPublished;previousPublished=current;publishedRevision++;return{draft,published,previousPublished,draftRevision,publishedRevision,updatedAt:null,publishedAt:null};},
     };
     const profile={id:'shop-a',name:'Seller A Shop',phone:'099',logo_url:null,default_delivery_fee:2000,origin_region:'Yangon',origin_township:'Kamayut',delivery_service:'manual'};
     const sellerClient:any={from(table:string){

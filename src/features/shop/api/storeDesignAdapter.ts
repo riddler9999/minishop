@@ -91,8 +91,10 @@ export function createStoreDesignLifecycleAdapter(client: StoreDesignRpcClient) 
       return mapLifecycle(data);
     },
 
-    async rollbackPublished(): Promise<StoreDesignLifecycle> {
-      const {data, error} = await client.rpc('rollback_store_design_published');
+    async rollbackPublished(input: {expectedPublishedRevision: number}): Promise<StoreDesignLifecycle> {
+      const {data, error} = await client.rpc('rollback_store_design_published', {
+        p_expected_published_revision: input.expectedPublishedRevision,
+      });
       if (error) throwRpcError(error);
       return mapLifecycle(data);
     },

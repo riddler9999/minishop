@@ -120,10 +120,10 @@ describe('seller Store Design lifecycle adapter', () => {
     }));
 
     assert.equal((await adapter.publishDraft({expectedDraftRevision: 4})).publishedRevision, 5);
-    assert.equal((await adapter.rollbackPublished()).draftRevision, 4);
+    assert.equal((await adapter.rollbackPublished({expectedPublishedRevision: 5})).draftRevision, 4);
     assert.deepEqual(calls, [
       {fn: 'publish_store_design_draft', args: {p_expected_draft_revision: 4}},
-      {fn: 'rollback_store_design_published', args: undefined},
+      {fn: 'rollback_store_design_published', args: {p_expected_published_revision: 5}},
     ]);
   });
 });
