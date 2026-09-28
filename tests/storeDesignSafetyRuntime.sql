@@ -117,7 +117,9 @@ declare
   v_published bigint;
   v_result jsonb;
 begin
-  select draft_revision, published_revision into v_draft, v_published from public.store_designs;
+  select draft_revision, published_revision into v_draft, v_published
+  from public.store_designs
+  where shop_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid;
   v_result := public.save_store_design_draft(v_draft, v_doc);
 
   begin
