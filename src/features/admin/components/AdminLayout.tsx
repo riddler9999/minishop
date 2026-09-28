@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {NavLink, Outlet, Link} from 'react-router-dom';
+import {NavLink, Outlet, Link, useLocation} from 'react-router-dom';
 import {BarChart3, Bell, Home, LogOut, Menu, Package, Settings, ShoppingBag, Store, Truck, X} from 'lucide-react';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
@@ -96,10 +96,12 @@ function MobileDrawer({onClose}: {onClose: () => void}) {
 export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const {shop} = usePlan();
+  const {pathname} = useLocation();
+  const inStoreBuilder = pathname === '/admin/online-store/themes/customize';
   return (
     <div className="platform-shell min-h-screen bg-[var(--minishop-canvas)] text-[var(--minishop-ink)]">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white p-5 lg:block"><Sidebar /></aside>
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-[#f7f9fc]/95 px-4 py-3 backdrop-blur lg:ml-64">
+      {!inStoreBuilder && <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white p-5 lg:block"><Sidebar /></aside>}
+      {!inStoreBuilder && <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-[#f7f9fc]/95 px-4 py-3 backdrop-blur lg:ml-64">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <button onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 lg:hidden"><Menu className="h-5 w-5" /></button>
           <div className="hidden items-center gap-3 lg:flex">
@@ -114,10 +116,10 @@ export default function AdminLayout() {
             </div>
           </div>
         </div>
-      </header>
+      </header>}
       {mobileOpen && <MobileDrawer onClose={() => setMobileOpen(false)} />}
-      <main className="lg:pl-64"><div className="mx-auto max-w-5xl px-4 py-5 pb-40 sm:pb-28 sm:px-5 lg:py-7"><Outlet /></div></main>
-      <MobileNav />
+      <main className={inStoreBuilder ? 'min-h-dvh' : 'lg:pl-64'}><div className={inStoreBuilder ? 'w-full' : 'mx-auto max-w-5xl px-4 py-5 pb-40 sm:pb-28 sm:px-5 lg:py-7'}><Outlet /></div></main>
+      {!inStoreBuilder && <MobileNav />}
     </div>
   );
 }

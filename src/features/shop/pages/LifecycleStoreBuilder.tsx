@@ -2,9 +2,11 @@ import {useEffect, useMemo, useState} from 'react';
 import {adminApi} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
 import type {StoreDesignLifecycle} from '@/domain/storeDesign';
+import {usePlan} from '@/features/billing/plan';
 import {StoreBuilderShell} from '@/features/shop/storeBuilder/StoreBuilderShell';
 
 export default function LifecycleStoreBuilder() {
+  const {shop} = usePlan();
   const [lifecycle, setLifecycle] = useState<StoreDesignLifecycle | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState('');
@@ -32,6 +34,7 @@ export default function LifecycleStoreBuilder() {
       initialRevision={lifecycle.draftRevision}
       products={products}
       categories={categories}
+      shopName={shop?.name ?? 'သင့်ဆိုင်'}
       saveDraft={adminApi.saveDraft}
       publishDraft={adminApi.publishDraft}
     />
