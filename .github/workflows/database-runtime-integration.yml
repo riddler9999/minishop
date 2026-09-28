@@ -57,7 +57,7 @@ jobs:
       - name: Start disposable local Supabase
         run: supabase start --workdir "$RUNTIME_WORKDIR"
 
-      - name: Replay full migration chain through 0023
+      - name: Replay full migration chain through current task
         run: supabase db reset --workdir "$RUNTIME_WORKDIR"
 
       - name: Inspect Storage RLS runtime state
