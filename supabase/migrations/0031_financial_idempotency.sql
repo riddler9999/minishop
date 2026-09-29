@@ -303,7 +303,7 @@ create or replace function public.activate_plan_from_verified_payment(
 language plpgsql
 security definer
 set search_path = pg_catalog, public
-as $
+as $$
 declare
   v_payment public.payment_proofs%rowtype;
   v_plan text;
@@ -331,7 +331,7 @@ begin
   update public.payment_proofs set amount=p_amount,transaction_id=v_transaction_id,paid_at=p_paid_at,sender_name=p_sender_name,receiver_name=p_receiver_name,status='approved',detected_plan=v_plan,confidence=p_confidence,rejection_reason=null,raw_extraction=coalesce(p_raw_extraction,'{}'::jsonb),verified_at=now() where id=p_payment_id;
   return jsonb_build_object('ok',true,'payment_id',p_payment_id,'shop_id',v_payment.shop_id,'status','approved','plan',v_plan,'amount',p_amount,'transaction_id',v_transaction_id);
 end;
-$;
+$$;
 
 revoke all on function public.claim_financial_admin_request(uuid,text,text,uuid,uuid,text) from public, anon, authenticated;
 revoke all on function public.finish_financial_admin_request(uuid,jsonb) from public, anon, authenticated;
