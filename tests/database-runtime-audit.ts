@@ -1020,7 +1020,7 @@ async function main() {
       p_idempotency_key: randomUUID(),
     });
     assert.ok(missing.error, 'missing transaction id unexpectedly credited purchase');
-    assert.match(errorText(missing.error), /transaction_id_required/);
+    assert.match(errorText(missing.error), /payment_identity_required/);
     const purchase = ok(await service.from('order_pack_purchases').select('status,transaction_id').eq('id', purchaseId).single(), 'missing transaction purchase');
     assert.equal(purchase.status, 'pending');
     assert.equal(purchase.transaction_id, null);
