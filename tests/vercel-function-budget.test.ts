@@ -17,7 +17,7 @@ async function walk(dir: string): Promise<string[]> {
 test('Vercel Hobby function discovery stays within the 12-function deployment budget', async () => {
   const files = await walk('api');
   const discovered = files.filter((file) => {
-    if (!/\\.(?:ts|js)$/.test(file)) return false;
+    if (!/\.(?:ts|js)$/.test(file)) return false;
     const relative = file.slice('api/'.length);
     return relative.split('/').every((segment) => !segment.startsWith('_'));
   });
