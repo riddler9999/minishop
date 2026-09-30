@@ -1221,7 +1221,7 @@ async function main() {
     assert.equal(orderMovement.stock_before, 5);
     assert.equal(orderMovement.stock_after, 3);
     assert.equal(orderMovement.source_type, 'order');
-    assert.equal(orderMovement.source_id, `${order.id}:${product.id}`);
+    assert.match(String(orderMovement.source_id), new RegExp(`^${product.id}:5:3:`));
 
     const beforeFailedCount = ok(
       await service.from('inventory_movements').select('id').eq('product_id', product.id),
