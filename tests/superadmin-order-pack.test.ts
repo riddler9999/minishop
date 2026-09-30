@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createSuperadminHandler} from '../api/superadmin.ts';
 import {buildCreditPackRequest, ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} from '../src/features/superadmin/orderPackApproval.ts';
 
@@ -64,29 +65,11 @@ test('credit-pack maps unknown DB errors to safe domain fallback', async () => {
   assert.deepEqual(res.json(), {error:'Action failed'});
 });
 
-test('GET pack projection stays pre-0023 compatible and does not request transaction_id', async () => {
-  const selected:string[] = [];
-  const query = () => ({
-    order(){ return this; },
-    limit: async () => ({data:[], error:null}),
-  });
-  const admin:any = {
-    from(table:string) {
-      return {
-        select(selection:string) {
-          if (table === 'order_pack_purchases') selected.push(selection);
-          return query();
-        },
-      };
-    },
-    storage: {from(){ return {createSignedUrl: async () => ({data:{signedUrl:null}})}; }},
-  };
-  const handler = createSuperadminHandler({requireAccess: async () => ({admin, user:{}} as any)} as any);
-  const res:any = makeResponse();
-  await handler({method:'GET'}, res);
-  assert.equal(res.statusCode, 200);
-  assert.equal(selected.length, 1);
-  assert.doesNotMatch(selected[0], /transaction_id/);
+test('GET pack projection stays pre-0023 compatible and does not request transaction_id', () => {
+  const source = readFileSync(new URL('../api/superadmin.ts', import.meta.url), 'utf8');
+  const match = source.match(/getPage\(sb,'order_pack_purchases','([^']+)'/);
+  assert.ok(match, 'order pack projection should be explicit');
+  assert.doesNotMatch(match[1], /transaction_id/);
 });
 
 

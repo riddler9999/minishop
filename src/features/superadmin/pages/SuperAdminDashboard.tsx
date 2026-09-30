@@ -7,6 +7,12 @@ import {buildCreditPackRequest, ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} from '@/fe
 type Payload = {
   metrics: {shops:number; activeShops:number; pendingApplications:number; pendingOrderPacks:number; recordedRevenue:number};
   shops: any[]; applications:any[]; packs:any[]; entitlements:any[];
+  page: {
+    limit:number;
+    shops:{nextCursor:string|null};
+    applications:{nextCursor:string|null};
+    packs:{nextCursor:string|null};
+  };
 };
 
 const money = (n:number) => new Intl.NumberFormat('en-US').format(n) + ' Ks';
@@ -18,6 +24,8 @@ export default function SuperAdminDashboard() {
   const [busy,setBusy]=useState('');
   const [packTransactionIds,setPackTransactionIds]=useState<Record<string,string>>({});
   const [subscriptionPaymentIds,setSubscriptionPaymentIds]=useState<Record<string,string>>({});
+  const [loadingPage,setLoadingPage]=useState('');
+  const [proofBusy,setProofBusy]=useState('');
   const requestKeys=useRef<Record<string,string>>({});
   const token=session?.access_token;
 
@@ -31,6 +39,58 @@ export default function SuperAdminDashboard() {
   },[token]);
 
   useEffect(()=>{void load()},[load]);
+
+  const loadMore=useCallback(async(section:'shops'|'applications'|'packs')=>{
+    if(!token || !data || loadingPage) return;
+    const cursor=data.page?.[section]?.nextCursor;
+    if(!cursor) return;
+    setLoadingPage(section);
+    setError('');
+    try {
+      const param=section==='shops'?'shopsCursor':section==='applications'?'applicationsCursor':'packsCursor';
+      const r=await fetch(`/api/superadmin?limit=${data.page.limit}&${param}=${encodeURIComponent(cursor)}`,{headers:{Authorization:`Bearer ${token}`}});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){setError(j.error||'Unable to load next page');return;}
+      setData((current)=>{
+        if(!current) return j;
+        const merged={...current,page:{...current.page,[section]:j.page[section]}};
+        if(section==='shops'){
+          merged.shops=[...current.shops,...j.shops];
+          const known=new Set(current.entitlements.map((e:any)=>e.shop_id));
+          merged.entitlements=[...current.entitlements,...j.entitlements.filter((e:any)=>!known.has(e.shop_id))];
+        } else if(section==='applications') merged.applications=[...current.applications,...j.applications];
+        else merged.packs=[...current.packs,...j.packs];
+        return merged;
+      });
+    } finally {
+      setLoadingPage('');
+    }
+  },[data,loadingPage,token]);
+
+  const openProof=useCallback(async(type:'application'|'pack',id:string)=>{
+    if(!token || proofBusy) return;
+    const key=`${type}:${id}`;
+    setProofBusy(key);
+    setError('');
+    const popup=window.open('about:blank','_blank');
+    try {
+      const r=await fetch(`/api/superadmin?proofType=${type}&proofId=${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`}});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok || !j.proofUrl){
+        popup?.close();
+        setError(j.error||'Unable to load proof');
+        return;
+      }
+      if(popup) popup.location.href=j.proofUrl;
+      else window.location.href=j.proofUrl;
+    } catch {
+      popup?.close();
+      setError('Unable to load proof');
+    } finally {
+      setProofBusy('');
+    }
+  },[proofBusy,token]);
+
   const ent=useMemo(()=>new Map((data?.entitlements||[]).map((e:any)=>[e.shop_id,e])),[data]);
 
   function requestKey(key:string){
@@ -83,9 +143,10 @@ export default function SuperAdminDashboard() {
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4"><h2 className="font-bold">Pending subscription applications</h2></div>
         <div className="overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th className="p-3">Owner</th><th>Plan</th><th>Amount</th><th>Payment</th><th>Submitted</th><th>Action</th></tr></thead><tbody>
-          {(data?.applications||[]).filter((a:any)=>a.status==='pending').map((a:any)=><tr key={a.owner_id} className="border-t"><td className="p-3 font-mono text-xs">{a.owner_id}</td><td className="font-semibold capitalize">{a.plan}</td><td>{money(a.amount)}</td><td>{a.payment_method} {a.payment_ref_tail&&`••${a.payment_ref_tail}`}</td><td>{new Date(a.created_at).toLocaleDateString()}</td><td className="py-2"><div className="flex items-center gap-2">{a.proofUrl&&<a href={a.proofUrl} target="_blank" rel="noreferrer" className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">View proof</a>}<button disabled={!!busy} onClick={()=>void act(a.owner_id+"approve",{action:"approve-application",ownerId:a.owner_id},"Approve this application?")} className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white">Approve</button><button disabled={!!busy} onClick={()=>void act(a.owner_id+"reject",{action:"reject-application",ownerId:a.owner_id},"Reject this application?")} className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600">Reject</button></div></td></tr>)}
+          {(data?.applications||[]).filter((a:any)=>a.status==='pending').map((a:any)=><tr key={a.owner_id} className="border-t"><td className="p-3 font-mono text-xs">{a.owner_id}</td><td className="font-semibold capitalize">{a.plan}</td><td>{money(a.amount)}</td><td>{a.payment_method} {a.payment_ref_tail&&`••${a.payment_ref_tail}`}</td><td>{new Date(a.created_at).toLocaleDateString()}</td><td className="py-2"><div className="flex items-center gap-2">{a.screenshot_path&&<button disabled={!!proofBusy} onClick={()=>void openProof('application',a.owner_id)} className="rounded-lg border px-2.5 py-1.5 text-xs font-semibold">{proofBusy===`application:${a.owner_id}`?'Loading…':'View proof'}</button>}<button disabled={!!busy} onClick={()=>void act(a.owner_id+"approve",{action:"approve-application",ownerId:a.owner_id},"Approve this application?")} className="rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white">Approve</button><button disabled={!!busy} onClick={()=>void act(a.owner_id+"reject",{action:"reject-application",ownerId:a.owner_id},"Reject this application?")} className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600">Reject</button></div></td></tr>)}
           {!(data?.applications||[]).some((a:any)=>a.status==='pending')&&<tr><td colSpan={6} className="p-8 text-center text-slate-400">No pending applications</td></tr>}
         </tbody></table></div>
+        {data?.page?.applications.nextCursor&&<div className="border-t p-3 text-center"><button disabled={!!loadingPage} onClick={()=>void loadMore('applications')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{loadingPage==='applications'?'Loading…':'Load more applications'}</button></div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -98,11 +159,13 @@ export default function SuperAdminDashboard() {
             {e?.active!==false&&<button disabled={!!busy} onClick={()=>void act(s.id+'cancel',{action:'cancel',shopId:s.id},`Cancel subscription for ${s.name}?`)} className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600">Cancel sub</button>}
           </div></td></tr>})}
         </tbody></table></div>
+        {data?.page?.shops.nextCursor&&<div className="border-t p-3 text-center"><button disabled={!!loadingPage} onClick={()=>void loadMore('shops')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{loadingPage==='shops'?'Loading…':'Load more shops'}</button></div>}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4"><h2 className="font-bold">Extra-order purchase requests</h2></div>
-        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=>{const transactionId=packTransactionIds[p.id]||''; const creditRequest=transactionId.trim()?buildCreditPackRequest(p.id,transactionId,requestKey(p.id)):null; return <div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex flex-col gap-2 md:items-end"><label className="text-xs font-semibold text-slate-600">Verified full transaction ID<input aria-label={`Full transaction ID for purchase ${p.id}`} value={transactionId} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setPackTransactionIds((current)=>({...current,[p.id]:e.target.value}))} placeholder="Enter full transaction ID" className="mt-1 block w-full min-w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal text-slate-950" /></label><div className="flex gap-2">{p.proofUrl&&<a href={p.proofUrl} target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-sm font-semibold">View proof</a>}<button disabled={!!busy||!creditRequest} onClick={()=>{if(creditRequest) void act(p.id,creditRequest,"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div></div>})}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
+        <div className="divide-y">{(data?.packs||[]).filter((p:any)=>p.status==='pending').map((p:any)=>{const transactionId=packTransactionIds[p.id]||''; const creditRequest=transactionId.trim()?buildCreditPackRequest(p.id,transactionId,requestKey(p.id)):null; return <div key={p.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-semibold">{p.qty} extra orders · {money(p.amount)}</p><p className="text-xs text-slate-500">{p.payment_method} {p.payment_ref_tail&&`••${p.payment_ref_tail}`} · shop {p.shop_id}</p></div><div className="flex flex-col gap-2 md:items-end"><label className="text-xs font-semibold text-slate-600">Verified full transaction ID<input aria-label={`Full transaction ID for purchase ${p.id}`} value={transactionId} maxLength={ORDER_PACK_TRANSACTION_ID_MAX_LENGTH} onChange={(e)=>setPackTransactionIds((current)=>({...current,[p.id]:e.target.value}))} placeholder="Enter full transaction ID" className="mt-1 block w-full min-w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal text-slate-950" /></label><div className="flex gap-2">{p.screenshot_path&&<button disabled={!!proofBusy} onClick={()=>void openProof('pack',p.id)} className="rounded-xl border px-4 py-2 text-sm font-semibold">{proofBusy===`pack:${p.id}`?'Loading…':'View proof'}</button>}<button disabled={!!busy||!creditRequest} onClick={()=>{if(creditRequest) void act(p.id,creditRequest,"Approve and credit extra orders?")}} className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">Approve & credit</button><button disabled={!!busy} onClick={()=>void act(p.id+"reject",{action:"reject-pack",purchaseId:p.id},"Reject this request?")} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600">Reject</button></div></div></div>})}{!(data?.packs||[]).some((p:any)=>p.status==='pending')&&<p className="p-8 text-center text-sm text-slate-400">No pending requests</p>}</div>
+        {data?.page?.packs.nextCursor&&<div className="border-t p-3 text-center"><button disabled={!!loadingPage} onClick={()=>void loadMore('packs')} className="rounded-xl border px-4 py-2 text-sm font-semibold">{loadingPage==='packs'?'Loading…':'Load more requests'}</button></div>}
       </section>
     </div>
   </main>;

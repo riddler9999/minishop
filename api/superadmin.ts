@@ -4,10 +4,64 @@ import {mapDbError} from '../src/domain/dbError.js';
 import {requireSuperadmin} from './_superadmin.js';
 
 const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
 
 type SuperadminDeps = {
   requireAccess: typeof requireSuperadmin;
 };
+
+function pageSize(input: unknown): number {
+  const parsed = Number(input);
+  if (!Number.isFinite(parsed)) return DEFAULT_PAGE_SIZE;
+  return Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(parsed)));
+}
+
+function encodeCursor(row: any): string | null {
+  if (!row?.created_at) return null;
+  return Buffer.from(JSON.stringify({created_at: row.created_at, id: row.id ?? row.owner_id ?? row.shop_id ?? null})).toString('base64url');
+}
+
+function decodeCursor(raw: unknown): {created_at: string; id: string | null} | null {
+  if (typeof raw !== 'string' || !raw) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    const createdAt = parsed?.created_at;
+    const id = parsed?.id;
+    if (typeof createdAt !== 'string' || !Number.isFinite(Date.parse(createdAt))) return null;
+    if (id !== null && (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,100}$/.test(id))) return null;
+    return {created_at: createdAt, id};
+  } catch {
+    return null;
+  }
+}
+
+async function getPage(
+  sb: any,
+  table: string,
+  selection: string,
+  limit: number,
+  cursorRaw: unknown,
+  keyColumn: string,
+  status?: string,
+) {
+  const cursor = decodeCursor(cursorRaw);
+  let q = sb.from(table).select(selection);
+  if (status) q = q.eq('status', status);
+  if (cursor?.id) {
+    q = q.or(`created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},${keyColumn}.lt.${cursor.id})`);
+  } else if (cursor) {
+    q = q.lt('created_at', cursor.created_at);
+  }
+  q = q.order('created_at', {ascending:false}).order(keyColumn, {ascending:false}).limit(limit + 1);
+  const {data, error} = await q;
+  const rows = data ?? [];
+  return {
+    rows: rows.slice(0, limit),
+    error,
+    nextCursor: rows.length > limit ? encodeCursor(rows[limit - 1]) : null,
+  };
+}
 
 export function createSuperadminHandler(
   deps: SuperadminDeps = {requireAccess: requireSuperadmin},
@@ -18,25 +72,64 @@ export function createSuperadminHandler(
   const sb = access.admin;
 
   if (req.method === 'GET') {
-    const [{data: shops, error: se}, {data: applications, error: ae}, {data: packs, error: pe}, {data: entitlements, error: ee}] = await Promise.all([
-      sb.from('shops').select('id,name,slug,owner_id,plan,is_active,seller_is_active,platform_suspended,created_at,updated_at').order('created_at', {ascending:false}).limit(500),
-      sb.from('shop_applications').select('owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note').order('created_at', {ascending:false}).limit(200),
-      sb.from('order_pack_purchases').select('id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at').order('created_at', {ascending:false}).limit(200),
-      sb.from('shop_entitlements').select('shop_id,plan,active,monthly_quota,monthly_used,purchased_balance,cycle_end,pending_plan,updated_at').limit(500),
+    const q = req.query || {};
+    const proofType = clean(q.proofType, 30);
+    const proofId = clean(q.proofId, 100);
+    if (proofType && proofId) {
+      const table = proofType === 'application' ? 'shop_applications' : proofType === 'pack' ? 'order_pack_purchases' : '';
+      const idColumn = proofType === 'application' ? 'owner_id' : 'id';
+      if (!table) return sendJson(res, 400, {error:'Invalid proof type'});
+      const {data, error} = await sb.from(table).select(`${idColumn},screenshot_path`).eq(idColumn, proofId).limit(1);
+      if (error) return sendJson(res, 502, {error:'Could not load proof'});
+      const row = (data || [])[0];
+      if (!row?.screenshot_path) return sendJson(res, 404, {error:'Proof not found'});
+      const signed = await sb.storage.from('payment-proofs').createSignedUrl(row.screenshot_path, 300);
+      return sendJson(res, 200, {proofUrl:signed.data?.signedUrl || null});
+    }
+
+    const limit = pageSize(q.limit);
+    const [
+      shopsPage, applicationsPage, packsPage, metricsResult,
+    ] = await Promise.all([
+      getPage(sb,'shops','id,name,slug,owner_id,plan,is_active,seller_is_active,platform_suspended,created_at,updated_at',limit,q.shopsCursor,'id'),
+      getPage(sb,'shop_applications','owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note',limit,q.applicationsCursor,'owner_id','pending'),
+      getPage(sb,'order_pack_purchases','id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at',limit,q.packsCursor,'id','pending'),
+      sb.rpc('superadmin_platform_metrics'),
     ]);
-    if (se || ae || pe || ee) return sendJson(res, 502, {error: 'Could not load platform data'});
-    const totalRevenue = [...(applications || []), ...(packs || [])]
-      .filter((x: any) => x.status === 'approved')
-      .reduce((sum: number, x: any) => sum + Number(x.amount || 0), 0);
+    const errors = [shopsPage.error, applicationsPage.error, packsPage.error, metricsResult.error].filter(Boolean);
+    if (errors.length) return sendJson(res, 502, {error:'Could not load platform data'});
+    const metricsRow = Array.isArray(metricsResult.data) ? metricsResult.data[0] : metricsResult.data;
+    if (!metricsRow) return sendJson(res, 502, {error:'Could not load platform data'});
+
+    const shopIds = shopsPage.rows.map((s:any)=>s.id);
+    let entitlements:any[] = [];
+    if (shopIds.length) {
+      const {data, error} = await sb.from('shop_entitlements')
+        .select('shop_id,plan,active,monthly_quota,monthly_used,purchased_balance,cycle_end,pending_plan,updated_at')
+        .in('shop_id', shopIds)
+        .limit(limit);
+      if (error) return sendJson(res, 502, {error:'Could not load platform data'});
+      entitlements = data || [];
+    }
+
     return sendJson(res, 200, {
-      metrics: {
-        shops: shops?.length || 0,
-        activeShops: (shops || []).filter((s: any) => s.is_active).length,
-        pendingApplications: (applications || []).filter((a: any) => a.status === 'pending').length,
-        pendingOrderPacks: (packs || []).filter((p: any) => p.status === 'pending').length,
-        recordedRevenue: totalRevenue,
+      metrics:{
+        shops:Number(metricsRow.shops || 0),
+        activeShops:Number(metricsRow.active_shops || 0),
+        pendingApplications:Number(metricsRow.pending_applications || 0),
+        pendingOrderPacks:Number(metricsRow.pending_order_packs || 0),
+        recordedRevenue:Number(metricsRow.recorded_revenue || 0),
       },
-      shops: shops || [], applications: await Promise.all((applications || []).map(async (a: any) => ({...a, proofUrl: a.screenshot_path ? (await sb.storage.from('payment-proofs').createSignedUrl(a.screenshot_path, 300)).data?.signedUrl || null : null}))), packs: await Promise.all((packs || []).map(async (p: any) => ({...p, proofUrl: p.screenshot_path ? (await sb.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 300)).data?.signedUrl || null : null}))), entitlements: entitlements || [],
+      shops:shopsPage.rows,
+      applications:applicationsPage.rows,
+      packs:packsPage.rows,
+      entitlements,
+      page:{
+        limit,
+        shops:{nextCursor:shopsPage.nextCursor},
+        applications:{nextCursor:applicationsPage.nextCursor},
+        packs:{nextCursor:packsPage.nextCursor},
+      },
     });
   }
 

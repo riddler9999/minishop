@@ -213,13 +213,31 @@ export default function AdminOrders() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [selected, setSelected] = useState<AdminOrder | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    adminApi.listOrders().then((r) => {
+    adminApi.listOrders({limit:50}).then((r) => {
       setOrders(r.orders);
+      setNextCursor(r.page.nextCursor);
+      setTotal(r.page.total);
       setLoading(false);
     });
   }, []);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const r = await adminApi.listOrders({cursor: nextCursor});
+      setOrders((prev) => [...prev, ...r.orders]);
+      setNextCursor(r.page.nextCursor);
+      setTotal(r.page.total);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -244,7 +262,7 @@ export default function AdminOrders() {
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Order စီမံခန့်ခွဲမှု</h1>
-        <p className="my mt-1 text-sm text-ink-soft">{orders.length} order · အခြေအနေ ပြောင်း / အသေးစိတ်ကြည့်နိုင်သည်</p>
+        <p className="my mt-1 text-sm text-ink-soft">{orders.length}/{total || orders.length} order · အခြေအနေ ပြောင်း / အသေးစိတ်ကြည့်နိုင်သည်</p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -321,6 +339,18 @@ export default function AdminOrders() {
           </ul>
         )}
       </div>
+
+      {nextCursor && !q.trim() && filter === 'all' && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="my rounded-full border border-cream-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-cream-50 disabled:opacity-50">
+            {loadingMore ? 'Loading…' : 'နောက်ထပ် Order များကြည့်ရန်'}
+          </button>
+        </div>
+      )}
 
       {selected && (
         <OrderDetail order={selected} onClose={() => setSelected(null)} onChanged={onChanged} />
