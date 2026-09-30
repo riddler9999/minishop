@@ -4,5 +4,5 @@ import fs from 'node:fs';
 
 test('gateway preserves place_order and lookup_order RPC names',()=>{
   assert.match(fs.readFileSync('api/checkout.ts','utf8'),/rpc\('place_order'/);
-  assert.match(fs.readFileSync('api/_storefront-lookup-backend.ts','utf8'),/rpc\('lookup_order'/);
+  assert.match(fs.readFileSync('server/_storefront-lookup-backend.ts','utf8'),/rpc\('lookup_order'/);
 });
