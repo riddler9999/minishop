@@ -44,7 +44,11 @@ export const orderAdminApi = {
       .eq('shop_id', shopId)
       .order('created_at', {ascending:false})
       .order('id', {ascending:false});
-    if (cursor) query = query.lt('created_at', cursor.created_at);
+    if (cursor?.id) {
+      query = query.or(`created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`);
+    } else if (cursor) {
+      query = query.lt('created_at', cursor.created_at);
+    }
     const {data, error, count} = await query.limit(limit + 1);
     if (error) throw new Error(mapDbError(error.message));
 
