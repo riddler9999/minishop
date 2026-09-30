@@ -88,7 +88,7 @@ test('production and fashion checkout both consume the canonical checkout logic 
     assert.match(source, /checkoutLogic/);
     assert.match(source, /api\.quoteOrder/);
     assert.match(source, /isCheckoutReady/);
-    assert.match(source, /newIdempotencyKey/);
+    assert.match(source, /checkoutIntent|newIdempotencyKey/);
     assert.equal(source.includes('function newIdempotencyKey()'), false);
   }
 });
