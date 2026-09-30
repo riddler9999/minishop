@@ -1199,7 +1199,7 @@ async function main() {
       buyer,
       orderArgs(shop.slug, product.id, randomUUID(), '0900000113', 2),
     );
-    ok(
+    const createdOrder = ok(
       await service.from('orders').select('id,status').eq('order_no', created.order_no).single(),
       'task13 created order',
     );
@@ -1211,7 +1211,7 @@ async function main() {
 
     const orderMovement = ok(
       await service.from('inventory_movements')
-        .select('movement_type,quantity_delta,stock_before,stock_after,source_type,source_id')
+        .select('movement_type,quantity_delta,stock_before,stock_after,source_type,source_id,product_name_snapshot')
         .eq('product_id', product.id)
         .eq('movement_type', 'order_consume')
         .single(),
@@ -1221,7 +1221,8 @@ async function main() {
     assert.equal(orderMovement.stock_before, 5);
     assert.equal(orderMovement.stock_after, 3);
     assert.equal(orderMovement.source_type, 'order');
-    assert.match(String(orderMovement.source_id), new RegExp(`^${product.id}:5:3:`));
+    assert.equal(orderMovement.source_id, createdOrder.id, 'inventory movement did not retain the real order id');
+    assert.equal(orderMovement.product_name_snapshot, product.name);
 
     const beforeFailedCount = ok(
       await service.from('inventory_movements').select('id').eq('product_id', product.id),
@@ -1277,15 +1278,38 @@ async function main() {
         .select('movement_type,quantity_delta,stock_before,stock_after,source_type,reason,actor_user_id')
         .eq('product_id', product.id)
         .eq('movement_type', 'manual_adjustment')
+        .eq('reason', 'cancelled before dispatch')
         .single(),
-      'task13 manual movement',
+      'task13 explicit manual movement',
     );
     assert.equal(manualMovement.quantity_delta, 2);
     assert.equal(manualMovement.stock_before, 3);
     assert.equal(manualMovement.stock_after, 5);
     assert.equal(manualMovement.source_type, 'manual');
-    assert.equal(manualMovement.reason, 'cancelled before dispatch');
     assert.equal(manualMovement.actor_user_id, seller.id);
+
+    // Mirrors the existing catalog admin path, which updates products.stock
+    // directly. It must be audited as a seller-authored manual adjustment, not
+    // mislabeled as order consumption.
+    const editorUpdate = ok(
+      await seller.client.from('products').update({stock: 4}).eq('id', product.id).select('stock').single(),
+      'task13 seller product editor stock update',
+    );
+    assert.equal(editorUpdate.stock, 4);
+    const editorMovement = ok(
+      await service.from('inventory_movements')
+        .select('movement_type,quantity_delta,stock_before,stock_after,source_type,reason,actor_user_id')
+        .eq('product_id', product.id)
+        .eq('reason', 'seller product editor stock update')
+        .single(),
+      'task13 product editor movement',
+    );
+    assert.equal(editorMovement.movement_type, 'manual_adjustment');
+    assert.equal(editorMovement.quantity_delta, -1);
+    assert.equal(editorMovement.stock_before, 5);
+    assert.equal(editorMovement.stock_after, 4);
+    assert.equal(editorMovement.source_type, 'manual');
+    assert.equal(editorMovement.actor_user_id, seller.id);
 
     const foreign = await otherSeller.client.rpc('adjust_own_product_stock', {
       p_product_id: product.id,
@@ -1294,6 +1318,19 @@ async function main() {
     });
     assert.ok(foreign.error, 'cross-tenant inventory adjustment unexpectedly succeeded');
     assert.match(errorText(foreign.error), /inventory_product_not_found/);
+
+    const foreignDirect = ok(
+      await otherSeller.client.from('products').update({stock: 99}).eq('id', product.id).select('id,stock'),
+      'task13 cross-tenant direct stock update',
+    );
+    assert.equal(foreignDirect.length, 0, 'cross-tenant direct stock update returned a foreign product');
+
+    const restore = await seller.client.rpc('adjust_own_product_stock', {
+      p_product_id: product.id,
+      p_quantity_delta: 1,
+      p_reason: 'restore after editor-path runtime check',
+    });
+    assert.equal(restore.error, null, errorText(restore.error));
 
     const negative = await seller.client.rpc('adjust_own_product_stock', {
       p_product_id: product.id,
@@ -1308,12 +1345,39 @@ async function main() {
     );
     assert.equal(finalProduct.stock, 5);
 
+    const beforeDeleteMovements = ok(
+      await service.from('inventory_movements').select('id,product_id,product_name_snapshot').eq('product_id', product.id),
+      'task13 movements before product deletion',
+    );
+    assert.ok(beforeDeleteMovements.length >= 4, 'task13 expected inventory history before deletion');
+
+    const deletedProduct = ok(
+      await seller.client.from('products').delete().eq('id', product.id).select('id'),
+      'task13 product deletion',
+    );
+    assert.equal(deletedProduct.length, 1, 'task13 seller could not delete own product');
+
+    const afterDeleteMovements = ok(
+      await service.from('inventory_movements').select('id,product_id,product_name_snapshot').eq('product_id', product.id),
+      'task13 movements after product deletion',
+    );
+    assert.equal(
+      afterDeleteMovements.length,
+      beforeDeleteMovements.length,
+      'product deletion erased append-only inventory history',
+    );
+    assert.ok(afterDeleteMovements.every((row) => row.product_id === product.id));
+    assert.ok(afterDeleteMovements.every((row) => row.product_name_snapshot === product.name));
+
     evidence.inventory_movements = {
       order_decrement_audited: 'PASS',
+      real_order_provenance: 'PASS',
       failed_order_rollback: 'PASS',
       cancellation_no_auto_restock: 'PASS',
       authorized_manual_adjustment: 'PASS',
+      seller_editor_adjustment_audited: 'PASS',
       cross_tenant_adjustment_blocked: 'PASS',
+      product_delete_preserves_history: 'PASS',
       negative_stock_blocked: 'PASS',
       refund_restock_policy: 'MANUAL_EXPLICIT_ONLY',
     };
