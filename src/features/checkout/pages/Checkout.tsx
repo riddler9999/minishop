@@ -32,8 +32,15 @@ export default function Checkout() {
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
   const cartFingerprint = useMemo(
-    () => items.map((item) => `${item.id}:${item.qty}`).sort().join('|'),
-    [items],
+    () => [
+      items.map((item) => `${item.id}:${item.qty}`).sort().join('|'),
+      region,
+      township,
+      method,
+      live ? quote?.itemTotal ?? '' : subtotal,
+      fee ?? '',
+    ].join('|'),
+    [items, region, township, method, live, quote?.itemTotal, subtotal, fee],
   );
 
   useEffect(() => {
