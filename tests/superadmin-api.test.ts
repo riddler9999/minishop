@@ -39,6 +39,10 @@ function makePagedQuery(rows: any[], calls: any[]) {
       filters.push(['or', expr, true]);
       return q;
     },
+    in(column: string, values: unknown[]) {
+      filters.push(['in', column, values]);
+      return q;
+    },
     order() { return q; },
     limit(value: number) { limit = value; return execute(); },
   };
@@ -48,6 +52,7 @@ function makePagedQuery(rows: any[], calls: any[]) {
     for (const [op, column, value] of filters) {
       if (op === 'eq') filtered = filtered.filter((r) => r[column] === value);
       if (op === 'lt') filtered = filtered.filter((r) => String(r[column]) < String(value));
+      if (op === 'in') filtered = filtered.filter((r) => (value as unknown[]).includes(r[column]));
     }
     const data = head ? null : filtered.slice(0, limit);
     return {data, error:null, count: countMode ? filtered.length : null};
@@ -154,6 +159,10 @@ describe('superadmin API behavior', () => {
     const calls:any[] = [];
     let signed = 0;
     const admin:any = {
+      rpc: async (name:string) => {
+        assert.equal(name,'superadmin_platform_metrics');
+        return {data:[{shops:620,active_shops:310,pending_applications:230,pending_order_packs:220,recorded_revenue:4000}],error:null};
+      },
       from(table:string) {
         const rows:any = table==='shops'?shops:table==='shop_applications'?applications:table==='order_pack_purchases'?packs:ents;
         return {select(selection:string, opts?:any){ return makePagedQuery(rows,calls).select(selection,opts); }};
@@ -170,7 +179,7 @@ describe('superadmin API behavior', () => {
     assert.equal(state.body.metrics.shops,620);
     assert.equal(state.body.metrics.pendingApplications,230);
     assert.equal(state.body.metrics.pendingOrderPacks,220);
-    assert.equal(state.body.metrics.recordedRevenue,30*100+20*50);
+    assert.equal(state.body.metrics.recordedRevenue,4000);
     assert.equal(signed,0);
     assert.equal(typeof state.body.page.shops.nextCursor,'string');
     assert.equal(typeof state.body.page.applications.nextCursor,'string');
@@ -181,6 +190,7 @@ describe('superadmin API behavior', () => {
     let signed = 0;
     const app={owner_id:'owner-1',status:'pending',screenshot_path:'proof.png',created_at:'2026-09-30T00:00:00Z'};
     const admin:any={
+      rpc: async () => ({data:[{shops:0,active_shops:0,pending_applications:1,pending_order_packs:0,recorded_revenue:0}],error:null}),
       from(table:string){
         const rows=table==='shop_applications'?[app]:[];
         return {select(selection:string,opts?:any){ return makePagedQuery(rows,[]).select(selection,opts); }};
