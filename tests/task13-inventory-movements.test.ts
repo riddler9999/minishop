@@ -24,7 +24,7 @@ test('automatic product stock mutations are captured without changing checkout s
   assert.match(migration, /after update of stock on public\.products/i);
   assert.match(migration, /order_consume/i);
   assert.match(migration, /manual_adjustment/i);
-  assert.match(migration, /set_config\('minishop\.inventory_order_id'/i);
+  assert.match(migration, /txid_current\(\)/i);
 });
 
 test('manual stock adjustment is seller scoped and requires a reason', () => {
