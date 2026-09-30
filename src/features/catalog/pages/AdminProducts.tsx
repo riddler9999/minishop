@@ -379,13 +379,31 @@ export default function AdminProducts() {
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const load = () => {
     setLoading(true);
     adminApi.listProducts().then((r) => {
       setProducts(r.products);
+      setNextCursor(r.page.nextCursor);
+      setTotal(r.page.total);
       setLoading(false);
     });
+  };
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const r = await adminApi.listProducts({cursor: nextCursor});
+      setProducts((prev) => [...prev, ...r.products]);
+      setNextCursor(r.page.nextCursor);
+      setTotal(r.page.total);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   useEffect(load, []);
@@ -421,7 +439,7 @@ export default function AdminProducts() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-ink">ပစ္စည်း စီမံခန့်ခွဲမှု</h1>
-          <p className="my mt-1 text-sm text-ink-soft">{products.length} မျိုး · အသစ်ထည့် / ပြင်ဆင် / ဖော်ပြမှု စီမံနိုင်သည်</p>
+          <p className="my mt-1 text-sm text-ink-soft">{products.length}/{total || products.length} မျိုး · အသစ်ထည့် / ပြင်ဆင် / ဖော်ပြမှု စီမံနိုင်သည်</p>
         </div>
         <button
           onClick={() => setCreating(true)}
@@ -537,6 +555,18 @@ export default function AdminProducts() {
           </>
         )}
       </div>
+
+      {nextCursor && !q.trim() && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="my rounded-full border border-cream-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-cream-50 disabled:opacity-50">
+            {loadingMore ? 'Loading…' : 'နောက်ထပ် ပစ္စည်းများကြည့်ရန်'}
+          </button>
+        </div>
+      )}
 
       {editing && <ProductModal mode="edit" product={editing} onClose={() => setEditing(null)} onSaved={onEdited} onDeleted={onDeleted} />}
       {creating && <ProductModal mode="create" onClose={() => setCreating(false)} onSaved={onCreated} />}
