@@ -19,6 +19,8 @@ test('notification outbox is durable, deduplicated, retryable, and observable', 
   assert.match(migration, /next_attempt_at timestamptz/i);
   assert.match(migration, /last_error text/i);
   assert.match(migration, /delivered_at timestamptz/i);
+  assert.match(migration, /lease_until timestamptz/i);
+  assert.match(migration, /blocked/);
 });
 
 test('order and payment lifecycle events enqueue stable notification types', () => {
@@ -26,7 +28,10 @@ test('order and payment lifecycle events enqueue stable notification types', () 
   assert.match(migration, /order_status_changed/);
   assert.match(migration, /payment_approved/);
   assert.match(migration, /payment_rejected/);
-  assert.match(checkout, /enqueue_notification/);
+  assert.doesNotMatch(checkout, /enqueue_notification/);
+  assert.match(migration, /orders_notification_outbox/);
+  assert.match(migration, /buyer_delivery_channel_unconfigured/);
+  assert.match(migration, /owner_id = auth\.uid\(\)/);
   assert.match(ordersAdmin, /update_order_status_and_notify/);
   assert.match(superadmin, /review_application_and_notify/);
 });
