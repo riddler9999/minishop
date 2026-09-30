@@ -1199,7 +1199,7 @@ async function main() {
       buyer,
       orderArgs(shop.slug, product.id, randomUUID(), '0900000113', 2),
     );
-    const order = ok(
+    ok(
       await service.from('orders').select('id,status').eq('order_no', created.order_no).single(),
       'task13 created order',
     );
