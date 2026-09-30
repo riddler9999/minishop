@@ -30,6 +30,7 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
+  const idempotencyFingerprint = useRef('');
   const checkoutIntentScope = slug || 'demo';
 
   useEffect(() => {
@@ -101,12 +102,13 @@ export default function Checkout() {
       township,
       paymentMethod: method,
     });
-    if (!idempotencyKey.current) {
+    if (!idempotencyKey.current || idempotencyFingerprint.current !== intentFingerprint) {
       idempotencyKey.current = getOrCreateCheckoutIntent({
         scope: checkoutIntentScope,
         fingerprint: intentFingerprint,
         storage: window.sessionStorage,
       });
+      idempotencyFingerprint.current = intentFingerprint;
     }
     try {
       const res = await api.createOrder({
@@ -120,6 +122,7 @@ export default function Checkout() {
       });
       clearCheckoutIntent(checkoutIntentScope, window.sessionStorage);
       idempotencyKey.current = '';
+      idempotencyFingerprint.current = '';
       clear();
       nav(`/order/${encodeURIComponent(res.orderId)}`, {
         state: {result: res, method, name: name.trim(), phone: phone.trim()},
