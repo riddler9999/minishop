@@ -218,7 +218,7 @@ export default function AdminOrders() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    adminApi.listOrders().then((r) => {
+    adminApi.listOrders({limit:50}).then((r) => {
       setOrders(r.orders);
       setNextCursor(r.page.nextCursor);
       setTotal(r.page.total);
