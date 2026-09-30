@@ -9,17 +9,46 @@ import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 import {mapProduct} from './mappers';
 
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+function pageSize(input?: number): number {
+  if (!Number.isFinite(input)) return DEFAULT_PAGE_SIZE;
+  return Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(input!)));
+}
+function encodeCursor(row:any): string | null {
+  if (!row?.arrival_date) return row?.id ? btoa(JSON.stringify({arrival_date:null,id:row.id})) : null;
+  return btoa(JSON.stringify({arrival_date:row.arrival_date,id:row.id}));
+}
+function decodeCursor(raw?:string|null): {arrival_date:string|null;id:string}|null {
+  if (!raw) return null;
+  try {
+    const p=JSON.parse(atob(raw));
+    return typeof p?.id==='string' ? {arrival_date:typeof p.arrival_date==='string'?p.arrival_date:null,id:p.id}:null;
+  } catch { return null; }
+}
+
 export const catalogAdminApi = {
-  async listProducts(): Promise<{products: Product[]}> {
+  async listProducts(opts:{limit?:number;cursor?:string|null}={}): Promise<{products: Product[]; page:{limit:number;nextCursor:string|null;total:number}}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const {data, error} = await sb
+    const limit=pageSize(opts.limit);
+    const cursor=decodeCursor(opts.cursor);
+    let query = sb
       .from('products')
-      .select('*')
+      .select('*',{count:'exact'})
       .eq('shop_id', shopId)
-      .order('arrival_date', {ascending: false, nullsFirst: false});
+      .order('arrival_date', {ascending: false, nullsFirst: false})
+      .order('id',{ascending:false});
+    if (cursor?.arrival_date) query=query.lt('arrival_date',cursor.arrival_date);
+    const {data,error,count}=await query.limit(limit+1);
     if (error) throw new Error(mapDbError(error.message));
-    return {products: (data ?? []).map(mapProduct)};
+    const rows=data??[];
+    const visible=rows.slice(0,limit);
+    return {
+      products:visible.map(mapProduct),
+      page:{limit,total:count??visible.length,nextCursor:rows.length>limit?encodeCursor(visible.at(-1)):null},
+    };
   },
 
   async updateProduct(id: string, patch: ProductPatch): Promise<{product: Product}> {
@@ -47,8 +76,6 @@ export const catalogAdminApi = {
       .eq('shop_id', shopId)
       .select()
       .maybeSingle();
-    // DB errors are mapped at this boundary. Basic promotion editing is a core
-    // selling capability under ADR 0002 and is not Business-gated.
     if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ရှာမတွေ့ပါ'));
     return {product: mapProduct(data)};
   },
@@ -90,8 +117,6 @@ export const catalogAdminApi = {
     return {product: mapProduct(data)};
   },
 
-  // Demo-only affordance (clears the localStorage override layer) — no
-  // equivalent on live shop data. See the file header.
   async resetProducts(): Promise<{ok: true}> {
     throw new Error('Live ဆိုင်တွင် reset လုပ်ခွင့်မရှိပါ — ပစ္စည်းတစ်ခုစီကို ကိုယ်တိုင် ပြင်ပေးပါ။');
   },
