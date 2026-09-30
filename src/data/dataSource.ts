@@ -29,8 +29,8 @@
 
 import {isSupabaseConfigured} from '@/core/supabase/client';
 import {getShopSlug} from '@/features/tenancy/shopContext';
-import {api as demoApi} from './demo/demoApi';
-import {api as liveApi, adminApi} from './liveApi';
+import {api as demoApi, adminApi as demoAdminApi} from './demo/demoApi';
+import {api as liveApi, adminApi as liveAdminApi} from './liveApi';
 
 /** True when the live Supabase storefront should serve — configured AND a shop
  *  slug is currently set. Evaluated on every call (NOT frozen at module load),
@@ -49,21 +49,16 @@ function resolveStorefrontApi(): typeof liveApi {
   return slug != null ? liveApi : (demoApi as unknown as typeof liveApi);
 }
 
+function resolveAdminApi(): typeof liveAdminApi {
+  const isDemo = localStorage.getItem('minishop_demo_admin') === 'true' || !isSupabaseConfigured;
+  return isDemo ? (demoAdminApi as unknown as typeof liveAdminApi) : liveAdminApi;
+}
+
 /**
  * Reactive storefront data layer. Each property access dispatches to the
  * currently-active backend at call time, so it can't get frozen on the demo
  * before `/s/<slug>` routing sets a slug, and it re-resolves per call on SPA
  * navigation between shops.
- *
- * ⚠️ Do NOT place `api.<method>` in a React dependency array — the get trap
- * returns a fresh function each access, which would loop effects. Call the
- * method directly inside the effect/handler instead.
- *
- * The target is a bare `{}`, so the `ownKeys`/`getOwnPropertyDescriptor`/`has`
- * traps below forward enumeration to the active backend — without them
- * `Object.keys(api)`, `{...api}`, `for..in`, and `JSON.stringify(api)` would
- * silently see nothing. (getOwnPropertyDescriptor reports `configurable: true`
- * to satisfy the Proxy invariant for keys absent from the empty target.)
  */
 export const api: typeof liveApi = new Proxy({} as typeof liveApi, {
   get(_target, prop) {
@@ -86,4 +81,50 @@ export const api: typeof liveApi = new Proxy({} as typeof liveApi, {
   },
 });
 
-export {adminApi};
+export const adminApi: typeof liveAdminApi = new Proxy({} as typeof liveAdminApi, {
+  get(_target, prop) {
+    const backend = resolveAdminApi();
+    const value = (backend as Record<string | symbol, unknown>)[prop];
+    if (typeof value === 'function') {
+      return (...args: unknown[]) => {
+        try {
+          const res = (value as (...a: unknown[]) => unknown).apply(backend, args);
+          if (res && typeof (res as Promise<unknown>).catch === 'function') {
+            return (res as Promise<unknown>).catch(() => {
+              const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
+              if (typeof fallback === 'function') {
+                return (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
+              }
+              return null;
+            });
+          }
+          return res;
+        } catch {
+          const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
+          if (typeof fallback === 'function') {
+            return (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
+          }
+          return null;
+        }
+      };
+    }
+    if (value === undefined) {
+      const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
+      if (typeof fallback === 'function') {
+        return (...args: unknown[]) => (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
+      }
+      return fallback;
+    }
+    return value;
+  },
+  has(_target, prop) {
+    return prop in resolveAdminApi();
+  },
+  ownKeys() {
+    return Reflect.ownKeys(resolveAdminApi());
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    const desc = Reflect.getOwnPropertyDescriptor(resolveAdminApi(), prop);
+    return desc && {...desc, configurable: true};
+  },
+});

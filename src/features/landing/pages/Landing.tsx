@@ -1,14 +1,10 @@
 import HeroSection from '../components/HeroSection';
 import {
-  DashboardFinalCTA,
+  DemoStoreShowcase,
+  FaqSection,
+  KeyFeatures,
   MyanmarCheckout,
   PricingSection,
-  SellEverywhere,
-  StopSellingThroughChat,
-  ThemeShowcase,
-  DemoStoreShowcase,
-  ProductFeatures,
-  ThreeStepStoreCreation,
 } from '../components/HomeSections';
 import './landing.css';
 import './landing-burmese-fix.css';
@@ -19,15 +15,11 @@ export default function Landing() {
     <main className="landing">
       <div className="landing-shell">
         <HeroSection />
-        <StopSellingThroughChat />
-        <ThreeStepStoreCreation />
-        <SellEverywhere />
         <MyanmarCheckout />
-        <ProductFeatures />
+        <KeyFeatures />
         <DemoStoreShowcase />
-        <ThemeShowcase />
         <PricingSection />
-        <DashboardFinalCTA />
+        <FaqSection />
         <footer className="landing-footer">
           <strong>MiniShop</strong>
           <span>Myanmar Online Business ကို ပိုလွယ်ကူအောင် ♡</span>

@@ -1,15 +1,10 @@
-import {ArrowRight, Check, CreditCard, ExternalLink, LayoutDashboard, MapPin, MessageCircle, Palette, PackageCheck, Send, Share2, Sparkles, Store, Truck} from 'lucide-react';
+import { useState } from 'react';
+import {ArrowRight, Boxes, Check, ChevronDown, ExternalLink, HelpCircle, LayoutDashboard, MessageCircle, Palette, PackageCheck, RefreshCw, Send, Share2, Sparkles, Store} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {motion, useReducedMotion, type Variants} from 'motion/react';
 import {formatKs, pricingPlans, signupHref} from '@/features/landing/pricing';
 
 const channels = ['Facebook', 'TikTok', 'Messenger', 'Telegram'];
-
-const checkoutFeatures = [
-  {icon: MapPin, title: 'မြို့နယ်နဲ့ တိုင်းဒေသကြီး', body: 'Customer ဘက်က လိပ်စာ အပြည့်အစုံ မရိုက်တတ်ရင်တောင် မြို့နယ် အလွယ်တကူ ရွေးလိုက်ရုံပဲ။'},
-  {icon: Truck, title: 'Deli ခ အလိုအလျောက် တွက်ချက်ခြင်း', body: 'မြို့နယ်ရွေးလိုက်တာနဲ့ ပို့ခပါ တခါတည်းတွက်ပေးလို့ “Deli ခ ဘယ်လောက်လဲ” လိုက်မေးစရာ မလိုတော့ဘူး။'},
-  {icon: CreditCard, title: 'KPay, Wave & COD စနစ်', body: 'မြန်မာပြည်မှာ အသုံးအများဆုံး KPay, WavePay ငွေလွှဲစနစ်တွေရော အိမ်ရောက်ငွေချေ (COD) ပါ အပြည့်အစုံ ပါတယ်။'},
-];
 
 const themes = [
   {name: 'Minimal', tone: 'theme-minimal'},
@@ -82,6 +77,10 @@ export function SellEverywhere() {
 export function MyanmarCheckout() {
   return (
     <section className="landing-checkout-section" aria-labelledby="checkout-title">
+      <div className="landing-checkout-copy">
+        <h2 id="checkout-title">လွယ်ကူရိုးရှင်းသော Checkout Flow</h2>
+        <p>၀ယ်ယူနည်းပြပေးစရာမလိုတဲ့အထိ လူတိုင်းအလွယ်တကူအော်ဒါတင်လို့ရစေမယ့် Checkout Process</p>
+      </div>
       <div className="landing-checkout-preview" aria-label="MiniShop real checkout flow animation">
         <div className="landing-checkout-phone landing-checkout-phone-animated">
           <div className="landing-checkout-bar">Order တင်မယ်</div>
@@ -92,9 +91,9 @@ export function MyanmarCheckout() {
               <div className="landing-checkout-animated-field"><span>ဖုန်းနံပါတ် *</span><strong className="landing-checkout-value-phone">09 123 456 789</strong></div>
               <div className="landing-checkout-animated-field landing-checkout-animated-field-wide"><span>လိပ်စာ *</span><strong className="landing-checkout-value-street">၁၂၃၊ ပြည်လမ်း</strong></div>
             </div>
-            <div className="landing-checkout-demo-field"><span>တိုင်း / ပြည်နယ် *</span><strong>Yangon</strong></div>
-            <div className="landing-checkout-demo-field"><span>မြို့နယ် *</span><strong>Sanchaung</strong></div>
-            <div className="landing-checkout-fee-note">📦 Sanchaung — ပို့ဆောင်ခ <strong>3,000 Ks</strong></div>
+            <div className="landing-checkout-demo-field"><span>တိုင်း / ပြည်နယ် *</span><strong>Yangon (ရန်ကုန်တိုင်း)</strong></div>
+            <div className="landing-checkout-demo-field"><span>မြို့နယ် *</span><strong>Kamayut (ကမာရွတ်)</strong></div>
+            <div className="landing-checkout-fee-note">📦 ကမာရွတ် — ပို့ဆောင်ခ <strong>3,000 Ks</strong></div>
           </div>
           <div className="landing-checkout-stage landing-checkout-stage-payment">
             <div className="landing-checkout-step-heading"><span>၂</span> ငွေပေးချေမှု</div>
@@ -113,12 +112,6 @@ export function MyanmarCheckout() {
           <div className="landing-checkout-tap" aria-hidden="true" />
           <div className="landing-checkout-success" aria-hidden="true"><Check size={18}/><span>Order တင်ပြီးပါပြီ</span></div>
         </div>
-      </div>
-      <div className="landing-checkout-copy">
-        <span className="landing-section-pill">BUILT FOR MYANMAR</span>
-        <h2 id="checkout-title">မြန်မာ ဝယ်သူတွေ ဈေးဝယ်နေကျ Flow အတိုင်း ကွက်တိ ချထားပေးတယ်</h2>
-        <p>နိုင်ငံခြား template တွေလို အဆင့်တွေမရှုပ်ဘူး။ မြန်မာပြည် အွန်လိုင်းဈေးဝယ်သူတွေ မျက်စိကျက်ပြီးသား ပုံစံအတိုင်း အလွယ်ဆုံး ဝယ်လို့ရအောင် လုပ်ထားပါတယ်။</p>
-        <div className="landing-checkout-features">{checkoutFeatures.map(({icon: Icon, title, body}) => <div key={title}><Icon size={20}/><span><strong>{title}</strong><small>{body}</small></span></div>)}</div>
       </div>
     </section>
   );
@@ -147,7 +140,7 @@ export function PricingSection() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className="landing-pricing-section px-4 py-24" id="pricing" aria-labelledby="pricing-title">
+    <section className="landing-pricing-section px-4 py-24" id="pricing" aria-label="Simple Pricing">
       <motion.div
         initial={shouldReduceMotion ? false : {opacity: 0, y: -20}}
         whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
@@ -156,8 +149,6 @@ export function PricingSection() {
         className="landing-section-head mb-14"
       >
         <span className="landing-section-pill">SIMPLE PRICING</span>
-        <h2 id="pricing-title">ဆိုင်အရွယ်အစားနဲ့ အော်ဒါအရေအတွက်အလိုက် ရွေးပါ</h2>
-        <p>အစမ်းသုံးကြည့်လို့ရတယ်။ အဆင်ပြေမှ ကိုယ့်အရောင်းနဲ့ ကိုက်တဲ့ Plan ကို ရွေးပါ။</p>
       </motion.div>
 
       <motion.div
@@ -285,11 +276,9 @@ const demoStores = [
 
 export function DemoStoreShowcase() {
   return (
-    <section className="landing-demo-stores-section" aria-labelledby="demo-stores-title">
+    <section className="landing-demo-stores-section" aria-label="Live Demo Stores">
       <div className="landing-section-head">
         <span className="landing-section-pill"><Store size={15}/> LIVE DEMO STORES</span>
-        <h2 id="demo-stores-title">Mockup မဟုတ်ဘဲ တကယ့် Demo Store Home Page တွေကို Slide နဲ့ကြည့်မယ်</h2>
-        <p>Store တစ်ခုချင်းစီကို card slide အနေနဲ့ preview ကြည့်ပြီး အောက်က Link ကနေ တကယ့် demo storefront ထဲ တန်းဝင်စမ်းလို့ရမယ်။</p>
       </div>
       <div className="landing-demo-store-slider" role="list">
         {demoStores.map((store) => (
@@ -303,6 +292,155 @@ export function DemoStoreShowcase() {
             </div>
           </article>
         ))}
+      </div>
+    </section>
+  );
+}
+
+export function KeyFeatures() {
+  const keyFeaturesList = [
+    {
+      icon: Boxes,
+      pill: 'INVENTORY MANAGEMENT',
+      title: 'လွယ်ကူစနစ်ကျတဲ့ Stock စီမံခန့်ခွဲမှု',
+      description: 'ပစ္စည်းအဝင်အထွက်နဲ့ ကုန်ပစ္စည်း အရေအတွက် (Stock) တွေကို ဖုန်းတစ်လုံးတည်းနဲ့ အချိန်မရွေး ကြည့်ပြီး လွယ်ကူစွာ စီမံနိုင်မယ်။',
+      highlights: ['အလိုအလျောက် Stock နုတ်ပေးခြင်း', 'Category အလိုက် ပစ္စည်းခွဲခြားခြင်း', 'ပစ္စည်းပြတ်ခါနီး သတိပေးချက်'],
+      accentBg: 'bg-pink-50 text-pink-600 border-pink-200/60',
+    },
+    {
+      icon: Palette,
+      pill: 'CUSTOM STORE THEMES',
+      title: 'စိတ်ကြိုက်ပြင်နိုင်တဲ့ Store Themes',
+      description: 'မိမိဆိုင် Brand အရောင်၊ Hero Banner နဲ့ Layout တွေကို Code ရေးစရာမလိုဘဲ 1-Click နဲ့ လှလှပပ ပြောင်းလဲပြင်ဆင်နိုင်မယ်။',
+      highlights: ['No-code Store Builder', 'Mobile-first Responsive Design', 'Custom Hero Banner & Colors'],
+      accentBg: 'bg-purple-50 text-purple-600 border-purple-200/60',
+    },
+    {
+      icon: RefreshCw,
+      pill: 'AUTOMATED ORDER TRACKING',
+      title: 'အလိုအလျောက် Order Tracking စနစ်',
+      description: 'Customer ဆီက Order တန်းဝင်လာတာနဲ့ Dashboard မှာ အလိုအလျောက် ပေါ်လာပြီး Order တိုင် ပို့ဆောင်မှု အခြေအနေအထိ စောင့်ကြည့်နိုင်မယ်။',
+      highlights: ['Real-time Order Notification', 'Township Delivery Fee Calculator', 'Payment Receipt Verification'],
+      accentBg: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+    },
+  ];
+
+  return (
+    <section className="landing-steps-section" aria-labelledby="key-features-title">
+      <div className="landing-section-head">
+        <span className="landing-section-pill mb-2"><Sparkles size={15}/> KEY FEATURES</span>
+        <h2 id="key-features-title">
+          ဆိုင်တစ်ဆိုင် လွယ်လွယ်နဲ့ ရောင်းအားတက်စေမယ့် Key Features ၃ ခု
+        </h2>
+        <p>
+          Stock စီမံတာ၊ ဆိုင်ဒီဇိုင်းပြင်တာနဲ့ Order စောင့်ကြည့်တာတွေကို လူမပင်ပန်းဘဲ စနစ်တကျ ပြုလုပ်နိုင်ပါပြီ။
+        </p>
+      </div>
+
+      <div className="max-w-5xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+        {keyFeaturesList.map(({icon: Icon, pill, title, description, highlights, accentBg}) => (
+          <article
+            key={title}
+            className="flex flex-col justify-between p-7 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 group"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-5">
+                <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase bg-slate-100 px-2.5 py-1 rounded-md">
+                  {pill}
+                </span>
+                <div className={`p-2.5 rounded-xl border ${accentBg} transition-transform duration-200 group-hover:scale-110`}>
+                  <Icon size={22} strokeWidth={2.2} />
+                </div>
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2.5 tracking-tight group-hover:text-pink-600 transition-colors">
+                {title}
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6 font-normal">
+                {description}
+              </p>
+            </div>
+            <ul className="space-y-2.5 border-t border-slate-100 pt-4 mt-2">
+              {highlights.map((h) => (
+                <li key={h} className="flex items-center gap-2.5 text-xs font-semibold text-slate-700">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <Check size={10} strokeWidth={3} />
+                  </span>
+                  <span>{h}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function FaqSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const faqs = [
+    {
+      q: 'MiniShop ကို စတင်သုံးစွဲဖို့ ဘာတွေလိုအပ်လဲ။',
+      a: 'ဖုန်းတစ်လုံးနဲ့ ဆိုင်အမည်၊ ပစ္စည်းအချက်အလက်များ ရှိရုံဖြင့် ၅ မိနစ်အတွင်း ဆိုင်စတင်ဖွင့်လှစ်နိုင်ပါသည်။ Code ရေးရန် သို့မဟုတ် Graphic Design သင်ရန် မလိုပါ။',
+    },
+    {
+      q: 'TikTok Bio မှာ Link ထည့်ပြီး ဘယ်လိုရောင်းရမလဲ။',
+      a: 'MiniShop မှ ရရှိလာသော ကိုယ့်ဆိုင် Link (ဥပမာ minishop.mm/s/your-store) ကို TikTok profile bio တွင် ထည့်ထားလိုက်ရုံဖြင့် ဝယ်သူများ TikTok WebView ထဲမှ တိုက်ရိုက် အော်ဒါတင်နိုင်မည်ဖြစ်သည်။',
+    },
+    {
+      q: 'Customer တွေက အော်ဒါတင်ရင် ငွေဘယ်လိုချေရလဲ။',
+      a: 'KPay၊ WavePay ငွေလွှဲပြေစာ (Payment Receipt Upload) စနစ်နှင့် COD (အိမ်ရောက်ငွေချေ) စနစ်များ ပါဝင်သောကြောင့် မြန်မာနိုင်ငံအတွက် အဆင်ပြေဆုံး ဖြစ်ပါသည်။',
+    },
+    {
+      q: 'Free Trial စမ်းသုံးကြည့်လို့ ရပါသလား။',
+      a: 'ရပါတယ်။ Free Trial ဖြင့် အခမဲ့ စမ်းသပ်သုံးစွဲနိုင်ပြီး အဆင်ပြေမှ မိမိဆိုင်နှင့် ကိုက်ညီသော Starter သို့မဟုတ် Pro Plan သို့ အချိန်မရွေး Upgrade လုပ်နိုင်ပါသည်။',
+    },
+    {
+      q: 'Delivery ပို့ဆောင်ခ ဘယ်လိုတွက်ချက်လဲ။',
+      a: 'တိုင်း/ပြည်နယ်နှင့် မြို့နယ်အလိုက် Delivery Fee များကို သီးသန့် သတ်မှတ်ထားနိုင်ပြီး Customer Checkout လုပ်ချိန်တွင် အလိုအလျောက် တွက်ချက်ပေးပါသည်။',
+    },
+  ];
+
+  return (
+    <section className="landing-steps-section py-16" aria-labelledby="faq-title">
+      <div className="landing-section-head mb-10 text-center">
+        <span className="landing-section-pill mb-2 inline-flex items-center gap-1.5">
+          <HelpCircle size={15} /> FREQUENTLY ASKED QUESTIONS
+        </span>
+        <h2 id="faq-title" className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          မကြာခဏ မေးလေ့ရှိသော မေးခွန်းများ
+        </h2>
+        <p className="mt-2 text-base text-slate-600 max-w-xl mx-auto">
+          MiniShop နှင့် ပတ်သက်၍ သိလိုသည်များကို အောက်တွင် ကြည့်ရှုနိုင်ပါသည်။
+        </p>
+      </div>
+
+      <div className="max-w-3xl mx-auto divide-y divide-slate-200/80 rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        {faqs.map((faq, index) => {
+          const isOpen = openIndex === index;
+          return (
+            <div key={faq.q} className="transition-colors">
+              <button
+                type="button"
+                onClick={() => setOpenIndex(isOpen ? null : index)}
+                className="w-full flex items-center justify-between gap-4 p-5 text-left text-base font-bold text-slate-900 hover:bg-slate-50 transition-colors focus:outline-none"
+                aria-expanded={isOpen}
+              >
+                <span>{faq.q}</span>
+                <ChevronDown
+                  size={20}
+                  className={`shrink-0 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180 text-pink-600' : ''}`}
+                />
+              </button>
+              {isOpen && (
+                <div className="px-5 pb-5 text-sm text-slate-600 leading-relaxed font-normal bg-slate-50/50">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

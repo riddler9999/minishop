@@ -1,12 +1,33 @@
-import {ArrowRight, Check, ExternalLink, Heart, Search, SlidersHorizontal, Sparkles} from 'lucide-react';
+import {ArrowRight, ExternalLink, Heart, Search, ShoppingBag, SlidersHorizontal} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
-const proofItems = ['ပစ္စည်းတွေကို တစ်နေရာတည်းမှာ ပြနိုင်', 'ဝယ်သူကိုယ်တိုင် Order တင်နိုင်', 'Product အကြောင်းပြည့်ပြည့်စုံစုံ ပြနိုင်'];
 const demoProducts = [
-  {name: 'Classic White Shirt', price: '17,500 Ks', tone: 'white', discount: '-20%'},
-  {name: 'Floral Blouse', price: '19,500 Ks', tone: 'floral'},
-  {name: 'Everyday Tee', price: '15,900 Ks', tone: 'pink', discount: '-26%'},
-  {name: 'Lavender Tee', price: '16,500 Ks', tone: 'lavender', discount: '-21%'},
+  {
+    name: 'ရှပ်အင်္ကျီ — Classic White Shirt',
+    price: '17,500 Ks',
+    originalPrice: '22,000 Ks',
+    discount: 'SALE',
+    image: '/demo/fashion/classic-white-shirt.png',
+  },
+  {
+    name: 'ဘလောက်စ်အင်္ကျီ — Floral Blouse',
+    price: '19,500 Ks',
+    image: '/demo/fashion/floral-blouse-pink.png',
+  },
+  {
+    name: 'တီရှပ် — Cotton Tee',
+    price: '8,900 Ks',
+    originalPrice: '12,000 Ks',
+    discount: 'SALE',
+    image: '/demo/fashion/fashion-01.png',
+  },
+  {
+    name: 'ဂါဝန် — Summer Dress',
+    price: '22,000 Ks',
+    originalPrice: '28,000 Ks',
+    discount: 'SALE',
+    image: '/demo/fashion/fashion-04.png',
+  },
 ];
 
 export default function HeroSection() {
@@ -18,50 +39,87 @@ export default function HeroSection() {
           <span className="landing-wordmark-text"><strong>Mini</strong><b>Shop</b><em>MM</em></span>
         </Link>
         <div className="landing-topbar-actions">
-          <Link className="landing-text-link" to="/demo">Demo Store</Link>
-          <Link className="landing-topbar-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ အခုပဲ ဆိုင်ဖွင့်မယ် <ArrowRight size={16} aria-hidden="true"/></Link>
+          <Link className="landing-topbar-cta" to="/admin">
+            Seller Dashboard သို့သွားရန် <ArrowRight size={16} aria-hidden="true"/>
+          </Link>
         </div>
       </div>
 
       <div className="landing-hero-copy">
-        <span className="landing-pill"><Sparkles size={16} aria-hidden="true"/> အွန်လိုင်းရောင်းသူတွေအတွက် သီးသန့်</span>
-        <h1 id="landing-title">ဝယ်ဖို့ဆိုတာ မြင်အောင်ပြပေးနိုင်မှ ဝယ်တာပါ</h1>
-        <p className="landing-hero-lede">တစ်ခုဝယ်ဖို့လာတဲ့သူက တခြားပစ္စည်းတွေပါမြင်ရင် နှစ်ခုဝယ်သွားနိုင်တယ်။</p>
-        <div className="landing-hero-points">
-          <p><strong>ဝယ်မယ်ဆိုရင်တောင် ဝယ်လို့လွယ်အောင်လုပ်ထားဖို့လိုသေးတယ်</strong><span>ဝယ်ယူနည်းလိုက်ပြပေးစရာမလိုတဲ့အထိ ကိုယ်တိုင်အလွယ်တကူ အော်ဒါတင်နိုင်ရမယ်။</span></p>
-          <p><strong>မေးစရာမလိုအောင်လည်း ပြည့်စုံဖို့လိုတယ်</strong><span>ပစ္စည်းတစ်ခုချင်းစီအကြောင်းကို ဝယ်သူက ထပ်မေးစရာမလိုတဲ့အထိ ပြည့်ပြည့်စုံစုံပြထားနိုင်ရမယ်။</span></p>
-        </div>
+        <h1 id="landing-title">ဝယ်သူကို မြင်အောင်ပိုပြနိုင်လေ<br/>ရောင်းအား ပိုတက်လေပါပဲ</h1>
+        <p className="landing-hero-lede">တစ်ခုချင်းလိုက်မပြဘဲ ကိုယ့်ဆိုင်မှာရှိသမျှ ပစ္စည်းအားလုံးကို Link တစ်ခုတည်းနဲ့ စုစည်းပြပေးထားပါ။</p>
         <div className="landing-hero-buttons">
-          <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ အခုပဲ ဆိုင်ဖွင့်မယ် <ArrowRight size={18} aria-hidden="true"/></Link>
-          <Link className="landing-demo-cta" to="/demo">Demo ဆိုင်ကို အရင်ကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
-        </div>
-        <div className="landing-proof-row" aria-label="MiniShop setup benefits">
-          {proofItems.map((item) => <span key={item}><Check size={15} aria-hidden="true"/>{item}</span>)}
+          <Link className="landing-primary-cta" to="/admin/login?mode=signup&from=%2Fadmin%2Fsubscribe">အခမဲ့ စတင်မည် <ArrowRight size={18} aria-hidden="true"/></Link>
+          <Link className="landing-demo-cta" to="/demo">နမူနာကြည့်မယ် <ExternalLink size={17} aria-hidden="true"/></Link>
         </div>
       </div>
 
       <div className="landing-hero-visual" aria-label="MiniShop demo storefront animation">
         <div className="landing-demo-device" role="img" aria-label="MiniShop demo home page mobile mockup">
           <div className="landing-demo-screen">
-            <div className="landing-demo-search"><Search size={16}/><span>Search</span><b>M</b></div>
-            <div className="landing-demo-banner"><small>BANNER</small><strong>Featured campaign<br/>area</strong><span>Promotion, collection or seasonal artwork</span><Sparkles size={26}/></div>
+            <div className="landing-demo-header">
+              <div className="landing-demo-brand">
+                <small>MiniShop</small>
+                <strong>FASHION</strong>
+              </div>
+              <div className="landing-demo-header-icons">
+                <span className="landing-demo-icon"><Heart size={14}/></span>
+                <span className="landing-demo-icon landing-demo-cart-icon"><ShoppingBag size={14}/><b className="landing-demo-badge">2</b></span>
+              </div>
+            </div>
+
+            <div className="landing-demo-search">
+              <Search size={14}/>
+              <span>ပစ္စည်းများ ရှာဖွေရန်...</span>
+            </div>
+
+            <div className="landing-demo-banner-real">
+              <img src="/demo/fashion/banner.webp" alt="MiniShop Fashion Promotion Banner" />
+              <div className="landing-demo-banner-overlay">
+                <small>NEW COLLECTION</small>
+                <strong>Summer Special Sales</strong>
+              </div>
+            </div>
+
             <div className="landing-demo-arrivals">
-              <div className="landing-demo-title"><strong>New<br/>arrivals</strong><SlidersHorizontal size={20}/></div>
-              <div className="landing-demo-categories"><b>All</b><span>အကျီ</span><span>ဂါဝန်</span><span>စကတ် & ဘောင်းဘီ</span></div>
+              <div className="landing-demo-title">
+                <strong>New arrivals</strong>
+                <SlidersHorizontal size={16}/>
+              </div>
+              <div className="landing-demo-categories">
+                <b>All</b>
+                <span>အင်္ကျီ</span>
+                <span>ဂါဝန်</span>
+                <span>စကတ် & ဘောင်းဘီ</span>
+              </div>
               <div className="landing-demo-products">
-                {demoProducts.map((product, index) => (
-                  <article key={product.name} className={`landing-demo-product landing-demo-product-${product.tone}`}>
+                {demoProducts.map((product) => (
+                  <article key={product.name} className="landing-demo-product">
                     <div className="landing-demo-product-image">
-                      {product.discount && <small>{product.discount}</small>}
-                      <Heart size={14}/><span className="landing-demo-shirt"/>
+                      <img src={product.image} alt={product.name} loading="lazy" />
+                      {product.discount && <small className="landing-demo-sale-tag">{product.discount}</small>}
+                      <Heart size={13} className="landing-demo-product-fav" />
                     </div>
-                    <strong>{product.name}</strong><b>{product.price}</b>
-                    {index === 0 && <i>22,000 Ks</i>}
+                    <strong className="landing-demo-product-title">{product.name}</strong>
+                    <div className="landing-demo-product-price-row">
+                      <b className="landing-demo-price">{product.price}</b>
+                      {product.originalPrice && <i className="landing-demo-old-price">{product.originalPrice}</i>}
+                    </div>
+                    <div className="landing-demo-product-btns">
+                      <button type="button" className="landing-demo-btn-cart">ခြင်းထဲထည့်မည်</button>
+                      <button type="button" className="landing-demo-btn-buy">ဝယ်မည်</button>
+                    </div>
                   </article>
                 ))}
               </div>
             </div>
-            <div className="landing-demo-nav"><span>⌂<small>Home</small></span><span>▦<small>Category</small></span><span>▢<small>Cart</small></span></div>
+
+            <div className="landing-demo-nav">
+              <span className="active">⌂<small>Home</small></span>
+              <span>▦<small>Shop</small></span>
+              <span>▢<small>Cart (2)</small></span>
+              <span>📦<small>Orders</small></span>
+            </div>
           </div>
           <div className="landing-demo-pointer" aria-hidden="true"/>
         </div>
