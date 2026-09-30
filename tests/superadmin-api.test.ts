@@ -17,7 +17,7 @@ function responseRecorder() {
 }
 
 function makePagedQuery(rows: any[], calls: any[]) {
-  let filters: Array<[string, string, unknown]> = [];
+  const filters: Array<[string, string, unknown]> = [];
   let countMode = false;
   let head = false;
   let limit = 50;
