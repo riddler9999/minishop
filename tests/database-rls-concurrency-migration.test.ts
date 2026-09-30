@@ -98,5 +98,5 @@ test('disposable runtime covers every reconciled storefront and payment/storage 
   assert.match(runtime, /owner logo update/);
   assert.match(runtime, /owner logo delete/);
   assert.match(runtime, /missing transaction id unexpectedly credited purchase/);
-  assert.match(runtime, /transaction_id_required/);
+  assert.match(runtime, /payment_identity_required/);
 });
