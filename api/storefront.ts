@@ -1,8 +1,8 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapProductRow} from './_map.js';
 import {sendJson} from './_http.js';
-import {loadBuyerStoreDesign} from './storefront-design.js';
-import {normalizeProductSourceLimit} from './storefront-product-source.js';
+import {loadBuyerStoreDesign} from './_storefront-design.js';
+import {normalizeProductSourceLimit} from './_storefront-product-source.js';
 import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
