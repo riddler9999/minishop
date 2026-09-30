@@ -43,4 +43,17 @@ fs.writeFileSync(
   'utf8',
 );
 
+const migration0028Path = path.join(
+  runtimeSupabase,
+  'migrations',
+  '0028_failed_lookup_rate_limit.sql',
+);
+const source0028 = fs.readFileSync(migration0028Path, 'utf8');
+const localReplay0028 = source0028.replace(
+  /\bas \$\$([\s\S]*?)\$\$;/g,
+  (match) => match.replace(/\$\$/g, '$fn
+),
+);
+fs.writeFileSync(migration0028Path, localReplay0028, 'utf8');
+
 process.stdout.write(runtimeWorkdir);
