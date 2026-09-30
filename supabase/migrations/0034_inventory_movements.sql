@@ -42,7 +42,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = pg_catalog, public
-as $$
+as $fn$
 declare
   v_delta integer;
   v_order_id uuid;
@@ -100,7 +100,7 @@ begin
   );
   return new;
 end;
-$$;
+$fn$;
 
 drop trigger if exists products_inventory_movement_audit on public.products;
 create trigger products_inventory_movement_audit
@@ -115,7 +115,7 @@ create or replace function public.adjust_own_product_stock(
 language plpgsql
 security definer
 set search_path = pg_catalog, public
-as $$
+as $fn$
 declare
   v_product public.products%rowtype;
   v_reason text := nullif(btrim(p_reason), '');
@@ -159,7 +159,7 @@ begin
     'quantity_delta', p_quantity_delta
   );
 end;
-$$;
+$fn$;
 
 revoke all on function public.adjust_own_product_stock(uuid,integer,text)
   from public, anon;
