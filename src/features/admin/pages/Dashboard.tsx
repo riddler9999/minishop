@@ -7,7 +7,7 @@ import type {Product} from '@/domain/product';
 import {ks} from '@/shared/lib/format';
 import {usePlan} from '@/features/billing/plan';
 import EntitlementSummary from '@/features/billing/components/EntitlementSummary';
-import {statusMeta, PAID_STATUSES, OPEN_STATUSES, type OrderStatus} from '@/domain/orderStatus';
+import {statusMeta, RECOGNIZED_SALES_STATUSES, OPEN_STATUSES, type OrderStatus} from '@/domain/orderStatus';
 import {addYangonDays, getYangonAnalyticsWindow, YANGON_TZ} from '@/features/admin/lib/analyticsTime';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 
@@ -22,7 +22,7 @@ interface StatCard {
   tone: string;
 }
 
-interface RevenuePoint {
+interface SalesPoint {
   date: Date;
   total: number;
 }
@@ -43,7 +43,7 @@ function PeriodBadge() {
   return <span className="inline-flex h-11 items-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm">Last 7 days</span>;
 }
 
-function RevenueTrend({points}: {points: RevenuePoint[]}) {
+function RecognizedSalesTrend({points}: {points: SalesPoint[]}) {
   const width = 680;
   const height = 210;
   const padX = 22;
@@ -63,10 +63,10 @@ function RevenueTrend({points}: {points: RevenuePoint[]}) {
   return (
     <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-[17px] font-bold text-slate-950">Revenue Trend</h2>
+        <h2 className="text-[17px] font-bold text-slate-950">Recognized Sales Trend</h2>
         <span className="flex h-10 items-center rounded-2xl bg-slate-50 px-3 text-xs font-semibold text-slate-700">Last 7 days</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Last 7 days revenue trend">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img" aria-label="Last 7 days recognized sales trend">
         <defs>
           <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="#ff2f79" stopOpacity="0.24" />
@@ -97,23 +97,49 @@ export default function Dashboard() {
   const [signingOut, setSigningOut] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([adminApi.listProducts(), adminApi.listOrders()])
-      .then(([productResult, orderResult]) => {
+    setProductsLoading(true);
+    setOrdersLoading(true);
+    setProductsError(null);
+    setOrdersError(null);
+
+    adminApi.listProducts()
+      .then((result) => {
         if (!alive) return;
-        setProducts(productResult.products);
-        setOrders(orderResult.orders);
+        setProducts(result.products);
+      })
+      .catch((error: unknown) => {
+        if (!alive) return;
+        setProductsError(error instanceof Error ? error.message : 'Products could not be loaded.');
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setProductsLoading(false);
       });
+
+    adminApi.listOrders()
+      .then((result) => {
+        if (!alive) return;
+        setOrders(result.orders);
+      })
+      .catch((error: unknown) => {
+        if (!alive) return;
+        setOrdersError(error instanceof Error ? error.message : 'Orders could not be loaded.');
+      })
+      .finally(() => {
+        if (alive) setOrdersLoading(false);
+      });
+
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const {currentStart, currentEnd, previousStart, previousEnd} = getYangonAnalyticsWindow();
   const currentOrders = useMemo(
@@ -124,41 +150,41 @@ export default function Dashboard() {
     [orders, currentStart, currentEnd],
   );
 
-  const currentRevenue = useMemo(
-    () => currentOrders.filter((order) => PAID_STATUSES.includes(order.status as OrderStatus)).reduce((sum, order) => sum + (order.grand_total || 0), 0),
+  const currentRecognizedSales = useMemo(
+    () => currentOrders.filter((order) => RECOGNIZED_SALES_STATUSES.includes(order.status as OrderStatus)).reduce((sum, order) => sum + (order.grand_total || 0), 0),
     [currentOrders],
   );
 
-  const previousRevenue = useMemo(
+  const previousRecognizedSales = useMemo(
     () => orders
       .filter((order) => {
         const created = new Date(order.created_at);
         return created >= previousStart && created < previousEnd;
       })
-      .filter((order) => PAID_STATUSES.includes(order.status as OrderStatus))
+      .filter((order) => RECOGNIZED_SALES_STATUSES.includes(order.status as OrderStatus))
       .reduce((sum, order) => sum + (order.grand_total || 0), 0),
     [orders, previousStart, previousEnd],
   );
 
-  const revenueDelta = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 : null;
+  const recognizedSalesDelta = previousRecognizedSales > 0 ? ((currentRecognizedSales - previousRecognizedSales) / previousRecognizedSales) * 100 : null;
   const activeProducts = products.filter((product) => product.status === 'active');
   const lowStock = products.filter((product) => product.stock <= LOW_STOCK_THRESHOLD).sort((a, b) => a.stock - b.stock);
   const actionOrders = orders.filter((order) => OPEN_STATUSES.includes(order.status as OrderStatus));
 
   const stats = useMemo<StatCard[]>(() => [
-    {key: 'revenue', label: 'Total Revenue', value: formatMoney(currentRevenue), sub: revenueDelta == null ? 'Last 7 days' : `${revenueDelta >= 0 ? '+' : ''}${Math.round(revenueDelta)}% vs previous 7 days`, icon: BarChart3, tone: 'bg-pink-50 text-pink-500'},
+    {key: 'revenue', label: 'Recognized Sales', value: formatMoney(currentRecognizedSales), sub: recognizedSalesDelta == null ? 'Last 7 days' : `${recognizedSalesDelta >= 0 ? '+' : ''}${Math.round(recognizedSalesDelta)}% vs previous 7 days`, icon: BarChart3, tone: 'bg-pink-50 text-pink-500'},
     {key: 'orders', label: 'Orders', value: String(currentOrders.length), sub: actionOrders.length > 0 ? `${actionOrders.length} need your action` : 'All caught up', icon: ShoppingBag, tone: 'bg-cyan-50 text-cyan-500'},
     {key: 'products', label: 'Products', value: String(activeProducts.length), sub: 'Active products', icon: Box, tone: 'bg-violet-50 text-violet-500'},
     {key: 'stock', label: 'Low Stock', value: String(lowStock.length), sub: 'Products', icon: AlertTriangle, tone: 'bg-orange-50 text-orange-500'},
-  ], [actionOrders.length, activeProducts.length, currentOrders.length, currentRevenue, lowStock.length, revenueDelta]);
+  ], [actionOrders.length, activeProducts.length, currentOrders.length, currentRecognizedSales, lowStock.length, recognizedSalesDelta]);
 
-  const revenuePoints = useMemo<RevenuePoint[]>(() => Array.from({length: 7}, (_, index) => {
+  const recognizedSalesPoints = useMemo<SalesPoint[]>(() => Array.from({length: 7}, (_, index) => {
     const date = addYangonDays(currentStart, index);
     const next = addYangonDays(date, 1);
     const total = orders
       .filter((order) => {
         const created = new Date(order.created_at);
-        return created >= date && created < next && PAID_STATUSES.includes(order.status as OrderStatus);
+        return created >= date && created < next && RECOGNIZED_SALES_STATUSES.includes(order.status as OrderStatus);
       })
       .reduce((sum, order) => sum + (order.grand_total || 0), 0);
     return {date, total};
@@ -171,6 +197,8 @@ export default function Dashboard() {
   };
 
   const recentActionOrders = actionOrders.slice(0, 3);
+  const loading = productsLoading || ordersLoading;
+  const retryLoads = () => setReloadKey((key) => key + 1);
   const lowStockPreview = lowStock.slice(0, 2);
 
   return (
@@ -194,6 +222,23 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {(productsError || ordersError) && (
+        <section className="rounded-[24px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold">Some dashboard data could not be loaded.</p>
+              <p className="mt-1 text-xs text-rose-700">
+                {ordersError ? 'Orders and sales metrics are unavailable. ' : ''}
+                {productsError ? 'Product and stock metrics are unavailable.' : ''}
+              </p>
+            </div>
+            <button type="button" onClick={retryLoads} className="min-h-11 rounded-2xl border border-rose-300 bg-white px-4 font-semibold text-rose-700 hover:bg-rose-100">
+              Retry
+            </button>
+          </div>
+        </section>
+      )}
+
       <section className="grid grid-cols-2 gap-3">
         {loading ? Array.from({length: 4}).map((_, index) => (
           <div key={index} className="h-[132px] animate-pulse rounded-[26px] border border-slate-200 bg-white" />
@@ -206,7 +251,7 @@ export default function Dashboard() {
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-500 sm:text-sm">{stat.label}</p>
                   <p className="mt-1 truncate text-[22px] font-black tracking-tight text-slate-950 sm:text-[28px]">{stat.value}</p>
-                  <p className={`mt-1 text-[11px] leading-4 sm:text-xs ${stat.key === 'revenue' && revenueDelta != null && revenueDelta >= 0 ? 'font-semibold text-emerald-500' : 'text-slate-500'}`}>{stat.sub}</p>
+                  <p className={`mt-1 text-[11px] leading-4 sm:text-xs ${stat.key === 'revenue' && recognizedSalesDelta != null && recognizedSalesDelta >= 0 ? 'font-semibold text-emerald-500' : 'text-slate-500'}`}>{stat.sub}</p>
                 </div>
               </div>
             </div>
@@ -216,7 +261,7 @@ export default function Dashboard() {
 
       <EntitlementSummary />
 
-      {!loading && <RevenueTrend points={revenuePoints} />}
+      {!ordersLoading && !ordersError && <RecognizedSalesTrend points={recognizedSalesPoints} />}
 
       <section className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-sm">
         <div className="flex items-center justify-between px-4 py-4 sm:px-5">
@@ -226,7 +271,7 @@ export default function Dashboard() {
           </div>
           <Link to="/admin/orders" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-700 hover:text-pink-500">View all <ArrowRight className="h-4 w-4" /></Link>
         </div>
-        {loading ? (
+        {ordersLoading ? (
           <div className="space-y-2 px-4 pb-4">{Array.from({length: 3}).map((_, index) => <div key={index} className="h-16 animate-pulse rounded-2xl bg-slate-50" />)}</div>
         ) : recentActionOrders.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-slate-500">No new orders need action.</div>
@@ -260,7 +305,7 @@ export default function Dashboard() {
             <h2 className="text-[17px] font-bold text-slate-950">Low Stock Products</h2>
             <Link to="/admin/products" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-700 hover:text-pink-500">View all <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          {loading ? (
+          {productsLoading ? (
             <div className="space-y-2 px-4 pb-4">{Array.from({length: 2}).map((_, index) => <div key={index} className="h-16 animate-pulse rounded-2xl bg-slate-50" />)}</div>
           ) : lowStockPreview.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-slate-500">Stock levels look healthy.</div>
