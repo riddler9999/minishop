@@ -1,0 +1,6 @@
+{
+  "name": "Mini Shop — Myanmar Online Shop",
+  "description": "Mini Shop — မြန်မာဆိုင်ရှင်များအတွက် online storefront။ ပစ္စည်းရောင်းချမှု၊ စျေးဝယ်ခြင်း၊ checkout (KBZPay / WavePay / COD) နှင့် order စီမံခန့်ခွဲမှု။",
+  "request_frame_permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

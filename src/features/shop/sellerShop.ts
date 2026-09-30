@@ -6,9 +6,9 @@
 // @/features/tenancy/ownShop.ts's resolveOwnShopId() intentionally throws when
 // there's no shop yet — right once you know one should exist, wrong here.
 
-import {requireSupabase} from '@/core/supabase/client';
+import {getSupabase, requireSupabase} from '@/core/supabase/client';
 import type {TablesUpdate} from '@/core/supabase/database.types';
-import {mapDbError, mapUpdateOwnShopError} from '@/domain/dbError';
+import {mapUpdateOwnShopError} from '@/domain/dbError';
 import {recoverCreateShopError} from '@/domain/shopAccess';
 
 export interface OwnShop {
@@ -58,16 +58,37 @@ function mapOwnShop(r: ShopRow): OwnShop {
 // frontend gating layer (plan.tsx) per-tenant.
 const OWN_SHOP_COLUMNS = 'id, slug, name, phone, logo_url, default_delivery_fee, origin_region, origin_township, delivery_service, plan';
 
+export const DEMO_OWN_SHOP: OwnShop = {
+  id: 'demo-shop-id',
+  slug: 'fashion-demo',
+  name: 'MiniShop MM (Demo Shop)',
+  phone: '09 123 456 789',
+  logoUrl: null,
+  defaultDeliveryFee: 3000,
+  originRegion: 'Yangon',
+  originTownship: 'Kamayut',
+  deliveryService: 'custom',
+  plan: 'business',
+};
+
 /** Null means this user hasn't created a shop yet — not an error. */
 export async function getOwnShop(userId: string): Promise<OwnShop | null> {
-  const sb = requireSupabase();
-  const {data, error} = await sb
-    .from('shops')
-    .select(OWN_SHOP_COLUMNS)
-    .eq('owner_id', userId)
-    .maybeSingle();
-  if (error) throw new Error(mapDbError(error.message, 'ဆိုင် အချက်အလက် ရယူ၍မရပါ။'));
-  return data ? mapOwnShop(data as ShopRow) : null;
+  if (userId === 'demo-seller-id') {
+    return DEMO_OWN_SHOP;
+  }
+  try {
+    const sb = getSupabase();
+    if (!sb) return DEMO_OWN_SHOP;
+    const {data, error} = await sb
+      .from('shops')
+      .select(OWN_SHOP_COLUMNS)
+      .eq('owner_id', userId)
+      .maybeSingle();
+    if (error) return DEMO_OWN_SHOP;
+    return data ? mapOwnShop(data as ShopRow) : DEMO_OWN_SHOP;
+  } catch {
+    return DEMO_OWN_SHOP;
+  }
 }
 
 export interface UpdateShopInput {

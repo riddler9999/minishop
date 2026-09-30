@@ -303,4 +303,35 @@ export const adminApi = {
     }
     throw new Error('Order ရှာမတွေ့ပါ');
   },
+
+  async getEntitlement() {
+    return {
+      entitlement: {
+        plan: 'business',
+        active: true,
+        monthlyQuota: 1000,
+        monthlyUsed: 24,
+        purchasedBalance: 0,
+        unlimited: true,
+        remainingOrders: 976,
+        isQuotaExhausted: false,
+        canAcceptOrders: true,
+        cycleStart: new Date().toISOString(),
+        cycleEnd: null,
+        pendingPlan: null,
+      },
+    };
+  },
+
+  async getUsage() {
+    return {
+      usage: {
+        shopId: 'demo-shop-id',
+        plan: 'business',
+        month: new Date().toISOString().slice(0, 7),
+        billableOrders: 24,
+        tier: 'unlimited',
+      },
+    };
+  },
 };
