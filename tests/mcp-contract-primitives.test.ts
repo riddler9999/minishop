@@ -4,8 +4,8 @@ import {
   MINI_SHOP_CAPABILITIES,
   MCP_TOOL_NAMES,
   createRequestId,
-} from '../api/mcp/contracts.ts';
-import {McpError, toSafeMcpError} from '../api/mcp/errors.ts';
+} from '../server/mcp/contracts.ts';
+import {McpError, toSafeMcpError} from '../server/mcp/errors.ts';
 
 describe('MiniShop MCP contract primitives', () => {
   it('uses the approved MiniShop capability vocabulary only', () => {

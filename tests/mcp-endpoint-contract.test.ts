@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
-import {MCP_TOOL_NAMES} from '../api/mcp/contracts.ts';
-import {TOOL_REGISTRY} from '../api/mcp/tool-registry.ts';
+import {MCP_TOOL_NAMES} from '../server/mcp/contracts.ts';
+import {TOOL_REGISTRY} from '../server/mcp/tool-registry.ts';
 
 describe('MCP tool registry',()=>{
   it('exposes exactly the approved 18 seller tools',()=>{

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {loadBuyerStoreDesign} from '../api/storefront-design.ts';
+import {loadBuyerStoreDesign} from '../server/storefront-design.ts';
 import {normalizeStoreDesign} from '../src/domain/storeDesign/index.ts';
 
 function queryResult(value: unknown, error: unknown = null) {

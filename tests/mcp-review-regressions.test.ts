@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
 import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
-import {createStoreDesignMcpService} from '../api/mcp/store-design.ts';
-import {McpError} from '../api/mcp/errors.ts';
+import {createStoreDesignMcpService} from '../server/mcp/store-design.ts';
+import {McpError} from '../server/mcp/errors.ts';
 
 describe('MCP review regressions',()=>{
   it('rejects unknown StoreDesign templates instead of crashing',async()=>{

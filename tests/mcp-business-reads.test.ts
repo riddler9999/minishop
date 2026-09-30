@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
-import {McpError} from '../api/mcp/errors.ts';
-import {decodeCursor,encodeCursor,normalizePageSize,validateDateRange} from '../api/mcp/pagination.ts';
-import {createBusinessReadService} from '../api/mcp/read-models.ts';
+import {McpError} from '../server/mcp/errors.ts';
+import {decodeCursor,encodeCursor,normalizePageSize,validateDateRange} from '../server/mcp/pagination.ts';
+import {createBusinessReadService} from '../server/mcp/read-models.ts';
 
 describe('MCP pagination/date guards',()=>{
   it('bounds page size and round-trips opaque cursors',()=>{
