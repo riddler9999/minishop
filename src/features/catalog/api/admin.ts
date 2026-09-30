@@ -24,33 +24,56 @@ function decodeCursor(raw?:string|null): ProductCursor|null {
   );
 }
 
+async function listProductPage(opts:{limit?:number;cursor?:string|null}) {
+  const shopId = await resolveOwnShopId();
+  const sb = requireSupabase();
+  const limit=boundedPageSize(opts.limit);
+  const cursor=decodeCursor(opts.cursor);
+  let query = sb
+    .from('products')
+    .select('*',{count:'exact'})
+    .eq('shop_id', shopId)
+    .order('arrival_date', {ascending: false, nullsFirst: false})
+    .order('id',{ascending:false});
+  if (cursor?.arrival_date) {
+    query = query.or(
+      `arrival_date.lt.${cursor.arrival_date},and(arrival_date.eq.${cursor.arrival_date},id.lt.${cursor.id}),arrival_date.is.null`,
+    );
+  } else if (cursor) {
+    query = query.is('arrival_date', null).lt('id', cursor.id);
+  }
+  const {data,error,count}=await query.limit(limit+1);
+  if (error) throw new Error(mapDbError(error.message));
+  const rows=data??[];
+  const visible=rows.slice(0,limit);
+  return {
+    products:visible.map(mapProduct),
+    page:{
+      limit,
+      total:count??visible.length,
+      nextCursor:rows.length>limit&&visible.at(-1)
+        ? encodePageCursor({arrival_date:visible.at(-1)!.arrival_date,id:visible.at(-1)!.id})
+        : null,
+    },
+  };
+}
+
 export const catalogAdminApi = {
-  async listProducts(opts:{limit?:number;cursor?:string|null}={}): Promise<{products: Product[]; page:{limit:number;nextCursor:string|null;total:number}}> {
-    const shopId = await resolveOwnShopId();
-    const sb = requireSupabase();
-    const limit=boundedPageSize(opts.limit);
-    const cursor=decodeCursor(opts.cursor);
-    let query = sb
-      .from('products')
-      .select('*',{count:'exact'})
-      .eq('shop_id', shopId)
-      .order('arrival_date', {ascending: false, nullsFirst: false})
-      .order('id',{ascending:false});
-    if (cursor?.arrival_date) {
-      query = query.or(
-        `arrival_date.lt.${cursor.arrival_date},and(arrival_date.eq.${cursor.arrival_date},id.lt.${cursor.id}),arrival_date.is.null`,
-      );
-    } else if (cursor) {
-      query = query.is('arrival_date', null).lt('id', cursor.id);
+  async listProducts(opts?:{limit?:number;cursor?:string|null}): Promise<{products: Product[]; page:{limit:number;nextCursor:string|null;total:number}}> {
+    if (opts) return listProductPage(opts);
+
+    const products: Product[] = [];
+    let cursor: string | null = null;
+    let total = 0;
+    for (let page = 0; page < 5; page += 1) {
+      const result = await listProductPage({limit:100,cursor});
+      products.push(...result.products);
+      total = result.page.total;
+      cursor = result.page.nextCursor;
+      if (!cursor) return {products,page:{limit:products.length,total,nextCursor:null}};
     }
-    const {data,error,count}=await query.limit(limit+1);
-    if (error) throw new Error(mapDbError(error.message));
-    const rows=data??[];
-    const visible=rows.slice(0,limit);
-    return {
-      products:visible.map(mapProduct),
-      page:{limit,total:count??visible.length,nextCursor:rows.length>limit&&visible.at(-1)?encodePageCursor({arrival_date:visible.at(-1)!.arrival_date,id:visible.at(-1)!.id}):null},
-    };
+    if (products.length < total) throw new Error('Catalog exceeds the supported 500-product plan limit.');
+    return {products,page:{limit:products.length,total,nextCursor:null}};
   },
 
   async updateProduct(id: string, patch: ProductPatch): Promise<{product: Product}> {
