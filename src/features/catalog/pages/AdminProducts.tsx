@@ -385,7 +385,7 @@ export default function AdminProducts() {
 
   const load = () => {
     setLoading(true);
-    adminApi.listProducts().then((r) => {
+    adminApi.listProducts({limit:50}).then((r) => {
       setProducts(r.products);
       setNextCursor(r.page.nextCursor);
       setTotal(r.page.total);
