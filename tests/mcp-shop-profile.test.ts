@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
-import {McpError} from '../api/mcp/errors.ts';
-import {createShopProfileService} from '../api/mcp/shop-profile.ts';
+import {McpError} from '../api/_mcp/errors.ts';
+import {createShopProfileService} from '../api/_mcp/shop-profile.ts';
 
 function fakeClient() {
   let row:any={id:'shop-a',name:'Mini A',phone:'099',logo_url:null,default_delivery_fee:2500,origin_region:'Yangon',origin_township:'Kyeemyindaing',delivery_service:'manual',slug:'mini-a',owner_id:'seller-a',plan:'starter',is_active:true};
