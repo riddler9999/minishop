@@ -31,18 +31,6 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
-  const cartFingerprint = useMemo(
-    () => [
-      items.map((item) => `${item.id}:${item.qty}`).sort().join('|'),
-      region,
-      township,
-      method,
-      live ? quote?.itemTotal ?? '' : subtotal,
-      fee ?? '',
-    ].join('|'),
-    [items, region, township, method, live, quote?.itemTotal, subtotal, fee],
-  );
-
   useEffect(() => {
     let alive = true;
     api.merchantAccounts().then((r) => alive && setAccounts(r.accounts)).catch(() => {});
@@ -84,6 +72,18 @@ export default function Checkout() {
   const fee = live ? quote?.deliveryFee ?? null : demoFee ?? 0;
   const displaySubtotal = live ? quote?.itemTotal ?? subtotal : subtotal;
   const grandTotal = live ? quote?.grandTotal ?? 0 : subtotal + (fee ?? 0);
+  const shopSlug = slug ?? '';
+  const cartFingerprint = useMemo(
+    () => [
+      items.map((item) => `${item.id}:${item.qty}`).sort().join('|'),
+      region,
+      township,
+      method,
+      live ? quote?.itemTotal ?? '' : subtotal,
+      fee ?? '',
+    ].join('|'),
+    [items, region, township, method, live, quote?.itemTotal, subtotal, fee],
+  );
   const online = isOnlinePayment(method);
   const providerAccounts = paymentAccounts(accounts, method);
   const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
@@ -105,8 +105,8 @@ export default function Checkout() {
     // Persist only retry identity, never customer/payment data. This survives
     // reload or a lost HTTP response and is bound to this shop + cart shape.
     if (!idempotencyKey.current) {
-      const existing = loadCheckoutIntent(sessionStorage, {shopSlug: slug, cartFingerprint});
-      const intent = existing ?? createCheckoutIntent({shopSlug: slug, cartFingerprint});
+      const existing = loadCheckoutIntent(sessionStorage, {shopSlug, cartFingerprint});
+      const intent = existing ?? createCheckoutIntent({shopSlug, cartFingerprint});
       saveCheckoutIntent(sessionStorage, intent);
       idempotencyKey.current = intent.idempotencyKey;
     }
@@ -120,7 +120,7 @@ export default function Checkout() {
         paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
-      clearCheckoutIntent(sessionStorage, slug);
+      clearCheckoutIntent(sessionStorage, shopSlug);
       idempotencyKey.current = '';
       clear();
       nav(`/order/${encodeURIComponent(res.orderId)}`, {
