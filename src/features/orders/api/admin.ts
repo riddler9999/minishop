@@ -7,6 +7,7 @@ import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 import {mapDbError} from '@/domain/dbError';
 import {boundedPageSize, decodePageCursor, encodePageCursor, isIsoTimestamp, isSafeCursorId} from '@/shared/lib/keysetPagination';
 
+export type SellerPage = {limit:number; nextCursor:string|null; total:number};
 type OrderCursor = {created_at:string; id:string};
 
 function decodeCursor(raw?: string | null): OrderCursor | null {
