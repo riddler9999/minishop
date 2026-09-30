@@ -62,9 +62,11 @@ export function createNotificationHandler(deps: NotificationDeps = {
     const {data: rows, error} = await sb
       .from('notification_outbox')
       .select('id,event_key,event_type,recipient,payload,status,attempt_count,next_attempt_at')
-      .in('status', ['pending','failed'])
+      .eq('channel', 'email')
+      .in('status', ['pending','failed','processing'])
       .lte('next_attempt_at', now)
       .lt('attempt_count', MAX_ATTEMPTS)
+      .lte('next_attempt_at', now)
       .order('created_at', {ascending:true})
       .limit(BATCH_SIZE);
     if (error) return sendJson(res, 502, {error: 'Could not load notification queue'});
@@ -75,9 +77,10 @@ export function createNotificationHandler(deps: NotificationDeps = {
       const attempt = Number(row.attempt_count || 0) + 1;
       const claim = await sb
         .from('notification_outbox')
-        .update({status:'processing', attempt_count:attempt, last_error:null, updated_at:new Date().toISOString()})
+        .update({status:'processing', attempt_count:attempt, lease_until:new Date(Date.now() + 5 * 60_000).toISOString(), next_attempt_at:new Date(Date.now() + 5 * 60_000).toISOString(), last_error:null, updated_at:new Date().toISOString()})
         .eq('id', row.id)
-        .in('status', ['pending','failed'])
+        .in('status', ['pending','failed','processing'])
+        .lte('next_attempt_at', now)
         .select('id')
         .maybeSingle();
       if (claim.error || !claim.data) continue;
@@ -97,6 +100,7 @@ export function createNotificationHandler(deps: NotificationDeps = {
         await sb.from('notification_outbox').update({
           status: 'sent',
           delivered_at: new Date().toISOString(),
+          lease_until: null,
           last_error: null,
           updated_at: new Date().toISOString(),
         }).eq('id', row.id);
@@ -107,6 +111,7 @@ export function createNotificationHandler(deps: NotificationDeps = {
         await sb.from('notification_outbox').update({
           status: 'failed',
           next_attempt_at: next,
+          lease_until: null,
           last_error: err instanceof Error ? err.message.slice(0, 200) : 'provider_error',
           updated_at: new Date().toISOString(),
         }).eq('id', row.id);
