@@ -92,3 +92,61 @@ test('production and fashion checkout both consume the canonical checkout logic 
     assert.equal(source.includes('function newIdempotencyKey()'), false);
   }
 });
+
+
+test('checkout intent survives reload for the same cart binding and expires or rotates when binding changes', () => {
+  const data = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => { data.set(key, value); },
+    removeItem: (key: string) => { data.delete(key); },
+  };
+  const fingerprint = checkoutIntentFingerprint({
+    itemIds: ['p1'],
+    quantities: [1],
+    region: 'Yangon',
+    township: 'Hlaing',
+    paymentMethod: 'cod',
+  });
+
+  const first = getOrCreateCheckoutIntent({scope: 'shop-a', fingerprint, storage, now: 1_000});
+  const reloaded = getOrCreateCheckoutIntent({scope: 'shop-a', fingerprint, storage, now: 2_000});
+  assert.equal(reloaded, first);
+
+  const changed = getOrCreateCheckoutIntent({
+    scope: 'shop-a',
+    fingerprint: checkoutIntentFingerprint({
+      itemIds: ['p1'],
+      quantities: [2],
+      region: 'Yangon',
+      township: 'Hlaing',
+      paymentMethod: 'cod',
+    }),
+    storage,
+    now: 3_000,
+  });
+  assert.notEqual(changed, first);
+
+  const expired = getOrCreateCheckoutIntent({scope: 'shop-a', fingerprint, storage, now: 31 * 60 * 1000});
+  assert.notEqual(expired, first);
+});
+
+test('successful checkout clears persisted intent', () => {
+  const data = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => { data.set(key, value); },
+    removeItem: (key: string) => { data.delete(key); },
+  };
+  const fingerprint = checkoutIntentFingerprint({
+    itemIds: ['p1'],
+    quantities: [1],
+    region: 'Yangon',
+    township: 'Hlaing',
+    paymentMethod: 'cod',
+  });
+  getOrCreateCheckoutIntent({scope: 'shop-a', fingerprint, storage, now: 1_000});
+  assert.equal(data.size, 1);
+  clearCheckoutIntent('shop-a', storage);
+  assert.equal(data.size, 0);
+});
