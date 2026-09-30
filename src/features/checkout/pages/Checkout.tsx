@@ -6,7 +6,8 @@ import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
-import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
+import {isCheckoutReady, isOnlinePayment, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
+import {clearCheckoutIntent, createCheckoutIntent, loadCheckoutIntent, saveCheckoutIntent} from '@/features/checkout/checkoutIntent';
 
 export default function Checkout() {
   const {items, subtotal, clear} = useCart();
@@ -30,6 +31,10 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
+  const cartFingerprint = useMemo(
+    () => items.map((item) => `${item.id}:${item.qty}`).sort().join('|'),
+    [items],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -90,10 +95,14 @@ export default function Checkout() {
     if (!ready || submitting) return;
     setSubmitting(true);
     setErr('');
-    // A stable idempotency key per checkout intent: reused across double-clicks
-    // and network retries so place_order() returns the SAME order (and bills it
-    // once) instead of creating a duplicate. Regenerated only after success.
-    if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
+    // Persist only retry identity, never customer/payment data. This survives
+    // reload or a lost HTTP response and is bound to this shop + cart shape.
+    if (!idempotencyKey.current) {
+      const existing = loadCheckoutIntent(sessionStorage, {shopSlug: slug, cartFingerprint});
+      const intent = existing ?? createCheckoutIntent({shopSlug: slug, cartFingerprint});
+      saveCheckoutIntent(sessionStorage, intent);
+      idempotencyKey.current = intent.idempotencyKey;
+    }
     try {
       const res = await api.createOrder({
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
@@ -104,6 +113,7 @@ export default function Checkout() {
         paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
+      clearCheckoutIntent(sessionStorage, slug);
       idempotencyKey.current = '';
       clear();
       nav(`/order/${encodeURIComponent(res.orderId)}`, {
