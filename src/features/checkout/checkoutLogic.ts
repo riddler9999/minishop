@@ -62,3 +62,71 @@ export function isCheckoutReady(input: {
     (!isOnlinePayment(input.method) || /^\d{5}$/.test(input.refTail)),
   );
 }
+
+
+export type CheckoutIntentStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
+const CHECKOUT_INTENT_TTL_MS = 30 * 60 * 1000;
+
+function checkoutIntentStorageKey(scope: string): string {
+  return `minishop_checkout_intent:${scope}`;
+}
+
+export function checkoutIntentFingerprint(input: {
+  itemIds: string[];
+  quantities: number[];
+  region: string;
+  township: string;
+  paymentMethod: PayMethod;
+}): string {
+  return JSON.stringify({
+    itemIds: input.itemIds,
+    quantities: input.quantities,
+    region: input.region,
+    township: input.township,
+    paymentMethod: input.paymentMethod,
+  });
+}
+
+export function getOrCreateCheckoutIntent(input: {
+  scope: string;
+  fingerprint: string;
+  storage: CheckoutIntentStorage;
+  now?: number;
+}): string {
+  const now = input.now ?? Date.now();
+  const key = checkoutIntentStorageKey(input.scope);
+  try {
+    const raw = input.storage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw) as {idempotencyKey?: string; fingerprint?: string; createdAt?: number};
+      if (
+        typeof parsed.idempotencyKey === 'string' &&
+        parsed.idempotencyKey &&
+        parsed.fingerprint === input.fingerprint &&
+        typeof parsed.createdAt === 'number' &&
+        now - parsed.createdAt <= CHECKOUT_INTENT_TTL_MS
+      ) {
+        return parsed.idempotencyKey;
+      }
+    }
+  } catch {
+    // Corrupt/unavailable storage falls through to a fresh in-memory-safe key.
+  }
+
+  const idempotencyKey = newIdempotencyKey();
+  try {
+    input.storage.setItem(key, JSON.stringify({idempotencyKey, fingerprint: input.fingerprint, createdAt: now}));
+  } catch {
+    // Checkout must still work when WebView storage is unavailable.
+  }
+  return idempotencyKey;
+}
+
+export function clearCheckoutIntent(scope: string, storage: CheckoutIntentStorage): void {
+  try {
+    storage.removeItem(checkoutIntentStorageKey(scope));
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
