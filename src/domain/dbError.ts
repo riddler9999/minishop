@@ -82,7 +82,8 @@ export type DbErrorCode =
   | 'invalid_notification_event_type'
   | 'notification_recipient_required'
   | 'application_not_pending'
-  | 'application_email_missing';
+  | 'application_email_missing'
+  | 'invalid_application_status';
 
 // Burmese, user-facing. Keep these buyer/seller-readable, not diagnostic.
 export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
@@ -159,6 +160,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   notification_recipient_required: 'Notification လက်ခံသူ အချက်အလက် မရှိပါ။',
   application_not_pending: 'ဒီလျှောက်လွှာကို စိစစ်ပြီးဖြစ်ပါသည်။',
   application_email_missing: 'လျှောက်လွှာပိုင်ရှင်၏ Email မတွေ့ပါ။',
+  invalid_application_status: 'လျှောက်လွှာ စိစစ်မှုအခြေအနေ မမှန်ပါ။',
 };
 
 // Generic fallback when the code is unknown (or the failure isn't a typed code
