@@ -647,6 +647,31 @@ async function main() {
     evidence.unknown_result_retry = 'PASS';
   }
 
+  // Task 9 final-slot same-key race: one quota slot left, two concurrent retries
+  // with the SAME intent key must both resolve to the same order and consume once.
+  {
+    const seller = await createSeller('task9-same-key-final-slot');
+    const shop = await createShop(seller.id, 'starter', 'task9-same-key-final-slot');
+    await setEntitlement(shop.id, 'starter', 60, 59, 0);
+    const product = await createProduct(shop.id, 'task9-same-key-final-slot', { stock: 3 });
+    const key = randomUUID();
+    const clients = [apiClient(anonKey!, '198.51.100.53'), apiClient(anonKey!, '198.51.100.54')];
+    const results = await race(clients.map((client) => () =>
+      callOrder(client, orderArgs(shop.slug, product.id, key, '0900000053')),
+    ));
+    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    const orders = ok(await service.from('orders').select('id,order_no').eq('shop_id', shop.id).eq('idempotency_key', key), 'task9 same-key final-slot orders');
+    assert.equal(orders.length, 1);
+    const fulfilled = results.filter((result): result is PromiseFulfilledResult<Record<string, unknown>> => result.status === 'fulfilled');
+    assert.equal(new Set(fulfilled.map((result) => result.value.order_no)).size, 1);
+    const ent = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(), 'task9 same-key final-slot entitlement');
+    assert.equal(ent.monthly_used, 60);
+    const stock = ok(await service.from('products').select('stock').eq('id', product.id).single(), 'task9 same-key final-slot stock');
+    assert.equal(stock.stock, 2);
+    evidence.connections = { ...(evidence.connections as object), task9_same_key_final_slot: 2 };
+    evidence.task9_same_key_final_slot = 'PASS';
+  }
+
   // Final stock race: stock=1, two different order keys -> exactly one successful order.
   {
     const stockShop = await createShop(sellerA.id, 'starter', 'stock-race').catch(() => null);
