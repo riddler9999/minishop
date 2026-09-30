@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import test from 'node:test';
 
 const api=readFileSync(new URL('../api/superadmin.ts',import.meta.url),'utf8');
-const auth=readFileSync(new URL('../api/_superadmin.ts',import.meta.url),'utf8');
+const auth=readFileSync(new URL('../server/_superadmin.ts',import.meta.url),'utf8');
 const app=readFileSync(new URL('../src/app/App.tsx',import.meta.url),'utf8');
 
 test('superadmin API verifies a real Supabase user and an explicit owner allowlist',()=>{

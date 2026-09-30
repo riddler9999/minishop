@@ -6,7 +6,7 @@ const hardening = new URL('../supabase/migrations/0007_production_hardening.sql'
 const lookupFix = new URL('../supabase/migrations/0028_failed_lookup_rate_limit.sql', import.meta.url);
 const checkoutApi = new URL('../api/checkout.ts', import.meta.url);
 const lookupApi = new URL('../api/storefront-orders.ts', import.meta.url);
-const lookupBackend = new URL('../api/_storefront-lookup-backend.ts', import.meta.url);
+const lookupBackend = new URL('../server/_storefront-lookup-backend.ts', import.meta.url);
 
 describe('distributed API rate limiting', () => {
   it('stores request hits in Postgres and serializes concurrent counters', async () => {
@@ -37,7 +37,7 @@ describe('distributed API rate limiting', () => {
       readFile(checkoutApi, 'utf8'),
       readFile(lookupApi, 'utf8'),
       readFile(lookupBackend, 'utf8'),
-      readFile(new URL('../api/_client-ip.ts', import.meta.url), 'utf8'),
+      readFile(new URL('../server/_client-ip.ts', import.meta.url), 'utf8'),
     ]);
     assert.match(clientIp, /x-forwarded-for/);
     assert.match(checkout, /'x-forwarded-for': forwardedClientIp\(req\)/);

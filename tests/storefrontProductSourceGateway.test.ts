@@ -3,7 +3,7 @@ import {describe, it} from 'node:test';
 import {
   MAX_PRODUCT_SOURCE_LIMIT,
   normalizeProductSourceLimit,
-} from '../api/storefront-product-source.ts';
+} from '../server/storefront-product-source.ts';
 
 describe('Store Builder #110 buyer product-source gateway', () => {
   it('clamps dynamic product-source limits at the buyer gateway boundary', () => {

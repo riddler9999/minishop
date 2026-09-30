@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {supabaseEnv} from '../api/_env.ts';
+import {supabaseEnv} from '../server/_env.ts';
 
 test('server gateway accepts non-VITE Supabase env names', () => {
   const oldUrl = process.env.SUPABASE_URL, oldKey = process.env.SUPABASE_ANON_KEY;
