@@ -8,31 +8,27 @@ import type {TablesInsert, TablesUpdate} from '@/core/supabase/database.types';
 import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 import {mapProduct} from './mappers';
+import {boundedPageSize, decodePageCursor, encodePageCursor, isIsoTimestamp, isSafeCursorId} from '@/shared/lib/keysetPagination';
 
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
+type ProductCursor = {arrival_date:string|null; id:string};
 
-function pageSize(input?: number): number {
-  if (!Number.isFinite(input)) return DEFAULT_PAGE_SIZE;
-  return Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(input!)));
-}
-function encodeCursor(row:any): string | null {
-  if (!row?.arrival_date) return row?.id ? btoa(JSON.stringify({arrival_date:null,id:row.id})) : null;
-  return btoa(JSON.stringify({arrival_date:row.arrival_date,id:row.id}));
-}
-function decodeCursor(raw?:string|null): {arrival_date:string|null;id:string}|null {
-  if (!raw) return null;
-  try {
-    const p=JSON.parse(atob(raw));
-    return typeof p?.id==='string' ? {arrival_date:typeof p.arrival_date==='string'?p.arrival_date:null,id:p.id}:null;
-  } catch { return null; }
+function decodeCursor(raw?:string|null): ProductCursor|null {
+  return decodePageCursor<ProductCursor>(
+    raw,
+    (value): value is ProductCursor => {
+      const candidate = value as Partial<ProductCursor> | null;
+      return !!candidate
+        && (candidate.arrival_date === null || isIsoTimestamp(candidate.arrival_date))
+        && isSafeCursorId(candidate.id);
+    },
+  );
 }
 
 export const catalogAdminApi = {
   async listProducts(opts:{limit?:number;cursor?:string|null}={}): Promise<{products: Product[]; page:{limit:number;nextCursor:string|null;total:number}}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const limit=pageSize(opts.limit);
+    const limit=boundedPageSize(opts.limit);
     const cursor=decodeCursor(opts.cursor);
     let query = sb
       .from('products')
@@ -53,7 +49,7 @@ export const catalogAdminApi = {
     const visible=rows.slice(0,limit);
     return {
       products:visible.map(mapProduct),
-      page:{limit,total:count??visible.length,nextCursor:rows.length>limit?encodeCursor(visible.at(-1)):null},
+      page:{limit,total:count??visible.length,nextCursor:rows.length>limit&&visible.at(-1)?encodePageCursor({arrival_date:visible.at(-1)!.arrival_date,id:visible.at(-1)!.id}):null},
     };
   },
 
