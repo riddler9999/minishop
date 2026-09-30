@@ -83,7 +83,12 @@ export type DbErrorCode =
   | 'notification_recipient_required'
   | 'application_not_pending'
   | 'application_email_missing'
-  | 'invalid_application_status';
+  | 'invalid_application_status'
+  | 'inventory_adjustment_delta_required'
+  | 'inventory_adjustment_reason_required'
+  | 'inventory_adjustment_reason_too_long'
+  | 'inventory_product_not_found'
+  | 'inventory_adjustment_would_go_negative';
 
 // Burmese, user-facing. Keep these buyer/seller-readable, not diagnostic.
 export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
@@ -161,6 +166,11 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   application_not_pending: 'ဒီလျှောက်လွှာကို စိစစ်ပြီးဖြစ်ပါသည်။',
   application_email_missing: 'လျှောက်လွှာပိုင်ရှင်၏ Email မတွေ့ပါ။',
   invalid_application_status: 'လျှောက်လွှာ စိစစ်မှုအခြေအနေ မမှန်ပါ။',
+  inventory_adjustment_delta_required: 'Stock ပြင်ဆင်မည့် အရေအတွက် မမှန်ပါ။',
+  inventory_adjustment_reason_required: 'Stock ပြင်ဆင်ရတဲ့ အကြောင်းပြချက် ထည့်ပေးပါ။',
+  inventory_adjustment_reason_too_long: 'Stock ပြင်ဆင်ရတဲ့ အကြောင်းပြချက် အရမ်းရှည်နေပါတယ်။',
+  inventory_product_not_found: 'ပြင်ဆင်မည့် ပစ္စည်းကို မတွေ့ပါ သို့မဟုတ် ခွင့်မရှိပါ။',
+  inventory_adjustment_would_go_negative: 'Stock ကို သုညအောက် မလျှော့နိုင်ပါ။',
 };
 
 // Generic fallback when the code is unknown (or the failure isn't a typed code
