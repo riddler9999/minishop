@@ -32,12 +32,24 @@ function decodeCursor(raw: unknown): {created_at: string; id: string | null} | n
   }
 }
 
-async function getPage(sb: any, table: string, selection: string, limit: number, cursorRaw: unknown, status?: string) {
+async function getPage(
+  sb: any,
+  table: string,
+  selection: string,
+  limit: number,
+  cursorRaw: unknown,
+  keyColumn: string,
+  status?: string,
+) {
   const cursor = decodeCursor(cursorRaw);
   let q = sb.from(table).select(selection);
   if (status) q = q.eq('status', status);
-  if (cursor) q = q.lt('created_at', cursor.created_at);
-  q = q.order('created_at', {ascending:false}).limit(limit + 1);
+  if (cursor?.id) {
+    q = q.or(`created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},${keyColumn}.lt.${cursor.id})`);
+  } else if (cursor) {
+    q = q.lt('created_at', cursor.created_at);
+  }
+  q = q.order('created_at', {ascending:false}).order(keyColumn, {ascending:false}).limit(limit + 1);
   const {data, error} = await q;
   const rows = data ?? [];
   return {
@@ -45,26 +57,6 @@ async function getPage(sb: any, table: string, selection: string, limit: number,
     error,
     nextCursor: rows.length > limit ? encodeCursor(rows[limit - 1]) : null,
   };
-}
-
-async function countRows(sb: any, table: string, filter?: {column: string; value: unknown}) {
-  let q = sb.from(table).select('*', {count:'exact', head:true});
-  if (filter) q = q.eq(filter.column, filter.value);
-  const {count, error} = await q.limit(1);
-  return {count: count ?? 0, error};
-}
-
-async function sumApproved(sb: any, table: string) {
-  let cursor: string | null = null;
-  let total = 0;
-  for (let i = 0; i < 100; i++) {
-    const page = await getPage(sb, table, 'id,owner_id,amount,status,created_at', 100, cursor, 'approved');
-    if (page.error) return {total:0, error:page.error};
-    total += page.rows.reduce((sum:number,row:any)=>sum+Number(row.amount||0),0);
-    if (!page.nextCursor) return {total, error:null};
-    cursor = page.nextCursor;
-  }
-  return {total:0, error:new Error('Aggregate page bound exceeded')};
 }
 
 export function createSuperadminHandler(
@@ -93,22 +85,17 @@ export function createSuperadminHandler(
 
     const limit = pageSize(q.limit);
     const [
-      shopsPage, applicationsPage, packsPage,
-      shopCount, activeShopCount, pendingApplications, pendingPacks,
-      appRevenue, packRevenue,
+      shopsPage, applicationsPage, packsPage, metricsResult,
     ] = await Promise.all([
-      getPage(sb,'shops','id,name,slug,owner_id,plan,is_active,seller_is_active,platform_suspended,created_at,updated_at',limit,q.shopsCursor),
-      getPage(sb,'shop_applications','owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note',limit,q.applicationsCursor,'pending'),
-      getPage(sb,'order_pack_purchases','id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at',limit,q.packsCursor,'pending'),
-      countRows(sb,'shops'),
-      countRows(sb,'shops',{column:'is_active',value:true}),
-      countRows(sb,'shop_applications',{column:'status',value:'pending'}),
-      countRows(sb,'order_pack_purchases',{column:'status',value:'pending'}),
-      sumApproved(sb,'shop_applications'),
-      sumApproved(sb,'order_pack_purchases'),
+      getPage(sb,'shops','id,name,slug,owner_id,plan,is_active,seller_is_active,platform_suspended,created_at,updated_at',limit,q.shopsCursor,'id'),
+      getPage(sb,'shop_applications','owner_id,plan,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at,review_note',limit,q.applicationsCursor,'owner_id','pending'),
+      getPage(sb,'order_pack_purchases','id,shop_id,qty,amount,payment_method,payment_ref_tail,screenshot_path,status,created_at,reviewed_at',limit,q.packsCursor,'id','pending'),
+      sb.rpc('superadmin_platform_metrics'),
     ]);
-    const errors = [shopsPage.error, applicationsPage.error, packsPage.error, shopCount.error, activeShopCount.error, pendingApplications.error, pendingPacks.error, appRevenue.error, packRevenue.error].filter(Boolean);
+    const errors = [shopsPage.error, applicationsPage.error, packsPage.error, metricsResult.error].filter(Boolean);
     if (errors.length) return sendJson(res, 502, {error:'Could not load platform data'});
+    const metricsRow = Array.isArray(metricsResult.data) ? metricsResult.data[0] : metricsResult.data;
+    if (!metricsRow) return sendJson(res, 502, {error:'Could not load platform data'});
 
     const shopIds = shopsPage.rows.map((s:any)=>s.id);
     let entitlements:any[] = [];
@@ -123,11 +110,11 @@ export function createSuperadminHandler(
 
     return sendJson(res, 200, {
       metrics:{
-        shops:shopCount.count,
-        activeShops:activeShopCount.count,
-        pendingApplications:pendingApplications.count,
-        pendingOrderPacks:pendingPacks.count,
-        recordedRevenue:appRevenue.total+packRevenue.total,
+        shops:Number(metricsRow.shops || 0),
+        activeShops:Number(metricsRow.active_shops || 0),
+        pendingApplications:Number(metricsRow.pending_applications || 0),
+        pendingOrderPacks:Number(metricsRow.pending_order_packs || 0),
+        recordedRevenue:Number(metricsRow.recorded_revenue || 0),
       },
       shops:shopsPage.rows,
       applications:applicationsPage.rows,
