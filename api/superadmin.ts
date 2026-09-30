@@ -150,7 +150,11 @@ export function createSuperadminHandler(
     const ownerId = clean(body.ownerId, 80);
     if (!ownerId) return sendJson(res, 400, {error:'Missing owner'});
     const status = action === 'approve-application' ? 'approved' : 'rejected';
-    ({error} = await sb.from('shop_applications').update({status, reviewed_at: new Date().toISOString(), review_note: clean(body.note, 500) || null}).eq('owner_id', ownerId).eq('status','pending'));
+    ({data, error} = await sb.rpc('review_application_and_notify', {
+      p_owner_id: ownerId,
+      p_status: status,
+      p_review_note: clean(body.note, 500) || null,
+    }));
   } else if (action === 'activate') {
     const plan = clean(body.plan, 30);
     if (!shopId || !['starter','business'].includes(plan)) return sendJson(res, 400, {error:'Invalid activation'});
