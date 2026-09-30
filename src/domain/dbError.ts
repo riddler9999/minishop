@@ -76,7 +76,13 @@ export type DbErrorCode =
   | 'empty_cart'
   // lookup_order() validation
   | 'invalid_lookup'
-  | 'order_not_found';
+  | 'order_not_found'
+  | 'forbidden'
+  | 'notification_event_key_required'
+  | 'invalid_notification_event_type'
+  | 'notification_recipient_required'
+  | 'application_not_pending'
+  | 'application_email_missing';
 
 // Burmese, user-facing. Keep these buyer/seller-readable, not diagnostic.
 export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
@@ -147,6 +153,12 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   empty_cart: 'ခြင်းထဲတွင် ပစ္စည်းမရှိပါ။',
   invalid_lookup: 'ရှာဖွေမှု အချက်အလက် မမှန်ပါ — ဖုန်းနံပါတ်နှင့် Order နံပါတ် စစ်ဆေးပါ။',
   order_not_found: 'Order ရှာမတွေ့ပါ။',
+  forbidden: 'ဒီလုပ်ဆောင်ချက်အတွက် ခွင့်ပြုချက်မရှိပါ။',
+  notification_event_key_required: 'Notification event အချက်အလက် မပြည့်စုံပါ။',
+  invalid_notification_event_type: 'Notification အမျိုးအစား မမှန်ပါ။',
+  notification_recipient_required: 'Notification လက်ခံသူ အချက်အလက် မရှိပါ။',
+  application_not_pending: 'ဒီလျှောက်လွှာကို စိစစ်ပြီးဖြစ်ပါသည်။',
+  application_email_missing: 'လျှောက်လွှာပိုင်ရှင်၏ Email မတွေ့ပါ။',
 };
 
 // Generic fallback when the code is unknown (or the failure isn't a typed code
