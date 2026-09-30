@@ -43,4 +43,13 @@ fs.writeFileSync(
   'utf8',
 );
 
+const migration0028Path = path.join(
+  runtimeSupabase,
+  'migrations',
+  '0028_failed_lookup_rate_limit.sql',
+);
+const source0028 = fs.readFileSync(migration0028Path, 'utf8');
+const functionBodies = source0028.replaceAll('as $$', 'as $fn$').replaceAll('$$;', '$fn$;');
+fs.writeFileSync(migration0028Path, functionBodies, 'utf8');
+
 process.stdout.write(runtimeWorkdir);
