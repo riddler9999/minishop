@@ -5,7 +5,10 @@ begin;
 create table if not exists public.inventory_movements (
   id bigint generated always as identity primary key,
   shop_id uuid not null references public.shops(id) on delete cascade,
-  product_id uuid not null references public.products(id) on delete cascade,
+  -- Deliberately not an FK: permanent product deletion is supported, but audit
+  -- history must retain the original product identifier after the catalog row is gone.
+  product_id uuid not null,
+  product_name_snapshot text not null,
   movement_type text not null check (movement_type in ('order_consume','manual_adjustment','system_adjustment')),
   quantity_delta integer not null check (quantity_delta <> 0),
   stock_before integer not null check (stock_before >= 0),
@@ -22,8 +25,8 @@ create index if not exists inventory_movements_shop_created_idx
   on public.inventory_movements (shop_id, created_at desc);
 create index if not exists inventory_movements_product_created_idx
   on public.inventory_movements (product_id, created_at desc);
-create unique index if not exists inventory_movements_source_uniq
-  on public.inventory_movements (product_id, source_type, source_id)
+create index if not exists inventory_movements_source_idx
+  on public.inventory_movements (source_type, source_id)
   where source_id is not null;
 
 alter table public.inventory_movements enable row level security;
@@ -37,6 +40,27 @@ create policy inventory_movements_owner_select on public.inventory_movements
   ));
 grant select on public.inventory_movements to authenticated;
 
+-- place_order() creates the order row before it decrements product stock. Capture
+-- that exact order id transaction-locally so the product trigger can record real
+-- provenance without racing another checkout or rewriting place_order().
+create or replace function public.set_inventory_order_context()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $order_context$
+begin
+  perform set_config('minishop.inventory_order_id', new.id::text, true);
+  perform set_config('minishop.inventory_order_no', new.order_no, true);
+  return new;
+end;
+$order_context$;
+
+drop trigger if exists orders_inventory_context on public.orders;
+create trigger orders_inventory_context
+after insert on public.orders
+for each row execute function public.set_inventory_order_context();
+
 create or replace function public.capture_product_stock_movement()
 returns trigger
 language plpgsql
@@ -45,7 +69,10 @@ set search_path = pg_catalog, public
 as $inventory$
 declare
   v_delta integer;
-  v_source_id text;
+  v_order_id text := nullif(current_setting('minishop.inventory_order_id', true), '');
+  v_order_no text := nullif(current_setting('minishop.inventory_order_no', true), '');
+  v_manual_reason text := nullif(current_setting('minishop.inventory_manual_reason', true), '');
+  v_manual_source text := nullif(current_setting('minishop.inventory_manual_source', true), '');
 begin
   if old.stock is not distinct from new.stock then
     return new;
@@ -53,45 +80,56 @@ begin
 
   v_delta := new.stock - old.stock;
 
-  -- If this stock decrement belongs to the current place_order transaction,
-  -- order_items for the matching product/order already exist by the time the
-  -- product row update fires in the established implementation. Capture the
-  -- newest matching order as provenance when available; otherwise classify the
-  -- mutation as a system adjustment. Seller-authored adjustments use the
-  -- dedicated RPC below and set a transaction-local marker.
-  if current_setting('minishop.inventory_manual_reason', true) is not null then
+  -- Explicit operational adjustment through adjust_own_product_stock().
+  if v_manual_reason is not null then
     insert into public.inventory_movements(
-      shop_id, product_id, movement_type, quantity_delta,
+      shop_id, product_id, product_name_snapshot, movement_type, quantity_delta,
       stock_before, stock_after, source_type, source_id, reason, actor_user_id
     ) values (
-      new.shop_id, new.id, 'manual_adjustment', v_delta,
-      old.stock, new.stock, 'manual',
-      current_setting('minishop.inventory_manual_source', true),
-      current_setting('minishop.inventory_manual_reason', true),
-      auth.uid()
+      new.shop_id, new.id, new.name, 'manual_adjustment', v_delta,
+      old.stock, new.stock, 'manual', v_manual_source, v_manual_reason, auth.uid()
     );
     return new;
   end if;
 
-  if v_delta < 0 then
-    v_source_id := new.id::text || ':' || old.stock::text || ':' || new.stock::text || ':' || txid_current()::text;
-
+  -- A real order row was inserted earlier in this same transaction. Because the
+  -- context is transaction-local, concurrent checkouts cannot be mistaken for
+  -- one another. source_id is the actual orders.id UUID.
+  if v_delta < 0 and v_order_id is not null then
     insert into public.inventory_movements(
-      shop_id, product_id, movement_type, quantity_delta,
+      shop_id, product_id, product_name_snapshot, movement_type, quantity_delta,
       stock_before, stock_after, source_type, source_id, reason
     ) values (
-      new.shop_id, new.id, 'order_consume', v_delta,
-      old.stock, new.stock, 'order', v_source_id, 'order stock consumption'
+      new.shop_id, new.id, new.name, 'order_consume', v_delta,
+      old.stock, new.stock, 'order', v_order_id,
+      coalesce('order stock consumption: ' || v_order_no, 'order stock consumption')
     );
     return new;
   end if;
 
+  -- The existing seller product editor writes products.stock directly. Treat
+  -- that authenticated owner edit as a manual adjustment rather than falsely
+  -- labelling a stock decrease as order consumption. RLS remains the ownership
+  -- boundary; actor_user_id makes the edit attributable.
+  if auth.uid() is not null then
+    insert into public.inventory_movements(
+      shop_id, product_id, product_name_snapshot, movement_type, quantity_delta,
+      stock_before, stock_after, source_type, reason, actor_user_id
+    ) values (
+      new.shop_id, new.id, new.name, 'manual_adjustment', v_delta,
+      old.stock, new.stock, 'manual', 'seller product editor stock update', auth.uid()
+    );
+    return new;
+  end if;
+
+  -- Privileged/system mutations outside checkout remain explicit rather than
+  -- being misrepresented as an order.
   insert into public.inventory_movements(
-    shop_id, product_id, movement_type, quantity_delta,
+    shop_id, product_id, product_name_snapshot, movement_type, quantity_delta,
     stock_before, stock_after, source_type, reason
   ) values (
-    new.shop_id, new.id, 'system_adjustment', v_delta,
-    old.stock, new.stock, 'system', 'unclassified product stock mutation'
+    new.shop_id, new.id, new.name, 'system_adjustment', v_delta,
+    old.stock, new.stock, 'system', 'unclassified privileged product stock mutation'
   );
   return new;
 end;
