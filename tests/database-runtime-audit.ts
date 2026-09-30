@@ -1185,6 +1185,140 @@ async function main() {
     evidence.seller_forged_transaction_id = 'PASS';
   }
 
+  // Task 13: inventory movement history + explicit no-auto-restock policy.
+  {
+    const seller = await createSeller('task13-inventory');
+    const otherSeller = await createSeller('task13-inventory-other');
+    const shop = await createShop(seller.id, 'starter', 'task13-inventory');
+    await createShop(otherSeller.id, 'starter', 'task13-inventory-other');
+    await setEntitlement(shop.id, 'starter', 60, 0, 0);
+    const product = await createProduct(shop.id, 'task13-inventory', {price: 12000, stock: 5});
+    const buyer = apiClient(anonKey!, '198.51.100.113');
+
+    const created = await callOrder(
+      buyer,
+      orderArgs(shop.slug, product.id, randomUUID(), '0900000113', 2),
+    );
+    const order = ok(
+      await service.from('orders').select('id,status').eq('order_no', created.order_no).single(),
+      'task13 created order',
+    );
+    const afterOrder = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task13 stock after order',
+    );
+    assert.equal(afterOrder.stock, 3);
+
+    const orderMovement = ok(
+      await service.from('inventory_movements')
+        .select('movement_type,quantity_delta,stock_before,stock_after,source_type,source_id')
+        .eq('product_id', product.id)
+        .eq('movement_type', 'order_consume')
+        .single(),
+      'task13 order movement',
+    );
+    assert.equal(orderMovement.quantity_delta, -2);
+    assert.equal(orderMovement.stock_before, 5);
+    assert.equal(orderMovement.stock_after, 3);
+    assert.equal(orderMovement.source_type, 'order');
+    assert.equal(orderMovement.source_id, `${order.id}:${product.id}`);
+
+    const beforeFailedCount = ok(
+      await service.from('inventory_movements').select('id').eq('product_id', product.id),
+      'task13 movement count before failed order',
+    ).length;
+    const failed = await buyer.rpc(
+      'place_order',
+      orderArgs(shop.slug, product.id, randomUUID(), '0900000114', 99),
+    );
+    assert.ok(failed.error, 'task13 insufficient-stock order unexpectedly succeeded');
+    assert.match(errorText(failed.error), /insufficient_stock/);
+    const afterFailedProduct = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task13 stock after failed order',
+    );
+    assert.equal(afterFailedProduct.stock, 3);
+    const afterFailedCount = ok(
+      await service.from('inventory_movements').select('id').eq('product_id', product.id),
+      'task13 movement count after failed order',
+    ).length;
+    assert.equal(afterFailedCount, beforeFailedCount, 'failed order committed an inventory movement');
+
+    const cancelled = await seller.client.rpc('update_order_status_and_notify', {
+      p_order_no: created.order_no,
+      p_shop_id: shop.id,
+      p_status: 'cancelled',
+    });
+    assert.equal(cancelled.error, null, errorText(cancelled.error));
+    const afterCancel = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task13 stock after cancellation',
+    );
+    assert.equal(afterCancel.stock, 3, 'cancellation auto-restocked inventory');
+    const afterCancelCount = ok(
+      await service.from('inventory_movements').select('id').eq('product_id', product.id),
+      'task13 movement count after cancellation',
+    ).length;
+    assert.equal(afterCancelCount, beforeFailedCount, 'cancellation created an automatic restock movement');
+
+    const adjustment = await seller.client.rpc('adjust_own_product_stock', {
+      p_product_id: product.id,
+      p_quantity_delta: 2,
+      p_reason: 'cancelled before dispatch',
+    });
+    assert.equal(adjustment.error, null, errorText(adjustment.error));
+    const adjustedProduct = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task13 manually adjusted stock',
+    );
+    assert.equal(adjustedProduct.stock, 5);
+    const manualMovement = ok(
+      await service.from('inventory_movements')
+        .select('movement_type,quantity_delta,stock_before,stock_after,source_type,reason,actor_user_id')
+        .eq('product_id', product.id)
+        .eq('movement_type', 'manual_adjustment')
+        .single(),
+      'task13 manual movement',
+    );
+    assert.equal(manualMovement.quantity_delta, 2);
+    assert.equal(manualMovement.stock_before, 3);
+    assert.equal(manualMovement.stock_after, 5);
+    assert.equal(manualMovement.source_type, 'manual');
+    assert.equal(manualMovement.reason, 'cancelled before dispatch');
+    assert.equal(manualMovement.actor_user_id, seller.id);
+
+    const foreign = await otherSeller.client.rpc('adjust_own_product_stock', {
+      p_product_id: product.id,
+      p_quantity_delta: 1,
+      p_reason: 'cross tenant attempt',
+    });
+    assert.ok(foreign.error, 'cross-tenant inventory adjustment unexpectedly succeeded');
+    assert.match(errorText(foreign.error), /inventory_product_not_found/);
+
+    const negative = await seller.client.rpc('adjust_own_product_stock', {
+      p_product_id: product.id,
+      p_quantity_delta: -999,
+      p_reason: 'invalid negative correction',
+    });
+    assert.ok(negative.error, 'negative inventory adjustment unexpectedly succeeded');
+    assert.match(errorText(negative.error), /inventory_adjustment_would_go_negative/);
+    const finalProduct = ok(
+      await service.from('products').select('stock').eq('id', product.id).single(),
+      'task13 final stock',
+    );
+    assert.equal(finalProduct.stock, 5);
+
+    evidence.inventory_movements = {
+      order_decrement_audited: 'PASS',
+      failed_order_rollback: 'PASS',
+      cancellation_no_auto_restock: 'PASS',
+      authorized_manual_adjustment: 'PASS',
+      cross_tenant_adjustment_blocked: 'PASS',
+      negative_stock_blocked: 'PASS',
+      refund_restock_policy: 'MANUAL_EXPLICIT_ONLY',
+    };
+  }
+
   // SECURITY DEFINER / privileged RPC permissions.
   {
     const seller = await createSeller('rpc-permissions');
