@@ -9,7 +9,7 @@ async function walk(dir: string): Promise<string[]> {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...await walk(full));
-    else files.push(full.replaceAll('\\\\', '/'));
+    else files.push(full.split(path.sep).join('/'));
   }
   return files;
 }
