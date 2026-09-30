@@ -26,7 +26,11 @@ function decodeCursor(raw: unknown): {created_at: string; id: string | null} | n
   if (typeof raw !== 'string' || !raw) return null;
   try {
     const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
-    return typeof parsed?.created_at === 'string' ? {created_at: parsed.created_at, id: typeof parsed.id === 'string' ? parsed.id : null} : null;
+    const createdAt = parsed?.created_at;
+    const id = parsed?.id;
+    if (typeof createdAt !== 'string' || !Number.isFinite(Date.parse(createdAt))) return null;
+    if (id !== null && (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,100}$/.test(id))) return null;
+    return {created_at: createdAt, id};
   } catch {
     return null;
   }
