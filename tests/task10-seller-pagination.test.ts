@@ -31,7 +31,8 @@ test('seller order and product pages expose next-page controls', () => {
 test('superadmin pagination is compound-key stable and proof generation is lazy', () => {
   assert.match(superadminApi, /created_at\.lt\.\$\{cursor\.created_at\}.*\$\{keyColumn\}\.lt\.\$\{cursor\.id\}/s);
   assert.match(superadminApi, /rpc\('superadmin_platform_metrics'\)/);
-  assert.doesNotMatch(superadminApi, /applications.*createSignedUrl/s);
+  assert.equal((superadminApi.match(/createSignedUrl\(/g) || []).length, 1);
+  assert.match(superadminApi, /if \(proofType && proofId\)[\s\S]*createSignedUrl\(/);
   assert.match(superadminPage, /openProof\('application'/);
   assert.match(superadminPage, /openProof\('pack'/);
   assert.match(superadminPage, /loadMore\('shops'\)/);
