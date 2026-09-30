@@ -714,6 +714,74 @@ async function main() {
     evidence.transaction_rollback = 'PASS';
   }
 
+  // Task 9: final quota slot with the same key must resolve to one stable order.
+  {
+    const seller = await createSeller('task9-same-key-final-slot');
+    const shop = await createShop(seller.id, 'starter', 'task9-same-key-final-slot');
+    await setEntitlement(shop.id, 'starter', 60, 59, 0);
+    const product = await createProduct(shop.id, 'task9-same-key-final-slot', { stock: 4, price: 10000 });
+    const buyer = apiClient(anonKey!, '198.51.100.131');
+    const quote = await buyer.rpc('quote_order', {
+      p_shop_slug: shop.slug,
+      p_region: 'Yangon',
+      p_township: 'Runtime',
+      p_items: [{ product_id: product.id, qty: 1 }],
+    });
+    assert.equal(quote.error, null, errorText(quote.error));
+    const totals = quote.data as Record<string, number>;
+    const key = randomUUID();
+    const clients = [apiClient(anonKey!, '198.51.100.132'), apiClient(anonKey!, '198.51.100.133')];
+    const results = await race(clients.map((client) => async () => {
+      const response = await client.rpc('place_order', {
+        ...orderArgs(shop.slug, product.id, key, '0900000131'),
+        p_expected_item_total: totals.item_total,
+        p_expected_delivery_fee: totals.delivery_fee,
+      });
+      if (response.error) throw new Error(errorText(response.error));
+      return response.data as Record<string, unknown>;
+    }));
+    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    const fulfilled = results.filter((r): r is PromiseFulfilledResult<Record<string, unknown>> => r.status === 'fulfilled');
+    assert.equal(fulfilled[0].value.order_no, fulfilled[1].value.order_no);
+    const ent = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(), 'task9 same-key entitlement');
+    assert.equal(ent.monthly_used, 60);
+    const rows = ok(await service.from('orders').select('id').eq('shop_id', shop.id).eq('idempotency_key', key), 'task9 same-key orders');
+    assert.equal(rows.length, 1);
+    evidence.task9_same_key_final_slot = 'PASS';
+  }
+
+  // Task 9: different keys competing for the final slot must not exceed quota.
+  {
+    const seller = await createSeller('task9-different-key-final-slot');
+    const shop = await createShop(seller.id, 'starter', 'task9-different-key-final-slot');
+    await setEntitlement(shop.id, 'starter', 60, 59, 0);
+    const product = await createProduct(shop.id, 'task9-different-key-final-slot', { stock: 4, price: 10000 });
+    const buyer = apiClient(anonKey!, '198.51.100.134');
+    const quote = await buyer.rpc('quote_order', {
+      p_shop_slug: shop.slug,
+      p_region: 'Yangon',
+      p_township: 'Runtime',
+      p_items: [{ product_id: product.id, qty: 1 }],
+    });
+    assert.equal(quote.error, null, errorText(quote.error));
+    const totals = quote.data as Record<string, number>;
+    const clients = [apiClient(anonKey!, '198.51.100.135'), apiClient(anonKey!, '198.51.100.136')];
+    const results = await race(clients.map((client, index) => async () => {
+      const response = await client.rpc('place_order', {
+        ...orderArgs(shop.slug, product.id, randomUUID(), `090000013${5 + index}`),
+        p_expected_item_total: totals.item_total,
+        p_expected_delivery_fee: totals.delivery_fee,
+      });
+      if (response.error) throw new Error(errorText(response.error));
+      return response.data;
+    }));
+    assert.equal(countFulfilled(results), 1, JSON.stringify(results));
+    assert.equal(countRejected(results), 1, JSON.stringify(results));
+    const ent = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(), 'task9 different-key entitlement');
+    assert.equal(ent.monthly_used, 60);
+    evidence.task9_different_key_final_slot = 'PASS';
+  }
+
   // Direct anonymous callers must not be able to bypass the first-party trust boundary.
   // The gateway uses a narrow server-only backend credential and forwards the client
   // identity only after api/_client-ip.ts has normalized it.
