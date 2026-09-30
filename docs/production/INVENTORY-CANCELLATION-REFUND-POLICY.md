@@ -14,8 +14,10 @@ Every product stock change must be explainable through an append-only inventory 
 
 Supported pilot paths:
 
-- Order creation: stock decreases according to the existing `place_order()` behavior and the decrement is audited as an order consumption movement.
+- Order creation: stock decreases according to the existing `place_order()` behavior and the decrement is audited against the actual `orders.id` that caused it.
 - Seller stock correction/restock: the shop owner uses the authorized manual adjustment RPC and must provide a reason.
+- Existing product editor stock changes remain supported; they are recorded as seller-authored manual adjustments with the authenticated actor and a standardized editor reason rather than being mislabeled as order consumption.
+- Permanent product deletion does not delete inventory movement history; the original product UUID and product-name snapshot remain in the ledger.
 - Failed order creation: transaction rollback leaves stock unchanged and therefore creates no committed inventory movement.
 - Cancellation/refund: changing order status does not automatically mutate stock.
 
