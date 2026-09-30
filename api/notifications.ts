@@ -50,7 +50,7 @@ export function createNotificationHandler(deps: NotificationDeps = {
       return sendJson(res, 401, {error: 'Unauthorized'});
     }
     const url = deps.env.SUPABASE_URL || deps.env.VITE_SUPABASE_URL;
-    const serviceKey = deps.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceKey = deps.env.SUPABASE_NOTIFICATION_WORKER_KEY;
     const resendKey = deps.env.RESEND_API_KEY;
     const from = deps.env.NOTIFICATION_EMAIL_FROM;
     if (!url || !serviceKey || !resendKey || !from) {
