@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {loadBuyerStoreDesign} from '../api/storefront-design.ts';
+import {loadBuyerStoreDesign} from '../api/_storefront-design.ts';
 
 type RpcResult = {data: any; error: any};
 type LegacyResult = {data: any; error: any};

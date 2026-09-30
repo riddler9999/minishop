@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {createCheckoutHandler} from '../api/checkout.ts';
-import {normalizeCheckoutInput} from '../api/checkout-input.ts';
+import {normalizeCheckoutInput} from '../api/_checkout-input.ts';
 
 function validBody(overrides: Record<string, unknown> = {}) {
   return {

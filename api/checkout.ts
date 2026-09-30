@@ -3,7 +3,7 @@ import {mapDbError} from '../src/domain/dbError.js';
 import {supabaseEnv} from './_env.js';
 import {sendJson} from './_http.js';
 import {clean} from './_validation.js';
-import {normalizeCheckoutInput, normalizeCheckoutQuoteInput} from './checkout-input.js';
+import {normalizeCheckoutInput, normalizeCheckoutQuoteInput} from './_checkout-input.js';
 import {forwardedClientIp} from './_client-ip.js';
 import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
 

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
-import {McpError} from '../api/mcp/errors.ts';
-import {createStoreDesignMcpService} from '../api/mcp/store-design.ts';
+import {McpError} from '../api/_mcp/errors.ts';
+import {createStoreDesignMcpService} from '../api/_mcp/store-design.ts';
 
 function service() {
   let draft = createDefaultStoreDesign('clean-minimal');

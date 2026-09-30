@@ -26,7 +26,7 @@ describe('anonymous storefront projection', () => {
     const relations = await readFile(new URL('../api/_buyer-relations.ts', import.meta.url), 'utf8');
     const storefront = await readFile(new URL('../api/storefront.ts', import.meta.url), 'utf8');
     const checkout = await readFile(new URL('../api/checkout.ts', import.meta.url), 'utf8');
-    const design = await readFile(new URL('../api/storefront-design.ts', import.meta.url), 'utf8');
+    const design = await readFile(new URL('../api/_storefront-design.ts', import.meta.url), 'utf8');
     const health = await readFile(new URL('../api/health.ts', import.meta.url), 'utf8');
 
     for (const view of ['buyer_public_shops', 'buyer_public_products', 'buyer_public_payment_accounts', 'buyer_public_shipping_zones']) {
