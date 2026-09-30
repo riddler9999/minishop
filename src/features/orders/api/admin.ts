@@ -5,37 +5,25 @@ import {requireSupabase} from '@/core/supabase/client';
 import type {AdminOrder} from '@/domain/order';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 import {mapDbError} from '@/domain/dbError';
+import {boundedPageSize, decodePageCursor, encodePageCursor, isIsoTimestamp, isSafeCursorId} from '@/shared/lib/keysetPagination';
 
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
+type OrderCursor = {created_at:string; id:string};
 
-export type SellerPage = {limit:number; nextCursor:string|null; total:number};
-
-function pageSize(input?: number): number {
-  if (!Number.isFinite(input)) return DEFAULT_PAGE_SIZE;
-  return Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(input!)));
-}
-
-function encodeCursor(row:any): string | null {
-  if (!row?.created_at) return null;
-  return btoa(JSON.stringify({created_at:row.created_at, id:row.id}));
-}
-
-function decodeCursor(raw?: string | null): {created_at:string; id?:string} | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(atob(raw));
-    return typeof parsed?.created_at === 'string' ? parsed : null;
-  } catch {
-    return null;
-  }
+function decodeCursor(raw?: string | null): OrderCursor | null {
+  return decodePageCursor<OrderCursor>(
+    raw,
+    (value): value is OrderCursor => {
+      const candidate = value as Partial<OrderCursor> | null;
+      return !!candidate && isIsoTimestamp(candidate.created_at) && isSafeCursorId(candidate.id);
+    },
+  );
 }
 
 export const orderAdminApi = {
   async listOrders(opts: {limit?: number; cursor?: string | null} = {}): Promise<{orders: AdminOrder[]; page: SellerPage}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const limit = pageSize(opts.limit);
+    const limit = boundedPageSize(opts.limit);
     const cursor = decodeCursor(opts.cursor);
 
     let query = sb
@@ -72,7 +60,7 @@ export const orderAdminApi = {
     }));
     return {
       orders,
-      page:{limit, total:count ?? orders.length, nextCursor: rows.length > limit ? encodeCursor(visible.at(-1)) : null},
+      page:{limit, total:count ?? orders.length, nextCursor: rows.length > limit && visible.at(-1) ? encodePageCursor({created_at: visible.at(-1)!.created_at, id: visible.at(-1)!.id}) : null},
     };
   },
 
