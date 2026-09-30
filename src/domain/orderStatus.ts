@@ -49,8 +49,10 @@ export const ADMIN_STATUS_OPTIONS: OrderStatus[] = [
   'cancelled',
 ];
 
-// "Money is settled" — used for revenue KPIs (exclude unpaid/cancelled).
-export const PAID_STATUSES: OrderStatus[] = ['partial_checked', 'checked', 'shipped', 'completed'];
+// Full order value is recognized only once payment has been fully checked.
+// partial_checked means only a deposit/partial amount was confirmed; the schema does not record that amount,
+// so it must not be counted as full recognized sales.
+export const RECOGNIZED_SALES_STATUSES: OrderStatus[] = ['checked', 'shipped', 'completed'];
 
 // "Needs the merchant's attention now."
 export const OPEN_STATUSES: OrderStatus[] = ['cod_pending', 'pending_payment', 'partial_checked', 'checked'];
