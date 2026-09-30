@@ -49,11 +49,7 @@ const migration0028Path = path.join(
   '0028_failed_lookup_rate_limit.sql',
 );
 const source0028 = fs.readFileSync(migration0028Path, 'utf8');
-const localReplay0028 = source0028.replace(
-  /\bas \$\$([\s\S]*?)\$\$;/g,
-  (match) => match.replace(/\$\$/g, '$fn
-),
-);
-fs.writeFileSync(migration0028Path, localReplay0028, 'utf8');
+const functionBodies = source0028.replaceAll('as $$', 'as $fn$').replaceAll('$$;', '$fn$;');
+fs.writeFileSync(migration0028Path, functionBodies, 'utf8');
 
 process.stdout.write(runtimeWorkdir);
