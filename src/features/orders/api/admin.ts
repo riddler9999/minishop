@@ -88,7 +88,7 @@ export const orderAdminApi = {
   async updateOrderStatus(orderId: string, status: string): Promise<{ok: true}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const {data, error} = await sb.rpc('update_order_status_and_notify', {
+    const {data, error} = await (sb as any).rpc('update_order_status_and_notify', {
       p_order_no: orderId,
       p_shop_id: shopId,
       p_status: status,
