@@ -6,7 +6,7 @@ import {useCart} from '@/features/cart/state';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
 import {ShopLink, useShopNavigate, useShopSlugParam} from '@/features/tenancy/ShopLink';
-import {isCheckoutReady, isOnlinePayment, newIdempotencyKey, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
+import {checkoutIntentFingerprint, clearCheckoutIntent, getOrCreateCheckoutIntent, isCheckoutReady, isOnlinePayment, paymentAccounts, PAYMENT_METHODS, type PayMethod} from '@/features/checkout/checkoutLogic';
 
 export default function Checkout() {
   const {items, subtotal, clear} = useCart();
@@ -30,6 +30,7 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
+  const checkoutIntentScope = slug || 'demo';
 
   useEffect(() => {
     let alive = true;
@@ -90,10 +91,23 @@ export default function Checkout() {
     if (!ready || submitting) return;
     setSubmitting(true);
     setErr('');
-    // A stable idempotency key per checkout intent: reused across double-clicks
-    // and network retries so place_order() returns the SAME order (and bills it
-    // once) instead of creating a duplicate. Regenerated only after success.
-    if (!idempotencyKey.current) idempotencyKey.current = newIdempotencyKey();
+    // Persist only a short-lived, non-PII checkout intent key. This survives a
+    // lost HTTP response + reload so the retry resolves to the already-created
+    // order instead of consuming another quota slot.
+    const intentFingerprint = checkoutIntentFingerprint({
+      itemIds: items.map((item) => item.id),
+      quantities: items.map((item) => item.qty),
+      region,
+      township,
+      paymentMethod: method,
+    });
+    if (!idempotencyKey.current) {
+      idempotencyKey.current = getOrCreateCheckoutIntent({
+        scope: checkoutIntentScope,
+        fingerprint: intentFingerprint,
+        storage: window.sessionStorage,
+      });
+    }
     try {
       const res = await api.createOrder({
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
@@ -104,6 +118,7 @@ export default function Checkout() {
         paymentRefTail: online ? refTail.trim() : undefined,
         idempotencyKey: idempotencyKey.current,
       });
+      clearCheckoutIntent(checkoutIntentScope, window.sessionStorage);
       idempotencyKey.current = '';
       clear();
       nav(`/order/${encodeURIComponent(res.orderId)}`, {
