@@ -88,13 +88,11 @@ export const orderAdminApi = {
   async updateOrderStatus(orderId: string, status: string): Promise<{ok: true}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const {data, error} = await sb
-      .from('orders')
-      .update({status})
-      .eq('order_no', orderId)
-      .eq('shop_id', shopId)
-      .select('id')
-      .maybeSingle();
+    const {data, error} = await (sb as any).rpc('update_order_status_and_notify', {
+      p_order_no: orderId,
+      p_shop_id: shopId,
+      p_status: status,
+    });
     if (error || !data) throw new Error('Order ရှာမတွေ့ပါ');
     return {ok: true};
   },
