@@ -1,4 +1,4 @@
-import {newIdempotencyKey} from './checkoutLogic';
+import {newIdempotencyKey} from './checkoutLogic.ts';
 
 export const CHECKOUT_INTENT_TTL_MS = 30 * 60 * 1000;
 
