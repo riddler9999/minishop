@@ -15,6 +15,9 @@ test('Task 13 creates an auditable inventory movement ledger', () => {
   assert.match(migration, /stock_before integer not null/i);
   assert.match(migration, /stock_after integer not null/i);
   assert.match(migration, /source_type text not null/i);
+  assert.match(migration, /product_id uuid not null/i);
+  assert.doesNotMatch(migration, /product_id uuid[^\n]*references public\.products[^\n]*on delete cascade/i);
+  assert.match(migration, /product_name_snapshot text not null/i);
   assert.match(migration, /source_id text/i);
   assert.match(migration, /created_at timestamptz/i);
 });
@@ -24,7 +27,9 @@ test('automatic product stock mutations are captured without changing checkout s
   assert.match(migration, /after update of stock on public\.products/i);
   assert.match(migration, /order_consume/i);
   assert.match(migration, /manual_adjustment/i);
-  assert.match(migration, /txid_current\(\)/i);
+  assert.match(migration, /set_inventory_order_context/i);
+  assert.match(migration, /minishop\.inventory_order_id/i);
+  assert.match(migration, /new\.id::text/i);
 });
 
 test('manual stock adjustment is seller scoped and requires a reason', () => {
@@ -32,6 +37,8 @@ test('manual stock adjustment is seller scoped and requires a reason', () => {
   assert.match(migration, /owner_id = auth\.uid\(\)/i);
   assert.match(migration, /inventory_adjustment_reason_required/i);
   assert.match(migration, /inventory_adjustment_would_go_negative/i);
+  assert.match(migration, /seller product editor stock update/i);
+  assert.match(migration, /actor_user_id/i);
 });
 
 test('refund and cancellation do not silently restock under the current policy', () => {
