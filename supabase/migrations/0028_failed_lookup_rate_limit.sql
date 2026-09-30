@@ -79,9 +79,9 @@ begin
   -- return typed JSON instead of raising, so this insert commits with the RPC.
   perform private.enforce_rate_limit('lookup_order', 30, interval '5 minutes');
 
-  if coalesce(length(trim(p_shop_slug)), 0) not between 3 and 40
-     or coalesce(length(trim(p_order_no)), 0) not between 8 and 40
-     or coalesce(length(trim(p_phone)), 0) not between 6 and 30 then
+  if not (coalesce(length(trim(p_shop_slug)), 0) between 3 and 40)
+     or not (coalesce(length(trim(p_order_no)), 0) between 8 and 40)
+     or not (coalesce(length(trim(p_phone)), 0) between 6 and 30) then
     return jsonb_build_object('error', 'invalid_lookup');
   end if;
 

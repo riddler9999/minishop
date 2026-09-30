@@ -9,7 +9,11 @@ import process from 'node:process';
 // so the disposable runtime uses a temporary migration copy with a replay-only
 // existence guard. The repository migration and Production remain untouched.
 const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'minishop-db-runtime-'));
-const runtimeWorkdir = path.join(runtimeRoot, 'minishop');
+const runtimeProjectId = `minishop-runtime-${process.env.GITHUB_RUN_ID ?? process.pid}-${process.env.GITHUB_RUN_ATTEMPT ?? '1'}`
+  .toLowerCase()
+  .replace(/[^a-z0-9-]/g, '-')
+  .slice(0, 60);
+const runtimeWorkdir = path.join(runtimeRoot, runtimeProjectId);
 const runtimeSupabase = path.join(runtimeWorkdir, 'supabase');
 fs.mkdirSync(runtimeWorkdir, {recursive: true});
 fs.cpSync('supabase', runtimeSupabase, {recursive: true});
