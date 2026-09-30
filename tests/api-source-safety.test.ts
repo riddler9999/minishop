@@ -12,7 +12,7 @@ for (const file of fs.readdirSync('api', {recursive:true}).filter((x) => typeof 
 }
 
 test('privileged superadmin boundary is authenticated and explicitly allowlisted', () => {
-  const source = fs.readFileSync('server/_superadmin.ts', 'utf8');
+  const source = fs.readFileSync('api/_superadmin.ts', 'utf8');
   assert.match(source, /auth\.getUser\(token\)/);
   assert.match(source, /SUPERADMIN_EMAILS/);
   assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
@@ -20,7 +20,7 @@ test('privileged superadmin boundary is authenticated and explicitly allowlisted
 
 
 test('privileged storefront lookup backend is fixed-purpose and cannot proxy arbitrary queries', () => {
-  const source = fs.readFileSync('server/_storefront-lookup-backend.ts', 'utf8');
+  const source = fs.readFileSync('api/_storefront-lookup-backend.ts', 'utf8');
   assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(source, /\.rpc\('lookup_order'/);
   assert.doesNotMatch(source, /\.from\(/);

@@ -3,7 +3,7 @@ import {describe, it} from 'node:test';
 import {readFile} from 'node:fs/promises';
 
 const migration = new URL('../supabase/migrations/0028_failed_lookup_rate_limit.sql', import.meta.url);
-const backend = new URL('../server/_storefront-lookup-backend.ts', import.meta.url);
+const backend = new URL('../api/_storefront-lookup-backend.ts', import.meta.url);
 const gateway = new URL('../api/storefront-orders.ts', import.meta.url);
 
 describe('trusted storefront lookup boundary', () => {

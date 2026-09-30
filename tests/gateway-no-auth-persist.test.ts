@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 test('server gateways disable session persistence and refresh',()=>{
-  for(const f of ['api/storefront.ts','api/checkout.ts','api/health.ts','server/_storefront-lookup-backend.ts']){
+  for(const f of ['api/storefront.ts','api/checkout.ts','api/health.ts','api/_storefront-lookup-backend.ts']){
     const s=fs.readFileSync(f,'utf8');
     assert.match(s,/persistSession: false/);
     assert.match(s,/autoRefreshToken: false/);

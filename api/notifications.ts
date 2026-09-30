@@ -1,5 +1,5 @@
 import {createClient} from '@supabase/supabase-js';
-import {sendJson} from '../server/_http.js';
+import {sendJson} from './_http.js';
 
 export const MAX_ATTEMPTS = 5;
 const BATCH_SIZE = 20;

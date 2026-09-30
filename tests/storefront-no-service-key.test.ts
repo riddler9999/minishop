@@ -9,7 +9,7 @@ test('public gateway handlers never reference privileged key names directly',()=
 });
 
 test('lookup privilege is isolated to the fixed-purpose server helper',()=>{
-  const helper=fs.readFileSync('server/_storefront-lookup-backend.ts','utf8');
+  const helper=fs.readFileSync('api/_storefront-lookup-backend.ts','utf8');
   assert.match(helper,/SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(helper,/\.rpc\('lookup_order'/);
   assert.doesNotMatch(helper,/\.from\(/);

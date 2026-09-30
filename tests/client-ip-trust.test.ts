@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {forwardedClientIp} from '../server/_client-ip.ts';
+import {forwardedClientIp} from '../api/_client-ip.ts';
 
 describe('storefront client IP trust boundary', () => {
   it('prefers the platform-controlled socket peer over caller supplied forwarding headers', () => {

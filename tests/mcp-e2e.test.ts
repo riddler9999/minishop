@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
 import {createMcpHandler} from '../api/mcp.ts';
-import {authenticateSeller,type AuthDeps} from '../server/mcp/auth.ts';
-import {createRateLimiter} from '../server/mcp/rate-limit.ts';
+import {authenticateSeller,type AuthDeps} from '../api/_mcp/auth.ts';
+import {createRateLimiter} from '../api/_mcp/rate-limit.ts';
 import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
-import type {StoreDesignLifecyclePort} from '../server/mcp/store-design.ts';
+import type {StoreDesignLifecyclePort} from '../api/_mcp/store-design.ts';
 
 describe('MiniShop MCP endpoint E2E lifecycle',()=>{
   it('authenticates Seller A, lists/calls tools, publishes Draft, and rolls back buyer state',async()=>{

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {McpError} from '../server/mcp/errors.ts';
-import {authenticateSeller, type AuthDeps} from '../server/mcp/auth.ts';
-import {requireCapability} from '../server/mcp/capabilities.ts';
+import {McpError} from '../api/_mcp/errors.ts';
+import {authenticateSeller, type AuthDeps} from '../api/_mcp/auth.ts';
+import {requireCapability} from '../api/_mcp/capabilities.ts';
 
 function req(token?: string) {
   return {headers: token ? {authorization: `Bearer ${token}`} : {}} as any;

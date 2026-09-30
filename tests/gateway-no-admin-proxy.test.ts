@@ -9,8 +9,8 @@ test('public storefront gateway has no admin proxy',()=>{
 
 test('the only admin API is the authenticated superadmin boundary',()=>{
   const files=fs.readdirSync('api',{recursive:true}).map(String).filter((f)=>/admin/i.test(f)).sort();
-  assert.deepEqual(files,['superadmin.ts']);
-  const auth=fs.readFileSync('server/_superadmin.ts','utf8');
+  assert.deepEqual(files,['_superadmin.ts','superadmin.ts']);
+  const auth=fs.readFileSync('api/_superadmin.ts','utf8');
   assert.match(auth,/auth\.getUser\(token\)/);
   assert.match(auth,/SUPERADMIN_EMAILS/);
 });

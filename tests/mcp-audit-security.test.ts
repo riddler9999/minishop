@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe,it} from 'node:test';
-import {McpError} from '../server/mcp/errors.ts';
-import {createAuditSink} from '../server/mcp/audit.ts';
-import {createRateLimiter} from '../server/mcp/rate-limit.ts';
+import {McpError} from '../api/_mcp/errors.ts';
+import {createAuditSink} from '../api/_mcp/audit.ts';
+import {createRateLimiter} from '../api/_mcp/rate-limit.ts';
 
 describe('MCP audit and rate limiting',()=>{
   it('records only safe audit metadata',async()=>{
