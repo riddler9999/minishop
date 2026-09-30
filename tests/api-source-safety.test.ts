@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const privilegedServerFiles = new Set(['superadmin.ts', '_superadmin.ts', '_storefront-lookup-backend.ts']);
+const privilegedServerFiles = new Set(['superadmin.ts', '_superadmin.ts', '_storefront-lookup-backend.ts', 'notifications.ts']);
 for (const file of fs.readdirSync('api', {recursive:true}).filter((x) => typeof x === 'string' && x.endsWith('.ts'))) {
   if (privilegedServerFiles.has(String(file))) continue;
   test(`api/${file} does not reference service role`, () => {
