@@ -278,9 +278,9 @@ export function ProductFeatures() {
 }
 
 const demoStores = [
-  {name:'Fashion Store', path:'/fashion-demo', body:'Fashion catalog + promotional storefront layout'},
-  {name:'Furniture Store', path:'/furniture-demo', body:'Furniture-focused product browsing demo'},
-  {name:'Mobile Store', path:'/mobile-store-demo', body:'Mobile & accessories storefront demo'},
+  {name:'Fashion Store', path:'/fashion-demo', preview:'/demo/fashion/preview.webp', body:'Fashion catalog + promotional storefront layout'},
+  {name:'Furniture Store', path:'/furniture-demo', preview:'/demo/furniture/preview.webp', body:'Furniture-focused product browsing demo'},
+  {name:'Mobile Store', path:'/mobile-store-demo', preview:'/demo/mobile/preview.webp', body:'Mobile & accessories storefront demo'},
 ];
 
 export function DemoStoreShowcase() {
@@ -295,7 +295,7 @@ export function DemoStoreShowcase() {
         {demoStores.map((store) => (
           <article className="landing-demo-store-card" role="listitem" key={store.path}>
             <Link className="landing-demo-store-preview" to={store.path} aria-label={`${store.name} demo store`}>
-              <iframe src={store.path} title={`${store.name} preview`} loading="lazy" tabIndex={-1} />
+              <img src={store.preview} alt={`${store.name} preview`} loading="lazy" />
             </Link>
             <div className="landing-demo-store-meta">
               <div><strong>{store.name}</strong><span>{store.body}</span></div>
