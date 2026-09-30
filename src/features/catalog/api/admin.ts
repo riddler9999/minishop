@@ -40,7 +40,13 @@ export const catalogAdminApi = {
       .eq('shop_id', shopId)
       .order('arrival_date', {ascending: false, nullsFirst: false})
       .order('id',{ascending:false});
-    if (cursor?.arrival_date) query=query.lt('arrival_date',cursor.arrival_date);
+    if (cursor?.arrival_date) {
+      query = query.or(
+        `arrival_date.lt.${cursor.arrival_date},and(arrival_date.eq.${cursor.arrival_date},id.lt.${cursor.id}),arrival_date.is.null`,
+      );
+    } else if (cursor) {
+      query = query.is('arrival_date', null).lt('id', cursor.id);
+    }
     const {data,error,count}=await query.limit(limit+1);
     if (error) throw new Error(mapDbError(error.message));
     const rows=data??[];
