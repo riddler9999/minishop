@@ -3,6 +3,9 @@ import {readFile} from 'node:fs/promises';
 import test from 'node:test';
 
 import {
+  checkoutIntentFingerprint,
+  clearCheckoutIntent,
+  getOrCreateCheckoutIntent,
   isCheckoutReady,
   isOnlinePayment,
   newIdempotencyKey,
