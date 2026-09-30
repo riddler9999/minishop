@@ -18,3 +18,12 @@ describe('admin analytics Yangon calendar boundaries', () => {
     assert.equal(yangonDayKey(new Date('2026-09-20T17:30:00.000Z')), '2026-09-21');
   });
 });
+
+
+describe('seller dashboard metric semantics', () => {
+  it('does not treat partial_checked as full recognized sales', async () => {
+    const {RECOGNIZED_SALES_STATUSES} = await import('../src/domain/orderStatus.ts');
+    assert.equal(RECOGNIZED_SALES_STATUSES.includes('partial_checked' as never), false);
+    assert.deepEqual(RECOGNIZED_SALES_STATUSES, ['checked', 'shipped', 'completed']);
+  });
+});
