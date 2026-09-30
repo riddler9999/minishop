@@ -13,7 +13,7 @@ const superadmin = readFileSync(new URL('../api/superadmin.ts', import.meta.url)
 
 test('notification outbox is durable, deduplicated, retryable, and observable', () => {
   assert.match(migration, /create table if not exists public\.notification_outbox/i);
-  assert.match(migration, /unique\s*\(event_key\)/i);
+  assert.match(migration, /event_key text not null unique/i);
   assert.match(migration, /status text not null default 'pending'/i);
   assert.match(migration, /attempt_count integer not null default 0/i);
   assert.match(migration, /next_attempt_at timestamptz/i);
