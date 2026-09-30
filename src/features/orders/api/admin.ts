@@ -6,18 +6,51 @@ import type {AdminOrder} from '@/domain/order';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
 import {mapDbError} from '@/domain/dbError';
 
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+export type SellerPage = {limit:number; nextCursor:string|null; total:number};
+
+function pageSize(input?: number): number {
+  if (!Number.isFinite(input)) return DEFAULT_PAGE_SIZE;
+  return Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(input!)));
+}
+
+function encodeCursor(row:any): string | null {
+  if (!row?.created_at) return null;
+  return btoa(JSON.stringify({created_at:row.created_at, id:row.id}));
+}
+
+function decodeCursor(raw?: string | null): {created_at:string; id?:string} | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(atob(raw));
+    return typeof parsed?.created_at === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export const orderAdminApi = {
-  async listOrders(): Promise<{orders: AdminOrder[]}> {
+  async listOrders(opts: {limit?: number; cursor?: string | null} = {}): Promise<{orders: AdminOrder[]; page: SellerPage}> {
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
-    const {data, error} = await sb
+    const limit = pageSize(opts.limit);
+    const cursor = decodeCursor(opts.cursor);
+
+    let query = sb
       .from('orders')
-      .select('*, order_items(name, unit_price, qty)')
+      .select('*, order_items(name, unit_price, qty)', {count:'exact'})
       .eq('shop_id', shopId)
-      .order('created_at', {ascending: false});
+      .order('created_at', {ascending:false})
+      .order('id', {ascending:false});
+    if (cursor) query = query.lt('created_at', cursor.created_at);
+    const {data, error, count} = await query.limit(limit + 1);
     if (error) throw new Error(mapDbError(error.message));
 
-    const orders: AdminOrder[] = (data ?? []).map((o) => ({
+    const rows = data ?? [];
+    const visible = rows.slice(0, limit);
+    const orders: AdminOrder[] = visible.map((o) => ({
       order_id: o.order_no,
       items: (o.order_items ?? []).map((it) => ({name: it.name, price: it.unit_price, qty: it.qty})),
       item_total: o.item_total,
@@ -33,7 +66,10 @@ export const orderAdminApi = {
       paymentRefTail: o.payment_ref_tail ?? null,
       phone_key: o.customer_phone.replace(/\D/g, ''),
     }));
-    return {orders};
+    return {
+      orders,
+      page:{limit, total:count ?? orders.length, nextCursor: rows.length > limit ? encodeCursor(visible.at(-1)) : null},
+    };
   },
 
   async updateOrderStatus(orderId: string, status: string): Promise<{ok: true}> {
