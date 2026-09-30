@@ -79,3 +79,21 @@ test('clearing checkout intent removes retry state after confirmed success', () 
   clearCheckoutIntent(storage, 'demo');
   assert.equal(loadCheckoutIntent(storage, {shopSlug: 'demo', cartFingerprint: 'cart-a', now}), null);
 });
+
+
+test('checkout intent binding changes when accepted checkout context changes', () => {
+  const storage = new MemoryStorage();
+  const now = 1_000_000;
+  const intent = createCheckoutIntent({
+    shopSlug: 'demo',
+    cartFingerprint: 'cart-a|yangon|hlaing|cod|7000|1800',
+    now,
+  });
+  saveCheckoutIntent(storage, intent);
+
+  assert.equal(loadCheckoutIntent(storage, {
+    shopSlug: 'demo',
+    cartFingerprint: 'cart-a|yangon|hlaing|cod|8000|1800',
+    now,
+  }), null);
+});
