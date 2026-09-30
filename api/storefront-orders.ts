@@ -1,7 +1,7 @@
 import {mapDbError} from '../src/domain/dbError.js';
-import {sendJson} from './_http.js';
-import {forwardedClientIp} from './_client-ip.js';
-import {lookupOrderBackend} from './_storefront-lookup-backend.js';
+import {sendJson} from '../server/_http.js';
+import {forwardedClientIp} from '../server/_client-ip.js';
+import {lookupOrderBackend} from '../server/_storefront-lookup-backend.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return sendJson(res, 405, {error: 'Method not allowed'});

@@ -1,7 +1,7 @@
-import {sendJson} from './_http.js';
-import {clean} from './_validation.js';
+import {sendJson} from '../server/_http.js';
+import {clean} from '../server/_validation.js';
 import {mapDbError} from '../src/domain/dbError.js';
-import {requireSuperadmin} from './_superadmin.js';
+import {requireSuperadmin} from '../server/_superadmin.js';
 
 const ACTIONS = new Set(['approve-application','reject-application','activate','renew','upgrade','downgrade','cancel','credit-pack','reject-pack','toggle-shop']);
 const DEFAULT_PAGE_SIZE = 50;

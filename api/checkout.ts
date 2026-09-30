@@ -1,11 +1,11 @@
 import {createClient} from '@supabase/supabase-js';
 import {mapDbError} from '../src/domain/dbError.js';
-import {supabaseEnv} from './_env.js';
-import {sendJson} from './_http.js';
-import {clean} from './_validation.js';
-import {normalizeCheckoutInput, normalizeCheckoutQuoteInput} from './checkout-input.js';
-import {forwardedClientIp} from './_client-ip.js';
-import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
+import {supabaseEnv} from '../server/_env.js';
+import {sendJson} from '../server/_http.js';
+import {clean} from '../server/_validation.js';
+import {normalizeCheckoutInput, normalizeCheckoutQuoteInput} from '../server/checkout-input.js';
+import {forwardedClientIp} from '../server/_client-ip.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from '../server/_buyer-relations.js';
 
 type CheckoutDeps = {
   createClient: typeof createClient;

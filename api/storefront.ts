@@ -1,9 +1,9 @@
 import {createClient} from '@supabase/supabase-js';
-import {mapProductRow} from './_map.js';
-import {sendJson} from './_http.js';
-import {loadBuyerStoreDesign} from './storefront-design.js';
-import {normalizeProductSourceLimit} from './storefront-product-source.js';
-import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
+import {mapProductRow} from '../server/_map.js';
+import {sendJson} from '../server/_http.js';
+import {loadBuyerStoreDesign} from '../server/storefront-design.js';
+import {normalizeProductSourceLimit} from '../server/storefront-product-source.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from '../server/_buyer-relations.js';
 
 const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';

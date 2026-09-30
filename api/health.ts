@@ -1,7 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
-import {supabaseEnv} from './_env.js';
-import {sendJson} from './_http.js';
-import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection} from './_buyer-relations.js';
+import {supabaseEnv} from '../server/_env.js';
+import {sendJson} from '../server/_http.js';
+import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection} from '../server/_buyer-relations.js';
 
 export default async function handler(req: any, res: any) {
   const started = Date.now();
