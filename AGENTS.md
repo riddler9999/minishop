@@ -15,6 +15,10 @@ two can never drift apart.**
    making architectural changes, and add a decision entry when you make one.
 3. **[`supabase/README.md`](supabase/README.md)** — schema, the security model, and
    how migrations are applied.
+4. For numbered Production Readiness work, read
+   **[`docs/superpowers/plans/2026-09-28-minishop-production-readiness-task-prompts.md`](docs/superpowers/plans/2026-09-28-minishop-production-readiness-task-prompts.md)**
+   and select exactly the requested task. Do not infer a task from memory or ask the
+   owner to paste a prompt that is already in the repository.
 
 ## What this project is
 
@@ -32,6 +36,58 @@ this is **not** a sales agent.
 | `npm run lint` | `tsc --noEmit` then ESLint |
 | `npm test` | Unit tests (`node --test`, no framework) |
 | `npm run check` | lint + test + build — **run this before every commit**; it is exactly what CI runs |
+
+## Task 12+ execution contract
+
+For **Task 12 and every later numbered Production Readiness task**, a request such
+as `@GitHub minishop task 12 start` is authorization to execute that task through
+the complete engineering gate below. Do not stop after implementation or after
+opening a PR, and do not start the next numbered task automatically.
+
+1. **Source of truth** — read the exact numbered task prompt, this file, `CLAUDE.md`,
+   `PROJECT.md`, relevant ADR/spec/schema/API contracts, and current GitHub state.
+2. **Fresh current state** — re-fetch `main`, related branches/PRs, review threads,
+   and CI. Never trust a stale SHA, previous-chat status, or an assessment finding
+   without confirming it against current code.
+3. **Reproduce / prove the problem** — for a behavioral defect, reproduce it before
+   changing implementation. Distinguish a confirmed current defect from an already
+   fixed, superseded, or unproven assessment finding.
+4. **Acceptance criteria** — derive explicit, testable completion criteria from the
+   task prompt and current contracts before implementation. Do not invent product
+   policy when the source of truth is silent.
+5. **Isolated branch / focused PR** — never implement directly on `main`. Reuse an
+   existing task branch/PR when it is the authoritative continuation; otherwise
+   create one scoped branch and one reviewable PR for the selected task only.
+6. **Test first where behavior changes** — use RED → GREEN → REFACTOR. Add/run a
+   failing regression test that proves the defect when feasible, then make the
+   smallest correct implementation. For non-behavioral work, define an equivalent
+   verifiable precondition instead of manufacturing a meaningless RED test.
+7. **Targeted verification** — run the smallest relevant tests/checks first and fix
+   root causes, not symptoms. Database/security/API/browser tasks require their
+   task-specific runtime evidence; frontend unit tests alone are not sufficient.
+8. **Full repository gates** — before merge, run the repository-supported full
+   lint/typecheck, test suite, and production build (`npm run check`) plus every
+   additional gate named by the selected task.
+9. **PR + CI** — push the focused changes, open/update the task PR, and require fresh
+   CI on the final head SHA. A locally passing checkout is not merge evidence.
+10. **Independent code review** — inspect the final diff for correctness, security,
+    data integrity, architecture/layering, edge cases, test gaps, and scope creep.
+    Treat confirmed Critical/Important findings as merge blockers.
+11. **Fix-and-rerun loop** — for every confirmed finding or failed check: determine
+    root cause → fix only the scoped defect → rerun affected tests → rerun required
+    full gates/CI → re-review the new final diff. Continue until clean.
+12. **Merge only all-green** — merge only when the final head SHA is mergeable,
+    required CI/checks pass, required runtime evidence passes, and there are no
+    unresolved Critical/Important review findings. Report the merge SHA/evidence.
+13. **Release boundary** — merge authorization is **not** Production authorization.
+    Do not deploy Production, mutate Production data, apply a Production database
+    migration, rotate credentials, or change live infrastructure unless the selected
+    task explicitly requires it **and** the owner separately gives explicit approval.
+
+Completion means the whole contract is satisfied, not merely “code written.” If a
+real human-only decision, credential, external approval, unavailable required check,
+or Production approval blocks completion, finish every independent step and report
+the exact blocker without claiming the task complete.
 
 ## Hard rules
 
