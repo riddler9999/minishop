@@ -136,27 +136,6 @@ export function createCheckoutHandler(
           {error: mapDbError(message, 'Order တင်၍မရပါ — ပြန်လည်ကြိုးစားပါ။')},
         );
       }
-
-      const order = data as Record<string, unknown> | null;
-      if (order?.order_no) {
-        const eventKey = `order-created:${input.slug}:${String(order.order_no)}`;
-        const notice = await sb.rpc('enqueue_notification', {
-          p_event_key: eventKey,
-          p_event_type: 'order_created',
-          p_recipient: input.customer.phone,
-          p_payload: {
-            order_no: order.order_no,
-            grand_total: order.grand_total,
-            status: order.status,
-          },
-        });
-        if (notice.error) {
-          return sendJson(res, 503, {
-            error: 'Order was created but notification tracking could not be recorded. Please keep your order number.',
-            order,
-          });
-        }
-      }
       return sendJson(res, 200, {order: data});
     }
 
