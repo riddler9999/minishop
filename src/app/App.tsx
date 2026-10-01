@@ -6,6 +6,7 @@ import Onboarding from '@/features/auth/pages/Onboarding';
 import Subscribe from '@/features/billing/pages/Subscribe';
 import Billing from '@/features/billing/pages/Billing';
 import Dashboard from '@/features/admin/pages/Dashboard';
+import Customers from '@/features/admin/pages/Customers';
 import SuperAdminDashboard from '@/features/superadmin/pages/SuperAdminDashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
@@ -47,6 +48,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<Customers />} />
           <Route path="shipping" element={<AdminShipping />} />
           <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
