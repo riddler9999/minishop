@@ -7,8 +7,10 @@ const app = fs.readFileSync(new URL('../src/app/App.tsx', import.meta.url), 'utf
 
 describe('Admin V2 navigation contract', () => {
   it('pins the exact English-first primary navigation order', () => {
-    const labels = [...nav.matchAll(/\{label: '([^']+)'/g)].map((match) => match[1]);
-    assert.deepEqual(labels.slice(0, 13), [
+    const primaryBlock = nav.match(/export const ADMIN_NAV_ITEMS:[\s\S]*?\n\];/);
+    assert.ok(primaryBlock, 'ADMIN_NAV_ITEMS block not found');
+    const labels = [...primaryBlock[0].matchAll(/label:\s*'([^']+)'/g)].map((match) => match[1]);
+    assert.deepEqual(labels, [
       'Dashboard',
       'Orders',
       'Products',
