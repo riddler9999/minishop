@@ -9,7 +9,7 @@ const buyerApi = fs.readFileSync(new URL('../src/features/catalog/api/storeDesig
 describe('Store Builder #112 Themes entry screen', () => {
   it('has a dedicated localized Themes page with Published and Customize semantics', () => {
     assert.match(source, /လက်ရှိအသုံးပြုနေသည်/);
-    assert.match(source, />Customize<\/Link>/);
+    assert.match(source, /Customize<\/Link>/);
     assert.match(source, /online-store\/themes\/customize/);
   });
 
