@@ -16,6 +16,9 @@ import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
 import LifecycleStoreBuilder from '@/features/shop/pages/LifecycleStoreBuilder';
 import Themes from '@/features/shop/pages/Themes';
+import StoreNavigation from '@/features/shop/pages/StoreNavigation';
+import StoreDomains from '@/features/shop/pages/StoreDomains';
+import StorePolicies from '@/features/shop/pages/StorePolicies';
 import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
 import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
@@ -55,6 +58,9 @@ export default function App() {
           <Route path="design" element={<StoreDesign />} />
           <Route path="online-store/themes" element={<Themes />} />
           <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
+          <Route path="store/navigation" element={<StoreNavigation />} />
+          <Route path="store/domains" element={<StoreDomains />} />
+          <Route path="store/policies" element={<StorePolicies />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>

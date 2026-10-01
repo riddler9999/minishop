@@ -71,7 +71,7 @@ export default function Themes() {
   if (!lifecycle || !publishedTheme) {
     return (
       <section className="space-y-4">
-        <h1 className="text-2xl font-black text-slate-950">Theme များ</h1>
+        <h1 className="text-2xl font-black text-slate-950">Themes</h1>
         <p className="text-sm text-rose-600">{status.kind === 'error' ? status.message : 'Theme အချက်အလက် ရယူ၍မရပါ။'}</p>
         <p className="text-sm leading-6 text-slate-600">Store Builder lifecycle မရသေးတဲ့ environment မှာ အဟောင်း Store Design ကို ဆက်သုံးနိုင်ပါတယ်။</p>
         <div className="flex flex-wrap gap-3">
@@ -87,7 +87,7 @@ export default function Themes() {
   return (
     <section className="space-y-8">
       <div>
-        <p className="text-sm font-semibold text-brand-600">အွန်လိုင်းဆိုင်</p>
+        <p className="text-sm font-semibold text-brand-600">Store</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">Theme များ</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">လက်ရှိ live storefront က Published theme ကိုပဲ သုံးနေပါတယ်။ Theme အသစ်ရွေးတာက Draft ကိုပဲပြောင်းပြီး Publish မလုပ်မချင်း customer ဆီ မပြောင်းပါ။</p>
       </div>
@@ -100,7 +100,7 @@ export default function Themes() {
               <h2 className="mt-4 text-2xl font-black text-slate-950">{publishedTheme.label}</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">{publishedTheme.description}</p>
             </div>
-            <Link to="/admin/online-store/themes/customize" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 font-bold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"><Paintbrush className="h-4 w-4" />ပြင်ဆင်မည်</Link>
+            <Link to="/admin/online-store/themes/customize" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 font-bold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"><Paintbrush className="h-4 w-4" />Customize</Link>
           </div>
         </div>
         {draftThemeId !== lifecycle.published.themeId && (
@@ -113,7 +113,7 @@ export default function Themes() {
       <div>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-slate-950">Theme စုစည်းမှု</h2>
+            <h2 className="text-xl font-black text-slate-950">Theme collection</h2>
             <p className="mt-1 text-sm text-slate-600">ရွေးလိုက်တာနဲ့ Draft အသစ်ဖြစ်မယ်။ Auto-publish မလုပ်ပါဘူး။</p>
           </div>
           {status.kind === 'saving' && <span className="text-sm font-semibold text-slate-500">Draft သိမ်းနေသည်…</span>}

@@ -44,8 +44,8 @@ export default function Billing() {
   return (
     <div className="space-y-4 pb-24 lg:pb-8">
       <header>
-        <h1 className="text-[26px] font-black tracking-tight text-slate-950 sm:text-3xl">Billing &amp; Extra Orders</h1>
-        <p className="mt-1 text-sm text-slate-500">Order လက်ခံနိုင်မှုနှင့် ငွေပေးချေမှု စီမံခန့်ခွဲမှု</p>
+        <h1 className="text-[26px] font-black tracking-tight text-slate-950 sm:text-3xl">Billing</h1>
+        <p className="mt-1 text-sm text-slate-500">Manage plan usage, order capacity, and payment submissions.</p>
       </header>
 
       <EntitlementSummary compact />
