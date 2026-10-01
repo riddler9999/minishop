@@ -25,7 +25,7 @@ test('seller order and product pages expose next-page controls', () => {
   assert.match(ordersPage, /adminApi\.listOrders\(\{cursor: nextCursor\}\)/);
   assert.match(ordersPage, /nextCursor && !q\.trim\(\) && filter === 'all'/);
   assert.match(productsPage, /adminApi\.listProducts\(\{cursor: nextCursor\}\)/);
-  assert.match(productsPage, /nextCursor && !q\.trim\(\)/);
+  assert.match(productsPage, /nextCursor && !hasActiveFilters/);
 });
 
 test('superadmin pagination is compound-key stable and proof generation is lazy', () => {
