@@ -7,6 +7,7 @@ import Subscribe from '@/features/billing/pages/Subscribe';
 import Billing from '@/features/billing/pages/Billing';
 import Dashboard from '@/features/admin/pages/Dashboard';
 import Customers from '@/features/admin/pages/Customers';
+import Analytics from '@/features/admin/pages/Analytics';
 import SuperAdminDashboard from '@/features/superadmin/pages/SuperAdminDashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
@@ -54,7 +55,7 @@ export default function App() {
           <Route path="design" element={<StoreDesign />} />
           <Route path="online-store/themes" element={<Themes />} />
           <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
-          <Route path="analytics" element={<Dashboard />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />
