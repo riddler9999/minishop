@@ -25,7 +25,7 @@ describe('Admin V2 store/settings/billing IA', () => {
   });
 
   it('uses English-first headings on Settings, Billing, and Themes', () => {
-    assert.match(settings, />Settings</);
+    assert.match(settings, /\/>\s*Settings\s*<PlanBadge/);
     assert.match(billing, />Billing</);
     assert.match(themes, />Themes</);
   });
