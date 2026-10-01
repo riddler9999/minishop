@@ -40,9 +40,9 @@ test('Orders V2 detail exposes current payment verification and existing status 
 test('Orders V2 preserves the trusted order API boundary', () => {
   assert.match(page, /adminApi\.listOrders/);
   assert.match(detail, /adminApi\.updateOrderStatus/);
-  assert.doesNotMatch(page, /requireSupabase|\.from\(['\"]orders['\"]\)/);
-  assert.doesNotMatch(table, /requireSupabase|\.from\(['\"]orders['\"]\)/);
-  assert.doesNotMatch(detail, /requireSupabase|\.from\(['\"]orders['\"]\)/);
+  assert.doesNotMatch(page, /requireSupabase|\.from\(['"]orders['"]\)/);
+  assert.doesNotMatch(table, /requireSupabase|\.from\(['"]orders['"]\)/);
+  assert.doesNotMatch(detail, /requireSupabase|\.from\(['"]orders['"]\)/);
   assert.match(api, /resolveOwnShopId/);
   assert.match(api, /update_order_status_and_notify/);
 });
