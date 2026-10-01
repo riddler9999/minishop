@@ -39,8 +39,9 @@ describe('Admin V2 navigation contract', () => {
     }
   });
 
-  it('does not invent routable backend functionality for future nav items', () => {
-    assert.doesNotMatch(nav, /to: ['"]\/admin\/customers['"]/);
-    assert.doesNotMatch(nav, /to: ['"]\/admin\/marketing['"]/);
+  it('routes Customers while keeping unsupported Marketing disabled', () => {
+    assert.match(nav, /label: 'Customers', to: '\/admin\/customers'/);
+    assert.match(app, /path=["']customers["'] element={<Customers \/>}/);
+    assert.doesNotMatch(nav, /label: 'Marketing', to:/);
   });
 });
