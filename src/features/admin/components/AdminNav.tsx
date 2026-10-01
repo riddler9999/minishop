@@ -15,7 +15,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {label: 'Dashboard', to: '/admin', end: true, icon: LayoutDashboard},
   {label: 'Orders', to: '/admin/orders', icon: ShoppingBag},
   {label: 'Products', to: '/admin/products', icon: Package},
-  {label: 'Customers', icon: Users},
+  {label: 'Customers', to: '/admin/customers', icon: Users},
   {
     label: 'Store',
     icon: Store,
