@@ -10,6 +10,10 @@ const pageSource = readFileSync(
   new URL('../src/features/catalog/pages/AdminProducts.tsx', import.meta.url),
   'utf8',
 );
+const editorSource = readFileSync(
+  new URL('../src/features/catalog/components/AdminProductEditor.tsx', import.meta.url),
+  'utf8',
+);
 
 test('seller catalog exposes tenant-scoped permanent product deletion', () => {
   assert.match(apiSource, /async deleteProduct\(id: string\)/);
@@ -20,14 +24,14 @@ test('seller catalog exposes tenant-scoped permanent product deletion', () => {
 });
 
 test('product admin requires confirmation, deletes the row, and frees the local slot', () => {
-  assert.match(pageSource, /confirm\(/);
-  assert.match(pageSource, /adminApi\.deleteProduct\(product\.id\)/);
-  assert.match(pageSource, /prev\.filter\(\(p\) => p\.id !== product\.id\)/);
+  assert.match(editorSource, /confirm\(/);
+  assert.match(editorSource, /adminApi\.deleteProduct\(product\.id\)/);
+  assert.match(pageSource, /current\.filter\(\(item\) => item\.id !== product\.id\)/);
 });
 
 test('product images are cleaned only after the product row delete succeeds', () => {
-  const deleteRow = pageSource.indexOf('adminApi.deleteProduct(product.id)');
-  const deleteImage = pageSource.indexOf('adminApi.deleteProductImage(path)', deleteRow);
+  const deleteRow = editorSource.indexOf('adminApi.deleteProduct(product.id)');
+  const deleteImage = editorSource.indexOf('adminApi.deleteProductImage(path)', deleteRow);
   assert.ok(deleteRow >= 0, 'row delete must exist');
   assert.ok(deleteImage > deleteRow, 'storage cleanup must occur after row delete');
 });
