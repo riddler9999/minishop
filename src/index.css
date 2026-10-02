@@ -91,6 +91,11 @@
   --minishop-canvas: #f4f7f5;
   --minishop-surface: #ffffff;
   --minishop-mint-soft: #d8f1ea;
+  /* Compatibility aliases: migrate call sites incrementally. */
+  --minishop-pink: var(--minishop-mint);
+  --minishop-ink: var(--minishop-charcoal);
+  --minishop-slate: var(--minishop-muted);
+  --minishop-pink-soft: var(--minishop-mint-soft);
 }
 
 .platform-shell {
@@ -620,7 +625,7 @@ textarea {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: #ec1f62;
+  background: #35b99d;
 }
 
 .auth-gradient-shell::before {
@@ -630,13 +635,13 @@ textarea {
   z-index: -2;
   background: conic-gradient(
     from 0deg,
-    #ec1f62,
-    #f9578d,
-    #7c3aed,
-    #0ea5e9,
-    #22c55e,
+    #35b99d,
+    #5bc9b2,
+    #29957f,
+    #8fd7c6,
+    #237665,
     #f59e0b,
-    #ec1f62
+    #35b99d
   );
   animation: auth-gradient-spin 6s linear infinite;
 }
