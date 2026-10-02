@@ -1,10 +1,10 @@
-# MiniShop Admin V2 Implementation Plan
+# MiniShop Admin V3 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the current seller admin experience with the approved English-first Admin V2 commerce workspace while preserving MiniShop's production backend, security boundaries, and Store Design lifecycle.
+**Goal:** Replace the current seller admin experience with the approved English-only Admin V3 commerce workspace while preserving MiniShop's production backend, security boundaries, and Store Design lifecycle.
 
-**Architecture:** Keep the current feature-first React/Vite structure and existing domain/API contracts. Introduce reusable Admin V2 shell/primitives under `src/features/admin/components`, then migrate each admin surface incrementally. Store Builder remains backed by the existing lifecycle, editor state, section operations, and shared storefront renderer; only its workspace UX is redesigned.
+**Architecture:** Keep the current feature-first React/Vite structure and existing domain/API contracts. Introduce reusable Admin V3 shell/primitives under `src/features/admin/components`, then migrate each admin surface incrementally. Store Builder remains backed by the existing lifecycle, editor state, section operations, and shared storefront renderer; only its workspace UX is redesigned.
 
 **Tech Stack:** React, Vite, TypeScript, Tailwind CSS v4, React Router, Lucide React, Supabase, Node test runner.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Admin UI is English-first.
+- Admin UI is English-only.
 - Preserve Supabase auth, tenant RLS, checkout/order semantics, inventory rules, billing/entitlement enforcement, financial idempotency, and RPC privilege boundaries.
 - Preserve Store Design Draft/Published lifecycle and shared storefront renderer.
 - Do not create a second storefront renderer or duplicate ProductCard/cart implementations.
@@ -20,7 +20,7 @@
 - Do not introduce a new UI dependency unless a concrete implementation need is demonstrated.
 - Responsive acceptance includes 375 px, 390 px, 414 px, normal laptop, and wide desktop.
 - Buyer storefront localization and buyer commerce behavior are out of scope except where shared renderer regression tests prove preservation.
-- Work remains on `feat/admin-v2-redesign` or child branches until Preview QA and explicit approval.
+- Work remains on `feature/admin-v3-shopify-inspired` or child branches until Preview QA and explicit approval.
 
 ## Review Focus
 
@@ -32,7 +32,7 @@
 
 ---
 
-### Task 1: Admin V2 foundation and shell
+### Task 1: Admin V3 foundation and shell
 
 **Files:**
 - Modify: `src/features/admin/components/AdminLayout.tsx`
@@ -49,12 +49,12 @@
 - Create: `tests/adminV2Shell.test.ts`
 
 **Interfaces:**
-- Produces: reusable Admin V2 chrome and UI primitives consumed by Tasks 2–9.
+- Produces: reusable Admin V3 chrome and UI primitives consumed by Tasks 2–9.
 - Preserves: `AdminConsole` route nesting and `RequireAdmin` security boundary.
 
 - [ ] **Step 1: Write failing shell/navigation tests**
 
-Assert the English-first navigation order is exactly Dashboard, Orders, Products, Customers, Store, Marketing, Analytics, Settings, Billing; Store exposes Store Builder, Navigation, Domains, Policies; mobile navigation has an accessible open/close contract; no duplicate competing admin shell is introduced.
+Assert the English-only navigation order is exactly Dashboard, Orders, Products, Customers, Store, Analytics, Settings; Marketing and top-level Billing are absent; Store exposes Store Builder and Themes only; Domains and Policies are reachable from Settings; mobile navigation has an accessible open/close contract; no duplicate competing admin shell is introduced.
 
 - [ ] **Step 2: Run focused tests**
 
@@ -63,7 +63,7 @@ Expected: FAIL against current shell/copy.
 
 - [ ] **Step 3: Implement shell and shared primitives**
 
-Refactor `AdminLayout` into dark persistent desktop sidebar + light content workspace. Keep page-specific business logic out of the layout. Add responsive drawer navigation and shared English-first page/status/empty/error primitives.
+Refactor `AdminLayout` into dark persistent desktop sidebar + light content workspace. Keep page-specific business logic out of the layout. Add responsive drawer navigation and shared English-only page/status/empty/error primitives.
 
 - [ ] **Step 4: Run focused tests**
 
@@ -77,7 +77,7 @@ Expected: PASS.
 
 - [ ] **Step 6: Commit**
 
-`git commit -am "feat(admin): add Admin V2 shell and primitives"`
+`git commit -am "feat(admin): add Admin V3 shell and primitives"`
 
 ---
 
@@ -120,7 +120,7 @@ Expected: PASS.
 
 ---
 
-### Task 3: Products workspace V2
+### Task 3: Shopify-inspired Products workspace V3
 
 **Files:**
 - Refactor: `src/features/catalog/pages/AdminProducts.tsx`
@@ -137,7 +137,7 @@ Expected: PASS.
 
 - [ ] **Step 1: Write failing product workspace tests**
 
-Assert Add Product, search/filter/sort affordances, status/stock/category/price/visibility columns, deliberate empty/error state, and editor grouping: General, Media, Pricing, Inventory, Store Visibility. Do not assert unsupported variants.
+Assert All Products, Add Product, search/filter/sort affordances, status/inventory/category/price/visibility columns, deliberate empty/error state, and editor grouping: General, Media, Pricing, Inventory, Product Organization, Store Visibility. Assert Variants, Collections, Tags, CSV import/export only when repository inspection proves current support; never add fake functional UI.
 
 - [ ] **Step 2: Run focused tests**
 
@@ -159,7 +159,7 @@ Expected: PASS.
 
 ---
 
-### Task 4: Orders workspace V2
+### Task 4: Orders workspace V3
 
 **Files:**
 - Refactor: `src/features/orders/pages/AdminOrders.tsx`
@@ -176,7 +176,7 @@ Expected: PASS.
 
 - [ ] **Step 1: Write failing tests**
 
-Assert current canonical statuses remain the source of truth, payment/fulfillment/customer/amount are scannable, detail UI exposes only allowed existing actions, and failure states provide Retry.
+First inspect and pin the canonical backend order states. Assert seller-facing tabs/stages are All, Pending, Confirmed, Delivered, Return; verify a deterministic presentation mapping to canonical backend states; verify only allowed transitions are exposed, Return is gated after Delivered unless backend truth requires otherwise, status changes require confirmation, and failure states provide Retry.
 
 - [ ] **Step 2: Run tests**
 
@@ -185,7 +185,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Implement Orders V2**
 
-Split list/detail concerns, translate presentation copy to English, retain current RPC/API write paths, and preserve order-status validation and payment semantics.
+Split list/detail concerns, keep copy English-only, introduce a small order-stage presentation mapping module if canonical backend statuses differ from Pending/Confirmed/Delivered/Return, retain current RPC/API write paths, and preserve backend order-status validation, payment semantics, and audit truth.
 
 - [ ] **Step 4: Verify**
 
@@ -289,7 +289,7 @@ Expected: PASS.
 
 - [ ] **Step 1: Write failing routing/IA tests**
 
-Assert Store grouping, English-first labels, Billing separation, existing theme lifecycle entry, and intentional non-destructive handling for capabilities not yet backed by APIs.
+Assert Store grouping, English-only labels, Billing separation, existing theme lifecycle entry, and intentional non-destructive handling for capabilities not yet backed by APIs.
 
 - [ ] **Step 2: Run tests**
 
@@ -396,7 +396,7 @@ Expected: PASS.
 ### Task 10: Responsive and accessibility pass
 
 **Files:**
-- Modify Admin V2 components/pages created in Tasks 1–9 as required.
+- Modify Admin V3 components/pages created in Tasks 1–9 as required.
 - Extend: `tests/storeBuilderResponsive.test.ts`
 - Create: `tests/adminV2Responsive.test.ts`
 - Create: `tests/adminV2Accessibility.test.ts`
@@ -509,3 +509,38 @@ Stop before merge. Present Preview and acceptance results for explicit approval.
 - [ ] **Step 6: Only after approval, prepare final PR/merge gate**
 
 Use the normal MiniShop release process. Production deployment remains a separate controlled release task.
+
+
+---
+
+## Admin V3 Decision Amendment — 2026-10-03
+
+This section supersedes any conflicting earlier task text.
+
+### Final primary navigation
+
+1. Dashboard
+2. Orders
+3. Products
+4. Customers
+5. Store
+6. Analytics
+7. Settings
+
+Marketing is removed. Billing is nested under Settings. Domains and Policies are nested under Settings. Store is reserved for Store Builder and theme/design concerns.
+
+### Orders presentation contract
+
+Seller UI exposes All, Pending, Confirmed, Delivered, Return. Do not migrate or rename canonical database statuses until repository inspection proves a migration is necessary and separately approved. Prefer a presentation mapping seam with explicit allowed transitions. Backend/RPC validation remains authoritative.
+
+### Products presentation contract
+
+Use Shopify-inspired information architecture for list and editor organization, while retaining MiniShop domain semantics. Categories, Collections, Tags, Variants, CSV and bulk operations are enabled only when current schema/API support is verified.
+
+### Settings contract
+
+Use a Shopify-inspired Settings Hub, adapted to actual MiniShop capabilities. Do not ship non-functional controls. Plan and billing, Domains and Policies belong here.
+
+### Git and release contract
+
+All Admin V3 implementation work starts from `feature/admin-v3-shopify-inspired` or short-lived child branches. No Production deployment, migration, or merge is authorized by this plan update.
