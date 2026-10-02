@@ -7,7 +7,7 @@ const shellPath = new URL('../src/features/shop/storeBuilder/StoreBuilderShell.t
 describe('Store Builder V2 workspace contract', () => {
   it('provides an English-first full-screen editor toolbar', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
-    for (const label of ['Back', 'Preview', 'Publish', 'Desktop', 'Mobile', 'Pages & Sections', 'Inspector']) {
+    for (const label of ['Back', 'Preview', 'Publish', 'Desktop', 'Mobile', 'Pages', 'Sections', 'Inspector']) {
       assert.match(source, new RegExp(label.replace(/[&]/g, '\\&')));
     }
     assert.match(source, /data-store-builder="three-pane"/);
@@ -18,8 +18,8 @@ describe('Store Builder V2 workspace contract', () => {
   it('keeps one selection state wired to tree, canvas, and inspector', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
     assert.match(source, /selectedSectionId/);
-    assert.match(source, /<SectionTree[\\s\\S]*onSelect={selectSection}/);
-    assert.match(source, /<PreviewCanvas[\\s\\S]*selectedSectionId={selectedSectionId}/);
+    assert.match(source, /<SectionTree[\s\S]*onSelect={selectSection}/);
+    assert.match(source, /<PreviewCanvas[\s\S]*selectedSectionId={selectedSectionId}/);
     assert.match(source, /<Inspector section={selected}/);
   });
 

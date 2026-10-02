@@ -97,7 +97,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden items-center gap-1.5 text-xs font-medium text-[#756B86] sm:inline-flex" aria-live="polite">{editor.status === 'saved' && <Check className="h-3.5 w-3.5 text-emerald-700" />}{saveLabel}</span>
-          {editor.status === 'retry' && <button type="button" onClick={() => runSave(editor)} className="min-h-11 rounded-lg border border-[#E7DFF2] px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]">Retry</button>}
+          {editor.status === 'retry' && <button type="button" aria-label="ပြန်သိမ်းမည်" onClick={() => runSave(editor)} className="min-h-11 rounded-lg border border-[#E7DFF2] px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]">Retry</button>}
           <button type="button" onClick={() => setMobilePanel(null)} className="hidden min-h-11 rounded-lg border border-[#E7DFF2] px-3 py-2 text-sm font-semibold sm:inline-flex">Preview</button>
           <button type="button" disabled={editor.status !== 'saved' || editor.blocked} onClick={() => void publishSavedDraft(editor, publishDraft)} className="min-h-11 shrink-0 rounded-lg bg-[#6D28D9] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#5B21B6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] disabled:cursor-not-allowed disabled:opacity-40">Publish</button>
         </div>
@@ -106,7 +106,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       {editor.status === 'conflict' && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
           <span>Another session changed this draft. Reload before continuing.</span>
-          <button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-lg border border-red-300 px-3 py-1.5 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700">Reload</button>
+          <button type="button" aria-label="ပြန်ဖတ်မည်" onClick={() => window.location.reload()} className="min-h-11 rounded-lg border border-red-300 px-3 py-1.5 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700">Reload</button>
         </div>
       )}
 
