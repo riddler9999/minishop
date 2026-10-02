@@ -1,7 +1,7 @@
 .landing{
-  --pink:#ec1f62;--pink-dark:#c91450;--pink-soft:#fff0f5;--pink-line:#f7c3d5;
-  --green:#19a96b;--green-soft:#eafaf2;--ink:#0f1d31;--muted:#6e788a;--silver:#d7dee9;--canvas:#fff8fb;
-  min-height:100vh;background:radial-gradient(circle at top left,#fff 0,#fff8fb 45%,#f9fbff 100%);color:var(--ink);
+  --pink:#35b99d;--pink-dark:#29957f;--pink-soft:#d8f1ea;--pink-line:#b8e6da;
+  --green:#19a96b;--green-soft:#eafaf2;--ink:#1f2421;--muted:#66706c;--silver:#e1e7e3;--canvas:#f4f7f5;
+  min-height:100vh;background:radial-gradient(circle at top left,#fff 0,#f4f7f5 45%,#f7faf8 100%);color:var(--ink);
   font-family:"Pyidaungsu","Noto Sans Myanmar","Myanmar Text",system-ui,sans-serif;
 }
 .landing *{box-sizing:border-box}.landing-shell{max-width:1260px;margin:0 auto;padding:18px 24px 30px}
@@ -231,7 +231,7 @@
   border-radius:0;
   box-shadow:none;
 }
-.landing-store-node{background:#fff1f6;color:var(--pink-dark)}
+.landing-store-node{background:#d8f1ea;color:var(--pink-dark)}
 .landing-order-node{background:#fff}
 .landing-checkout-phone{
   border:0;
