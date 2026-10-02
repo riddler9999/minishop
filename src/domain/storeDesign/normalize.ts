@@ -1,6 +1,6 @@
-import {DEFAULT_THEME, THEME_PRESETS, normalizeTheme, resolveThemePresetId, type ThemePresetId} from '../theme.ts';
-import {defaultSectionSettings, getSectionDefinition, isStoreSectionType, supportsTemplate} from './registry.ts';
-import {MAX_PRODUCT_SOURCE_PRODUCTS} from './productSource.ts';
+import {DEFAULT_THEME, THEME_PRESETS, normalizeTheme, resolveThemePresetId, type ThemePresetId} from '../theme.js';
+import {defaultSectionSettings, getSectionDefinition, isStoreSectionType, supportsTemplate} from './registry.js';
+import {MAX_PRODUCT_SOURCE_PRODUCTS} from './productSource.js';
 import {
   STORE_DESIGN_SCHEMA_VERSION,
   type BuyNowSettings,
@@ -13,7 +13,7 @@ import {
   type StoreSection,
   type StoreSectionType,
   type StoreTemplateName,
-} from './types.ts';
+} from './types.js';
 
 const TEMPLATE_NAMES: readonly StoreTemplateName[] = ['home', 'collection', 'product'];
 const HEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
