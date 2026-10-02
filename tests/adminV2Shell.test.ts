@@ -29,10 +29,18 @@ describe('Admin V2 shell', () => {
   });
 
   it('keeps a persistent dark desktop sidebar and light workspace without document overflow', () => {
-    assert.match(layout, /bg-slate-950/);
-    assert.match(layout, /bg-slate-50/);
+    assert.match(layout, /bg-\[var\(--admin-sidebar\)\]/);
+    assert.match(layout, /className="admin-shell/);
+    assert.match(layout, /bg-\[var\(--admin-canvas\)\]/);
     assert.match(layout, /overflow-x-hidden/);
     assert.match(layout, /lg:pl-64/);
+  });
+
+  it('uses only the shared mobile drawer and no admin bottom tabs', () => {
+    assert.match(layout, /<AdminMobileNav open=\{mobileOpen\}/);
+    assert.doesNotMatch(layout, /AdminBottomNav|bottom-tabs/);
+    assert.match(layout, /min-h-11/);
+    assert.match(mobile, /useModalA11y/);
   });
 
   it('preserves AdminConsole nesting and RequireAdmin security boundary', () => {
