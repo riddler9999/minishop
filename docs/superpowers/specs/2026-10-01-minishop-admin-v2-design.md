@@ -41,7 +41,7 @@ Visual character:
 - white/light-neutral working canvas
 - subtle borders and restrained shadows
 - compact but comfortable spacing
-- purple as the primary admin action/accent family
+- charcoal as the structural primary and Mint as the restrained admin interaction/accent family
 - Lucide iconography
 - strong table readability
 - clear semantic success/warning/error states
@@ -457,7 +457,7 @@ Admin V2 is ready for merge only when:
 
 ## 21. Approved visual-system amendment (2026-10-02)
 
-This amendment supersedes Section 3's generic purple/light-neutral guidance and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
+This amendment confirms Section 3's Charcoal + Mint direction and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
 
 ### Admin-only palette and semantics
 
