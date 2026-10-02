@@ -67,7 +67,7 @@ export function ProductSourceInspector({source, products, categories, blocked, o
           </label>
           {source.rule === 'category' && (
             <label className="block text-sm font-medium leading-6 text-[#1F1633]">Category
-              <select aria-label="Category" value={source.category ?? ''} onChange={(event) => onChange({...source, category: event.target.value})} className="mt-1 min-h-11 w-full rounded-lg border border-[#E7DFF2] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]}>
+              <select aria-label="Category" value={source.category ?? ''} onChange={(event) => onChange({...source, category: event.target.value})} className="mt-1 min-h-11 w-full rounded-lg border border-[#E7DFF2] px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]">
                 <option value="">Select a category</option>
                 {categories.map((category) => <option key={category} value={category}>{category}</option>)}
               </select>
