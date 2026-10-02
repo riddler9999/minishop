@@ -73,7 +73,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
 
   const save = async () => {
     const feeN = Number(fee);
-    if (!name.trim()) return setErr('ဆိုင်နာမည် ဖြည့်ပါ။');
+    if (!name.trim()) return setErr('Store name ဖြည့်ပါ။');
     if (!Number.isFinite(feeN) || feeN < 0) return setErr('ပို့ခ မမှန်ပါ။');
     setErr('');
     setOk(false);
@@ -155,16 +155,16 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink">
-          <Store className="h-6 w-6 text-brand-500" /> ဆိုင် ချိန်ညှိ
+          <Store className="h-6 w-6 text-brand-500" /> Settings
           <PlanBadge className="ml-1" />
         </h1>
-        <p className="my mt-1 text-sm text-ink-soft">ဆိုင်၏ အမည်၊ ဆက်သွယ်ရန်နှင့် branding ကို စီမံပါ။</p>
+        <p className="my mt-1 text-sm text-ink-soft">Manage your store profile, contact details, delivery fee, and branding.</p>
       </div>
 
       {/* Public link */}
       <section className="rounded-2xl border border-cream-200 bg-white p-4">
         <h2 className="my mb-2 flex items-center gap-1.5 text-sm font-bold text-ink">
-          <Link2 className="h-4 w-4 text-brand-500" /> ဆိုင် Link (အများမြင်)
+          <Link2 className="h-4 w-4 text-brand-500" /> Public store link
         </h2>
         <div className="flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded-xl border border-cream-200 bg-cream-50 px-3 py-2.5 text-sm text-ink">
@@ -177,7 +177,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
             {copied ? 'ကူးပြီး' : 'Copy'}
           </button>
         </div>
-        <p className="my mt-2 text-xs text-ink-soft">ဤ link ကို bio / post / message တွင် မျှဝေပါ။ (link ကို ပြောင်း၍မရပါ)</p>
+        <p className="my mt-2 text-xs text-ink-soft">Share this link in your bio, posts, or messages. The store slug is read-only here.</p>
       </section>
 
       {/* Profile form */}
@@ -189,11 +189,11 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className={lbl}>ဖုန်းနံပါတ်</span>
+            <span className={lbl}>Phone number</span>
             <input value={phone} onChange={(e) => setPhone(e.target.value)} className={field} placeholder="09xxxxxxxxx" />
           </label>
           <label className="block">
-            <span className={lbl}>ပုံမှန် ပို့ခ (Ks)</span>
+            <span className={lbl}>Default delivery fee (Ks)</span>
             <input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} className={field} placeholder="0" />
           </label>
         </div>
@@ -202,7 +202,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         <div className="block">
             <span className={lbl}>
               <span className="inline-flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4 text-gold-600" /> ဆိုင် Logo
+                <ImageIcon className="h-4 w-4 text-gold-600" /> Store logo
               </span>
             </span>
             <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         {err && <p className="my text-sm text-brand-600">{err}</p>}
         {ok && (
           <p className="my flex items-center gap-1.5 text-sm text-emerald-600">
-            <Check className="h-4 w-4" /> သိမ်းပြီးပါပြီ။
+            <Check className="h-4 w-4" /> Settings saved.
           </p>
         )}
 
@@ -249,7 +249,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
           onClick={save}
           disabled={saving}
           className="my inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50">
-          <Save className="h-4 w-4" /> {saving ? 'သိမ်းနေသည်…' : 'သိမ်းရန်'}
+          <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save settings'}
         </button>
       </section>
 

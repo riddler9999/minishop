@@ -6,6 +6,8 @@ import Onboarding from '@/features/auth/pages/Onboarding';
 import Subscribe from '@/features/billing/pages/Subscribe';
 import Billing from '@/features/billing/pages/Billing';
 import Dashboard from '@/features/admin/pages/Dashboard';
+import Customers from '@/features/admin/pages/Customers';
+import Analytics from '@/features/admin/pages/Analytics';
 import SuperAdminDashboard from '@/features/superadmin/pages/SuperAdminDashboard';
 import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
@@ -14,6 +16,9 @@ import Settings from '@/features/shop/pages/Settings';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
 import LifecycleStoreBuilder from '@/features/shop/pages/LifecycleStoreBuilder';
 import Themes from '@/features/shop/pages/Themes';
+import StoreNavigation from '@/features/shop/pages/StoreNavigation';
+import StoreDomains from '@/features/shop/pages/StoreDomains';
+import StorePolicies from '@/features/shop/pages/StorePolicies';
 import Landing from '@/features/landing/pages/Landing';
 import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
 import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
@@ -47,12 +52,16 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<Customers />} />
           <Route path="shipping" element={<AdminShipping />} />
           <Route path="billing" element={<Billing />} />
           <Route path="design" element={<StoreDesign />} />
           <Route path="online-store/themes" element={<Themes />} />
           <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
-          <Route path="analytics" element={<Dashboard />} />
+          <Route path="store/navigation" element={<StoreNavigation />} />
+          <Route path="store/domains" element={<StoreDomains />} />
+          <Route path="store/policies" element={<StorePolicies />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="/s/:slug/*" element={<ShopRoute />} />
