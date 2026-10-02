@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const layout = fs.readFileSync(new URL('../src/features/admin/components/AdminLayout.tsx', import.meta.url), 'utf8');
 const mobile = fs.readFileSync(new URL('../src/features/admin/components/AdminMobileNav.tsx', import.meta.url), 'utf8');
+const dashboard = fs.readFileSync(new URL('../src/features/admin/pages/Dashboard.tsx', import.meta.url), 'utf8');
 const nav = fs.readFileSync(new URL('../src/features/admin/components/AdminNav.tsx', import.meta.url), 'utf8');
 const consoleShell = fs.readFileSync(new URL('../src/app/routes/AdminConsole.tsx', import.meta.url), 'utf8');
 const app = fs.readFileSync(new URL('../src/app/App.tsx', import.meta.url), 'utf8');
@@ -41,6 +42,8 @@ describe('Admin V2 shell', () => {
     assert.doesNotMatch(layout, /AdminBottomNav|bottom-tabs/);
     assert.match(layout, /min-h-11/);
     assert.match(mobile, /useModalA11y/);
+    assert.doesNotMatch(dashboard, /pb-24/);
+    assert.match(dashboard, /pb-8/);
   });
 
   it('preserves AdminConsole nesting and RequireAdmin security boundary', () => {
