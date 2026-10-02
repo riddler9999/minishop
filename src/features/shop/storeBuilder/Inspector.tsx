@@ -6,6 +6,7 @@ import {SECTION_LABELS} from './sectionCopy';
 
 type Props = {section: StoreSection | null; products: Product[]; categories: string[]; blocked: boolean; onChange: (section: StoreSection) => void};
 type FieldProps = {label: string; value: string; disabled: boolean; multiline?: boolean; onChange: (value: string) => void};
+type ProductSection = Extract<StoreSection, {type: 'featured-products' | 'best-selling' | 'product-collection' | 'new-arrivals' | 'sale-products' | 'related-products'}>;
 
 function TextField({label, value, disabled, multiline, onChange}: FieldProps) {
   const className = 'mt-1 min-h-11 w-full rounded-lg border border-[#E7DFF2] bg-white px-3 py-2 text-sm text-[#1F1633] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]';
@@ -31,7 +32,7 @@ export function Inspector({section, products, categories, blocked, onChange}: Pr
 
   let content: ReactNode;
   let layout: ReactNode = <p className="text-sm leading-6 text-[#756B86]">This section uses its default layout.</p>;
-  let productSource: ProductSource | null = null;
+  let productSection: ProductSection | null = null;
 
   switch (section.type) {
     case 'hero':
@@ -47,7 +48,7 @@ export function Inspector({section, products, categories, blocked, onChange}: Pr
     case 'sale-products':
     case 'related-products':
       content = field('Title', section.settings.title, (title) => onChange({...section, settings: {...section.settings, title}}));
-      productSource = section.settings.productSource;
+      productSection = section;
       break;
     case 'promotion-banner':
       content = <>{field('Headline', section.settings.headline, (headline) => onChange({...section, settings: {...section.settings, headline}}))}{field('Body', section.settings.body, (body) => onChange({...section, settings: {...section.settings, body}}), true)}</>;
@@ -83,7 +84,7 @@ export function Inspector({section, products, categories, blocked, onChange}: Pr
       <Group title="Content">{content}</Group>
       <Group title="Style"><p className="text-sm leading-6 text-[#756B86]">Style follows the selected Store Design theme. Only schema-backed section settings are editable here.</p></Group>
       <Group title="Layout">{layout}</Group>
-      {productSource && <Group title="Product Source"><ProductSourceInspector source={productSource} products={products} categories={categories} blocked={blocked} onChange={(nextSource: ProductSource) => onChange({...section, settings: {...section.settings, productSource: nextSource}})} /></Group>}
+      {productSection && <Group title="Product Source"><ProductSourceInspector source={productSection.settings.productSource} products={products} categories={categories} blocked={blocked} onChange={(nextSource: ProductSource) => onChange({...productSection, settings: {...productSection.settings, productSource: nextSource}})} /></Group>}
     </div>
   );
 }
