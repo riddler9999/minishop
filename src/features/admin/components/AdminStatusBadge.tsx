@@ -9,12 +9,6 @@ const toneClasses = {
   info: 'bg-violet-50 text-violet-700',
 } as const;
 
-export default function AdminStatusBadge({
-  children,
-  tone = 'neutral',
-}: {
-  children: ReactNode;
-  tone?: keyof typeof toneClasses;
-}) {
-  return <span className={cx('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold', toneClasses[tone])}>{children}</span>;
+export default function AdminStatusBadge({children, tone = 'neutral'}: {children: ReactNode; tone?: keyof typeof toneClasses}) {
+  return <span role="status" data-status-tone={tone} className={cx('inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-xs font-semibold', toneClasses[tone])}>{children}</span>;
 }

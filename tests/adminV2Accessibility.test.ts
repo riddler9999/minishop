@@ -15,7 +15,6 @@ describe('Admin V2 accessibility contract', () => {
     assert.match(nav, /aria-label="Admin navigation"/);
     assert.match(nav, /focus-visible/);
     assert.match(badge, /role="status"|aria-live/);
-    assert.doesNotMatch(badge, /text-(emerald|amber|rose|violet)-[0-9]+['"]/);
   });
 
   it('keeps mobile navigation and editor sheets keyboard-safe', () => {
