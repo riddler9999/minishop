@@ -38,21 +38,21 @@ The normal Admin Dashboard remains an operational commerce workspace. It does no
 
 ## 3. Canonical design system
 
-Use one admin/editor system based on the already-approved Admin V2 amendment.
+Use one canonical MiniShop platform/admin/editor system based on the approved Charcoal + Mint direction.
 
 ### Core tokens
 
-- Sidebar / Ink: `#1F1633`
-- Primary Plum: `#6D28D9`
-- Primary Hover: `#5B21B6`
-- Lavender: `#C4B5FD`
-- Selected Surface: `#EDE9FE`
-- App Canvas: `#FAF7FF`
+- Sidebar / Charcoal: `#1F2421`
+- Brand Mint: `#35B99D`
+- Mint Strong / Hover: `#29957F`
+- Mint Light: `#8FD7C6`
+- Selected Surface: `#D8F1EA`
+- App Canvas: `#F4F7F5`
 - Surface: `#FFFFFF`
-- Secondary Text: `#756B86`
-- Border: `#E7DFF2`
+- Secondary Text: `#66706C`
+- Border: `#E1E7E3`
 
-Semantic success/warning/error/info remain independent roles and must not reuse Plum as meaning.
+Semantic success/warning/error/info remain independent roles and must not reuse Mint as status meaning. Mint represents MiniShop interaction/intelligence.
 
 ### Typography
 
@@ -144,7 +144,7 @@ Preview-first:
 
 Examples:
 
-- "Create a clean women fashion store using soft lavender and off-white."
+- "Create a clean women fashion store using soft sand and charcoal."
 - "Use this image as the hero image and keep the model visible on mobile."
 - "Move Best Selling above New Arrivals."
 - "Make the hero shorter and align the text left."
