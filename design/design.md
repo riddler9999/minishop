@@ -151,7 +151,7 @@ Never stretch, skew, outline, rotate, recolor arbitrarily or add effects to the 
 
 | Role | Name | Value | Use |
 |---|---|---:|---|
-| Primary | MiniShop Mint | `#35B99D` | Logo accent, primary CTA, selected states, key brand moments |
+| Accent | MiniShop Mint | `#35B99D` | Logo accent, AI/creation actions with Charcoal text, selected states, key brand moments |
 | Ink | MiniShop Charcoal | `#1F2421` | Headings, high-emphasis text, dark brand surfaces |
 | Muted | Slate | `#66706C` | Secondary text, metadata, placeholders |
 | Border | Silver | `#E1E7E3` | Dividers, input/card borders |
@@ -165,9 +165,9 @@ Use the existing semantic `brand` ramp as the implementation family, converging 
 
 | Token | Value |
 |---|---:|
-| `brand-50` | `#D8F1EA` |
-| `brand-100` | `#C5EAE1` |
-| `brand-200` | `#A8DFD2` |
+| `brand-50` | `#EEF9F6` |
+| `brand-100` | `#D8F1EA` |
+| `brand-200` | `#B8E6DA` |
 | `brand-300` | `#8FD7C6` |
 | `brand-400` | `#5BC9B2` |
 | `brand-500` | `#35B99D` |
@@ -354,7 +354,7 @@ Avoid large diffuse fashion-style shadows in dense admin UI.
 **Primary** — Charcoal fill with white text; Mint fill uses Charcoal text for AI/creation actions  
 **Secondary** — white/neutral surface + border  
 **Ghost** — transparent, used for low-priority actions  
-**Danger** — semantic red; do not reuse brand pink as destructive color
+**Danger** — semantic red; do not reuse brand Mint as destructive color
 
 Minimum touch target: **44 × 44 px**.
 
@@ -545,7 +545,7 @@ Before shipping a new MiniShop-owned surface, verify:
 **Tagline:** One Place to Sell Everywhere.  
 **Category:** Myanmar-first social commerce platform  
 **Personality:** Simple · Friendly · Confident · Trustworthy · Local-first · Merchant-first  
-**Primary:** MiniShop Mint `#35B99D`  
+**Accent:** MiniShop Mint `#35B99D`  
 **Ink:** `#1F2421`  
 **Platform type:** Inter + Noto Sans Myanmar  
 **Graphic language:** Shop Blocks  
