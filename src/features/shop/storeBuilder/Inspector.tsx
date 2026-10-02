@@ -67,7 +67,7 @@ export function Inspector({section, products, categories, blocked, onChange}: Pr
       break;
     case 'product-gallery':
       content = <p className="text-sm leading-6 text-[#756B86]">Gallery content is provided by the selected products.</p>;
-      layout = <label className="block text-sm font-medium leading-6 text-[#1F1633]">Layout<select aria-label="Layout" value={section.settings.layout} disabled={blocked} onChange={(event) => onChange({...section, settings: {layout: event.target.value as 'stacked' | 'carousel'}})} className="mt-1 min-h-11 w-full rounded-lg border border-[#E7DFF2] bg-white px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]}><option value="carousel">Carousel</option><option value="stacked">Stacked</option></select></label>;
+      layout = <label className="block text-sm font-medium leading-6 text-[#1F1633]">Layout<select aria-label="Layout" value={section.settings.layout} disabled={blocked} onChange={(event) => onChange({...section, settings: {layout: event.target.value as 'stacked' | 'carousel'}})} className="mt-1 min-h-11 w-full rounded-lg border border-[#E7DFF2] bg-white px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]"><option value="carousel">Carousel</option><option value="stacked">Stacked</option></select></label>;
       break;
     case 'product-info':
       content = <p data-protected-commerce-action="buy-now" className="rounded-lg bg-[#EDE9FE] p-3 text-sm leading-6 text-[#1F1633]">Product title, price, and the Buy Now action are always enabled and cannot be removed.</p>;
