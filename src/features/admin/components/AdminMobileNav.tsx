@@ -11,7 +11,7 @@ export default function AdminMobileNav({open, onClose}: {open: boolean; onClose:
       <button
         type="button"
         aria-label="Close navigation"
-        className="absolute inset-0 bg-slate-950/55"
+        className="absolute inset-0 bg-[var(--admin-sidebar)]/55"
         onClick={onClose}
       />
       <div
@@ -20,17 +20,17 @@ export default function AdminMobileNav({open, onClose}: {open: boolean; onClose:
         aria-modal="true"
         aria-label="Admin navigation"
         tabIndex={-1}
-        className="absolute inset-y-0 left-0 flex w-[min(88vw,20rem)] flex-col bg-slate-950 p-4 text-white shadow-2xl outline-none">
+        className="absolute inset-y-0 left-0 flex w-[min(88vw,20rem)] flex-col bg-[var(--admin-sidebar)] p-4 text-white shadow-2xl outline-none">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-black tracking-wide">MiniShop</p>
-            <p className="text-xs text-slate-400">Seller Admin</p>
+            <p className="text-xs text-[var(--admin-sidebar-muted)]">Seller Admin</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close navigation"
-            className="grid h-10 w-10 place-items-center rounded-xl text-slate-300 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400">
+            className="grid h-11 w-11 place-items-center rounded-xl text-[var(--admin-sidebar-muted)] transition hover:bg-[var(--admin-sidebar-hover)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]">
             <X className="h-5 w-5" />
           </button>
         </div>
