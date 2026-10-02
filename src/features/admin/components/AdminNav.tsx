@@ -37,7 +37,7 @@ function DisabledNavItem({item}: {item: AdminNavItem}) {
   return (
     <div
       aria-disabled="true"
-      className="flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500">
+      className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--admin-sidebar-muted)]">
       <Icon className="h-[18px] w-[18px]" />
       <span>{item.label}</span>
     </div>
@@ -52,11 +52,11 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
         if (item.children) {
           return (
             <div key={item.label} className="space-y-1">
-              <div className="flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200">
+              <div className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--admin-sidebar-text)]">
                 <Icon className="h-[18px] w-[18px]" />
                 <span>{item.label}</span>
               </div>
-              <div className="ml-7 space-y-1 border-l border-slate-700 pl-3">
+              <div className="ml-7 space-y-1 border-l border-[var(--admin-sidebar-hover)] pl-3">
                 {item.children.map((child) => (
                   <NavLink
                     key={child.label}
@@ -64,8 +64,8 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
                     onClick={onNavigate}
                     className={({isActive}) =>
                       cx(
-                        'block rounded-lg px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400',
-                        isActive ? 'bg-violet-500/15 text-violet-200' : 'text-slate-400 hover:bg-slate-800 hover:text-white',
+                        'block rounded-lg px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
+                        isActive ? 'bg-[var(--admin-sidebar-hover)] text-white' : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
                       )
                     }>
                     {child.label}
@@ -84,8 +84,8 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
             onClick={onNavigate}
             className={({isActive}) =>
               cx(
-                'flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400',
-                isActive ? 'bg-violet-500 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white',
+                'flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
+                isActive ? 'bg-[var(--admin-primary)] text-white' : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
               )
             }>
             <Icon className="h-[18px] w-[18px]" />
