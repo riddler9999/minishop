@@ -75,31 +75,31 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const saveLabel = editor.status === 'saving' ? 'Saving…' : editor.status === 'saved' ? 'Saved' : editor.status === 'retry' ? 'Retry save' : editor.status === 'conflict' ? 'Conflict detected' : 'Unsaved changes';
 
   return (
-    <div className="store-builder-workspace flex min-h-dvh w-full max-w-full flex-col overflow-hidden bg-[#FAF7FF] text-[#1F1633]" data-store-builder="three-pane" data-editor-fullscreen>
-      <header className="z-20 flex min-h-[64px] flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#E7DFF2] bg-white px-3 py-2.5 sm:px-5 lg:flex-nowrap" aria-label="Store Builder toolbar">
-        <Link to="/admin/online-store/themes" onClick={(event) => { if (editor.status !== 'saved' && !window.confirm('Unsaved changes will be lost. Go back?')) event.preventDefault(); }} aria-label="Back to Store Themes" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-[#1F1633] transition hover:bg-[#EDE9FE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]"><ArrowLeft className="h-5 w-5" /></Link>
+    <div className="store-builder-workspace flex min-h-dvh w-full max-w-full flex-col overflow-hidden bg-[#F4F7F5] text-[#1F2421]" data-store-builder="three-pane" data-editor-fullscreen>
+      <header className="z-20 flex min-h-[64px] flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#E1E7E3] bg-white px-3 py-2.5 sm:px-5 lg:flex-nowrap" aria-label="Store Builder toolbar">
+        <Link to="/admin/online-store/themes" onClick={(event) => { if (editor.status !== 'saved' && !window.confirm('Unsaved changes will be lost. Go back?')) event.preventDefault(); }} aria-label="Back to Store Themes" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-[#1F2421] transition hover:bg-[#D8F1EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="min-w-0 flex-1 lg:flex-none">
           <p className="truncate text-sm font-bold leading-tight">Store Builder</p>
-          <p className="mt-0.5 text-xs font-medium text-[#756B86]" role="status" data-save-status={editor.status}>{saveLabel}</p>
+          <p className="mt-0.5 text-xs font-medium text-[#66706C]" role="status" data-save-status={editor.status}>{saveLabel}</p>
         </div>
         <div className="order-3 flex w-full min-w-0 items-center gap-2 sm:order-none sm:w-auto sm:flex-1 sm:justify-center">
           <label className="relative min-w-0 flex-1 sm:max-w-[220px] sm:flex-none">
             <span className="sr-only">Pages</span>
-            <select aria-label="Pages" value={template} onChange={(event) => { setTemplate(event.target.value as StoreTemplateName); setMobilePanel(null); }} className="h-11 w-full appearance-none rounded-lg border border-[#E7DFF2] bg-white py-2 pl-3 pr-9 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]">
+            <select aria-label="Pages" value={template} onChange={(event) => { setTemplate(event.target.value as StoreTemplateName); setMobilePanel(null); }} className="h-11 w-full appearance-none rounded-lg border border-[#E1E7E3] bg-white py-2 pl-3 pr-9 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]">
               <option value="home">Home page</option><option value="collection">Collection page</option><option value="product">Product page</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-[#756B86]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-[#66706C]" />
           </label>
-          <div className="hidden rounded-lg border border-[#E7DFF2] bg-[#FAF7FF] p-0.5 lg:flex" role="group" aria-label="Preview viewport">
-            <button type="button" aria-label="Desktop" aria-pressed={viewport === 'desktop'} onClick={() => setViewport('desktop')} className={`grid h-10 w-10 place-items-center rounded-md ${viewport === 'desktop' ? 'bg-white text-[#1F1633] shadow-sm' : 'text-[#756B86] hover:text-[#1F1633]'}`}><Monitor className="h-4 w-4" /></button>
-            <button type="button" aria-label="Mobile" aria-pressed={viewport === 'mobile'} onClick={() => setViewport('mobile')} className={`grid h-10 w-10 place-items-center rounded-md ${viewport === 'mobile' ? 'bg-white text-[#1F1633] shadow-sm' : 'text-[#756B86] hover:text-[#1F1633]'}`}><Smartphone className="h-4 w-4" /></button>
+          <div className="hidden rounded-lg border border-[#E1E7E3] bg-[#F4F7F5] p-0.5 lg:flex" role="group" aria-label="Preview viewport">
+            <button type="button" aria-label="Desktop" aria-pressed={viewport === 'desktop'} onClick={() => setViewport('desktop')} className={`grid h-10 w-10 place-items-center rounded-md ${viewport === 'desktop' ? 'bg-white text-[#1F2421] shadow-sm' : 'text-[#66706C] hover:text-[#1F2421]'}`}><Monitor className="h-4 w-4" /></button>
+            <button type="button" aria-label="Mobile" aria-pressed={viewport === 'mobile'} onClick={() => setViewport('mobile')} className={`grid h-10 w-10 place-items-center rounded-md ${viewport === 'mobile' ? 'bg-white text-[#1F2421] shadow-sm' : 'text-[#66706C] hover:text-[#1F2421]'}`}><Smartphone className="h-4 w-4" /></button>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="hidden items-center gap-1.5 text-xs font-medium text-[#756B86] sm:inline-flex" aria-live="polite">{editor.status === 'saved' && <Check className="h-3.5 w-3.5 text-emerald-700" />}{saveLabel}</span>
-          {editor.status === 'retry' && <button type="button" aria-label="ပြန်သိမ်းမည်" onClick={() => runSave(editor)} className="min-h-11 rounded-lg border border-[#E7DFF2] px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]">Retry</button>}
-          <button type="button" onClick={() => setMobilePanel(null)} className="hidden min-h-11 rounded-lg border border-[#E7DFF2] px-3 py-2 text-sm font-semibold sm:inline-flex">Preview</button>
-          <button type="button" disabled={editor.status !== 'saved' || editor.blocked} onClick={() => void publishSavedDraft(editor, publishDraft)} className="min-h-11 shrink-0 rounded-lg bg-[#6D28D9] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#5B21B6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9] disabled:cursor-not-allowed disabled:opacity-40">Publish</button>
+          <span className="hidden items-center gap-1.5 text-xs font-medium text-[#66706C] sm:inline-flex" aria-live="polite">{editor.status === 'saved' && <Check className="h-3.5 w-3.5 text-emerald-700" />}{saveLabel}</span>
+          {editor.status === 'retry' && <button type="button" aria-label="ပြန်သိမ်းမည်" onClick={() => runSave(editor)} className="min-h-11 rounded-lg border border-[#E1E7E3] px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]">Retry</button>}
+          <button type="button" onClick={() => setMobilePanel(null)} className="hidden min-h-11 rounded-lg border border-[#E1E7E3] px-3 py-2 text-sm font-semibold sm:inline-flex">Preview</button>
+          <button type="button" disabled={editor.status !== 'saved' || editor.blocked} onClick={() => void publishSavedDraft(editor, publishDraft)} className="min-h-11 shrink-0 rounded-lg bg-[#35B99D] px-4 py-2 text-sm font-bold text-[#1F2421] transition hover:bg-[#29957F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] disabled:cursor-not-allowed disabled:opacity-40">Publish</button>
         </div>
       </header>
 
@@ -111,21 +111,21 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       )}
 
       <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 lg:h-[calc(100dvh-64px)] lg:grid-cols-[240px_minmax(0,1fr)_300px]" data-layout="three-pane">
-        <aside className="hidden overflow-y-auto border-r border-[#E7DFF2] bg-white p-4 lg:block" aria-label="Pages and sections">
-          <p className="mb-4 text-xs font-bold uppercase tracking-wide text-[#756B86]">Pages &amp; Sections</p>
-          <p className="mb-3 text-xs font-semibold text-[#756B86]">Sections</p>
+        <aside className="hidden overflow-y-auto border-r border-[#E1E7E3] bg-white p-4 lg:block" aria-label="Pages and sections">
+          <p className="mb-4 text-xs font-bold uppercase tracking-wide text-[#66706C]">Pages &amp; Sections</p>
+          <p className="mb-3 text-xs font-semibold text-[#66706C]">Sections</p>
           {treePanel}
         </aside>
         <main className="order-first min-w-0 max-w-full lg:order-none" data-mobile-preview-first><PreviewCanvas document={editor.document} template={template} products={products} categories={categories} shopName={shopName} viewport={viewport} selectedSectionId={selectedSectionId} onSectionSelect={selectPreviewSection} /></main>
-        <aside className="hidden overflow-y-auto border-l border-[#E7DFF2] bg-white p-5 lg:block" aria-label="Inspector">
-          <p className="mb-4 border-b border-[#E7DFF2] pb-3 text-xs font-bold uppercase tracking-wide text-[#756B86]">Inspector</p>
+        <aside className="hidden overflow-y-auto border-l border-[#E1E7E3] bg-white p-5 lg:block" aria-label="Inspector">
+          <p className="mb-4 border-b border-[#E1E7E3] pb-3 text-xs font-bold uppercase tracking-wide text-[#66706C]">Inspector</p>
           {inspectorPanel}
         </aside>
       </div>
 
-      <nav aria-label="Store Builder tools" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-2 border-t border-[#E7DFF2] bg-white px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_28px_rgba(31,22,51,0.08)] lg:hidden">
-        <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'tree'} aria-controls="store-builder-section-drawer" onClick={() => setMobilePanel('tree')} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[#E7DFF2] bg-[#FAF7FF] text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]"><Layers3 className="h-4 w-4" />Sections</button>
-        <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'inspector'} aria-controls="store-builder-inspector-sheet" onClick={() => setMobilePanel('inspector')} className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#6D28D9] text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D28D9]"><SlidersHorizontal className="h-4 w-4" />Inspector</button>
+      <nav aria-label="Store Builder tools" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-2 border-t border-[#E1E7E3] bg-white px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_28px_rgba(31,22,51,0.08)] lg:hidden">
+        <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'tree'} aria-controls="store-builder-section-drawer" onClick={() => setMobilePanel('tree')} className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-[#E1E7E3] bg-[#F4F7F5] text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]"><Layers3 className="h-4 w-4" />Sections</button>
+        <button type="button" aria-haspopup="dialog" aria-expanded={mobilePanel === 'inspector'} aria-controls="store-builder-inspector-sheet" onClick={() => setMobilePanel('inspector')} className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#35B99D] text-sm font-semibold text-[#1F2421] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]"><SlidersHorizontal className="h-4 w-4" />Inspector</button>
       </nav>
       <MobileEditorPanels active={mobilePanel} onClose={() => setMobilePanel(null)} tree={treePanel} inspector={inspectorPanel} />
     </div>

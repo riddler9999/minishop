@@ -41,7 +41,7 @@ Visual character:
 - white/light-neutral working canvas
 - subtle borders and restrained shadows
 - compact but comfortable spacing
-- purple as the primary admin action/accent family
+- charcoal as the structural primary and Mint as the restrained admin interaction/accent family
 - Lucide iconography
 - strong table readability
 - clear semantic success/warning/error states
@@ -457,17 +457,17 @@ Admin V2 is ready for merge only when:
 
 ## 21. Approved visual-system amendment (2026-10-02)
 
-This amendment supersedes Section 3's generic purple/light-neutral guidance and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
+This amendment confirms Section 3's Charcoal + Mint direction and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
 
 ### Admin-only palette and semantics
 
-- Deep sidebar: `#1F1633`
-- Admin primary Plum: `#6D28D9`; deep/hover Plum: `#5B21B6`
-- Lavender accent: `#C4B5FD`; soft selected surface: `#EDE9FE`
-- Canvas Off-White: `#FAF7FF`; card surface: `#FFFFFF`
-- Ink: `#1F1633`; secondary text: `#756B86`; border: `#E7DFF2`
-- Success, warning, error, and informational status are separate semantic roles; do not equate Plum with success. Check WCAG 2.2 AA contrast for every text/state combination and adjust token variants when necessary.
-- MiniShop Pink `#EC1F62` remains a platform/marketing identity, not the admin action color. Scope admin tokens to the admin shell so storefront themes and Store Builder preview cannot inherit them accidentally.
+- Deep sidebar: `#1F2421`
+- Admin accent Mint: `#35B99D`; deep/hover Mint: `#29957F`
+- Mint accent: `#8FD7C6`; soft selected surface: `#D8F1EA`
+- Canvas Off-White: `#F4F7F5`; card surface: `#FFFFFF`
+- Ink: `#1F2421`; secondary text: `#66706C`; border: `#E1E7E3`
+- Success, warning, error, and informational status are separate semantic roles; do not equate Mint with success. Check WCAG 2.2 AA contrast for every text/state combination and adjust token variants when necessary.
+- MiniShop now uses Charcoal + Mint as the canonical platform identity. Mint is an interaction/intelligence accent, not a status color. Scope admin tokens to the admin shell so storefront themes and Store Builder preview cannot inherit them accidentally.
 - Prefer semantic admin tokens over page-specific hard-coded slate/violet classes. Do not add a second component library or decorative glassmorphism.
 
 ### Navigation
