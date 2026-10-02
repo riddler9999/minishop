@@ -67,7 +67,7 @@ export default function Dashboard() {
   const retry = () => setReloadKey((key) => key + 1);
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-8">
+    <div className="space-y-5 pb-8">
       <AdminPageHeader
         title="Dashboard"
         description="See what needs attention and keep your store moving."
