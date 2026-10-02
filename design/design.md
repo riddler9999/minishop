@@ -76,7 +76,7 @@ A real tenant storefront should prioritize:
 - seller product imagery
 - seller-selected storefront typography where supported
 
-Do **not** force MiniShop Pink or the MiniShop wordmark into tenant components unless a product requirement explicitly calls for platform attribution.
+Do **not** force MiniShop Mint or the MiniShop wordmark into tenant components unless a product requirement explicitly calls for platform attribution.
 
 **Principle:**
 
@@ -94,7 +94,7 @@ Primary written brand name:
 
 > **MiniShop MM**
 
-Preferred visual treatment is a friendly, bold wordmark with `Mini` emphasized in MiniShop Pink, `Shop` in MiniShop Ink, and `MM` in MiniShop Pink when rendered on a light neutral surface.
+Preferred visual treatment is a friendly, bold wordmark with Charcoal as the anchor and Mint as the restrained accent on light neutral surfaces.
 
 The wordmark should feel compact, modern and approachable. Avoid literal shopping-cart, shopping-bag and generic storefront clip-art as the primary logo.
 
@@ -117,10 +117,10 @@ The mark uses a rounded-square container and simple geometric lowercase `m` cons
 Required variants:
 
 1. Full-color wordmark on light surface
-2. White/reversed wordmark on MiniShop Pink
-3. White/reversed wordmark on MiniShop Ink
-4. MiniShop Pink `m` mark on light surface
-5. White `m` mark on MiniShop Pink
+2. White/reversed wordmark on MiniShop Charcoal
+3. Charcoal wordmark with Mint accent on light surface
+4. MiniShop Mint `m` mark on light surface
+5. Charcoal `m` mark on MiniShop Mint
 6. Single-color monochrome version for constrained production
 
 ### 3.4 Tagline lockup
@@ -151,30 +151,30 @@ Never stretch, skew, outline, rotate, recolor arbitrarily or add effects to the 
 
 | Role | Name | Value | Use |
 |---|---|---:|---|
-| Primary | MiniShop Pink | `#EC1F62` | Logo accent, primary CTA, selected states, key brand moments |
-| Ink | MiniShop Ink | `#0F1D31` | Headings, high-emphasis text, dark brand surfaces |
-| Muted | Slate | `#6E788A` | Secondary text, metadata, placeholders |
-| Border | Silver | `#D7DEE9` | Dividers, input/card borders |
-| Canvas | Canvas | `#F7F9FC` | Application background |
+| Primary | MiniShop Mint | `#35B99D` | Logo accent, primary CTA, selected states, key brand moments |
+| Ink | MiniShop Charcoal | `#1F2421` | Headings, high-emphasis text, dark brand surfaces |
+| Muted | Slate | `#66706C` | Secondary text, metadata, placeholders |
+| Border | Silver | `#E1E7E3` | Dividers, input/card borders |
+| Canvas | Canvas | `#F4F7F5` | Application background |
 | Surface | White | `#FFFFFF` | Cards, forms, overlays |
-| Brand Soft | Pink Soft | `#FFF1F6` | Selected/brand-tinted surfaces; use sparingly |
+| Brand Soft | Mint Soft | `#D8F1EA` | Selected/brand-tinted surfaces; use sparingly |
 
-### 4.2 Pink ramp
+### 4.2 Mint ramp
 
 Use the existing semantic `brand` ramp as the implementation family, converging around:
 
 | Token | Value |
 |---|---:|
-| `brand-50` | `#FFF1F6` |
-| `brand-100` | `#FFE1EC` |
-| `brand-200` | `#FFC2D6` |
-| `brand-300` | `#FF91B5` |
-| `brand-400` | `#F9578D` |
-| `brand-500` | `#EC1F62` |
-| `brand-600` | `#D61251` |
-| `brand-700` | `#AD0F40` |
-| `brand-800` | `#7F1035` |
-| `brand-900` | `#4D0A22` |
+| `brand-50` | `#D8F1EA` |
+| `brand-100` | `#C5EAE1` |
+| `brand-200` | `#A8DFD2` |
+| `brand-300` | `#8FD7C6` |
+| `brand-400` | `#5BC9B2` |
+| `brand-500` | `#35B99D` |
+| `brand-600` | `#29957F` |
+| `brand-700` | `#237665` |
+| `brand-800` | `#205E52` |
+| `brand-900` | `#1B4D43` |
 
 ### 4.3 Semantic colors
 
@@ -189,23 +189,23 @@ Never use color alone to communicate status. Pair color with text and/or iconogr
 
 ### 4.4 Color behavior
 
-MiniShop Pink is a **brand signal**, not the page environment.
+MiniShop Mint is the **interaction/intelligence signal**, not the page environment. Charcoal anchors hierarchy and primary operational actions.
 
 Good uses:
 
-- primary action
+- AI/creation actions
 - selected navigation state
-- key brand mark
-- promotional emphasis
-- important commerce highlight
+- focus/active interaction
+- key brand accent
+- restrained promotional emphasis
 
 Avoid:
 
-- making every card pink
-- large pink application backgrounds without purpose
-- pink body copy
-- decorative pink competing with product imagery
-- combining MiniShop Pink with cyan in a way that imitates another social platform's identity
+- making every card mint
+- large mint application backgrounds without purpose
+- mint body copy
+- decorative mint competing with product imagery
+- combining MiniShop Mint with cyan in a way that imitates another social platform's identity
 
 ---
 
@@ -292,7 +292,7 @@ When photography is used:
 - prefer authentic seller/customer/product context
 - keep backgrounds simple
 - allow the product or person to remain the focal point
-- use Pink/Ink framing elements rather than aggressive full-image color filters
+- use Mint/Charcoal framing elements rather than aggressive full-image color filters
 
 ### 6.4 Social platform logos
 
@@ -334,7 +334,7 @@ Do not make every element pill-shaped.
 Default application border:
 
 ```css
-border: 1px solid #D7DEE9;
+border: 1px solid #E1E7E3;
 ```
 
 Prefer borders and surface contrast before heavy shadows.
@@ -351,7 +351,7 @@ Avoid large diffuse fashion-style shadows in dense admin UI.
 
 ### 7.5 Buttons
 
-**Primary** — MiniShop Pink fill, high-contrast text  
+**Primary** — Charcoal fill with white text; Mint fill uses Charcoal text for AI/creation actions  
 **Secondary** — white/neutral surface + border  
 **Ghost** — transparent, used for low-priority actions  
 **Danger** — semantic red; do not reuse brand pink as destructive color
@@ -396,7 +396,7 @@ Use:
 - white cards
 - Ink headings
 - Slate secondary copy
-- Pink primary/selected states
+- Mint interaction/selected states
 - semantic colors only for semantic meaning
 - compact metrics and actionable lists
 
@@ -406,7 +406,7 @@ Avoid fashion/editorial typography in the admin shell.
 
 These surfaces may carry stronger MiniShop branding than the admin dashboard, but form completion remains the priority.
 
-Use the wordmark, Shop Blocks and Pink Soft surfaces strategically. Keep the primary path obvious.
+Use the wordmark, Shop Blocks and Mint Soft surfaces strategically; keep Charcoal as the dominant structural color. Keep the primary path obvious.
 
 ### 8.3 Merchant storefront — Merchant-owned
 
@@ -438,8 +438,8 @@ Every template should be recognizable without requiring a giant logo.
 
 Recurring ingredients:
 
-- MiniShop Pink
-- MiniShop Ink
+- MiniShop Mint
+- MiniShop Charcoal
 - neutral Canvas/White
 - bold Inter hierarchy
 - Shop Blocks
@@ -510,12 +510,12 @@ This document defines the **confirmed target brand system**. Existing code may s
 
 Known migration work includes:
 
-1. reconcile legacy/documented color values with the confirmed MiniShop Pink `#EC1F62`
+1. migrate legacy Pink/Plum platform values to the confirmed Charcoal + Mint system (`#1F2421` + `#35B99D`) while preserving merchant storefront themes
 2. separate MiniShop platform typography from merchant storefront font pairings
 3. replace temporary initial/square identity treatments with approved logo assets once production logo files exist
 4. migrate misleading legacy semantic token names (`cream`, `gold`) toward clearer roles only through a safe compatibility plan — do not break existing components merely to rename tokens
 5. ensure Fashion Demo styling stays isolated from production tenant storefronts and platform chrome
-6. audit MiniShop-owned surfaces for Pink overuse and accessibility
+6. audit MiniShop-owned surfaces for Mint overuse, contrast, and semantic-color confusion
 
 Do not treat this document update alone as evidence that those code migrations are complete.
 
@@ -528,7 +528,7 @@ Before shipping a new MiniShop-owned surface, verify:
 - [ ] Is this a MiniShop platform surface or a merchant-owned storefront?
 - [ ] Is MiniShop MM naming used consistently where platform branding is appropriate?
 - [ ] Is the tagline exactly `One Place to Sell Everywhere.` when the master tagline is shown?
-- [ ] Is MiniShop Pink used as a signal rather than flooding the UI?
+- [ ] Is MiniShop Mint used as a signal rather than flooding the UI?
 - [ ] Does platform typography use neutral sans-serif rather than a merchant/fashion display face?
 - [ ] Does the design use the approved spacing/radius/icon language?
 - [ ] Are third-party social logos contextual rather than part of the MiniShop logo?
@@ -545,11 +545,11 @@ Before shipping a new MiniShop-owned surface, verify:
 **Tagline:** One Place to Sell Everywhere.  
 **Category:** Myanmar-first social commerce platform  
 **Personality:** Simple · Friendly · Confident · Trustworthy · Local-first · Merchant-first  
-**Primary:** MiniShop Pink `#EC1F62`  
-**Ink:** `#0F1D31`  
+**Primary:** MiniShop Mint `#35B99D`  
+**Ink:** `#1F2421`  
 **Platform type:** Inter + Noto Sans Myanmar  
 **Graphic language:** Shop Blocks  
-**UI:** Neutral canvas + white surfaces + restrained pink + semantic status colors  
+**UI:** Neutral canvas + white surfaces + restrained mint + semantic status colors  
 **Core principle:** **MiniShop owns the platform. The seller owns the storefront.**
 
 ---
