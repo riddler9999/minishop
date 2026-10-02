@@ -1,21 +1,21 @@
-# MiniShop Admin V2 Design
+# MiniShop Admin V3 Design
 
-**Status:** Approved product direction
-**Date:** 2026-10-01
+**Status:** Approved product direction — supersedes conflicting Admin V3 IA
+**Date:** 2026-10-03
 **Scope:** Seller Admin Dashboard and Store Builder UX/UI redesign
-**Language:** English-first seller admin UI
+**Language:** English-only seller admin UI
 
 ## 1. Goal
 
 Redesign the complete MiniShop seller-admin experience into a focused commerce workspace for Myanmar social-commerce sellers while preserving the production backend and existing domain contracts.
 
-Admin V2 is a frontend/product-experience redesign, not a backend rewrite.
+Admin V3 is a frontend/product-experience redesign, not a backend rewrite.
 
 Success means a seller can understand what needs attention, manage products and orders quickly, and customize the storefront through a professional visual editor without needing to understand MiniShop implementation details.
 
 ## 2. Non-goals and protected boundaries
 
-Admin V2 must not unnecessarily redesign or replace:
+Admin V3 must not unnecessarily redesign or replace:
 
 - Supabase authentication
 - tenant ownership and RLS
@@ -52,7 +52,7 @@ The approved visual mockup is directional rather than a pixel-for-pixel contract
 
 ## 4. Language and copy
 
-Admin V2 is English-first.
+Admin V3 is English-first.
 
 Primary seller UI uses concise commerce terminology such as:
 
@@ -61,10 +61,8 @@ Primary seller UI uses concise commerce terminology such as:
 - Products
 - Customers
 - Store
-- Marketing
 - Analytics
 - Settings
-- Billing
 - Action Required
 - Add Product
 - Customize Store
@@ -73,6 +71,8 @@ Primary seller UI uses concise commerce terminology such as:
 - Saved
 - Low Stock
 - Payment Pending
+
+Marketing is removed from seller-admin navigation. Billing is not a primary navigation destination; plan and billing management lives inside Settings.
 
 Buyer-facing storefront localization is outside this admin-language decision and remains governed by storefront requirements.
 
@@ -88,19 +88,17 @@ Primary navigation:
 4. Customers
 5. Store
    - Store Builder
-   - Navigation
-   - Domains
-   - Policies
-6. Marketing
-7. Analytics
-8. Settings
-9. Billing
+   - Themes
+6. Analytics
+7. Settings
 
 Operational selling surfaces appear before configuration surfaces.
 
-Subscription/usage management belongs under Billing rather than competing with daily commerce operations.
+Marketing is intentionally omitted from Admin V3 navigation.
 
-Storefront configuration is grouped under Store.
+Settings is the configuration hub. Plan and billing, Domains, Policies, and other store/account configuration belong inside Settings rather than occupying top-level navigation.
+
+Store is reserved for storefront-design concerns such as Store Builder and Themes.
 
 ## 6. Admin shell
 
@@ -148,31 +146,35 @@ Detailed analysis belongs under Analytics.
 
 ## 8. Products
 
-Products is a commerce data workspace.
+Products is a Shopify-inspired commerce workspace while retaining MiniShop domain semantics.
 
 Core list capabilities:
 
+- All Products workspace
 - search
-- useful filters
-- sort
+- useful filters and sort
 - product status
-- stock state
+- inventory/stock state
 - category
 - price
 - storefront visibility
-- bulk selection where supported by current domain behavior
+- bulk selection/actions only where current domain behavior safely supports them
 - prominent Add Product action
+- CSV import/export only if current implementation supports it truthfully
 
-Product create/edit organizes existing fields into coherent groups:
+Product create/edit is organized into coherent groups:
 
 - General
 - Media
 - Pricing
 - Inventory
-- Variants where the current domain supports them
+- Variants only where supported by the current domain/schema
+- Product Organization
 - Store Visibility
 
-The redesign must not invent unsupported backend semantics merely to fill the UI.
+Product Organization may expose Categories, Collections, and Tags only when the current schema/API supports them. Admin V3 must not create fake functional UI for unsupported concepts.
+
+The redesign must preserve existing product create/update/delete, media handling, plan limits, storefront rendering contracts, and tenant isolation.
 
 ## 9. Orders
 
@@ -190,7 +192,20 @@ Order detail consolidates:
 - status actions allowed by the existing domain
 - timeline/history where supported
 
-The UI must map to the existing order-state machine rather than inventing a visually convenient but false workflow.
+Seller-facing Order stages are standardized to:
+
+1. Pending
+2. Confirmed
+3. Delivered
+4. Return
+
+The intended presentation workflow is `Pending → Confirmed → Delivered → Return`.
+
+`Return` is available only after `Delivered` unless the canonical backend state machine explicitly requires a different safe transition.
+
+Admin V3 must not blindly replace database status values. Before implementation, inspect the canonical order state machine and introduce a small Order Status presentation mapping module when needed. The UI consumes presentation stages and allowed actions through that seam; backend/RPC validation remains authoritative.
+
+Status changes require a confirmation interaction. Show status history/audit information only where authoritative data exists; do not fabricate history.
 
 ## 10. Customers
 
@@ -204,7 +219,7 @@ Prioritize:
 - last order
 - useful status/context
 
-Do not introduce a new CRM subsystem as part of Admin V2.
+Do not introduce a new CRM subsystem as part of Admin V3.
 
 ## 11. Analytics
 
@@ -214,18 +229,30 @@ Use only metrics supported by authoritative MiniShop data. Do not fabricate prec
 
 Charts must have readable labels, meaningful empty states, and accompanying numeric context.
 
-## 12. Settings and Billing
+## 12. Settings Hub
 
-Settings contains shop/platform configuration that does not belong in daily operational flows.
+Settings is a Shopify-inspired configuration hub adapted to MiniShop's actual capabilities.
 
-Billing contains:
+Settings groups may include, when supported by existing backend/domain behavior:
 
-- current plan
-- usage/entitlement information
-- renewal/upgrade surfaces supported by existing billing behavior
-- Extra Orders where supported
+- Store details
+- Plan and billing
+- Users and permissions
+- Payments
+- Checkout
+- Shipping and delivery
+- Taxes / legal configuration where applicable
+- Domains
+- Policies
+- Notifications
+- Customer privacy
+- Files / media where supported
 
-Admin V2 must preserve existing entitlement and financial enforcement; UI state is never treated as the security boundary.
+Plan and billing is moved into Settings and is no longer a top-level navigation item.
+
+Domains and Policies are moved from Store into Settings.
+
+Do not surface a setting as functional merely because Shopify has it. Unsupported capabilities must not appear as working controls. Existing authorization, entitlement, financial idempotency, and RLS enforcement remain authoritative; frontend visibility is never the security boundary.
 
 ## 13. Store Builder V2
 
@@ -251,7 +278,7 @@ Top toolbar:
 - Preview
 - Publish
 
-The center canvas must use the same catalog-owned storefront rendering contract as the buyer storefront. Admin V2 must not create a second storefront implementation.
+The center canvas must use the same catalog-owned storefront rendering contract as the buyer storefront. Admin V3 must not create a second storefront implementation.
 
 ### Selection model
 
@@ -322,7 +349,7 @@ Verify at 375 px, 390 px, and 414 px.
 
 ## 14. Design system
 
-Admin V2 should establish reusable admin primitives rather than styling each page independently.
+Admin V3 should establish reusable admin primitives rather than styling each page independently.
 
 Required primitive families include:
 
@@ -344,7 +371,7 @@ Reuse existing accessible primitives and Lucide icons where practical. Do not ad
 
 ## 15. Responsive behavior
 
-Admin V2 is responsive by design, not by desktop compression.
+Admin V3 is responsive by design, not by desktop compression.
 
 Acceptance widths include at least:
 
@@ -381,7 +408,7 @@ Requirements include:
 
 ## 17. Error, loading, and empty states
 
-Every major Admin V2 surface must intentionally define:
+Every major Admin V3 surface must intentionally define:
 
 - initial loading
 - empty data
@@ -413,33 +440,37 @@ Frontend hiding is never authorization.
 
 ## 19. Delivery strategy
 
-Implement incrementally on `feat/admin-v2-redesign` or task branches derived from it.
+Implement incrementally on `feature/admin-v3-shopify-inspired` or short-lived task branches derived from it.
 
 Recommended sequence:
 
+0. reconcile Admin V3 spec/plan and existing implementation state
 1. Admin shell + design primitives
-2. Dashboard
-3. Products
-4. Orders
+2. operational Dashboard
+3. Shopify-inspired Products workspace
+4. Orders workspace with Pending / Confirmed / Delivered / Return presentation mapping
 5. Customers
 6. Analytics
-7. Settings + Billing
-8. Store navigation surfaces
-9. Store Builder V2 shell/interactions
-10. responsive/mobile pass
-11. accessibility/error-state pass
-12. regression/security verification
-13. Vercel Preview QA
-14. explicit owner approval
-15. merge/release through the normal production gate
+7. Settings Hub, including Plan and billing, Domains, and Policies
+8. Store / Store Builder consistency
+9. responsive/mobile pass
+10. accessibility/error-state pass
+11. regression/security verification
+12. Vercel Preview QA
+13. explicit owner approval
+14. merge/release through the normal production gate
 
 Each stage must preserve working production-domain behavior and should be independently reviewable.
 
 ## 20. Acceptance criteria
 
-Admin V2 is ready for merge only when:
+Admin V3 is ready for merge only when:
 
-- English-first admin IA is consistent across all redesigned surfaces
+- English-only admin IA is consistent across all redesigned surfaces
+- Marketing is absent from primary navigation
+- Billing, Domains, and Policies are correctly housed in Settings
+- Products follows the approved Shopify-inspired workspace without inventing unsupported domain features
+- Orders presents Pending, Confirmed, Delivered, Return through a verified mapping to the canonical backend state machine
 - admin pages share one coherent design system
 - Dashboard prioritizes operations and actionable states
 - Products and Orders are efficient data workspaces
@@ -457,7 +488,7 @@ Admin V2 is ready for merge only when:
 
 ## 21. Approved visual-system amendment (2026-10-02)
 
-This amendment confirms Section 3's Charcoal + Mint direction and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
+This amendment confirms Section 3's Charcoal + Mint direction and clarifies Sections 6, 14–16. Preserve all other Admin V3 domain and security constraints.
 
 ### Admin-only palette and semantics
 
@@ -493,4 +524,4 @@ Do not shrink metadata below 12px. Allow Burmese multi-line content approximatel
 
 Preserve the existing operational hierarchy and supported data; do not invent comparison percentages or trends. The current date-window label must be visibly static unless backed by working filtering. Retain restrained transitions (roughly 150–220ms) and reduced-motion support. QA at 375/390/414px, tablet, laptop, and wide desktop; verify no horizontal overflow, text truncation of critical values, navigation duplication, or status conveyed by color alone.
 
-Implementation is an incremental follow-on to the existing Admin V2 plan. Audit the current PR head before edits and avoid repeating completed tasks. Tests must cover nav removal, token scoping, and responsive/accessibility regressions. No production deployment, migrations, or PR merge without separate release approval.
+Implementation is an incremental follow-on to the existing Admin V3 plan. Audit the current PR head before edits and avoid repeating completed tasks. Tests must cover nav removal, token scoping, and responsive/accessibility regressions. No production deployment, migrations, or PR merge without separate release approval.
