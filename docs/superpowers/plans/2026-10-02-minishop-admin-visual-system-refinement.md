@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refine the existing Admin V2 UI with the approved Plum/Lavender/Off-White system, remove mobile bottom navigation, and normalize typography and spacing without changing commerce behavior.
+**Goal:** Refine the existing Admin V2 UI with the approved Charcoal/Mint/Soft-Neutral system, remove mobile bottom navigation, and normalize typography and spacing without changing commerce behavior.
 
 **Architecture:** Add admin-scoped semantic tokens and migrate existing shared admin components before individual dashboard surfaces. Keep existing route structure and Store Builder's distinct editor shell; validate each change with focused tests and the repository's full regression commands.
 
@@ -17,7 +17,7 @@
 - Preserve existing domain, RLS, checkout, inventory, billing and Store Design contracts.
 - Admin-only tokens must not affect storefront preview or buyer theme.
 - Remove admin mobile bottom tabs, not Store Builder editing sheets.
-- Use approved palette and typography/spacing values from Section 21; maintain WCAG 2.2 AA targets.
+- Use approved Charcoal + Mint palette and typography/spacing values from Section 21; maintain WCAG 2.2 AA targets.
 
 ## Review Focus
 
