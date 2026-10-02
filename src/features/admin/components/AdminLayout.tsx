@@ -13,9 +13,9 @@ function Sidebar() {
   const {shop} = usePlan();
 
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-800 bg-slate-950 p-4 text-white lg:flex lg:flex-col">
-      <div className="flex items-center gap-3 border-b border-slate-800 px-2 pb-4">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600 text-sm font-black text-white">
+    <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[var(--admin-sidebar-hover)] bg-[var(--admin-sidebar)] p-4 text-white lg:flex lg:flex-col">
+      <div className="flex items-center gap-3 border-b border-[var(--admin-sidebar-hover)] px-2 pb-4">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--admin-primary)] text-sm font-black text-white">
           {shopInitial(shop?.name)}
         </div>
         <div className="min-w-0">
@@ -31,17 +31,17 @@ function Sidebar() {
         <AdminNav />
       </div>
 
-      <div className="space-y-1 border-t border-slate-800 pt-4">
+      <div className="space-y-1 border-t border-[var(--admin-sidebar-hover)] pt-4">
         <Link
           to={shop?.slug ? `/s/${shop.slug}` : '/demo'}
-          className="flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+          className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
           <Store className="h-[18px] w-[18px]" />
           View store
         </Link>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
           <LogOut className="h-[18px] w-[18px]" />
           Sign out
         </button>
@@ -65,17 +65,17 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-slate-50 text-slate-950">
+    <div className="admin-shell min-h-dvh overflow-x-hidden bg-[var(--admin-canvas)] text-[var(--admin-text)]">
       <Sidebar />
 
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:ml-64">
+      <header className="sticky top-0 z-30 border-b border-[var(--admin-border)] bg-white/95 backdrop-blur lg:ml-64">
         <div className="flex min-h-14 items-center gap-3 px-4 sm:px-5 lg:px-6">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
-            className="grid h-10 w-10 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden">
+            className="grid h-11 w-11 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden">
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
@@ -83,7 +83,7 @@ export default function AdminLayout() {
             <p className="hidden text-xs text-slate-500 sm:block">Seller Admin</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span aria-label="Notifications" className="grid h-10 w-10 place-items-center rounded-xl text-slate-600">
+            <span aria-label="Notifications" className="grid h-11 w-11 place-items-center rounded-xl text-slate-600">
               <Bell className="h-5 w-5" />
             </span>
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-sm font-bold text-violet-700">
