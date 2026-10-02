@@ -13,6 +13,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=Cormorant:wght@500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
+/* ---- Admin V2 scoped semantic tokens ---------------------------------------
+   Opt-in only: the AdminLayout root receives .admin-shell in a later migration.
+   No admin token is declared on :root, .platform-shell or storefront selectors,
+   so merchant-owned themes and the Store Builder preview remain isolated. */
+.admin-shell {
+  --admin-canvas: #faf7ff;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f8f5ff;
+  --admin-border: #e7dff2;
+  --admin-text: #1f1633;
+  --admin-muted: #756b86;
+  --admin-primary: #6d28d9;
+  --admin-primary-hover: #5b21b6;
+  --admin-primary-soft: #ede9fe;
+  --admin-lavender: #c4b5fd;
+  --admin-sidebar: #1f1633;
+  --admin-sidebar-hover: #34274b;
+  --admin-sidebar-text: #f5f0ff;
+  --admin-sidebar-muted: #c4b5d5;
+  --admin-focus: #6d28d9;
+  --admin-font-sans: 'Inter', 'Noto Sans Myanmar', 'Myanmar Text', 'Pyidaungsu', system-ui, sans-serif;
+  --admin-page-padding-mobile: 16px;
+  --admin-page-padding-desktop: 24px;
+  --admin-section-gap: 24px;
+  --admin-card-gap: 16px;
+  --admin-card-padding-mobile: 16px;
+  --admin-card-padding-desktop: 20px;
+}
+
 /* ---- Mini Shop design system ------------------------------------------------
    Shared semantic tokens for the admin console and buyer flows. Token names stay
    stable because existing modules depend on brand/cream/gold/ink roles. The buyer
