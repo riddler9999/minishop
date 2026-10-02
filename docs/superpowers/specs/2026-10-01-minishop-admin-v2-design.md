@@ -454,3 +454,43 @@ Admin V2 is ready for merge only when:
 - existing auth/RLS/checkout/inventory/billing/security contracts remain green
 - full repository-supported CI/regression gates pass
 - a Vercel Preview is manually reviewed and approved before Production merge
+
+## 21. Approved visual-system amendment (2026-10-02)
+
+This amendment supersedes Section 3's generic purple/light-neutral guidance and clarifies Sections 6, 14–16. Preserve all other Admin V2 domain and security constraints.
+
+### Admin-only palette and semantics
+
+- Deep sidebar: `#1F1633`
+- Admin primary Plum: `#6D28D9`; deep/hover Plum: `#5B21B6`
+- Lavender accent: `#C4B5FD`; soft selected surface: `#EDE9FE`
+- Canvas Off-White: `#FAF7FF`; card surface: `#FFFFFF`
+- Ink: `#1F1633`; secondary text: `#756B86`; border: `#E7DFF2`
+- Success, warning, error, and informational status are separate semantic roles; do not equate Plum with success. Check WCAG 2.2 AA contrast for every text/state combination and adjust token variants when necessary.
+- MiniShop Pink `#EC1F62` remains a platform/marketing identity, not the admin action color. Scope admin tokens to the admin shell so storefront themes and Store Builder preview cannot inherit them accidentally.
+- Prefer semantic admin tokens over page-specific hard-coded slate/violet classes. Do not add a second component library or decorative glassmorphism.
+
+### Navigation
+
+Desktop retains the persistent sidebar. Narrow screens use top bar plus accessible hamburger drawer as the single navigation source. Remove seller-admin mobile bottom tabs, duplicate nav state, and their compensating page padding across affected routes. Do not remove Store Builder's contextual bottom sheet; it is an editor, not navigation. Preserve keyboard focus management, close control, escape/backdrop dismissal, and active-route indication.
+
+### Typography and spacing
+
+Use Inter with Noto Sans Myanmar fallback where Burmese copy appears. Establish these admin defaults, with responsive adjustments only when content requires them:
+
+| Role | Font size | Line height | Weight |
+| --- | ---: | ---: | ---: |
+| Page title | 24px | 32px | 700 |
+| KPI value | 24px | 32px | 700 |
+| Section heading | 18px | 28px | 600 |
+| Body and navigation | 14px | 22px | 400–500 |
+| Secondary text | 13px | 20px | 400 |
+| Metadata | 12px | 18px | 400 |
+
+Do not shrink metadata below 12px. Allow Burmese multi-line content approximately 24–26px line-height at 14px font where visual QA shows glyph collisions or poor readability. Use mobile page padding 16px, desktop page padding 24px, section gaps 24px, card gaps 12–16px, card padding 16px mobile / 20px desktop, form field gaps 16px, and 44px minimum interactive touch targets. Keep row heights content-driven (typically 48–56px); allow expansion for Burmese or wrapped content.
+
+### Dashboard and delivery
+
+Preserve the existing operational hierarchy and supported data; do not invent comparison percentages or trends. The current date-window label must be visibly static unless backed by working filtering. Retain restrained transitions (roughly 150–220ms) and reduced-motion support. QA at 375/390/414px, tablet, laptop, and wide desktop; verify no horizontal overflow, text truncation of critical values, navigation duplication, or status conveyed by color alone.
+
+Implementation is an incremental follow-on to the existing Admin V2 plan. Audit the current PR head before edits and avoid repeating completed tasks. Tests must cover nav removal, token scoping, and responsive/accessibility regressions. No production deployment, migrations, or PR merge without separate release approval.
