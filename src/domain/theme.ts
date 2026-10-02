@@ -7,7 +7,7 @@
 // This module is pure domain code. Theme data is cosmetic only; authorization,
 // RLS, validation and commerce rules live elsewhere.
 
-import {type FontPairingId, DEFAULT_FONT_PAIRING, isFontPairingId} from './fontPairing.ts';
+import {type FontPairingId, DEFAULT_FONT_PAIRING, isFontPairingId} from './fontPairing.js';
 
 export type ThemePresetId =
   | 'clean-minimal'

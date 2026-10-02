@@ -1,6 +1,6 @@
-import type {ThemePresetId} from '../theme.ts';
-import {createDefaultStoreDesign, normalizeStoreDesign} from './normalize.ts';
-import type {StoreDesignDocument, StoreSection, StoreSectionType} from './types.ts';
+import type {ThemePresetId} from '../theme.js';
+import {createDefaultStoreDesign, normalizeStoreDesign} from './normalize.js';
+import type {StoreDesignDocument, StoreSection, StoreSectionType} from './types.js';
 
 const COPY_FIELDS: Partial<Record<StoreSectionType, readonly string[]>> = {
   hero: ['headline', 'subtext', 'ctaLabel', 'imageUrl'],

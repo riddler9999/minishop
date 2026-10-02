@@ -1,6 +1,6 @@
-import type {StoreDesignDocument, StoreDesignLifecycle} from '../../../domain/storeDesign/index.ts';
-import {normalizeStoreDesign} from '../../../domain/storeDesign/index.ts';
-import {mapDbError} from '../../../domain/dbError.ts';
+import type {StoreDesignDocument, StoreDesignLifecycle} from '../../../domain/storeDesign/index.js';
+import {normalizeStoreDesign} from '../../../domain/storeDesign/index.js';
+import {mapDbError} from '../../../domain/dbError.js';
 
 type RpcResult = Promise<{data: unknown; error: unknown}>;
 
