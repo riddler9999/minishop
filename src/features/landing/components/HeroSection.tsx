@@ -39,9 +39,6 @@ export default function HeroSection() {
           <span className="landing-wordmark-text"><strong>Mini</strong><b>Shop</b><em>MM</em></span>
         </Link>
         <div className="landing-topbar-actions">
-          <Link className="landing-topbar-cta" to="/admin">
-            Seller Dashboard သို့သွားရန် <ArrowRight size={16} aria-hidden="true"/>
-          </Link>
         </div>
       </div>
 

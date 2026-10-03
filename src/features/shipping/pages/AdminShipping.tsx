@@ -4,13 +4,17 @@ import {adminApi} from '@/data/dataSource';
 import type {ShippingZone} from '@/domain/shop';
 import {ks, cx} from '@/shared/lib/format';
 import {regionNames, shippingFee, townshipsOf} from '@/shared/data/locations';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminSurface from '@/features/admin/components/AdminSurface';
+import AdminLoadingState from '@/features/admin/components/AdminLoadingState';
+import AdminEmptyState from '@/features/admin/components/AdminEmptyState';
+import AdminErrorState from '@/features/admin/components/AdminErrorState';
 
-// Per-township shipping zones are a CORE feature on every plan (pricing V1 — the
-// old Business-only gate was removed here and in the RLS policy, migration 0013).
 export default function AdminShipping() {
   const [zones, setZones] = useState<ShippingZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Add-zone form.
   const [region, setRegion] = useState('');
@@ -25,18 +29,18 @@ export default function AdminShipping() {
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setErr('');
     adminApi
       .listShippingZones()
       .then((r) => alive && setZones(r.zones))
-      .catch((e) => alive && setErr(e.message || 'ဆွဲယူ၍မရပါ'))
+      .catch((e) => alive && setErr(e.message || 'Could not load shipping zones.'))
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
-  // Prefill the fee input with the static-table suggestion whenever both
-  // region+township are chosen (seller can still override — it's just a hint).
   const onTownship = (t: string) => {
     setTownship(t);
     if (region && t) {
@@ -48,17 +52,21 @@ export default function AdminShipping() {
   const add = async () => {
     const feeN = Number(fee);
     setErr('');
-    if (!region || !township) return setErr('တိုင်း/မြို့နယ် ရွေးပါ။');
-    if (!Number.isFinite(feeN) || feeN < 0) return setErr('ပို့ခ မမှန်ပါ။');
+    if (!region || !township) return setErr('Please select a region and township.');
+    if (!Number.isFinite(feeN) || feeN < 0) return setErr('Please enter a valid delivery fee.');
     setAdding(true);
     try {
       const {zone} = await adminApi.createShippingZone({region, township, fee: feeN});
-      setZones((prev) => [...prev, zone].sort((a, b) => a.region.localeCompare(b.region) || a.township.localeCompare(b.township)));
+      setZones((prev) =>
+        [...prev, zone].sort(
+          (a, b) => a.region.localeCompare(b.region) || a.township.localeCompare(b.township),
+        ),
+      );
       setRegion('');
       setTownship('');
       setFee('');
-    } catch (e: any) {
-      setErr(e.message || 'ထည့်၍မရပါ။');
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not add shipping zone.');
     } finally {
       setAdding(false);
     }
@@ -66,145 +74,186 @@ export default function AdminShipping() {
 
   const saveEdit = async (id: string) => {
     const feeN = Number(editFee);
-    if (!Number.isFinite(feeN) || feeN < 0) return setErr('ပို့ခ မမှန်ပါ။');
+    if (!Number.isFinite(feeN) || feeN < 0) return setErr('Please enter a valid delivery fee.');
     setErr('');
     try {
       const {zone} = await adminApi.updateShippingZone(id, {fee: feeN});
       setZones((prev) => prev.map((z) => (z.id === id ? zone : z)));
       setEditingId(null);
-    } catch (e: any) {
-      setErr(e.message || 'ပြင်၍မရပါ။');
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not update shipping zone.');
     }
   };
 
   const remove = async (z: ShippingZone) => {
-    if (!confirm(`${z.region} / ${z.township} ပို့ခ ဇုန်ကို ဖျက်မည်။ သေချာပါသလား?`)) return;
+    if (!confirm(`Delete shipping zone for ${z.region} / ${z.township}?`)) return;
     setErr('');
     try {
       await adminApi.deleteShippingZone(z.id);
       setZones((prev) => prev.filter((x) => x.id !== z.id));
-    } catch (e: any) {
-      setErr(e.message || 'ဖျက်၍မရပါ။');
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not delete shipping zone.');
     }
   };
 
-  const field = 'w-full rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-brand-400';
+  const field =
+    'w-full rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 text-sm text-[#1F2421] outline-none focus:border-[#35B99D] focus:ring-1 focus:ring-[#35B99D]';
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink">
-          <Truck className="h-6 w-6 text-brand-500" /> ပို့ဆောင်ခ ဇုန်များ
-        </h1>
-        <p className="my mt-1 text-sm text-ink-soft">
-          မြို့နယ်အလိုက် ပို့ခ သတ်မှတ်ပါ။ ဇုန်မသတ်မှတ်ရသေးသော မြို့နယ်များအတွက် ဆိုင်၏ default ပို့ခကို အသုံးပြုပါမည်။
-        </p>
-      </div>
+    <div className="space-y-6 pb-12">
+      <AdminPageHeader
+        title="Shipping Zones"
+        description="Set custom delivery rates by township. Unconfigured townships use your store default delivery fee."
+      />
 
-      {/* Add zone */}
-      <div className="rounded-2xl border border-cream-200 bg-white p-4">
-        <h2 className="my mb-3 text-sm font-bold text-ink">ဇုန်အသစ် ထည့်ရန်</h2>
-        <div className="grid gap-3 sm:grid-cols-4">
+      {err ? (
+        <AdminErrorState
+          title="Shipping Error"
+          description={err}
+          onRetry={() => setReloadKey((k) => k + 1)}
+        />
+      ) : null}
+
+      {/* Add zone form */}
+      <AdminSurface>
+        <h2 className="text-base font-bold text-[#1F2421]">Add New Zone</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
           <select
             value={region}
-            aria-label="တိုင်း/ပြည်နယ်"
+            aria-label="Region / State"
             onChange={(e) => {
               setRegion(e.target.value);
               setTownship('');
             }}
-            className={field}>
-            <option value="">— တိုင်း/ပြည်နယ် —</option>
+            className={field}
+          >
+            <option value="">— Region / State —</option>
             {regionNames().map((r) => (
-              <option key={r} value={r}>{r}</option>
+              <option key={r} value={r}>
+                {r}
+              </option>
             ))}
           </select>
-          <select value={township} aria-label="မြို့နယ်" disabled={!region} onChange={(e) => onTownship(e.target.value)} className={cx(field, !region && 'opacity-60')}>
-            <option value="">{region ? '— မြို့နယ် —' : 'တိုင်းအရင်ရွေးပါ'}</option>
+          <select
+            value={township}
+            aria-label="Township"
+            disabled={!region}
+            onChange={(e) => onTownship(e.target.value)}
+            className={cx(field, !region && 'opacity-60')}
+          >
+            <option value="">{region ? '— Township —' : 'Select region first'}</option>
             {townships.map((t) => (
-              <option key={t.name} value={t.name}>{t.name}</option>
+              <option key={t.name} value={t.name}>
+                {t.name}
+              </option>
             ))}
           </select>
-          <input inputMode="numeric" value={fee} aria-label="ပို့ခ" onChange={(e) => setFee(e.target.value)} placeholder="ပို့ခ (Ks)" className={field} />
+          <input
+            inputMode="numeric"
+            value={fee}
+            aria-label="Delivery fee"
+            onChange={(e) => setFee(e.target.value)}
+            placeholder="Fee (Ks)"
+            className={field}
+          />
           <button
+            type="button"
             onClick={add}
             disabled={adding}
-            className="my inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50">
-            <Plus className="h-4 w-4" /> ထည့်ရန်
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1F2421] px-4 py-2 text-sm font-bold text-white hover:bg-[#303a35] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" /> Add Zone
           </button>
         </div>
-        {err && <p className="my mt-2 text-sm text-brand-600">{err}</p>}
-      </div>
+      </AdminSurface>
 
       {/* Zone list */}
-      <div className="overflow-hidden rounded-2xl border border-cream-200 bg-white">
-        {loading ? (
-          <div className="space-y-2 p-4">
-            {Array.from({length: 4}).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-lg bg-cream-100" />
-            ))}
+      <AdminSurface>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-[#1F2421]">Configured Zones</h2>
+            <p className="mt-0.5 text-xs text-[#66706C]">
+              {zones.length} zone{zones.length === 1 ? '' : 's'} configured
+            </p>
           </div>
+          <Truck className="h-5 w-5 text-[#66706C]" aria-hidden="true" />
+        </div>
+
+        {loading ? (
+          <AdminLoadingState message="Loading shipping zones..." />
         ) : zones.length === 0 ? (
-          <p className="my px-4 py-12 text-center text-sm text-ink-soft">ဇုန် မသတ်မှတ်ရသေးပါ။</p>
+          <AdminEmptyState
+            title="No custom shipping zones"
+            description="All orders will use your default store delivery fee until specific township zones are added."
+          />
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-cream-200 bg-cream-50 text-xs uppercase text-ink-soft">
-              <tr>
-                <th className="px-4 py-3 font-semibold">တိုင်း/ပြည်နယ်</th>
-                <th className="px-4 py-3 font-semibold">မြို့နယ်</th>
-                <th className="px-4 py-3 text-right font-semibold">ပို့ခ</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cream-200">
-              {zones.map((z) => (
-                <tr key={z.id} className="hover:bg-cream-50/60">
-                  <td className="my px-4 py-3 text-ink">{z.region}</td>
-                  <td className="my px-4 py-3 text-ink">{z.township}</td>
-                  <td className="px-4 py-3 text-right">
-                    {editingId === z.id ? (
-                      <input
-                        inputMode="numeric"
-                        value={editFee}
-                        aria-label="ပို့ခ ပြင်ရန်"
-                        onChange={(e) => setEditFee(e.target.value)}
-                        className="w-28 rounded-lg border border-cream-200 bg-cream-50 px-2 py-1 text-right text-sm outline-none focus:border-brand-400"
-                      />
-                    ) : (
-                      <span className="font-semibold text-ink">{ks(z.fee)}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {editingId === z.id ? (
-                        <button
-                          onClick={() => saveEdit(z.id)}
-                          className="my inline-flex items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-600">
-                          <Check className="h-3.5 w-3.5" /> သိမ်း
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setEditingId(z.id);
-                            setEditFee(String(z.fee));
-                          }}
-                          className="my inline-flex items-center gap-1 rounded-lg border border-cream-200 px-2.5 py-1.5 text-xs font-semibold text-ink hover:bg-cream-100">
-                          <Pencil className="h-3.5 w-3.5" /> ပြင်
-                        </button>
-                      )}
-                      <button
-                        onClick={() => remove(z)}
-                        aria-label="delete"
-                        className="grid h-8 w-8 place-items-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-[#E1E7E3] bg-[#F4F7F5] text-xs font-semibold text-[#66706C]">
+                <tr>
+                  <th className="px-4 py-3">Region / State</th>
+                  <th className="px-4 py-3">Township</th>
+                  <th className="px-4 py-3 text-right">Delivery Fee</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#E1E7E3]">
+                {zones.map((z) => (
+                  <tr key={z.id} className="hover:bg-[#F4F7F5]/60 transition">
+                    <td className="px-4 py-3 font-medium text-[#1F2421]">{z.region}</td>
+                    <td className="px-4 py-3 text-[#1F2421]">{z.township}</td>
+                    <td className="px-4 py-3 text-right">
+                      {editingId === z.id ? (
+                        <input
+                          inputMode="numeric"
+                          value={editFee}
+                          aria-label="Edit fee"
+                          onChange={(e) => setEditFee(e.target.value)}
+                          className="w-28 rounded-lg border border-[#E1E7E3] bg-[#FFFFFF] px-2 py-1 text-right text-sm outline-none focus:border-[#35B99D]"
+                        />
+                      ) : (
+                        <span className="font-semibold tabular-nums text-[#1F2421]">{ks(z.fee)}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {editingId === z.id ? (
+                          <button
+                            type="button"
+                            onClick={() => saveEdit(z.id)}
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-[#35B99D] px-2.5 py-1.5 text-xs font-bold text-white hover:bg-[#29957F] transition"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Save
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(z.id);
+                              setEditFee(String(z.fee));
+                            }}
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-[#E1E7E3] px-2.5 py-1.5 text-xs font-semibold text-[#1F2421] hover:bg-[#F4F7F5] transition"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => remove(z)}
+                          aria-label="Delete shipping zone"
+                          className="grid h-9 w-9 place-items-center rounded-lg border border-[#E1E7E3] text-[#66706C] hover:border-rose-300 hover:text-rose-600 transition"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </AdminSurface>
     </div>
   );
 }

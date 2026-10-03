@@ -46,6 +46,18 @@ describe('Admin V2 shell', () => {
     assert.match(dashboard, /pb-8/);
   });
 
+  it('uses a slide-out transition and accessible trigger for the mobile drawer', () => {
+    assert.match(layout, /aria-label="Open navigation"/);
+    assert.match(layout, /aria-expanded=\{mobileOpen\}/);
+    assert.match(layout, /aria-controls="admin-mobile-nav"/);
+    assert.match(layout, /<Menu className="h-5 w-5" \/>/);
+    assert.match(mobile, /id="admin-mobile-nav"/);
+    assert.match(mobile, /transition-transform/);
+    assert.match(mobile, /translate-x-0/);
+    assert.match(mobile, /-translate-x-full/);
+    assert.match(mobile, /motion-reduce:transition-none/);
+  });
+
   it('preserves AdminConsole nesting and RequireAdmin security boundary', () => {
     assert.match(consoleShell, /return <AdminLayout \/>/);
     assert.match(app, /path="\/admin"/);

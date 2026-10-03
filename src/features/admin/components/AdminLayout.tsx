@@ -15,15 +15,15 @@ function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[var(--admin-sidebar-hover)] bg-[var(--admin-sidebar)] p-4 text-white lg:flex lg:flex-col">
       <div className="flex items-center gap-3 border-b border-[var(--admin-sidebar-hover)] px-2 pb-4">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--admin-primary)] text-sm font-black text-white">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--admin-primary)] text-sm font-black text-[#1F2421]">
           {shopInitial(shop?.name)}
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-sm font-bold">{shop?.name ?? 'MiniShop'}</span>
+            <span className="truncate text-sm font-bold text-white">{shop?.name ?? 'MiniShop'}</span>
             <PlanBadge />
           </div>
-          <span className="text-xs text-slate-400">Seller Admin</span>
+          <span className="text-xs text-[var(--admin-sidebar-muted)]">Seller Admin</span>
         </div>
       </div>
 
@@ -34,14 +34,14 @@ function Sidebar() {
       <div className="space-y-1 border-t border-[var(--admin-sidebar-hover)] pt-4">
         <Link
           to={shop?.slug ? `/s/${shop.slug}` : '/demo'}
-          className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+          className="flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]">
           <Store className="h-[18px] w-[18px]" />
           View store
         </Link>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]">
           <LogOut className="h-[18px] w-[18px]" />
           Sign out
         </button>
@@ -75,18 +75,19 @@ export default function AdminLayout() {
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
-            className="grid h-11 w-11 place-items-center rounded-xl text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden">
+            aria-controls="admin-mobile-nav"
+            className="grid h-11 w-11 place-items-center rounded-xl text-[#1F2421] transition hover:bg-[#F4F7F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] lg:hidden">
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-950">{shop?.name ?? 'MiniShop'}</p>
-            <p className="hidden text-xs text-slate-500 sm:block">Seller Admin</p>
+            <p className="truncate text-sm font-semibold text-[#1F2421]">{shop?.name ?? 'MiniShop'}</p>
+            <p className="hidden text-xs text-[#66706C] sm:block">Seller Admin</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span aria-label="Notifications" className="grid h-11 w-11 place-items-center rounded-xl text-slate-600">
+            <span aria-label="Notifications" className="grid h-11 w-11 place-items-center rounded-xl text-[#66706C]">
               <Bell className="h-5 w-5" />
             </span>
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-sm font-bold text-violet-700">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#D8F1EA] text-sm font-bold text-[#1F2421]">
               {shopInitial(shop?.name)}
             </div>
           </div>

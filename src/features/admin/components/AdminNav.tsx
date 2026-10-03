@@ -1,5 +1,5 @@
 import type {ComponentType} from 'react';
-import {BarChart3, CreditCard, LayoutDashboard, Megaphone, Package, Settings, ShoppingBag, Store, Users} from 'lucide-react';
+import {BarChart3, LayoutDashboard, Package, Settings, ShoppingBag, Store, Users} from 'lucide-react';
 import {NavLink} from 'react-router-dom';
 import {cx} from '@/shared/lib/format';
 
@@ -21,15 +21,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Store,
     children: [
       {label: 'Store Builder', to: '/admin/online-store/themes/customize'},
-      {label: 'Navigation', to: '/admin/store/navigation'},
-      {label: 'Domains', to: '/admin/store/domains'},
-      {label: 'Policies', to: '/admin/store/policies'},
+      {label: 'Themes', to: '/admin/online-store/themes'},
     ],
   },
-  {label: 'Marketing', icon: Megaphone},
   {label: 'Analytics', to: '/admin/analytics', icon: BarChart3},
   {label: 'Settings', to: '/admin/settings', icon: Settings},
-  {label: 'Billing', to: '/admin/billing', icon: CreditCard},
 ];
 
 function DisabledNavItem({item}: {item: AdminNavItem}) {
@@ -64,8 +60,10 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
                     onClick={onNavigate}
                     className={({isActive}) =>
                       cx(
-                        'block rounded-lg px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
-                        isActive ? 'bg-[var(--admin-sidebar-hover)] text-white' : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
+                        'block rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
+                        isActive
+                          ? 'bg-[var(--admin-primary)] font-bold text-[#1F2421]'
+                          : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
                       )
                     }>
                     {child.label}
@@ -85,7 +83,9 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
             className={({isActive}) =>
               cx(
                 'flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
-                isActive ? 'bg-[var(--admin-primary)] text-white' : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
+                isActive
+                  ? 'bg-[var(--admin-primary)] font-bold text-[#1F2421]'
+                  : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
               )
             }>
             <Icon className="h-[18px] w-[18px]" />

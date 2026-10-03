@@ -35,3 +35,24 @@ export function getYangonAnalyticsWindow(now = new Date()) {
 export function addYangonDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * DAY_MS);
 }
+
+export function getYangonRangeWindow(range: 'today' | '7d' | '30d' | 'all', now = new Date()): {
+  start: Date | null;
+  end: Date | null;
+  dayCount: number;
+} {
+  const todayStart = yangonStartOfDay(now);
+  const todayEnd = new Date(todayStart.getTime() + DAY_MS);
+
+  switch (range) {
+    case 'today':
+      return {start: todayStart, end: todayEnd, dayCount: 1};
+    case '7d':
+      return {start: new Date(todayStart.getTime() - 6 * DAY_MS), end: todayEnd, dayCount: 7};
+    case '30d':
+      return {start: new Date(todayStart.getTime() - 29 * DAY_MS), end: todayEnd, dayCount: 30};
+    case 'all':
+    default:
+      return {start: null, end: null, dayCount: 0};
+  }
+}

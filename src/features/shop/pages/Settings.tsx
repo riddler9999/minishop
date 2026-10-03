@@ -1,38 +1,67 @@
-// ---- Shop settings / branding ----------------------------------------------
-// Seller-managed shop profile: name, phone, default delivery fee (all plans);
-// logo + extended branding (all plans). Writes go through updateOwnShop() which
-// is confined by RLS to the seller's own row. The public `/s/:slug` address is
-// intentionally read-only here — changing it would break every shared link.
+// ---- Settings Hub V3 (Shopify-inspired architecture) ------------------------
+// Organizes supported configuration into 11 clear groups with in-place General
+// profile management and direct navigation to supported settings detail views.
 
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Store, Save, Link2, Copy, Check, Image as ImageIcon, Upload, X, Loader2} from 'lucide-react';
+import {
+  Store,
+  Save,
+  Link2,
+  Copy,
+  Check,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Loader2,
+  CreditCard,
+  Globe,
+  ShieldCheck,
+  Truck,
+  Users,
+  Banknote,
+  ShoppingCart,
+  Bell,
+  Lock,
+  Palette,
+  ArrowRight,
+} from 'lucide-react';
+import {Link} from 'react-router-dom';
 import type {User} from '@supabase/supabase-js';
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan, PLAN_LABEL} from '@/features/billing/plan';
 import {updateOwnShop, type OwnShop} from '@/features/shop/sellerShop';
 import {SHOP_LOGOS_BUCKET} from '@/core/storage/buckets';
 import {adminApi} from '@/data/dataSource';
-import {validateImageFile, prepareImageForUpload, deriveStoragePath} from '@/core/storage/imageUpload';
+import {
+  validateImageFile,
+  prepareImageForUpload,
+  deriveStoragePath,
+} from '@/core/storage/imageUpload';
 import {PlanBadge} from '@/features/billing/PlanGate';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminSurface from '@/features/admin/components/AdminSurface';
+import AdminLoadingState from '@/features/admin/components/AdminLoadingState';
 import {cx} from '@/shared/lib/format';
 
 const field =
-  'w-full rounded-xl border border-cream-200 bg-cream-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-400';
-const lbl = 'my mb-1.5 block text-sm font-semibold text-ink';
+  'w-full rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 text-sm text-[#1F2421] outline-none focus:border-[#35B99D] focus:ring-1 focus:ring-[#35B99D]';
+const lbl = 'mb-1.5 block text-sm font-semibold text-[#1F2421]';
 
 export default function Settings() {
   const {user} = useAdminAuth();
   const {shop, loading} = usePlan();
 
   if (loading) {
-    return <div className="grid min-h-[40vh] place-items-center text-sm text-ink-soft">Loading…</div>;
+    return <AdminLoadingState message="Loading store settings..." />;
   }
   if (!shop || !user) {
-    return <p className="my text-sm text-ink-soft">ဆိုင် အချက်အလက် ရှာမတွေ့ပါ။</p>;
+    return (
+      <div className="p-8 text-center text-sm text-[#66706C]">
+        Store information could not be found.
+      </div>
+    );
   }
-  // Keyed on shop.id so the form's initial state always reflects the loaded shop
-  // (a direct hard-load resolves the shop AFTER first render; remounting on id
-  // seeds the inputs correctly instead of leaving them blank).
+
   return <SettingsForm key={shop.id} shop={shop} user={user} />;
 }
 
@@ -43,10 +72,6 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
   const [phone, setPhone] = useState(shop.phone ?? '');
   const [fee, setFee] = useState(String(shop.defaultDeliveryFee));
   const [logoUrl, setLogoUrl] = useState(shop.logoUrl ?? '');
-  // Path of a logo uploaded THIS session that hasn't been saved into
-  // shops.logo_url yet — kept so it can be cleaned up if the seller replaces
-  // it again, fails to save, or navigates away before saving (see PROJECT.md
-  // Task B invariant: upload before the write, never leave an orphan).
   const [pendingLogoPath, setPendingLogoPath] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoErr, setLogoErr] = useState('');
@@ -55,9 +80,6 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
   const [ok, setOk] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Delete any not-yet-saved upload if the seller navigates away without
-  // saving — a ref keeps the cleanup effect from needing pendingLogoPath in
-  // its dependency array (it must only run once, on unmount).
   const pendingLogoPathRef = useRef(pendingLogoPath);
   pendingLogoPathRef.current = pendingLogoPath;
   useEffect(
@@ -67,14 +89,12 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
     [],
   );
 
-  // The public storefront URL for this shop (channel-neutral — a seller pastes
-  // it into any bio/message/QR, TikTok included).
   const storeUrl = useMemo(() => `${window.location.origin}/s/${shop.slug}`, [shop.slug]);
 
   const save = async () => {
     const feeN = Number(fee);
-    if (!name.trim()) return setErr('Store name ဖြည့်ပါ။');
-    if (!Number.isFinite(feeN) || feeN < 0) return setErr('ပို့ခ မမှန်ပါ။');
+    if (!name.trim()) return setErr('Please enter store name.');
+    if (!Number.isFinite(feeN) || feeN < 0) return setErr('Invalid delivery fee.');
     setErr('');
     setOk(false);
     setSaving(true);
@@ -86,9 +106,6 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
         defaultDeliveryFee: feeN,
         logoUrl,
       });
-      // Only after the DB write succeeds is it safe to drop the old object —
-      // deleting first risks a persisted URL pointing at nothing if the write
-      // above had failed instead.
       if (previousLogoUrl && previousLogoUrl !== logoUrl) {
         const oldPath = deriveStoragePath(previousLogoUrl, SHOP_LOGOS_BUCKET);
         if (oldPath) await adminApi.deleteShopLogo(oldPath).catch(() => {});
@@ -96,15 +113,13 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
       setPendingLogoPath(null);
       setOk(true);
       refresh();
-    } catch (e: any) {
-      // The write failed — undo only what this attempt uploaded. Nothing else
-      // was touched, so there's nothing else to compensate.
+    } catch (e: unknown) {
       if (pendingLogoPath) {
         await adminApi.deleteShopLogo(pendingLogoPath).catch(() => {});
         setPendingLogoPath(null);
         setLogoUrl(shop.logoUrl ?? '');
       }
-      setErr(e.message || 'သိမ်း၍မရပါ။');
+      setErr(e instanceof Error ? e.message : 'Cannot save settings.');
     } finally {
       setSaving(false);
     }
@@ -112,7 +127,7 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
 
   const onLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    e.target.value = ''; // allow re-selecting the same file later
+    e.target.value = '';
     if (!file) return;
     const validationError = validateImageFile(file);
     if (validationError) return setLogoErr(validationError);
@@ -121,13 +136,11 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
     try {
       const prepared = await prepareImageForUpload(file);
       const {url, path} = await adminApi.uploadShopLogo(prepared);
-      // Replacing an earlier pick from this same session — that upload was
-      // never saved anywhere, so it's safe to delete immediately.
       if (pendingLogoPath) await adminApi.deleteShopLogo(pendingLogoPath).catch(() => {});
       setPendingLogoPath(path);
       setLogoUrl(url);
-    } catch (e: any) {
-      setLogoErr(e.message || 'ပုံ တင်၍မရပါ။');
+    } catch (e: unknown) {
+      setLogoErr(e instanceof Error ? e.message : 'Cannot upload image.');
     } finally {
       setUploadingLogo(false);
     }
@@ -147,128 +160,480 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard blocked (e.g. WebView) — the link is shown for manual copy */
+      /* clipboard fallback */
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ink">
-          <Store className="h-6 w-6 text-brand-500" /> Settings
-          <PlanBadge className="ml-1" />
-        </h1>
-        <p className="my mt-1 text-sm text-ink-soft">Manage your store profile, contact details, delivery fee, and branding.</p>
+    <div className="space-y-6 pb-12">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <AdminPageHeader
+          title="Settings"
+          description="Manage store operations, plan subscription, shipping, policies, and store details."
+        />
+        <div className="flex items-center gap-2">
+          <PlanBadge />
+        </div>
       </div>
 
+      {/* 11 Configuration Categories Hub */}
+      <section aria-label="Settings configuration categories" className="space-y-3">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#66706C]">
+          Configuration Hub
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* 1. General Store Details */}
+          <a
+            href="#general-profile"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Store className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Active
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                General / Store Details
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Store name, contact phone, and public link
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Edit profile</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </a>
+
+          {/* 2. Plan and Billing */}
+          <Link
+            to="/admin/settings/billing"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <CreditCard className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  {PLAN_LABEL[plan]}
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Plan &amp; Billing
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Subscription status, monthly order quota &amp; Extra Orders
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Manage plan</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 3. Users and Permissions */}
+          <Link
+            to="/admin/settings/users"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F4F7F5] text-[#1F2421]">
+                  <Users className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#F4F7F5] px-2 py-0.5 text-[10px] font-bold text-[#66706C]">
+                  Owner
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Users &amp; Permissions
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Account ownership, credentials &amp; access control
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>View permissions</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 4. Payments */}
+          <Link
+            to="/admin/settings/payments"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Banknote className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Enabled
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Payments &amp; Transfers
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Cash on Delivery (COD), KBZPay &amp; WavePay transfer settings
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Payment methods</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 5. Checkout */}
+          <Link
+            to="/admin/settings/checkout"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <ShoppingCart className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Standard
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Checkout Rules
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Customer phone collection &amp; mandatory Buy Now flow
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Checkout rules</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 6. Shipping and Delivery */}
+          <Link
+            to="/admin/settings/shipping"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Truck className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Custom Zones
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Shipping &amp; Delivery
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Township delivery zones, rates &amp; default fees
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Manage zones</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 7. Domains */}
+          <Link
+            to="/admin/settings/domains"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F4F7F5] text-[#1F2421]">
+                  <Globe className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#F4F7F5] px-2 py-0.5 text-[10px] font-bold text-[#66706C]">
+                  Read-only
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Domains
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Storefront bio URL &amp; custom domain status
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>View domains</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 8. Policies */}
+          <Link
+            to="/admin/settings/policies"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F4F7F5] text-[#1F2421]">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#F4F7F5] px-2 py-0.5 text-[10px] font-bold text-[#66706C]">
+                  Default
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Policies
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Return, refund, shipping, and terms policies
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>View policies</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 9. Notifications */}
+          <Link
+            to="/admin/settings/notifications"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F4F7F5] text-[#1F2421]">
+                  <Bell className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#F4F7F5] px-2 py-0.5 text-[10px] font-bold text-[#66706C]">
+                  Automatic
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Notifications
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Transactional order and shipping alerts
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>View notifications</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 10. Customer Privacy */}
+          <Link
+            to="/admin/settings/privacy"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Lock className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Protected
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Customer Privacy
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Multi-tenant data isolation &amp; buyer privacy
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Privacy standards</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 11. Brand and Media */}
+          <Link
+            to="/admin/online-store/themes"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Palette className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  Customizable
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                Brand &amp; Media
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Store logo, themes &amp; visual storefront design
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Themes &amp; Brand</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
       {/* Public link */}
-      <section className="rounded-2xl border border-cream-200 bg-white p-4">
-        <h2 className="my mb-2 flex items-center gap-1.5 text-sm font-bold text-ink">
-          <Link2 className="h-4 w-4 text-brand-500" /> Public store link
+      <AdminSurface>
+        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-[#1F2421]">
+          <Link2 className="h-4 w-4 text-[#35B99D]" /> Public Store Link
         </h2>
         <div className="flex items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded-xl border border-cream-200 bg-cream-50 px-3 py-2.5 text-sm text-ink">
+          <code className="min-w-0 flex-1 truncate rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 text-sm text-[#1F2421]">
             {storeUrl}
           </code>
           <button
+            type="button"
             onClick={copyUrl}
-            className="my inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-cream-200 px-3 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100">
+            className="inline-flex shrink-0 min-h-11 items-center gap-1.5 rounded-xl border border-[#E1E7E3] px-3.5 py-2 text-sm font-semibold text-[#1F2421] hover:bg-[#F4F7F5] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]"
+          >
             {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-            {copied ? 'ကူးပြီး' : 'Copy'}
+            {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
-        <p className="my mt-2 text-xs text-ink-soft">Share this link in your bio, posts, or messages. The store slug is read-only here.</p>
-      </section>
+        <p className="mt-2 text-xs text-[#66706C]">
+          Share this link in your TikTok bio, posts, or messages. The store slug is read-only here.
+        </p>
+      </AdminSurface>
 
-      {/* Profile form */}
-      <section className="space-y-3 rounded-2xl border border-cream-200 bg-white p-5">
-        <label className="block">
-          <span className={lbl}>ဆိုင်နာမည် <span className="text-brand-600">*</span></span>
-          <input value={name} onChange={(e) => setName(e.target.value)} className={field} placeholder="ဆိုင်နာမည်" />
-        </label>
-
-        <div className="grid gap-3 sm:grid-cols-2">
+      {/* General Profile Form */}
+      <AdminSurface id="general-profile">
+        <h2 className="text-base font-bold text-[#1F2421]">General Store Profile</h2>
+        <div className="mt-4 space-y-4">
           <label className="block">
-            <span className={lbl}>Phone number</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} className={field} placeholder="09xxxxxxxxx" />
+            <span className={lbl}>
+              Store name <span className="text-rose-600">*</span>
+            </span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={field}
+              placeholder="Store name"
+            />
           </label>
-          <label className="block">
-            <span className={lbl}>Default delivery fee (Ks)</span>
-            <input inputMode="numeric" value={fee} onChange={(e) => setFee(e.target.value)} className={field} placeholder="0" />
-          </label>
-        </div>
 
-        {/* Branding — available on every plan */}
-        <div className="block">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className={lbl}>Phone number</span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={field}
+                placeholder="09xxxxxxxxx"
+              />
+            </label>
+            <label className="block">
+              <span className={lbl}>Default delivery fee (Ks)</span>
+              <input
+                inputMode="numeric"
+                value={fee}
+                onChange={(e) => setFee(e.target.value)}
+                className={field}
+                placeholder="0"
+              />
+            </label>
+          </div>
+
+          {/* Logo Branding */}
+          <div className="block">
             <span className={lbl}>
               <span className="inline-flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4 text-gold-600" /> Store logo
+                <ImageIcon className="h-4 w-4 text-[#35B99D]" /> Store logo
               </span>
             </span>
             <div className="flex items-center gap-3">
               {logoUrl ? (
                 <div className="relative">
-                  <img src={logoUrl} alt="logo preview" className="h-14 w-14 rounded-xl border border-cream-200 object-cover" />
+                  <img
+                    src={logoUrl}
+                    alt="logo preview"
+                    className="h-14 w-14 rounded-xl border border-[#E1E7E3] object-cover"
+                  />
                   <button
                     type="button"
                     onClick={removeLogo}
-                    aria-label="logo ဖယ်ရှားရန်"
-                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-white shadow">
+                    aria-label="Remove logo"
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#1F2421] text-white shadow"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               ) : (
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-cream-300 bg-cream-50 text-ink-soft">
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-dashed border-[#E1E7E3] bg-[#F4F7F5] text-[#66706C]">
                   <ImageIcon className="h-5 w-5" />
                 </div>
               )}
               <label
                 className={cx(
-                  'my inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-cream-200 px-3.5 py-2.5 text-sm font-semibold text-ink hover:bg-cream-100',
+                  'inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-[#E1E7E3] px-3.5 py-2.5 text-sm font-semibold text-[#1F2421] hover:bg-[#F4F7F5] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]',
                   uploadingLogo && 'pointer-events-none opacity-60',
-                )}>
-                {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {uploadingLogo ? 'တင်နေသည်…' : logoUrl ? 'ပြောင်းရန်' : 'ပုံတင်ရန်'}
-                <input type="file" accept="image/png,image/webp" className="hidden" onChange={onLogoFileChange} disabled={uploadingLogo} />
+                )}
+              >
+                {uploadingLogo ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {uploadingLogo ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
+                <input
+                  type="file"
+                  accept="image/png,image/webp"
+                  className="hidden"
+                  onChange={onLogoFileChange}
+                  disabled={uploadingLogo}
+                />
               </label>
             </div>
-            <span className="my mt-1.5 block text-xs text-ink-soft">
-              PNG သို့မဟုတ် WebP ပုံဖိုင်သာ တင်နိုင်သည် (JPG/JPEG လက်မခံပါ) — storefront နှင့် console တွင် ပေါ်ပါမည်။
+            <span className="mt-1.5 block text-xs text-[#66706C]">
+              PNG or WebP only (JPG/JPEG not supported) — appears on storefront and console.
             </span>
-            {logoErr && <p className="my mt-1 text-sm text-brand-600">{logoErr}</p>}
+            {logoErr && <p className="mt-1 text-sm text-rose-600">{logoErr}</p>}
+          </div>
+
+          {err && <p className="text-sm text-rose-600">{err}</p>}
+          {ok && (
+            <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+              <Check className="h-4 w-4" /> Settings saved successfully.
+            </p>
+          )}
+
+          <div>
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1F2421] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#303a35] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save settings'}
+            </button>
+          </div>
         </div>
+      </AdminSurface>
 
-        {err && <p className="my text-sm text-brand-600">{err}</p>}
-        {ok && (
-          <p className="my flex items-center gap-1.5 text-sm text-emerald-600">
-            <Check className="h-4 w-4" /> Settings saved.
-          </p>
-        )}
-
-        <button
-          onClick={save}
-          disabled={saving}
-          className="my inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-600 disabled:opacity-50">
-          <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save settings'}
-        </button>
-      </section>
-
-      {/* Integration hooks — Business placeholder (channel-neutral, no external calls) */}
+      {/* Integration hooks */}
       {features.integrations && (
-        <section className="rounded-2xl border border-cream-200 bg-white p-5">
-          <h2 className="my mb-1 text-sm font-bold text-ink">Integration-ready</h2>
-          <p className="my mb-3 text-xs text-ink-soft">
-            အောက်ပါ public URL များကို ပြင်ပ tool / automation တွင် ချိတ်ဆက်ရန် အသုံးပြုနိုင်သည်။
+        <AdminSurface>
+          <h2 className="mb-1 text-sm font-bold text-[#1F2421]">Integration-ready</h2>
+          <p className="mb-3 text-xs text-[#66706C]">
+            The following public endpoints can be connected to external tools or automations.
           </p>
           <dl className="space-y-2 text-sm">
             <IntegrationRow label="Storefront" value={storeUrl} />
             <IntegrationRow label="Order tracking" value={`${storeUrl}/orders`} />
           </dl>
-        </section>
+        </AdminSurface>
       )}
 
-      <p className="my text-xs text-ink-soft/70">
-        Package: <span className="font-semibold text-ink">{PLAN_LABEL[plan]}</span>
+      <p className="text-xs text-[#66706C]">
+        Current Subscription Plan: <span className="font-semibold text-[#1F2421]">{PLAN_LABEL[plan]}</span>
       </p>
     </div>
   );
@@ -276,9 +641,13 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
 
 function IntegrationRow({label, value}: {label: string; value: string}) {
   return (
-    <div className={cx('flex flex-col gap-1 rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between')}>
-      <span className="my font-semibold text-ink-soft">{label}</span>
-      <code className="truncate text-xs text-ink">{value}</code>
+    <div
+      className={cx(
+        'flex flex-col gap-1 rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 sm:flex-row sm:items-center sm:justify-between',
+      )}
+    >
+      <span className="font-semibold text-xs text-[#66706C]">{label}</span>
+      <code className="truncate text-xs text-[#1F2421]">{value}</code>
     </div>
   );
 }

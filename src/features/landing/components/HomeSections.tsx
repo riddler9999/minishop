@@ -138,6 +138,7 @@ const pricingCardVariants: Variants = {
 
 export function PricingSection() {
   const shouldReduceMotion = useReducedMotion();
+  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <section className="landing-pricing-section px-4 py-24" id="pricing" aria-label="Simple Pricing">
@@ -146,26 +147,58 @@ export function PricingSection() {
         whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
         viewport={{once: true, amount: 0.35}}
         transition={{duration: 0.55, ease: [0.22, 1, 0.36, 1]}}
-        className="landing-section-head mb-14"
+        className="landing-section-head mb-8 text-center"
       >
         <span className="landing-section-pill">SIMPLE PRICING</span>
+        <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl text-slate-950">
+          ရိုးရှင်းပြီး ပွင့်လင်းမြင်သာသော စေျးနှုန်းများ
+        </h2>
+        <p className="mt-2 text-sm text-slate-600 max-w-xl mx-auto">
+          Hidden fees မရှိပါ။ မိမိဆိုင်နှင့် ကိုက်ညီမည့် Plan ကို စိတ်ကြိုက်ရွေးချယ် အသုံးပြုနိုင်ပါသည်။
+        </p>
       </motion.div>
+
+      {/* Yearly / Monthly Toggle */}
+      <div className="mb-12 flex items-center justify-center gap-3">
+        <span className={`text-sm font-semibold transition-colors ${!isYearly ? 'text-black' : 'text-black/50'}`}>Monthly</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isYearly}
+          onClick={() => setIsYearly(!isYearly)}
+          className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${isYearly ? 'bg-black' : 'bg-black/20'}`}
+        >
+          <span className="sr-only">Toggle monthly or yearly billing</span>
+          <span
+            className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${isYearly ? 'translate-x-5' : 'translate-x-0'}`}
+          />
+        </button>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-sm font-semibold transition-colors ${isYearly ? 'text-black' : 'text-black/50'}`}>Annual</span>
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 uppercase tracking-wide">
+            Save 10%
+          </span>
+        </div>
+      </div>
 
       <motion.div
         variants={pricingContainerVariants}
         initial={shouldReduceMotion ? false : 'hidden'}
         whileInView={shouldReduceMotion ? undefined : 'visible'}
         viewport={{once: true, amount: 0.2}}
-        className="mx-auto grid w-full max-w-5xl grid-cols-1 items-end gap-4 md:grid-cols-3"
+        className="mx-auto grid w-full max-w-5xl grid-cols-1 items-end gap-5 md:grid-cols-3"
       >
         {pricingPlans.map(({plan, name, eyebrow, price, priceSuffix, description, features, cta}) => {
           const featured = plan === 'starter';
+          const displayPrice = isYearly && price > 0 ? Math.round(price * 0.9) : price;
+          const displaySuffix = priceSuffix ? (isYearly ? '/ လ (Annual)' : priceSuffix) : '';
+
           return (
             <div key={plan} className={`h-full ${featured ? 'md:-translate-y-3.5' : ''}`}>
               <motion.article
                 variants={pricingCardVariants}
                 whileHover={shouldReduceMotion ? undefined : {y: featured ? -14 : -6, boxShadow: featured ? '0 20px 50px rgba(0,0,0,0.28)' : '0 12px 36px rgba(0,0,0,0.10)'}}
-                className={`relative flex h-full flex-col rounded-2xl p-7 ${featured ? 'bg-black text-white' : 'border border-black/10 bg-white text-black'}`}
+                className={`relative flex h-full flex-col rounded-2xl p-7 ${featured ? 'bg-black text-white shadow-xl' : 'border border-black/10 bg-white text-black shadow-xs'}`}
               >
               {featured && (
                 <motion.div
@@ -180,19 +213,19 @@ export function PricingSection() {
               )}
 
               <div className="mb-5 flex items-center gap-2">
-                <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm font-semibold ${featured ? 'bg-white/10 text-white' : 'bg-black/5 text-black'}`}>
+                <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${featured ? 'bg-white/10 text-white' : 'bg-black/5 text-black'}`}>
                   {plan === 'free_trial' ? '○' : plan === 'starter' ? '◇' : '⊕'}
                 </span>
-                <span className="text-sm font-semibold">{name}</span>
+                <span className="text-base font-bold">{name}</span>
               </div>
 
               <span className={`mb-3 text-xs font-semibold ${featured ? 'text-white/60' : 'text-black/50'}`}>{eyebrow}</span>
               <div className="mb-2 flex items-end gap-1">
-                <strong className="text-4xl leading-none font-bold tracking-tight md:text-5xl">{formatKs(price)}</strong>
-                {priceSuffix && <span className={`mb-1.5 text-xs ${featured ? 'text-white/50' : 'text-black/50'}`}>{priceSuffix}</span>}
+                <strong className="text-4xl leading-none font-bold tracking-tight md:text-5xl">{formatKs(displayPrice)}</strong>
+                {displaySuffix && <span className={`mb-1.5 text-xs ${featured ? 'text-white/50' : 'text-black/50'}`}>{displaySuffix}</span>}
               </div>
 
-              <p className={`mb-6 text-sm leading-7 ${featured ? 'text-white/60' : 'text-black/60'}`}>{description}</p>
+              <p className={`mb-6 text-sm leading-6 ${featured ? 'text-white/60' : 'text-black/60'}`}>{description}</p>
               <div className={`mb-6 h-px w-full ${featured ? 'bg-white/10' : 'bg-black/8'}`} />
 
               <ul className="mb-8 flex flex-1 flex-col gap-3">

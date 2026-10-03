@@ -1,18 +1,27 @@
 import {FileText} from 'lucide-react';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminSurface from '@/features/admin/components/AdminSurface';
 
 export default function StorePolicies() {
   return (
-    <section className="space-y-4">
-      <header>
-        <p className="text-sm font-semibold text-violet-600">Store</p>
-        <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">Policies</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Policy editing is not available yet in Admin V2. Existing storefront policy behavior remains unchanged.</p>
-      </header>
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <FileText className="h-6 w-6 text-slate-500" />
-        <h2 className="mt-4 text-lg font-bold text-slate-950">Existing policy behavior is preserved</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">No draft or save controls are exposed until a real policy persistence contract is implemented.</p>
-      </div>
-    </section>
+    <div className="space-y-6 pb-12">
+      <AdminPageHeader
+        title="Policies"
+        description="Policy editing is not available yet in Admin V3. Existing storefront policy behavior remains unchanged."
+      />
+      <AdminSurface>
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D8F1EA] text-[#29957F]">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-[#1F2421]">Existing policy behavior is preserved</h2>
+            <p className="mt-1 text-sm text-[#66706C]">
+              No draft or save controls are exposed until a real policy persistence contract is implemented.
+            </p>
+          </div>
+        </div>
+      </AdminSurface>
+    </div>
   );
 }

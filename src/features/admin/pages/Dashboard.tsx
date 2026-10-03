@@ -12,6 +12,8 @@ import AdminStatCard from '@/features/admin/components/AdminStatCard';
 import ActionRequiredPanel from '@/features/admin/components/ActionRequiredPanel';
 import RecentOrdersPanel from '@/features/admin/components/RecentOrdersPanel';
 import LowStockPanel from '@/features/admin/components/LowStockPanel';
+import SalesOverviewPanel from '@/features/admin/components/SalesOverviewPanel';
+import OrdersByStatusPanel from '@/features/admin/components/OrdersByStatusPanel';
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -36,16 +38,30 @@ export default function Dashboard() {
     setOrdersError(null);
 
     adminApi.listProducts()
-      .then((result) => alive && setProducts(result.products))
-      .catch((error: unknown) => alive && setProductsError(error instanceof Error ? error.message : 'Products could not be loaded.'))
-      .finally(() => alive && setProductsLoading(false));
+      .then((result) => {
+        if (alive) setProducts(result.products);
+      })
+      .catch((error: unknown) => {
+        if (alive) setProductsError(error instanceof Error ? error.message : 'Products could not be loaded.');
+      })
+      .finally(() => {
+        if (alive) setProductsLoading(false);
+      });
 
     adminApi.listOrders()
-      .then((result) => alive && setOrders(result.orders))
-      .catch((error: unknown) => alive && setOrdersError(error instanceof Error ? error.message : 'Orders could not be loaded.'))
-      .finally(() => alive && setOrdersLoading(false));
+      .then((result) => {
+        if (alive) setOrders(result.orders);
+      })
+      .catch((error: unknown) => {
+        if (alive) setOrdersError(error instanceof Error ? error.message : 'Orders could not be loaded.');
+      })
+      .finally(() => {
+        if (alive) setOrdersLoading(false);
+      });
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [reloadKey]);
 
   const {currentStart, currentEnd} = getYangonAnalyticsWindow();
@@ -71,7 +87,11 @@ export default function Dashboard() {
       <AdminPageHeader
         title="Dashboard"
         description="See what needs attention and keep your store moving."
-        actions={<span className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700">Last 7 days</span>}
+        actions={
+          <span className="inline-flex min-h-10 items-center rounded-lg border border-[#E1E7E3] bg-white px-3 text-sm font-semibold text-[#1F2421]">
+            Last 7 days
+          </span>
+        }
       />
 
       {(ordersError || productsError) ? (
@@ -83,21 +103,47 @@ export default function Dashboard() {
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Store summary">
-        {loading ? Array.from({length: 4}).map((_, index) => <div key={index} className="h-32 animate-pulse rounded-xl border border-slate-200 bg-white" />) : (
+        {loading ? Array.from({length: 4}).map((_, index) => (
+          <div key={index} className="h-32 animate-pulse rounded-xl border border-[#E1E7E3] bg-white" />
+        )) : (
           <>
-            <AdminStatCard label="Sales" value={money(recognizedSales)} detail="Recognized sales · last 7 days" icon={CircleDollarSign} />
-            <AdminStatCard label="Orders" value={String(currentOrders.length)} detail="Created in the last 7 days" icon={ShoppingBag} />
-            <AdminStatCard label="Pending Orders" value={String(actionOrders.length)} detail="Need merchant attention now" icon={PackageCheck} />
-            <AdminStatCard label="Customers" value={String(uniqueCustomers)} detail="Unique customer phone records" icon={Users} />
+            <AdminStatCard
+              label="Sales"
+              value={money(recognizedSales)}
+              detail="Recognized sales · last 7 days"
+              icon={CircleDollarSign}
+            />
+            <AdminStatCard
+              label="Orders"
+              value={String(currentOrders.length)}
+              detail="Created in the last 7 days"
+              icon={ShoppingBag}
+            />
+            <AdminStatCard
+              label="Pending Orders"
+              value={String(actionOrders.length)}
+              detail="Need merchant attention now"
+              icon={PackageCheck}
+            />
+            <AdminStatCard
+              label="Customers"
+              value={String(uniqueCustomers)}
+              detail="Unique customer phone records"
+              icon={Users}
+            />
           </>
         )}
       </section>
 
       {!productsLoading && !productsError && products.length === 0 ? (
-        <section className="rounded-xl border border-violet-200 bg-violet-50 p-5">
-          <h2 className="font-bold text-slate-950">Add your first product</h2>
-          <p className="mt-1 text-sm text-slate-600">Your store needs at least one product before customers can place an order.</p>
-          <Link to="/admin/products" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-700">Go to Products</Link>
+        <section className="rounded-xl border border-[#D8F1EA] bg-[#EEF9F6] p-5">
+          <h2 className="font-bold text-[#1F2421]">Add your first product</h2>
+          <p className="mt-1 text-sm text-[#66706C]">Your store needs at least one product before customers can place an order.</p>
+          <Link
+            to="/admin/products"
+            className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-[#1F2421] px-4 text-sm font-semibold text-white transition hover:bg-[#35B99D] hover:text-[#1F2421]">
+            Go to Products
+          </Link>
         </section>
       ) : null}
 
@@ -107,6 +153,19 @@ export default function Dashboard() {
       </div>
 
       {!ordersError ? <RecentOrdersPanel orders={recentOrders} /> : null}
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        {!ordersError ? (
+          <SalesOverviewPanel
+            orders={orders}
+            currentStart={currentStart}
+            currentEnd={currentEnd}
+          />
+        ) : null}
+        {!ordersError ? (
+          <OrdersByStatusPanel orders={orders} />
+        ) : null}
+      </div>
     </div>
   );
 }

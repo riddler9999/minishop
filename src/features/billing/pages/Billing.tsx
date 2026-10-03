@@ -9,6 +9,8 @@ import {Check, Clock, Copy, PlusCircle, ShieldAlert, Sparkles, Upload} from 'luc
 import {useAdminAuth} from '@/features/auth/adminAuth';
 import {usePlan} from '@/features/billing/plan';
 import EntitlementSummary from '@/features/billing/components/EntitlementSummary';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminSurface from '@/features/admin/components/AdminSurface';
 import {
   listOrderPackPurchases,
   submitOrderPackPurchase,
@@ -42,11 +44,11 @@ export default function Billing() {
   const isPaid = plan === 'starter' || plan === 'business';
 
   return (
-    <div className="space-y-4 pb-24 lg:pb-8">
-      <header>
-        <h1 className="text-[26px] font-black tracking-tight text-slate-950 sm:text-3xl">Billing</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage plan usage, order capacity, and payment submissions.</p>
-      </header>
+    <div className="space-y-6 pb-12">
+      <AdminPageHeader
+        title="Plan & Billing"
+        description="Manage plan usage, order capacity, and subscription upgrades."
+      />
 
       <EntitlementSummary compact />
 
@@ -120,9 +122,9 @@ function ExtraOrdersPanel() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!file) return setErr('ငွေလွှဲ Screenshot တင်ပါ။');
+    if (!file) return setErr('Please upload your payment screenshot.');
     if (refClean && !/^[0-9]{5}$/.test(refClean)) {
-      return setErr('ငွေလွှဲ နောက်ဆုံး ဂဏန်း ၅ လုံးကို မှန်ကန်စွာ ဖြည့်ပါ (သို့) ကွက်လပ်ထားပါ။');
+      return setErr('Please enter the last 5 digits of your transfer reference.');
     }
     setErr('');
     setSaving(true);
@@ -141,8 +143,8 @@ function ExtraOrdersPanel() {
       });
       setDone(true);
       setFile(null);
-    } catch (e: any) {
-      setErr(e?.message || 'တင်သွင်း၍မရပါ — ပြန်ကြိုးစားပါ။');
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not submit order pack purchase.');
     } finally {
       setSaving(false);
     }
@@ -150,39 +152,43 @@ function ExtraOrdersPanel() {
 
   if (done) {
     return (
-      <section className="rounded-[26px] border border-slate-200/80 bg-white p-5 shadow-sm">
-        <div className="flex items-center gap-3 rounded-2xl bg-amber-50 p-4">
-          <Clock className="h-6 w-6 shrink-0 text-amber-500" />
-          <p className="text-sm text-amber-900">
-            Extra Orders ဝယ်ယူမှုကို လက်ခံရရှိပါပြီ။ ငွေလွှဲ Screenshot စစ်ဆေးအတည်ပြုပြီးပါက သင့် balance သို့
-            အလိုအလျောက် ပေါင်းထည့်ပေးပါမည်။
+      <AdminSurface>
+        <div className="flex items-center gap-3 rounded-2xl bg-[#D8F1EA] p-4 text-[#1F2421]">
+          <Clock className="h-6 w-6 shrink-0 text-[#29957F]" />
+          <p className="text-sm font-medium">
+            Your Extra Orders purchase has been submitted. Once verified by support, the order pack balance will be credited automatically.
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setDone(false)}
-          className="mt-4 w-full rounded-2xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
-          နောက်ထပ် ဝယ်ရန်
+          className="mt-4 w-full rounded-xl border border-[#E1E7E3] py-2.5 text-sm font-semibold text-[#1F2421] transition hover:bg-[#F4F7F5]"
+        >
+          Purchase Another Pack
         </button>
         <PurchaseHistory items={history} />
-      </section>
+      </AdminSurface>
     );
   }
 
-  const field = 'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-pink-400';
+  const field =
+    'w-full rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 text-sm text-[#1F2421] outline-none focus:border-[#35B99D] focus:ring-1 focus:ring-[#35B99D]';
 
   return (
-    <section className="rounded-[26px] border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">
-      <h2 className="flex items-center gap-2 text-[17px] font-bold text-slate-950">
-        <PlusCircle className="h-5 w-5 text-pink-500" /> Extra Orders ဝယ်ယူရန်
+    <AdminSurface>
+      <h2 className="flex items-center gap-2 text-base font-bold text-[#1F2421]">
+        <PlusCircle className="h-5 w-5 text-[#35B99D]" /> Buy Extra Orders
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Order တစ်ခုလျှင် {formatKs(EXTRA_ORDER_UNIT_PRICE_KS)} — ဝယ်ထားသည့် အရေအတွက် ဘယ်တော့မှ သက်တမ်းမကုန်ပါ။
+      <p className="mt-1 text-xs text-[#66706C]">
+        {formatKs(EXTRA_ORDER_UNIT_PRICE_KS)} per extra order — purchased quota never expires.
       </p>
 
       <form onSubmit={submit} className="mt-4 space-y-5">
         {/* qty presets */}
         <fieldset>
-          <legend className="mb-2 text-sm font-bold text-slate-950">၁။ အရေအတွက် ရွေးပါ</legend>
+          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-[#66706C]">
+            1. Select Order Pack Size
+          </legend>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {EXTRA_ORDER_PRESETS.map((n) => {
               const active = qty === n;
@@ -191,42 +197,52 @@ function ExtraOrdersPanel() {
                   key={n}
                   type="button"
                   onClick={() => setQty(n)}
-                  className={`rounded-xl border-2 py-2.5 text-sm font-bold transition ${
-                    active ? 'border-pink-500 bg-pink-50 text-pink-600' : 'border-slate-200 text-slate-600 hover:border-pink-200'
-                  }`}>
+                  className={`rounded-xl border py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] ${
+                    active
+                      ? 'border-[#35B99D] bg-[#D8F1EA] text-[#1F2421]'
+                      : 'border-[#E1E7E3] bg-[#FFFFFF] text-[#1F2421] hover:border-[#35B99D]'
+                  }`}
+                >
                   {n}
                 </button>
               );
             })}
           </div>
-          <p className="mt-2 text-sm text-slate-600">
-            စုစုပေါင်း — <span className="font-black text-pink-600">{formatKs(amount)}</span>
+          <p className="mt-2 text-xs text-[#66706C]">
+            Total Amount: <span className="font-bold text-[#1F2421]">{formatKs(amount)}</span>
           </p>
         </fieldset>
 
         {/* payment instructions */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-bold text-slate-950">၂။ ငွေလွှဲပါ</legend>
-          <div className="rounded-2xl border border-pink-100 bg-pink-50/40 p-4">
-            <p className="text-sm text-slate-600">
-              အောက်ပါ အကောင့်သို့ <span className="font-bold text-pink-600">{formatKs(amount)}</span> လွှဲပါ။
+          <legend className="text-xs font-bold uppercase tracking-wider text-[#66706C]">
+            2. Transfer Funds
+          </legend>
+          <div className="rounded-2xl border border-[#D8F1EA] bg-[#D8F1EA]/30 p-4">
+            <p className="text-xs text-[#66706C]">
+              Transfer exactly <span className="font-bold text-[#1F2421]">{formatKs(amount)}</span> to:
             </p>
-            <div className="mt-2 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5">
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] px-3.5 py-2.5">
               <div>
-                <p className="text-base font-bold tracking-wide text-slate-950">{PLATFORM_PAYMENT_RECIPIENT.phone}</p>
-                <p className="text-xs text-slate-500">{PLATFORM_PAYMENT_RECIPIENT.name}</p>
+                <p className="text-base font-bold tracking-wide text-[#1F2421]">
+                  {PLATFORM_PAYMENT_RECIPIENT.phone}
+                </p>
+                <p className="text-xs text-[#66706C]">{PLATFORM_PAYMENT_RECIPIENT.name}</p>
               </div>
               <button
                 type="button"
                 onClick={copyPhone}
-                className="flex items-center gap-1 rounded-lg border border-pink-200 px-2.5 py-1.5 text-xs font-semibold text-pink-600 transition hover:bg-pink-50">
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? 'ကူးပြီး' : 'ကူးရန်'}
+                className="flex items-center gap-1 rounded-lg border border-[#E1E7E3] px-2.5 py-1.5 text-xs font-semibold text-[#1F2421] transition hover:bg-[#F4F7F5]"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
           </div>
           <div>
-            <span className="mb-1.5 block text-sm font-semibold text-slate-950">မည်သည့်နည်းလမ်းဖြင့် လွှဲသနည်း?</span>
+            <span className="mb-1.5 block text-xs font-semibold text-[#1F2421]">
+              Payment Method Used
+            </span>
             <div className="grid grid-cols-3 gap-2">
               {SUBSCRIPTION_PAYMENT_METHODS.map((m) => {
                 const active = method === m;
@@ -235,9 +251,12 @@ function ExtraOrdersPanel() {
                     key={m}
                     type="button"
                     onClick={() => setMethod(m)}
-                    className={`rounded-xl border-2 px-2 py-2.5 text-sm font-semibold transition ${
-                      active ? 'border-pink-500 bg-pink-50 text-pink-600' : 'border-slate-200 text-slate-600'
-                    }`}>
+                    className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] ${
+                      active
+                        ? 'border-[#35B99D] bg-[#D8F1EA] text-[#1F2421] font-bold'
+                        : 'border-[#E1E7E3] bg-[#FFFFFF] text-[#66706C]'
+                    }`}
+                  >
                     {PAYMENT_METHOD_LABEL[m]}
                   </button>
                 );
@@ -245,14 +264,14 @@ function ExtraOrdersPanel() {
             </div>
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold text-slate-950">
-              ငွေလွှဲ နောက်ဆုံး ဂဏန်း ၅ လုံး <span className="font-normal text-slate-400">(ရွေးချယ်)</span>
+            <span className="mb-1.5 block text-xs font-semibold text-[#1F2421]">
+              Last 5 digits of transfer <span className="font-normal text-[#66706C]">(Optional)</span>
             </span>
             <input
               inputMode="numeric"
               value={refTail}
               onChange={(e) => setRefTail(e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
-              placeholder="ဥပမာ — 12345"
+              placeholder="e.g. 12345"
               className={field}
             />
           </label>
@@ -260,18 +279,31 @@ function ExtraOrdersPanel() {
 
         {/* proof */}
         <fieldset className="space-y-2">
-          <legend className="text-sm font-bold text-slate-950">၃။ ငွေလွှဲ Screenshot တင်ပါ</legend>
-          <input ref={fileInputRef} type="file" accept="image/png,image/webp,image/jpeg" onChange={pickFile} className="hidden" />
+          <legend className="text-xs font-bold uppercase tracking-wider text-[#66706C]">
+            3. Upload Payment Screenshot
+          </legend>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/webp,image/jpeg"
+            onChange={pickFile}
+            className="hidden"
+          />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-pink-200 py-4 text-sm font-semibold text-pink-600 transition hover:bg-pink-50">
-            <Upload className="h-4 w-4" /> {file ? 'ပုံ ပြောင်းရန်' : 'Screenshot ရွေးရန်'}
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#E1E7E3] py-4 text-sm font-semibold text-[#1F2421] transition hover:bg-[#F4F7F5]"
+          >
+            <Upload className="h-4 w-4 text-[#35B99D]" /> {file ? 'Change screenshot' : 'Select payment screenshot'}
           </button>
           {previewUrl && (
-            <img src={previewUrl} alt="ငွေလွှဲ screenshot" className="mx-auto max-h-56 rounded-xl border border-pink-100 object-contain" />
+            <img
+              src={previewUrl}
+              alt="Payment screenshot"
+              className="mx-auto max-h-56 rounded-xl border border-[#E1E7E3] object-contain"
+            />
           )}
-          <p className="text-xs text-slate-500">PNG / JPG / WebP — 5MB အထိ။</p>
+          <p className="text-xs text-[#66706C]">PNG / JPG / WebP up to 5MB.</p>
         </fieldset>
 
         {err && (
@@ -281,37 +313,46 @@ function ExtraOrdersPanel() {
         )}
 
         <button
+          type="submit"
           disabled={saving}
-          className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-pink-500 py-3 text-sm font-bold text-white transition hover:bg-pink-600 disabled:opacity-50">
-          <PlusCircle className="h-4 w-4" /> {saving ? 'တင်နေသည်…' : `${formatKs(amount)} — ဝယ်ယူမှု တင်သွင်းရန်`}
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#1F2421] py-3 text-sm font-bold text-white transition hover:bg-[#303a35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] disabled:opacity-50"
+        >
+          <PlusCircle className="h-4 w-4" /> {saving ? 'Submitting…' : `${formatKs(amount)} — Submit Order Pack`}
         </button>
       </form>
 
       <PurchaseHistory items={history} />
-    </section>
+    </AdminSurface>
   );
 }
 
 function PurchaseHistory({items}: {items: OrderPackPurchase[]}) {
   if (items.length === 0) return null;
   const statusText: Record<OrderPackPurchase['status'], string> = {
-    pending: 'စစ်ဆေးဆဲ',
-    approved: 'အတည်ပြုပြီး',
-    rejected: 'ငြင်းပယ်',
+    pending: 'Pending verification',
+    approved: 'Approved',
+    rejected: 'Declined',
   };
   const statusCls: Record<OrderPackPurchase['status'], string> = {
-    pending: 'bg-amber-50 text-amber-600',
-    approved: 'bg-emerald-50 text-emerald-600',
-    rejected: 'bg-rose-50 text-rose-600',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    approved: 'bg-[#D8F1EA] text-[#29957F] border-[#8FD7C6]',
+    rejected: 'bg-rose-50 text-rose-700 border-rose-200',
   };
   return (
-    <div className="mt-5 border-t border-slate-100 pt-4">
-      <h3 className="mb-2 text-sm font-bold text-slate-950">ယခင် ဝယ်ယူမှုများ</h3>
+    <div className="mt-6 border-t border-[#E1E7E3] pt-4">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#66706C]">
+        Previous Purchases
+      </h3>
       <ul className="space-y-2">
         {items.map((p) => (
-          <li key={p.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
-            <span className="font-semibold text-slate-800">{p.qty} orders · {formatKs(p.amount)}</span>
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${statusCls[p.status]}`}>
+          <li
+            key={p.id}
+            className="flex items-center justify-between rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] px-3.5 py-2.5 text-xs"
+          >
+            <span className="font-semibold text-[#1F2421]">
+              {p.qty} orders · {formatKs(p.amount)}
+            </span>
+            <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusCls[p.status]}`}>
               {statusText[p.status]}
             </span>
           </li>
@@ -334,52 +375,84 @@ function UpgradePanel() {
     }
   };
   return (
-    <section className="rounded-[26px] border border-slate-200/80 bg-white p-5 shadow-sm">
-      <h2 className="flex items-center gap-2 text-[17px] font-bold text-slate-950">
-        <Sparkles className="h-5 w-5 text-pink-500" /> Plan upgrade
+    <AdminSurface>
+      <h2 className="flex items-center gap-2 text-base font-bold text-[#1F2421]">
+        <Sparkles className="h-5 w-5 text-[#35B99D]" /> Upgrade Your Plan
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Free Trial တွင် Order ၂၀ (တစ်သက်တာ) နှင့် ပစ္စည်း ၁၀ ခုအထိသာ ရပါသည်။ ပိုမိုလက်ခံနိုင်ရန် upgrade လုပ်ပါ။
+      <p className="mt-1 text-xs text-[#66706C]">
+        Free Trial includes 20 lifetime orders and up to 10 products. Upgrade for full selling capacity.
       </p>
 
       <div className="mt-4 grid gap-3">
-        <PlanRow name="Starter" price={PLAN_PRICE_KS.starter} orders={PLAN_MONTHLY_QUOTA.starter} products={PLAN_PRODUCT_LIMIT.starter} note="selling features အပြည့်" />
-        <PlanRow name="Business" price={PLAN_PRICE_KS.business} orders={PLAN_MONTHLY_QUOTA.business} products={PLAN_PRODUCT_LIMIT.business} note="ပိုမြန်၊ လူသက်သာ၊ automation-ready" />
+        <PlanRow
+          name="Starter"
+          price={PLAN_PRICE_KS.starter}
+          orders={PLAN_MONTHLY_QUOTA.starter}
+          products={PLAN_PRODUCT_LIMIT.starter}
+          note="Full selling features & storefront"
+        />
+        <PlanRow
+          name="Business"
+          price={PLAN_PRICE_KS.business}
+          orders={PLAN_MONTHLY_QUOTA.business}
+          products={PLAN_PRODUCT_LIMIT.business}
+          note="Higher volume, automation & priority support"
+        />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-pink-100 bg-pink-50/40 p-4">
-        <p className="text-sm font-semibold text-slate-800">Upgrade လုပ်နည်း</p>
-        <ol className="mt-2 space-y-1 text-sm text-slate-600">
-          <li>၁။ အောက်ပါ အကောင့်သို့ plan ဈေးနှုန်း လွှဲပါ။</li>
-          <li>၂။ ငွေလွှဲ Screenshot နှင့် သင့်ဆိုင်နာမည်ကို platform သို့ ပေးပို့ပါ။</li>
-          <li>၃။ အတည်ပြုပြီးပါက သင့် plan ကို အလိုအလျောက် upgrade လုပ်ပေးပါမည်။</li>
+      <div className="mt-4 rounded-2xl border border-[#D8F1EA] bg-[#D8F1EA]/30 p-4">
+        <p className="text-xs font-bold text-[#1F2421]">How to Upgrade</p>
+        <ol className="mt-2 space-y-1 text-xs text-[#66706C]">
+          <li>1. Transfer the plan subscription amount to the account below.</li>
+          <li>2. Submit screenshot and store name to platform support.</li>
+          <li>3. Upon confirmation, your plan is upgraded immediately.</li>
         </ol>
-        <div className="mt-3 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5">
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] px-3.5 py-2.5">
           <div>
-            <p className="text-base font-bold tracking-wide text-slate-950">{PLATFORM_PAYMENT_RECIPIENT.phone}</p>
-            <p className="text-xs text-slate-500">{PLATFORM_PAYMENT_RECIPIENT.name}</p>
+            <p className="text-base font-bold tracking-wide text-[#1F2421]">
+              {PLATFORM_PAYMENT_RECIPIENT.phone}
+            </p>
+            <p className="text-xs text-[#66706C]">{PLATFORM_PAYMENT_RECIPIENT.name}</p>
           </div>
           <button
             type="button"
             onClick={copyPhone}
-            className="flex items-center gap-1 rounded-lg border border-pink-200 px-2.5 py-1.5 text-xs font-semibold text-pink-600 transition hover:bg-pink-50">
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? 'ကူးပြီး' : 'ကူးရန်'}
+            className="flex items-center gap-1 rounded-lg border border-[#E1E7E3] px-2.5 py-1.5 text-xs font-semibold text-[#1F2421] transition hover:bg-[#F4F7F5]"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
       </div>
-    </section>
+    </AdminSurface>
   );
 }
 
-function PlanRow({name, price, orders, products, note}: {name: string; price: number; orders: number; products: number; note: string}) {
+function PlanRow({
+  name,
+  price,
+  orders,
+  products,
+  note,
+}: {
+  name: string;
+  price: number;
+  orders: number;
+  products: number;
+  note: string;
+}) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border-2 border-slate-200 p-4">
+    <div className="flex items-center justify-between rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] p-4">
       <div>
-        <p className="font-display text-lg font-bold text-slate-950">{name}</p>
-        <p className="text-xs text-slate-500">လစဉ် Order {orders} ခု · Product {products} ခု · {note}</p>
+        <p className="text-sm font-bold text-[#1F2421]">{name}</p>
+        <p className="text-xs text-[#66706C]">
+          {orders} orders/mo · {products} products · {note}
+        </p>
       </div>
-      <span className="font-display text-lg font-bold text-pink-600">{formatKs(price)}<span className="text-xs font-medium text-slate-400">/လ</span></span>
+      <span className="text-sm font-bold tabular-nums text-[#1F2421]">
+        {formatKs(price)}
+        <span className="text-xs font-normal text-[#66706C]">/mo</span>
+      </span>
     </div>
   );
 }

@@ -13,6 +13,11 @@ import AdminProducts from '@/features/catalog/pages/AdminProducts';
 import AdminOrders from '@/features/orders/pages/AdminOrders';
 import AdminShipping from '@/features/shipping/pages/AdminShipping';
 import Settings from '@/features/shop/pages/Settings';
+import SettingsUsers from '@/features/shop/pages/SettingsUsers';
+import SettingsPayments from '@/features/shop/pages/SettingsPayments';
+import SettingsCheckout from '@/features/shop/pages/SettingsCheckout';
+import SettingsNotifications from '@/features/shop/pages/SettingsNotifications';
+import SettingsPrivacy from '@/features/shop/pages/SettingsPrivacy';
 import StoreDesign from '@/features/shop/pages/StoreDesign';
 import LifecycleStoreBuilder from '@/features/shop/pages/LifecycleStoreBuilder';
 import Themes from '@/features/shop/pages/Themes';
@@ -33,39 +38,49 @@ export default function App() {
     <AdminAuthProvider>
       <RouteScopedCartProvider>
         <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/demo/*" element={<RootStorefront />} />
-        <Route path="/fashion-demo/*" element={<FashionDemo />} />
-        <Route path="/furniture-demo/*" element={<FurnitureDemo />} />
-        <Route path="/mobile-store-demo/*" element={<MobileDemo />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/superadmin" element={<SuperAdminDashboard />} />
-        <Route path="/admin/subscribe" element={<Subscribe />} />
-        <Route path="/admin/onboarding" element={<Onboarding />} />
-        <Route
-          path="/admin"
-          element={
-            <RequireAdmin>
-              <AdminConsole />
-            </RequireAdmin>
-          }>
-          <Route index element={<Dashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="shipping" element={<AdminShipping />} />
-          <Route path="billing" element={<Billing />} />
-          <Route path="design" element={<StoreDesign />} />
-          <Route path="online-store/themes" element={<Themes />} />
-          <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
-          <Route path="store/navigation" element={<StoreNavigation />} />
-          <Route path="store/domains" element={<StoreDomains />} />
-          <Route path="store/policies" element={<StorePolicies />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-        <Route path="/s/:slug/*" element={<ShopRoute />} />
-        <Route path="*" element={<RootStorefront />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/demo/*" element={<RootStorefront />} />
+          <Route path="/fashion-demo/*" element={<FashionDemo />} />
+          <Route path="/furniture-demo/*" element={<FurnitureDemo />} />
+          <Route path="/mobile-store-demo/*" element={<MobileDemo />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/superadmin" element={<SuperAdminDashboard />} />
+          <Route path="/admin/subscribe" element={<Subscribe />} />
+          <Route path="/admin/onboarding" element={<Onboarding />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <AdminConsole />
+              </RequireAdmin>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="shipping" element={<AdminShipping />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="design" element={<StoreDesign />} />
+            <Route path="online-store/themes" element={<Themes />} />
+            <Route path="online-store/themes/customize" element={<LifecycleStoreBuilder />} />
+            <Route path="store/navigation" element={<StoreNavigation />} />
+            <Route path="store/domains" element={<StoreDomains />} />
+            <Route path="store/policies" element={<StorePolicies />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="settings/billing" element={<Billing />} />
+            <Route path="settings/users" element={<SettingsUsers />} />
+            <Route path="settings/payments" element={<SettingsPayments />} />
+            <Route path="settings/checkout" element={<SettingsCheckout />} />
+            <Route path="settings/shipping" element={<AdminShipping />} />
+            <Route path="settings/domains" element={<StoreDomains />} />
+            <Route path="settings/policies" element={<StorePolicies />} />
+            <Route path="settings/notifications" element={<SettingsNotifications />} />
+            <Route path="settings/privacy" element={<SettingsPrivacy />} />
+          </Route>
+          <Route path="/s/:slug/*" element={<ShopRoute />} />
+          <Route path="*" element={<RootStorefront />} />
         </Routes>
       </RouteScopedCartProvider>
     </AdminAuthProvider>

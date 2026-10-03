@@ -2,9 +2,12 @@ import {useEffect, useMemo, useState} from 'react';
 import {Plus} from 'lucide-react';
 import {adminApi} from '@/data/dataSource';
 import type {Product} from '@/domain/product';
+import {cx} from '@/shared/lib/format';
 import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminButton from '@/features/admin/components/AdminButton';
 import AdminErrorState from '@/features/admin/components/AdminErrorState';
 import AdminEmptyState from '@/features/admin/components/AdminEmptyState';
+import AdminLoadingState from '@/features/admin/components/AdminLoadingState';
 import AdminProductFilters, {
   type ProductSort,
   type ProductStatusFilter,
@@ -12,6 +15,8 @@ import AdminProductFilters, {
 } from '@/features/catalog/components/AdminProductFilters';
 import AdminProductTable from '@/features/catalog/components/AdminProductTable';
 import AdminProductEditor from '@/features/catalog/components/AdminProductEditor';
+
+type ProductViewTab = 'all' | 'active' | 'hidden' | 'out_of_stock';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,6 +75,19 @@ export default function AdminProducts() {
     [products],
   );
 
+  const activeCount = useMemo(() => products.filter((p) => p.status === 'active').length, [products]);
+  const hiddenCount = useMemo(() => products.filter((p) => p.status === 'hidden').length, [products]);
+  const outOfStockCount = useMemo(() => products.filter((p) => p.stock <= 0).length, [products]);
+
+  const activeTab: ProductViewTab =
+    status === 'active' && stock === 'all'
+      ? 'active'
+      : status === 'hidden' && stock === 'all'
+      ? 'hidden'
+      : stock === 'out_of_stock' && status === 'all'
+      ? 'out_of_stock'
+      : 'all';
+
   const visibleProducts = useMemo(() => {
     const term = query.trim().toLowerCase();
     const filtered = products.filter((product) => {
@@ -114,17 +132,67 @@ export default function AdminProducts() {
     setEditing(null);
   };
 
+  const clearFilters = () => {
+    setQuery('');
+    setStatus('all');
+    setStock('all');
+    setCategory('all');
+  };
+
   return (
     <div className="space-y-5 pb-24 lg:pb-8">
       <AdminPageHeader
         title="Products"
         description={`Manage your catalog, storefront visibility, stock, and pricing. ${products.length}/${total || products.length} loaded.`}
         actions={(
-          <button type="button" onClick={() => setCreating(true)} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-700">
+          <AdminButton
+            type="button"
+            variant="mint"
+            size="md"
+            onClick={() => setCreating(true)}>
             <Plus className="h-4 w-4" /> Add Product
-          </button>
+          </AdminButton>
         )}
       />
+
+      {/* Product Views Sub-Navigation */}
+      <nav aria-label="Product views" className="flex items-center gap-1.5 border-b border-[#E1E7E3] pb-2 overflow-x-auto">
+        {[
+          {id: 'all', label: 'All', count: total || products.length},
+          {id: 'active', label: 'Active', count: activeCount},
+          {id: 'hidden', label: 'Hidden', count: hiddenCount},
+          {id: 'out_of_stock', label: 'Out of stock', count: outOfStockCount},
+        ].map((tab) => {
+          const isSelected = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              onClick={() => {
+                if (tab.id === 'all') { setStatus('all'); setStock('all'); }
+                else if (tab.id === 'active') { setStatus('active'); setStock('all'); }
+                else if (tab.id === 'hidden') { setStatus('hidden'); setStock('all'); }
+                else if (tab.id === 'out_of_stock') { setStatus('all'); setStock('out_of_stock'); }
+              }}
+              className={cx(
+                'inline-flex min-h-11 items-center gap-2 px-3.5 py-2 text-sm font-semibold rounded-lg transition whitespace-nowrap cursor-pointer',
+                isSelected
+                  ? 'bg-[#1F2421] text-white shadow-xs'
+                  : 'text-[#66706C] hover:text-[#1F2421] hover:bg-[#F4F7F5]',
+              )}>
+              <span>{tab.label}</span>
+              <span className={cx(
+                'rounded-full px-2 py-0.5 text-xs font-bold',
+                isSelected ? 'bg-white/20 text-white' : 'bg-[#E1E7E3] text-[#66706C]',
+              )}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
 
       <AdminProductFilters
         query={query}
@@ -149,17 +217,27 @@ export default function AdminProducts() {
       ) : null}
 
       {loading ? (
-        <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4">
-          {Array.from({length: 6}).map((_, index) => <div key={index} className="h-14 animate-pulse rounded-lg bg-slate-100" />)}
-        </div>
+        <AdminLoadingState message="Loading catalog products…" />
       ) : visibleProducts.length === 0 ? (
         <AdminEmptyState
           title={products.length === 0 ? 'No products yet' : 'No products match your filters'}
           description={products.length === 0 ? 'Add your first product to start selling from your storefront.' : 'Try changing search, status, stock, or category filters.'}
           action={products.length === 0 ? (
-            <button type="button" onClick={() => setCreating(true)} className="min-h-10 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-700">Add Product</button>
+            <AdminButton
+              type="button"
+              variant="mint"
+              size="md"
+              onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4" /> Add Product
+            </AdminButton>
           ) : hasActiveFilters ? (
-            <button type="button" onClick={() => {setQuery(''); setStatus('all'); setStock('all'); setCategory('all');}} className="min-h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Clear filters</button>
+            <AdminButton
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={clearFilters}>
+              Clear filters
+            </AdminButton>
           ) : null}
         />
       ) : (
@@ -167,10 +245,15 @@ export default function AdminProducts() {
       )}
 
       {nextCursor && !hasActiveFilters ? (
-        <div className="flex justify-center">
-          <button type="button" onClick={() => void loadMore()} disabled={loadingMore} className="min-h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+        <div className="flex justify-center pt-2">
+          <AdminButton
+            type="button"
+            variant="secondary"
+            size="md"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}>
             {loadingMore ? 'Loading…' : 'Load more products'}
-          </button>
+          </AdminButton>
         </div>
       ) : null}
 
@@ -179,3 +262,4 @@ export default function AdminProducts() {
     </div>
   );
 }
+
