@@ -50,7 +50,7 @@ function resolveStorefrontApi(): typeof liveApi {
 }
 
 function resolveAdminApi(): typeof liveAdminApi {
-  const isDemo = localStorage.getItem('minishop_demo_admin') === 'true' || !isSupabaseConfigured;
+  const isDemo = localStorage.getItem('minishop_demo_admin') === 'true';
   return isDemo ? (demoAdminApi as unknown as typeof liveAdminApi) : liveAdminApi;
 }
 
@@ -86,43 +86,13 @@ export const adminApi: typeof liveAdminApi = new Proxy({} as typeof liveAdminApi
     const backend = resolveAdminApi();
     const value = (backend as Record<string | symbol, unknown>)[prop];
     if (typeof value === 'function') {
-      return (...args: unknown[]) => {
-        try {
-          const res = (value as (...a: unknown[]) => unknown).apply(backend, args);
-          if (res && typeof (res as Promise<unknown>).catch === 'function') {
-            return (res as Promise<unknown>).catch(() => {
-              const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
-              if (typeof fallback === 'function') {
-                return (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
-              }
-              return null;
-            });
-          }
-          return res;
-        } catch {
-          const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
-          if (typeof fallback === 'function') {
-            return (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
-          }
-          return null;
-        }
-      };
-    }
-    if (value === undefined) {
-      const fallback = (demoAdminApi as Record<string | symbol, unknown>)[prop];
-      if (typeof fallback === 'function') {
-        return (...args: unknown[]) => (fallback as (...a: unknown[]) => unknown).apply(demoAdminApi, args);
-      }
-      return fallback;
+      return (...args: unknown[]) =>
+        (value as (...a: unknown[]) => unknown).apply(backend, args);
     }
     return value;
   },
-  has(_target, prop) {
-    return prop in resolveAdminApi();
-  },
-  ownKeys() {
-    return Reflect.ownKeys(resolveAdminApi());
-  },
+  has(_target, prop) { return prop in resolveAdminApi(); },
+  ownKeys() { return Reflect.ownKeys(resolveAdminApi()); },
   getOwnPropertyDescriptor(_target, prop) {
     const desc = Reflect.getOwnPropertyDescriptor(resolveAdminApi(), prop);
     return desc && {...desc, configurable: true};
