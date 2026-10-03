@@ -70,37 +70,35 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <AdminPageHeader
-          title="Analytics"
-          description="Authoritative commerce analytics derived from your store order records."
-        />
-
-        {/* Date Range Selector */}
-        {!loading && !error && !summary.isEmpty && (
-          <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-1 shadow-xs">
-            <Calendar className="ml-2 h-4 w-4 text-[#66706C]" aria-hidden="true" />
-            {TIME_RANGES.map((range) => {
-              const active = timeRange === range.id;
-              return (
-                <button
-                  key={range.id}
-                  type="button"
-                  onClick={() => setTimeRange(range.id)}
-                  className={cx(
-                    'min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]',
-                    active
-                      ? 'bg-[#1F2421] text-white shadow-xs'
-                      : 'text-[#66706C] hover:bg-[#F4F7F5] hover:text-[#1F2421]',
-                  )}
-                >
-                  {range.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <AdminPageHeader
+        title="Analytics"
+        description="Authoritative commerce analytics derived from your store order records."
+        actions={
+          !loading && !error && !summary.isEmpty ? (
+            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-1 shadow-xs">
+              <Calendar className="ml-2 h-4 w-4 text-[#66706C]" aria-hidden="true" />
+              {TIME_RANGES.map((range) => {
+                const active = timeRange === range.id;
+                return (
+                  <button
+                    key={range.id}
+                    type="button"
+                    onClick={() => setTimeRange(range.id)}
+                    className={cx(
+                      'min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]',
+                      active
+                        ? 'bg-[#1F2421] text-white shadow-xs'
+                        : 'text-[#66706C] hover:bg-[#F4F7F5] hover:text-[#1F2421]',
+                    )}
+                  >
+                    {range.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : undefined
+        }
+      />
 
       {error ? (
         <AdminErrorState

@@ -138,7 +138,6 @@ const pricingCardVariants: Variants = {
 
 export function PricingSection() {
   const shouldReduceMotion = useReducedMotion();
-  const [isYearly, setIsYearly] = useState(false);
 
   return (
     <section className="landing-pricing-section px-4 py-24" id="pricing" aria-label="Simple Pricing">
@@ -151,35 +150,9 @@ export function PricingSection() {
       >
         <span className="landing-section-pill">SIMPLE PRICING</span>
         <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl text-slate-950">
-          ရိုးရှင်းပြီး ပွင့်လင်းမြင်သာသော စေျးနှုန်းများ
+          Pricing
         </h2>
-        <p className="mt-2 text-sm text-slate-600 max-w-xl mx-auto">
-          Hidden fees မရှိပါ။ မိမိဆိုင်နှင့် ကိုက်ညီမည့် Plan ကို စိတ်ကြိုက်ရွေးချယ် အသုံးပြုနိုင်ပါသည်။
-        </p>
       </motion.div>
-
-      {/* Yearly / Monthly Toggle */}
-      <div className="mb-12 flex items-center justify-center gap-3">
-        <span className={`text-sm font-semibold transition-colors ${!isYearly ? 'text-black' : 'text-black/50'}`}>Monthly</span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isYearly}
-          onClick={() => setIsYearly(!isYearly)}
-          className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${isYearly ? 'bg-black' : 'bg-black/20'}`}
-        >
-          <span className="sr-only">Toggle monthly or yearly billing</span>
-          <span
-            className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${isYearly ? 'translate-x-5' : 'translate-x-0'}`}
-          />
-        </button>
-        <div className="flex items-center gap-1.5">
-          <span className={`text-sm font-semibold transition-colors ${isYearly ? 'text-black' : 'text-black/50'}`}>Annual</span>
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 uppercase tracking-wide">
-            Save 10%
-          </span>
-        </div>
-      </div>
 
       <motion.div
         variants={pricingContainerVariants}
@@ -190,8 +163,8 @@ export function PricingSection() {
       >
         {pricingPlans.map(({plan, name, eyebrow, price, priceSuffix, description, features, cta}) => {
           const featured = plan === 'starter';
-          const displayPrice = isYearly && price > 0 ? Math.round(price * 0.9) : price;
-          const displaySuffix = priceSuffix ? (isYearly ? '/ လ (Annual)' : priceSuffix) : '';
+          const displayPrice = price;
+          const displaySuffix = priceSuffix || '';
 
           return (
             <div key={plan} className={`h-full ${featured ? 'md:-translate-y-3.5' : ''}`}>
