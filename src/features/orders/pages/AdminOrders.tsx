@@ -67,7 +67,6 @@ export default function AdminOrders() {
       pending: 0,
       confirmed: 0,
       delivered: 0,
-      return: 0,
     };
     for (const order of orders) {
       const stage = getOrderStage(order.status);
@@ -177,15 +176,11 @@ export default function AdminOrders() {
             title={
               orders.length === 0
                 ? 'No orders yet'
-                : filter === 'return'
-                ? 'No returns'
                 : 'No matching orders'
             }
             description={
               orders.length === 0
                 ? 'When buyers place orders on your storefront, they will appear here in real time.'
-                : filter === 'return'
-                ? 'There are currently no returned orders. Returns are managed after orders are delivered.'
                 : q.trim()
                 ? `No orders match the search query "${q}".`
                 : `There are currently no orders in the "${filter}" stage.`
