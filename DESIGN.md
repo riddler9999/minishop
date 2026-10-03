@@ -120,7 +120,7 @@ Organize controls by the smallest useful groups:
 - Layout
 - Product source, where supported
 
-Use explicit labels and inline validation. Seller copy defaults to natural Burmese. Internal schema names such as `productIds`, `draft_revision`, or `schemaVersion` are never shown as UI copy.
+Use explicit labels and inline validation. Admin and Store Builder chrome use English only. Buyer storefront localization remains independent from admin/editor language. Internal schema names such as `productIds`, `draft_revision`, or `schemaVersion` are never shown as UI copy.
 
 ## 8. Draft save and conflict states
 
@@ -143,7 +143,20 @@ Publish is an explicit primary action and never an autosave side effect.
 - Publish failure leaves current Published unchanged and keeps Draft available for correction.
 - Theme change remains Draft-only until Publish succeeds.
 
-## 10. Mobile Store Builder
+## 10. AI-first Store Builder direction
+
+The current section-tree-first workspace is the compatibility baseline, not the long-term default entry.
+
+- The default AI Store Builder experience is AI conversation + preview.
+- Section Tree remains available as secondary navigation for deterministic manual editing.
+- AI emits typed Store Design commands only; it never writes arbitrary React, HTML, CSS, SQL, or JavaScript.
+- AI changes Draft state only and enters the existing save/conflict lifecycle.
+- AI never publishes automatically. Publish stays an explicit seller action.
+- Protected commerce invariants, including required Product Detail Buy Now behavior, remain outside AI control.
+- Preview continues to use the same catalog-owned renderer as the buyer storefront.
+- Manual controls remain available when AI is unavailable or the seller wants precise edits.
+
+## 11. Mobile Store Builder
 
 Do not compress the desktop three-pane editor into a narrow viewport.
 
@@ -157,7 +170,7 @@ At mobile widths:
 - Closing drawer/sheet returns focus to the control that opened it whenever practicable.
 - Escape/backdrop/explicit close behavior follows existing accessible modal primitives.
 
-## 11. Responsive acceptance rules
+## 12. Responsive acceptance rules
 
 Store Builder must be checked at **375 px, 390 px, and 414 px** viewport widths.
 
@@ -172,7 +185,7 @@ At each width:
 
 Desktop acceptance also includes a normal laptop viewport and a wide desktop viewport.
 
-## 12. Accessibility
+## 13. Accessibility
 
 - Visible `:focus-visible` indication on all keyboard-operable editor controls.
 - Minimum 44×44 px touch target for primary mobile controls.
@@ -183,7 +196,7 @@ Desktop acceptance also includes a normal laptop viewport and a wide desktop vie
 - Respect `prefers-reduced-motion`.
 - Avoid tight Myanmar line-height and tracking.
 
-## 13. Token and component policy
+## 14. Token and component policy
 
 Reuse first:
 
@@ -197,7 +210,7 @@ Do not create a second ProductCard, cart implementation, admin shell, or storefr
 
 New one-off values are allowed only when no existing semantic token/component fits and the value is local to editor layout mechanics.
 
-## 14. Storefront isolation
+## 15. Storefront isolation
 
 Admin/editor visual changes must not redesign live tenant storefronts outside the Store Design contract.
 
@@ -207,9 +220,9 @@ Admin/editor visual changes must not redesign live tenant storefronts outside th
 - Existing checkout/order/tracking structures remain platform-controlled.
 - Store Design must not weaken tenant routing, RLS, plan rules, pricing, inventory, order creation, checkout, or payment semantics.
 
-## 15. Copy rules
+## 16. Copy rules
 
-Seller-facing editor/admin copy defaults to Burmese unless an existing approved product decision explicitly uses another language.
+Admin and Store Builder chrome use English only. Buyer storefront content and localization are independent and may use the configured storefront language.
 
 Copy characteristics:
 
@@ -221,7 +234,7 @@ Copy characteristics:
 
 Do not expose implementation terminology when a seller-oriented phrase exists.
 
-## 16. Verification checklist
+## 17. Verification checklist
 
 Before Store Builder UI work is considered complete:
 
