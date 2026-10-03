@@ -29,21 +29,20 @@ describe('Admin Orders V3 stage presentation mapping', () => {
     assert.equal(getOrderStageLabel('pending'), 'Pending');
     assert.equal(getOrderStageLabel('confirmed'), 'Confirmed');
     assert.equal(getOrderStageLabel('delivered'), 'Delivered');
-    assert.equal(getOrderStageLabel('return'), 'Return');
     assert.equal(getOrderStageLabel('cancelled'), 'Cancelled');
 
     assert.equal(getOrderStageTone('pending'), 'warning');
     assert.equal(getOrderStageTone('confirmed'), 'info');
     assert.equal(getOrderStageTone('delivered'), 'success');
-    assert.equal(getOrderStageTone('return'), 'neutral');
     assert.equal(getOrderStageTone('cancelled'), 'danger');
   });
 
-  it('provides all 5 required seller-facing tabs: All, Pending, Confirmed, Delivered, Return', () => {
+  it('exposes only backend-supported seller-facing tabs', () => {
     const tabIds = ORDER_STAGE_TABS.map((t) => t.id);
-    assert.deepEqual(tabIds, ['all', 'pending', 'confirmed', 'delivered', 'return']);
+    assert.deepEqual(tabIds, ['all', 'pending', 'confirmed', 'delivered']);
     const tabLabels = ORDER_STAGE_TABS.map((t) => t.label);
-    assert.deepEqual(tabLabels, ['All', 'Pending', 'Confirmed', 'Delivered', 'Return']);
+    assert.deepEqual(tabLabels, ['All', 'Pending', 'Confirmed', 'Delivered']);
+    assert.ok(!tabIds.includes('return'), 'Return must stay hidden until a canonical backend state exists');
   });
 
   it('keeps payment state separate from order stage', () => {
