@@ -242,3 +242,17 @@ Production-generated `database.types.ts` intact during this compatibility period
 Storefront theme presets are design-aesthetic families rather than product-niche templates. The canonical registry is `src/domain/theme.ts`; layout metadata is read through `getThemeVisual()`. Buyer-facing Home, catalog, product detail and shell must respect `theme.presetId`, and the Store Design preview must show the same layout family.
 
 Do not add a new preset that merely recolors the same layout. A distinct preset must materially change composition/density/card language. Keep compatibility for persisted legacy IDs in `normalizeTheme()`. See `design/themes/aesthetic-themes.md`.
+
+## MiniShop MM landing
+
+The `/` landing is an English-copy screen by explicit owner brief (2026-10-04).
+It uses `.mm-landing` scoped warm-accent tokens; admin Charcoal/Mint and merchant
+storefront palettes remain separate. Product demonstrations use existing product
+assets and the five `domain/theme.ts` families, with sample UI data identified as
+illustrative. The interactive builder on the landing is an unsaved demonstration,
+not the authenticated Store Builder or a publishing endpoint.
+
+`App.tsx` keeps Landing eager and lazily loads the other page routes. Auth and
+route-scoped cart providers remain above the Suspense boundary. Product font
+stylesheets load on the first non-landing route; `/` uses system fonts and makes
+no external font request. Signup destinations still come from `signupHref`.

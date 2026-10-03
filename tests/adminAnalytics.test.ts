@@ -201,7 +201,7 @@ describe('Admin Analytics V3 — UI Workspace & Component Standards', () => {
   });
 
   it('routes /admin/analytics to Analytics rather than Dashboard', () => {
-    assert.match(app, /import Analytics from ['"]@\/features\/admin\/pages\/Analytics['"]/);
+    assert.match(app, /const Analytics = lazy\(\(\) => import\(['"]@\/features\/admin\/pages\/Analytics['"]\)\)/);
     assert.match(app, /path=["']analytics["'] element={<Analytics \/>}/);
     assert.doesNotMatch(app, /path=["']analytics["'] element={<Dashboard \/>}/);
     assert.match(nav, /label: 'Analytics', to: '\/admin\/analytics'/);
