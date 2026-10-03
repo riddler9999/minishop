@@ -10,7 +10,7 @@ export default function SettingsUsers() {
     <div className="space-y-6 pb-12">
       <AdminPageHeader
         title="Users & Permissions"
-        description="Manage store owner authentication and access control."
+        description="View the current store owner account and access model. Multi-staff management is not available yet."
       />
 
       <AdminSurface>
