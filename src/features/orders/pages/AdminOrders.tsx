@@ -108,7 +108,7 @@ export default function AdminOrders() {
       />
 
       {/* Stage Tabs */}
-      <div className="border-b border-[#E1E7E3] -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="border-b border-[var(--admin-border)] -mx-4 px-4 sm:mx-0 sm:px-0">
         <nav className="flex gap-2 overflow-x-auto pb-px" aria-label="Order stages">
           {ORDER_STAGE_TABS.map((tab) => {
             const count = stageCounts[tab.id] ?? 0;
@@ -121,14 +121,14 @@ export default function AdminOrders() {
                 className={cx(
                   'flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-3 text-sm font-semibold transition min-h-[44px]',
                   active
-                    ? 'border-[#35B99D] text-[#1F2421]'
-                    : 'border-transparent text-[#66706C] hover:border-[#E1E7E3] hover:text-[#1F2421]',
+                    ? 'border-[var(--admin-primary)] text-[var(--admin-text)]'
+                    : 'border-transparent text-[var(--admin-muted)] hover:border-[var(--admin-border)] hover:text-[var(--admin-text)]',
                 )}>
                 <span>{tab.label}</span>
                 <span
                   className={cx(
                     'rounded-full px-2 py-0.5 text-xs font-semibold',
-                    active ? 'bg-[#D8F1EA] text-[#29957F]' : 'bg-[#F4F7F5] text-[#66706C]',
+                    active ? 'bg-[var(--admin-primary-soft)] text-[var(--admin-primary-hover)]' : 'bg-[var(--admin-canvas)] text-[var(--admin-muted)]',
                   )}>
                   {count}
                 </span>
@@ -140,21 +140,21 @@ export default function AdminOrders() {
 
       {/* Search Input Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <label className="flex min-h-11 flex-1 items-center gap-2.5 rounded-xl border border-[#E1E7E3] bg-white px-3.5 shadow-xs focus-within:border-[#35B99D] focus-within:ring-2 focus-within:ring-[#35B99D]/20 transition">
-          <Search className="h-4 w-4 text-[#66706C] shrink-0" />
+        <label className="flex min-h-11 flex-1 items-center gap-2.5 rounded-xl border border-[var(--admin-border)] bg-white px-3.5 shadow-xs focus-within:border-[var(--admin-primary)] focus-within:ring-2 focus-within:ring-[var(--admin-focus)]/20 transition">
+          <Search className="h-4 w-4 text-[var(--admin-muted)] shrink-0" />
           <input
             type="search"
             aria-label="Search orders"
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder="Search by order ID, customer name, or phone number…"
-            className="w-full bg-transparent text-sm text-[#1F2421] placeholder-[#66706C] outline-none"
+            className="w-full bg-transparent text-sm text-[var(--admin-text)] placeholder-[#66706C] outline-none"
           />
           {q ? (
             <button
               type="button"
               onClick={() => setQ('')}
-              className="text-xs font-medium text-[#66706C] hover:text-[#1F2421] px-1.5 py-1 rounded">
+              className="text-xs font-medium text-[var(--admin-muted)] hover:text-[var(--admin-text)] px-1.5 py-1 rounded">
               Clear
             </button>
           ) : null}
