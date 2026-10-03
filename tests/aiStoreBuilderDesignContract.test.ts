@@ -23,7 +23,7 @@ describe('AI Store Builder Task 1 design contract', () => {
   });
 
   it('aligns durable contract with the approved Admin V3 plan', () => {
-    assert.match(plan, /Admin language:\s*English only/i);
+    assert.ok(plan.includes('**Admin language:** English only'));
     assert.match(plan, /AI changes Draft only\. AI cannot Publish automatically/i);
   });
 });
