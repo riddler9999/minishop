@@ -75,8 +75,8 @@ export default function Analytics() {
         description="Authoritative commerce analytics derived from your store order records."
         actions={
           !loading && !error && !summary.isEmpty ? (
-            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-1 shadow-xs">
-              <Calendar className="ml-2 h-4 w-4 text-[#66706C]" aria-hidden="true" />
+            <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-1 shadow-xs">
+              <Calendar className="ml-2 h-4 w-4 text-[var(--admin-muted)]" aria-hidden="true" />
               {TIME_RANGES.map((range) => {
                 const active = timeRange === range.id;
                 return (
@@ -85,10 +85,10 @@ export default function Analytics() {
                     type="button"
                     onClick={() => setTimeRange(range.id)}
                     className={cx(
-                      'min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D]',
+                      'min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
                       active
                         ? 'bg-[#1F2421] text-white shadow-xs'
-                        : 'text-[#66706C] hover:bg-[#F4F7F5] hover:text-[#1F2421]',
+                        : 'text-[var(--admin-muted)] hover:bg-[var(--admin-canvas)] hover:text-[var(--admin-text)]',
                     )}
                   >
                     {range.label}
@@ -155,20 +155,20 @@ export default function Analytics() {
             <AdminSurface>
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#1F2421]">Sales Overview</h2>
-                  <p className="mt-0.5 text-xs text-[#66706C]">
+                  <h2 className="text-base font-bold text-[var(--admin-text)]">Sales Overview</h2>
+                  <p className="mt-0.5 text-xs text-[var(--admin-muted)]">
                     Daily recognized sales in selected time period.
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold tabular-nums text-[#1F2421]">
+                  <span className="text-sm font-bold tabular-nums text-[var(--admin-text)]">
                     {money(summary.recognizedSales)}
                   </span>
                 </div>
               </div>
 
               {summary.dailySales.length === 0 || summary.recognizedSales === 0 ? (
-                <div className="py-8 text-center text-xs text-[#66706C]">
+                <div className="py-8 text-center text-xs text-[var(--admin-muted)]">
                   No recognized sales in this time period.
                 </div>
               ) : (
@@ -179,22 +179,22 @@ export default function Analytics() {
                     return (
                       <div key={day.key} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-medium text-[#1F2421]">{day.label}</span>
+                          <span className="font-medium text-[var(--admin-text)]">{day.label}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[#66706C]">
+                            <span className="text-[var(--admin-muted)]">
                               {day.orderCount} order{day.orderCount === 1 ? '' : 's'}
                             </span>
-                            <span className="font-semibold tabular-nums text-[#1F2421]">
+                            <span className="font-semibold tabular-nums text-[var(--admin-text)]">
                               {money(day.amount)}
                             </span>
                           </div>
                         </div>
                         <div
-                          className="h-2 w-full overflow-hidden rounded-full bg-[#F4F7F5]"
+                          className="h-2 w-full overflow-hidden rounded-full bg-[var(--admin-canvas)]"
                           aria-hidden="true"
                         >
                           <div
-                            className="h-full rounded-full bg-[#35B99D] transition-all duration-300"
+                            className="h-full rounded-full bg-[var(--admin-primary)] transition-all duration-300"
                             style={{width: `${width}%`}}
                           />
                         </div>
@@ -208,8 +208,8 @@ export default function Analytics() {
             {/* Orders by Status */}
             <AdminSurface>
               <div className="mb-4">
-                <h2 className="text-base font-bold text-[#1F2421]">Orders by Status</h2>
-                <p className="mt-0.5 text-xs text-[#66706C]">
+                <h2 className="text-base font-bold text-[var(--admin-text)]">Orders by Status</h2>
+                <p className="mt-0.5 text-xs text-[var(--admin-muted)]">
                   Counts across all canonical order lifecycle states.
                 </p>
               </div>
@@ -223,17 +223,17 @@ export default function Analytics() {
                   return (
                     <div key={status} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-[#1F2421]">{meta.admin}</span>
-                        <span className="font-semibold tabular-nums text-[#1F2421]">
+                        <span className="font-medium text-[var(--admin-text)]">{meta.admin}</span>
+                        <span className="font-semibold tabular-nums text-[var(--admin-text)]">
                           {count}
                         </span>
                       </div>
                       <div
-                        className="h-2 w-full overflow-hidden rounded-full bg-[#F4F7F5]"
+                        className="h-2 w-full overflow-hidden rounded-full bg-[var(--admin-canvas)]"
                         aria-hidden="true"
                       >
                         <div
-                          className="h-full rounded-full bg-[#35B99D] transition-all duration-300"
+                          className="h-full rounded-full bg-[var(--admin-primary)] transition-all duration-300"
                           style={{width: `${width}%`}}
                         />
                       </div>
@@ -250,37 +250,37 @@ export default function Analytics() {
             <AdminSurface>
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#1F2421]">Top Products</h2>
-                  <p className="mt-0.5 text-xs text-[#66706C]">
+                  <h2 className="text-base font-bold text-[var(--admin-text)]">Top Products</h2>
+                  <p className="mt-0.5 text-xs text-[var(--admin-muted)]">
                     Best-performing products by recognized sales in this period.
                   </p>
                 </div>
-                <Package className="h-5 w-5 text-[#66706C]" aria-hidden="true" />
+                <Package className="h-5 w-5 text-[var(--admin-muted)]" aria-hidden="true" />
               </div>
 
               {summary.topProducts.length === 0 ? (
-                <div className="py-8 text-center text-xs text-[#66706C]">
+                <div className="py-8 text-center text-xs text-[var(--admin-muted)]">
                   No product sales recorded in recognized orders for this period.
                 </div>
               ) : (
-                <div className="divide-y divide-[#E1E7E3] overflow-hidden rounded-xl border border-[#E1E7E3]">
+                <div className="divide-y divide-[#E1E7E3] overflow-hidden rounded-xl border border-[var(--admin-border)]">
                   {summary.topProducts.slice(0, 5).map((product, idx) => (
                     <div
                       key={product.name}
-                      className="flex items-center justify-between bg-[#FFFFFF] p-3 text-xs"
+                      className="flex items-center justify-between bg-[var(--admin-surface)] p-3 text-xs"
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4F7F5] text-[10px] font-bold text-[#66706C]">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--admin-canvas)] text-[10px] font-bold text-[var(--admin-muted)]">
                           {idx + 1}
                         </span>
                         <div>
-                          <p className="font-semibold text-[#1F2421]">{product.name}</p>
-                          <p className="text-[11px] text-[#66706C]">
+                          <p className="font-semibold text-[var(--admin-text)]">{product.name}</p>
+                          <p className="text-[11px] text-[var(--admin-muted)]">
                             {product.unitsSold} unit{product.unitsSold === 1 ? '' : 's'} across {product.orderCount} order{product.orderCount === 1 ? '' : 's'}
                           </p>
                         </div>
                       </div>
-                      <span className="font-bold tabular-nums text-[#1F2421]">
+                      <span className="font-bold tabular-nums text-[var(--admin-text)]">
                         {money(product.revenue)}
                       </span>
                     </div>
@@ -293,43 +293,43 @@ export default function Analytics() {
             <AdminSurface>
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-[#1F2421]">Customer Insights</h2>
-                  <p className="mt-0.5 text-xs text-[#66706C]">
+                  <h2 className="text-base font-bold text-[var(--admin-text)]">Customer Insights</h2>
+                  <p className="mt-0.5 text-xs text-[var(--admin-muted)]">
                     Customer behavior derived from authoritative order records.
                   </p>
                 </div>
-                <Users className="h-5 w-5 text-[#66706C]" aria-hidden="true" />
+                <Users className="h-5 w-5 text-[var(--admin-muted)]" aria-hidden="true" />
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] p-3.5">
-                  <p className="text-[11px] font-medium text-[#66706C]">Total Buyers</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-[#1F2421]">
+                <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-canvas)] p-3.5">
+                  <p className="text-[11px] font-medium text-[var(--admin-muted)]">Total Buyers</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-[var(--admin-text)]">
                     {summary.customerMetrics.totalCustomers}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] p-3.5">
-                  <p className="text-[11px] font-medium text-[#66706C]">Repeat Buyers</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-[#1F2421]">
+                <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-canvas)] p-3.5">
+                  <p className="text-[11px] font-medium text-[var(--admin-muted)]">Repeat Buyers</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-[var(--admin-text)]">
                     {summary.customerMetrics.repeatCustomers}
                   </p>
                 </div>
 
-                <div className="col-span-2 rounded-xl border border-[#E1E7E3] bg-[#F4F7F5] p-3.5 sm:col-span-1">
-                  <p className="text-[11px] font-medium text-[#66706C]">Avg. Customer Spend</p>
-                  <p className="mt-1 text-base font-bold tabular-nums text-[#1F2421]">
+                <div className="col-span-2 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-canvas)] p-3.5 sm:col-span-1">
+                  <p className="text-[11px] font-medium text-[var(--admin-muted)]">Avg. Customer Spend</p>
+                  <p className="mt-1 text-base font-bold tabular-nums text-[var(--admin-text)]">
                     {money(summary.customerMetrics.averageRecognizedSpendPerCustomer)}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl border border-[#D8F1EA] bg-[#D8F1EA]/30 p-3 text-xs text-[#1F2421]">
+              <div className="mt-4 rounded-xl border border-[#D8F1EA] bg-[var(--admin-primary-soft)]/30 p-3 text-xs text-[var(--admin-text)]">
                 <div className="flex items-center gap-2 font-semibold">
-                  <ShoppingBag className="h-4 w-4 text-[#29957F]" />
+                  <ShoppingBag className="h-4 w-4 text-[var(--admin-primary-hover)]" />
                   <span>Buyer Relationship Health</span>
                 </div>
-                <p className="mt-1 text-[#66706C]">
+                <p className="mt-1 text-[var(--admin-muted)]">
                   {summary.customerMetrics.totalCustomers > 0
                     ? `${Math.round(
                         (summary.customerMetrics.repeatCustomers /

@@ -1,12 +1,13 @@
 // ---- ORDERS: Admin V3 Stage Presentation Mapping -----------------------------
 // Maps canonical backend OrderStatus to seller-facing Admin V3 stages:
-// Pending -> Confirmed -> Delivered -> Return.
+// Pending -> Confirmed -> Delivered. Return is intentionally not exposed until
+// the backend gains a canonical return state and inventory/refund policy.
 // Backend validation, RPCs and Row Level Security remain authoritative.
 
 import type {AdminOrder} from '@/domain/order';
 import type {OrderStatus} from '@/domain/orderStatus';
 
-export type OrderStage = 'pending' | 'confirmed' | 'delivered' | 'return' | 'cancelled';
+export type OrderStage = 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 
 export interface StageTab {
   id: 'all' | OrderStage;
@@ -18,7 +19,6 @@ export const ORDER_STAGE_TABS: StageTab[] = [
   {id: 'pending', label: 'Pending'},
   {id: 'confirmed', label: 'Confirmed'},
   {id: 'delivered', label: 'Delivered'},
-  {id: 'return', label: 'Return'},
 ];
 
 /**
@@ -53,8 +53,6 @@ export function getOrderStageLabel(stage: OrderStage): string {
       return 'Confirmed';
     case 'delivered':
       return 'Delivered';
-    case 'return':
-      return 'Return';
     case 'cancelled':
       return 'Cancelled';
   }
@@ -71,8 +69,6 @@ export function getOrderStageTone(stage: OrderStage): 'warning' | 'info' | 'succ
       return 'info';
     case 'delivered':
       return 'success';
-    case 'return':
-      return 'neutral';
     case 'cancelled':
       return 'danger';
   }

@@ -9,6 +9,8 @@ const shipping = fs.readFileSync(new URL('../src/features/shipping/pages/AdminSh
 const storeNavigation = fs.readFileSync(new URL('../src/features/shop/pages/StoreNavigation.tsx', import.meta.url), 'utf8');
 const storeDomains = fs.readFileSync(new URL('../src/features/shop/pages/StoreDomains.tsx', import.meta.url), 'utf8');
 const storePolicies = fs.readFileSync(new URL('../src/features/shop/pages/StorePolicies.tsx', import.meta.url), 'utf8');
+const settingsPayments = fs.readFileSync(new URL('../src/features/shop/pages/SettingsPayments.tsx', import.meta.url), 'utf8');
+const settingsUsers = fs.readFileSync(new URL('../src/features/shop/pages/SettingsUsers.tsx', import.meta.url), 'utf8');
 
 describe('Admin Settings Hub V3 — Architecture & Navigation', () => {
   it('organizes all 11 configuration categories in Settings Hub', () => {
@@ -87,6 +89,12 @@ describe('Admin Settings Hub V3 — Architecture & Navigation', () => {
       assert.match(source, /(not available yet|not configured yet|preserved|read-only)/i);
       assert.doesNotMatch(source, /onClick=|<form|<input|<button/);
     }
+  });
+
+  it('keeps informational settings pages truthful about unsupported management actions', () => {
+    assert.match(settingsPayments, /Current payment capabilities/i);
+    assert.doesNotMatch(settingsPayments, />\s*Enabled\s*</i);
+    assert.match(settingsUsers, /Multi-staff management is not available yet/i);
   });
 
   it('preserves store profile mutation contract with tenant RLS isolation and file validation', () => {
