@@ -7,7 +7,7 @@ export default function SettingsPayments() {
     <div className="space-y-6 pb-12">
       <AdminPageHeader
         title="Payment Methods"
-        description="Supported payment options for your TikTok storefront buyers."
+        description="Current payment capabilities available to your TikTok storefront buyers. Configuration is managed through the existing checkout and order workflows."
       />
 
       <div className="grid gap-4">
@@ -22,7 +22,7 @@ export default function SettingsPayments() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold text-[#1F2421]">Cash on Delivery (COD)</h2>
                   <span className="rounded-full bg-[#D8F1EA] px-2.5 py-0.5 text-[11px] font-bold text-[#29957F]">
-                    Enabled
+                    Available
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-[#66706C]">
@@ -44,7 +44,7 @@ export default function SettingsPayments() {
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold text-[#1F2421]">KBZPay & WavePay Transfer</h2>
                   <span className="rounded-full bg-[#D8F1EA] px-2.5 py-0.5 text-[11px] font-bold text-[#29957F]">
-                    Enabled
+                    Available
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-[#66706C]">
