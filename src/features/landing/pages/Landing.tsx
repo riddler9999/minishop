@@ -26,9 +26,9 @@ import {
   PLAN_PRODUCT_LIMIT,
 } from "@/domain/entitlement";
 import { pricingPlans, signupHref } from "@/features/landing/pricing";
-import { BrowserPreview, ProductPreview } from "../components/ProductPreview";
-import { BuilderDemo } from "../components/BuilderDemo";
-import { SellerPreview } from "../components/SellerPreview";
+import { BrowserPreview, ProductPreview } from "@/features/landing/components/ProductPreview";
+import { BuilderDemo } from "@/features/landing/components/BuilderDemo";
+import { SellerPreview } from "@/features/landing/components/SellerPreview";
 import "./landing-mm.css";
 
 const navigation = [

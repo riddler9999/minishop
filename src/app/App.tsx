@@ -4,7 +4,7 @@ import {Route, Routes, useLocation} from 'react-router-dom';
 import {AdminAuthProvider} from '@/features/auth/adminAuth';
 import Landing from '@/features/landing/pages/Landing';
 import {RouteScopedCartProvider} from '@/features/cart/state';
-import RequireAdmin from './routes/RequireAdmin';
+import RequireAdmin from '@/app/routes/RequireAdmin';
 
 const AdminLogin = lazy(() => import('@/features/auth/pages/Login'));
 const Onboarding = lazy(() => import('@/features/auth/pages/Onboarding'));
@@ -32,9 +32,9 @@ const StorePolicies = lazy(() => import('@/features/shop/pages/StorePolicies'));
 const FashionDemo = lazy(() => import('@/features/fashion-demo/pages/FashionDemo'));
 const FurnitureDemo = lazy(() => import('@/features/furniture-demo/pages/FurnitureDemo'));
 const MobileDemo = lazy(() => import('@/features/mobile-demo/pages/MobileDemo'));
-const AdminConsole = lazy(() => import('./routes/AdminConsole'));
-const ShopRoute = lazy(() => import('./routes/ShopRoute'));
-const RootStorefront = lazy(() => import('./routes/ShopRoute').then((module) => ({default: module.RootStorefront})));
+const AdminConsole = lazy(() => import('@/app/routes/AdminConsole'));
+const ShopRoute = lazy(() => import('@/app/routes/ShopRoute'));
+const RootStorefront = lazy(() => import('@/app/routes/ShopRoute').then((module) => ({default: module.RootStorefront})));
 
 // Product fonts are deferred until a product route is visited. The landing uses
 // system fonts and must not wait on an external font stylesheet.
