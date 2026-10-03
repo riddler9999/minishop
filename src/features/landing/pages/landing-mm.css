@@ -1991,6 +1991,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  html:has(.mm-landing) {
+    scroll-behavior: auto;
+  }
   .mm-landing *,
   .mm-landing *:before,
   .mm-landing *:after {
