@@ -1,16 +1,6 @@
-/* The app-wide default font pairing ("boutique" — Calistoga/Inter, see
-   domain/fontPairing.ts, PROJECT.md D54) plus the "classic" alternative a
-   seller can opt into from Store Design. Both load here (not injected at
-   runtime) so admin console + every storefront always has them warm; Google's
-   CSS2 endpoint splits each family into per-script @font-face rules with
-   unicode-range, so a page that never renders Cormorant/Montserrat glyphs
-   never actually downloads those font files. `display=swap` avoids invisible
-   text while a face loads. The "minimal" pairing (domain/fontPairing.ts)
-   intentionally needs no import — it's the original system-font stack.
-   Must precede `@import 'tailwindcss'` below: CSS requires every @import to
-   come before any other rule, and Tailwind's own import expands into @layer
-   content that would otherwise push a later @import into an invalid position. */
-@import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=Cormorant:wght@500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap');
+/* Storefront and admin font pairings are loaded by App.tsx after a product
+   route is visited. The landing uses system fonts and does not request external
+   typography. Product fonts retain display=swap and per-script unicode ranges. */
 @import 'tailwindcss';
 
 /* ---- Admin V2 scoped semantic tokens ---------------------------------------
