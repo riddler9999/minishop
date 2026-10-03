@@ -15,17 +15,17 @@ export default function SettingsPayments() {
         <AdminSurface>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D8F1EA] text-[#29957F]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-primary-soft)] text-[var(--admin-primary-hover)]">
                 <Banknote className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-[#1F2421]">Cash on Delivery (COD)</h2>
-                  <span className="rounded-full bg-[#D8F1EA] px-2.5 py-0.5 text-[11px] font-bold text-[#29957F]">
+                  <h2 className="text-base font-bold text-[var(--admin-text)]">Cash on Delivery (COD)</h2>
+                  <span className="rounded-full bg-[var(--admin-primary-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--admin-primary-hover)]">
                     Available
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[#66706C]">
+                <p className="mt-1 text-sm leading-5 text-[var(--admin-muted)]">
                   Buyers place orders without prepayment and pay cash upon package delivery.
                 </p>
               </div>
@@ -37,17 +37,17 @@ export default function SettingsPayments() {
         <AdminSurface>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#D8F1EA] text-[#29957F]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-primary-soft)] text-[var(--admin-primary-hover)]">
                 <CreditCard className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-[#1F2421]">KBZPay & WavePay Transfer</h2>
-                  <span className="rounded-full bg-[#D8F1EA] px-2.5 py-0.5 text-[11px] font-bold text-[#29957F]">
+                  <h2 className="text-base font-bold text-[var(--admin-text)]">KBZPay & WavePay Transfer</h2>
+                  <span className="rounded-full bg-[var(--admin-primary-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--admin-primary-hover)]">
                     Available
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[#66706C]">
+                <p className="mt-1 text-sm leading-5 text-[var(--admin-muted)]">
                   Buyers transfer funds directly to your wallet account and submit proof/slip or transaction digits during checkout.
                 </p>
               </div>
@@ -58,12 +58,12 @@ export default function SettingsPayments() {
 
       <AdminSurface>
         <div className="flex items-start gap-3.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F4F7F5] text-[#66706C]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-canvas)] text-[var(--admin-muted)]">
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#1F2421]">Financial Verification</h2>
-            <p className="mt-1 text-sm text-[#66706C]">
+            <h2 className="text-base font-bold text-[var(--admin-text)]">Financial Verification</h2>
+            <p className="mt-1 text-sm text-[var(--admin-muted)]">
               Payment reconciliation is seller-verified from the admin Orders workspace. MiniShop strictly enforces financial idempotency and does not count unverified payments as recognized sales.
             </p>
           </div>
