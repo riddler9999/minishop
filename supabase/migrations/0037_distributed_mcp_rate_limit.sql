@@ -15,6 +15,11 @@ revoke all on table private.mcp_rate_limits from public, anon, authenticated;
 create index if not exists mcp_rate_limits_user_action_requested_at_idx
   on private.mcp_rate_limits (user_id, action, requested_at);
 
+-- Cleanup is global (not seller/action-scoped), so it needs its own timestamp
+-- prefix to avoid scanning and sorting all rate-limit rows on every MCP call.
+create index if not exists mcp_rate_limits_requested_at_idx
+  on private.mcp_rate_limits (requested_at);
+
 create or replace function public.enforce_own_mcp_rate_limit(p_action text)
 returns void
 language plpgsql
