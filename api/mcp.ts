@@ -9,13 +9,12 @@ import {createStoreDesignMcpService} from './_mcp/store-design.js';
 import {createShopProfileService} from './_mcp/shop-profile.js';
 import {createBusinessReadService} from './_mcp/read-models.js';
 import {createAuditSink} from './_mcp/audit.js';
-import {defaultMcpRateLimiter} from './_mcp/rate-limit.js';
+import {defaultMcpRateLimiter, type McpRateLimiter} from './_mcp/rate-limit.js';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import type {AuditSink, SellerContext} from './_mcp/contracts.js';
 import type {StoreDesignLifecyclePort} from './_mcp/store-design.js';
 
 type AuthResult = Awaited<ReturnType<typeof authenticateSeller>>;
-type McpRateLimiter = typeof defaultMcpRateLimiter;
 type McpHandlerDependencies = {
   authenticate?: (req: any) => Promise<AuthResult>;
   rateLimiter?: McpRateLimiter;
@@ -67,7 +66,7 @@ export function createMcpHandler(dependencies: McpHandlerDependencies = {}) {
       rejectTenantSelectors(args);
       const validatedArgs=parseToolArguments(name,args);
       requireCapability(context,TOOL_REGISTRY[name].capability);
-      rateLimiter.check(context,name);
+      await rateLimiter.check(context,name,supabase);
 
       const store=createStoreDesignMcpService(storeAdapterFor(supabase));
       const profile=createShopProfileService(supabase,context);

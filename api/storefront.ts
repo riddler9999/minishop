@@ -4,8 +4,8 @@ import {sendJson} from './_http.js';
 import {loadBuyerStoreDesign} from './_storefront-design.js';
 import {normalizeProductSourceLimit} from './_storefront-product-source.js';
 import {BUYER_LEGACY_RELATIONS, BUYER_SAFE_RELATIONS, isMissingBuyerProjection, type BuyerRelations} from './_buyer-relations.js';
+import {MAX_PUBLIC_MEDIA_BYTES, allowedPublicImageContentType, isPublicMediaLengthAllowed} from './_public-media.js';
 
-const MAX_MEDIA_BYTES = 5 * 1024 * 1024;
 const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,name,description,category,color,size,price,promo_price,is_promotion,stock,status,images,arrival_date,created_at';
 const PRODUCT_SOURCE_RULES = new Set(['new_arrivals', 'sale', 'category', 'best_selling']);
 const MAX_MANUAL_PRODUCT_IDS = 24;
@@ -45,15 +45,14 @@ export default async function handler(req: any, res: any) {
     const safePath = mediaPath.split('/').filter(Boolean).map((part: string) => encodeURIComponent(part)).join('/');
     const upstream = await fetch(`${url}/storage/v1/object/public/${encodeURIComponent(mediaBucket)}/${safePath}`);
     if (!upstream.ok) return res.status(upstream.status).end();
-    const contentLength = Number(upstream.headers.get('content-length') || '0');
-    if (Number.isFinite(contentLength) && contentLength > MAX_MEDIA_BYTES) return res.status(413).end();
-    const type = upstream.headers.get('content-type');
-    if (type && !type.startsWith('image/')) return res.status(415).end();
+    if (!isPublicMediaLengthAllowed(upstream.headers.get('content-length'))) return res.status(413).end();
+    const type = allowedPublicImageContentType(upstream.headers.get('content-type'));
+    if (!type) return res.status(415).end();
     if (type) res.setHeader('Content-Type', type);
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
     if (req.method === 'HEAD') return res.status(200).end();
     const body = Buffer.from(await upstream.arrayBuffer());
-    if (body.byteLength > MAX_MEDIA_BYTES) return res.status(413).end();
+    if (body.byteLength > MAX_PUBLIC_MEDIA_BYTES) return res.status(413).end();
     return res.status(200).send(body);
   }
   if (req.method === 'HEAD') return res.status(404).end();

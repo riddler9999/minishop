@@ -88,7 +88,11 @@ export type DbErrorCode =
   | 'inventory_adjustment_reason_required'
   | 'inventory_adjustment_reason_too_long'
   | 'inventory_product_not_found'
-  | 'inventory_adjustment_would_go_negative';
+  | 'inventory_adjustment_would_go_negative'
+  // MCP distributed rate-limit guard (0037)
+  | 'mcp_auth_required'
+  | 'invalid_mcp_action'
+  | 'mcp_rate_limit_exceeded';
 
 // Burmese, user-facing. Keep these buyer/seller-readable, not diagnostic.
 export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
@@ -171,6 +175,9 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   inventory_adjustment_reason_too_long: 'Stock ပြင်ဆင်ရတဲ့ အကြောင်းပြချက် အရမ်းရှည်နေပါတယ်။',
   inventory_product_not_found: 'ပြင်ဆင်မည့် ပစ္စည်းကို မတွေ့ပါ သို့မဟုတ် ခွင့်မရှိပါ။',
   inventory_adjustment_would_go_negative: 'Stock ကို သုညအောက် မလျှော့နိုင်ပါ။',
+  mcp_auth_required: 'MCP အသုံးပြုရန် အကောင့်ဝင်ရောက်မှု လိုအပ်ပါသည်။',
+  invalid_mcp_action: 'MCP လုပ်ဆောင်ချက် မမှန်ပါ။',
+  mcp_rate_limit_exceeded: 'MCP တောင်းဆိုမှုများလွန်းနေပါတယ်။ ခဏနားပြီး ပြန်ကြိုးစားပါ။',
 };
 
 // Generic fallback when the code is unknown (or the failure isn't a typed code

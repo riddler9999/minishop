@@ -70,6 +70,48 @@ jobs:
       - name: Replay full migration chain through current task
         run: supabase db reset --workdir "$RUNTIME_WORKDIR"
 
+      - name: Assert stale MCP rate-limit cleanup uses its timestamp index
+        shell: bash
+        run: |
+          set -o pipefail
+          docker exec -i supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users (
+            instance_id, id, aud, role, email, encrypted_password,
+            email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+            created_at, updated_at
+          ) values (
+            '00000000-0000-0000-0000-000000000000',
+            '10000000-0000-0000-0000-000000000037',
+            'authenticated', 'authenticated', 'mcp-rate-limit-plan@example.test',
+            crypt('local-runtime-only', gen_salt('bf')), now(),
+            '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
+            now(), now()
+          );
+
+          insert into private.mcp_rate_limits (user_id, action, requested_at)
+          select
+            '10000000-0000-0000-0000-000000000037'::uuid,
+            'list_products',
+            now() - interval '2 days' - (n * interval '1 second')
+          from generate_series(1, 10000) as n;
+
+          analyze private.mcp_rate_limits;
+          explain (costs off)
+          select id
+          from private.mcp_rate_limits
+          where requested_at < now() - interval '1 day'
+          order by requested_at asc
+          limit 500;
+          SQL
+          docker exec supabase_db_minishop psql -U postgres -d postgres -Atqc "
+            explain (costs off)
+            select id
+            from private.mcp_rate_limits
+            where requested_at < now() - interval '1 day'
+            order by requested_at asc
+            limit 500;
+          " | grep -F 'Index Scan using mcp_rate_limits_requested_at_idx'
+
       - name: Inspect Storage RLS runtime state
         run: |
           docker exec supabase_db_minishop psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select policyname, permissive, roles, cmd, qual, with_check from pg_policies where schemaname='storage' and tablename='objects' order by policyname;"
