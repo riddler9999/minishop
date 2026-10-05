@@ -28,3 +28,11 @@ test('migration keeps the rate-limit table private and binds its counter to auth
   assert.match(sql, /mcp_rate_limit_exceeded/i);
   assert.match(sql, /grant execute on function public\.enforce_own_mcp_rate_limit\(text\)\s+to authenticated/i);
 });
+
+test('migration indexes the global stale-row cleanup by requested_at', async () => {
+  const sql = await readFile('supabase/migrations/0037_distributed_mcp_rate_limit.sql', 'utf8');
+  assert.match(
+    sql,
+    /create index if not exists mcp_rate_limits_requested_at_idx\s+on private\.mcp_rate_limits \(requested_at\)/i,
+  );
+});
