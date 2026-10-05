@@ -20,7 +20,7 @@ test('production MCP limiter maps database exhaustion to a safe 429', async () =
 });
 
 test('migration keeps the rate-limit table private and binds its counter to auth.uid()', async () => {
-  const sql = await readFile('supabase/migrations/0037_distributed_mcp_rate_limit.sql', 'utf8');
+  const sql = await readFile('supabase/migrations/0038_distributed_mcp_rate_limit.sql', 'utf8');
   assert.match(sql, /alter table private\.mcp_rate_limits enable row level security/i);
   assert.match(sql, /revoke all on table private\.mcp_rate_limits from public, anon, authenticated/i);
   assert.match(sql, /v_user_id uuid := auth\.uid\(\)/i);
@@ -30,7 +30,7 @@ test('migration keeps the rate-limit table private and binds its counter to auth
 });
 
 test('migration indexes the global stale-row cleanup by requested_at', async () => {
-  const sql = await readFile('supabase/migrations/0037_distributed_mcp_rate_limit.sql', 'utf8');
+  const sql = await readFile('supabase/migrations/0038_distributed_mcp_rate_limit.sql', 'utf8');
   assert.match(
     sql,
     /create index if not exists mcp_rate_limits_requested_at_idx\s+on private\.mcp_rate_limits \(requested_at\)/i,
