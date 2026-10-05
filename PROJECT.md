@@ -838,3 +838,21 @@ Only fields required by the current storefront and checkout are projected. Selle
 Production rollout is non-breaking: buyer gateways prefer the projection views, but if PostgREST specifically reports the new views as undeployed they fall back to the pre-0027 active-row base-table reads. All other projection errors fail closed. Once 0027 is applied, direct anon SELECT on the four base tables is revoked and the fallback is no longer reachable.
 
 `0027` has **not** been applied to Production by this task. Applying it still requires explicit owner approval and the normal migration preflight.
+
+### D65 — MiniShop MM store-building landing
+**Date:** 2026-10-04
+
+Owner-approved screen-specific English copy and warm orange landing accents.
+The `/` page positions MiniShop as a merchant store-building platform, using the
+existing React/Vite architecture. Admin Charcoal/Mint and merchant themes are
+not recolored. Five real theme-family names and canonical pricing/quota/product
+caps come from domain modules; buyer payment copy reflects seller-verified
+COD/KBZPay/WavePay flows. Roadmap integrations, automatic payment settlement,
+unverified support benefits, fabricated business metrics, and nonexistent public
+legal/company links are not advertised.
+
+The landing builder and seller workspace are explicitly illustrative examples;
+changes to the landing preview never save or publish seller data. Product-route
+lazy loading and deferred product fonts reduce initial landing dependencies while
+preserving the auth and tenant cart boundaries. Responsive WebP derivatives are
+local landing assets; original demo assets remain intact.

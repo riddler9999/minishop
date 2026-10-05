@@ -1,42 +1,57 @@
 // ---- COMPOSITION ROOT --------------------------------------------------------
-import {Route, Routes} from 'react-router-dom';
+import {lazy, Suspense, useEffect} from 'react';
+import {Route, Routes, useLocation} from 'react-router-dom';
 import {AdminAuthProvider} from '@/features/auth/adminAuth';
-import AdminLogin from '@/features/auth/pages/Login';
-import Onboarding from '@/features/auth/pages/Onboarding';
-import Subscribe from '@/features/billing/pages/Subscribe';
-import Billing from '@/features/billing/pages/Billing';
-import Dashboard from '@/features/admin/pages/Dashboard';
-import Customers from '@/features/admin/pages/Customers';
-import Analytics from '@/features/admin/pages/Analytics';
-import SuperAdminDashboard from '@/features/superadmin/pages/SuperAdminDashboard';
-import AdminProducts from '@/features/catalog/pages/AdminProducts';
-import AdminOrders from '@/features/orders/pages/AdminOrders';
-import AdminShipping from '@/features/shipping/pages/AdminShipping';
-import Settings from '@/features/shop/pages/Settings';
-import SettingsUsers from '@/features/shop/pages/SettingsUsers';
-import SettingsPayments from '@/features/shop/pages/SettingsPayments';
-import SettingsCheckout from '@/features/shop/pages/SettingsCheckout';
-import SettingsNotifications from '@/features/shop/pages/SettingsNotifications';
-import SettingsPrivacy from '@/features/shop/pages/SettingsPrivacy';
-import StoreDesign from '@/features/shop/pages/StoreDesign';
-import LifecycleStoreBuilder from '@/features/shop/pages/LifecycleStoreBuilder';
-import Themes from '@/features/shop/pages/Themes';
-import StoreNavigation from '@/features/shop/pages/StoreNavigation';
-import StoreDomains from '@/features/shop/pages/StoreDomains';
-import StorePolicies from '@/features/shop/pages/StorePolicies';
 import Landing from '@/features/landing/pages/Landing';
-import FashionDemo from '@/features/fashion-demo/pages/FashionDemo';
-import FurnitureDemo from '@/features/furniture-demo/pages/FurnitureDemo';
-import MobileDemo from '@/features/mobile-demo/pages/MobileDemo';
 import {RouteScopedCartProvider} from '@/features/cart/state';
-import AdminConsole from './routes/AdminConsole';
-import RequireAdmin from './routes/RequireAdmin';
-import ShopRoute, {RootStorefront} from './routes/ShopRoute';
+import RequireAdmin from '@/app/routes/RequireAdmin';
 
+const AdminLogin = lazy(() => import('@/features/auth/pages/Login'));
+const Onboarding = lazy(() => import('@/features/auth/pages/Onboarding'));
+const Subscribe = lazy(() => import('@/features/billing/pages/Subscribe'));
+const Billing = lazy(() => import('@/features/billing/pages/Billing'));
+const Dashboard = lazy(() => import('@/features/admin/pages/Dashboard'));
+const Analytics = lazy(() => import('@/features/admin/pages/Analytics'));
+const Customers = lazy(() => import('@/features/admin/pages/Customers'));
+const SuperAdminDashboard = lazy(() => import('@/features/superadmin/pages/SuperAdminDashboard'));
+const AdminProducts = lazy(() => import('@/features/catalog/pages/AdminProducts'));
+const AdminOrders = lazy(() => import('@/features/orders/pages/AdminOrders'));
+const AdminShipping = lazy(() => import('@/features/shipping/pages/AdminShipping'));
+const Settings = lazy(() => import('@/features/shop/pages/Settings'));
+const SettingsUsers = lazy(() => import('@/features/shop/pages/SettingsUsers'));
+const SettingsPayments = lazy(() => import('@/features/shop/pages/SettingsPayments'));
+const SettingsCheckout = lazy(() => import('@/features/shop/pages/SettingsCheckout'));
+const SettingsNotifications = lazy(() => import('@/features/shop/pages/SettingsNotifications'));
+const SettingsPrivacy = lazy(() => import('@/features/shop/pages/SettingsPrivacy'));
+const StoreDesign = lazy(() => import('@/features/shop/pages/StoreDesign'));
+const LifecycleStoreBuilder = lazy(() => import('@/features/shop/pages/LifecycleStoreBuilder'));
+const Themes = lazy(() => import('@/features/shop/pages/Themes'));
+const StoreNavigation = lazy(() => import('@/features/shop/pages/StoreNavigation'));
+const StoreDomains = lazy(() => import('@/features/shop/pages/StoreDomains'));
+const StorePolicies = lazy(() => import('@/features/shop/pages/StorePolicies'));
+const FashionDemo = lazy(() => import('@/features/fashion-demo/pages/FashionDemo'));
+const FurnitureDemo = lazy(() => import('@/features/furniture-demo/pages/FurnitureDemo'));
+const MobileDemo = lazy(() => import('@/features/mobile-demo/pages/MobileDemo'));
+const AdminConsole = lazy(() => import('@/app/routes/AdminConsole'));
+const ShopRoute = lazy(() => import('@/app/routes/ShopRoute'));
+const RootStorefront = lazy(() => import('@/app/routes/ShopRoute').then((module) => ({default: module.RootStorefront})));
+
+// Product fonts are deferred until a product route is visited. The landing uses
+// system fonts and must not wait on an external font stylesheet.
 export default function App() {
+  const {pathname} = useLocation();
+  useEffect(() => {
+    if (pathname === '/' || document.getElementById('minishop-product-fonts')) return;
+    const stylesheet = document.createElement('link');
+    stylesheet.id = 'minishop-product-fonts';
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = 'https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=Cormorant:wght@500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap';
+    document.head.appendChild(stylesheet);
+  }, [pathname]);
   return (
     <AdminAuthProvider>
       <RouteScopedCartProvider>
+        <Suspense fallback={<div className="grid min-h-screen place-items-center bg-white text-sm text-slate-700" role="status">Loading…</div>}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/demo/*" element={<RootStorefront />} />
@@ -82,6 +97,7 @@ export default function App() {
           <Route path="/s/:slug/*" element={<ShopRoute />} />
           <Route path="*" element={<RootStorefront />} />
         </Routes>
+        </Suspense>
       </RouteScopedCartProvider>
     </AdminAuthProvider>
   );

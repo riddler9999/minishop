@@ -159,7 +159,7 @@ describe('Admin Customers V3 UI workspace & detail components', () => {
   });
 
   it('routes Customers through the existing protected admin console and makes nav item routable', () => {
-    assert.match(app, /import Customers from ['"]@\/features\/admin\/pages\/Customers['"]/);
+    assert.match(app, /const Customers = lazy\(\(\) => import\(['"]@\/features\/admin\/pages\/Customers['"]\)\)/);
     assert.match(app, /path=["']customers["'] element={<Customers \/>}/);
     assert.match(nav, /label: 'Customers', to: '\/admin\/customers'/);
   });
