@@ -22,7 +22,7 @@ test('storefront gateway uses shared JSON security helper', () => {
 test('storefront media proxy enforces a maximum content length', () => {
   const source = fs.readFileSync('api/storefront.ts', 'utf8');
   assert.match(source, /content-length/i);
-  assert.match(source, /MAX_MEDIA_BYTES/);
+  assert.match(source, /MAX_PUBLIC_MEDIA_BYTES/);
 });
 
 test('public product queries use explicit projections', () => {
