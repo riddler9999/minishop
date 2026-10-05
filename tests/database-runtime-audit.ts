@@ -162,6 +162,17 @@ function countRejected<T>(results: PromiseSettledResult<T>[]) {
   return results.filter((r) => r.status === 'rejected').length;
 }
 
+function settledResultsText<T>(results: PromiseSettledResult<T>[]) {
+  return JSON.stringify(results.map((result) => result.status === 'fulfilled'
+    ? { status: result.status, value: result.value }
+    : {
+        status: result.status,
+        reason: result.reason instanceof Error
+          ? { name: result.reason.name, message: result.reason.message, stack: result.reason.stack }
+          : String(result.reason),
+      }));
+}
+
 const evidence: Record<string, unknown> = {
   runtime: 'local_supabase',
   connections: {},
@@ -623,7 +634,7 @@ async function main() {
     const results = await race(clients.map((client, index) => () =>
       callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, `090000004${index}`)),
     ));
-    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    assert.equal(countFulfilled(results), 2, settledResultsText(results));
     const orders = ok(await service.from('orders').select('id').eq('shop_id', shopA.id).eq('idempotency_key', key), 'idem orders');
     assert.equal(orders.length, 1);
     const after = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem after');
@@ -715,11 +726,13 @@ async function main() {
   }
 
   // Task 9: final quota slot with the same key must resolve to one stable order.
-  {
-    const seller = await createSeller('task9-same-key-final-slot');
-    const shop = await createShop(seller.id, 'starter', 'task9-same-key-final-slot');
+  // Repeating the concurrent request exercises the lock-order regression rather
+  // than treating a single green race as proof that the path is safe.
+  for (let attempt = 1; attempt <= 12; attempt++) {
+    const seller = await createSeller(`task9-same-key-final-slot-${attempt}`);
+    const shop = await createShop(seller.id, 'starter', `task9-same-key-final-slot-${attempt}`);
     await setEntitlement(shop.id, 'starter', 60, 59, 0);
-    const product = await createProduct(shop.id, 'task9-same-key-final-slot', { stock: 4, price: 10000 });
+    const product = await createProduct(shop.id, `task9-same-key-final-slot-${attempt}`, { stock: 4, price: 10000 });
     const buyer = apiClient(anonKey!, '198.51.100.131');
     const quote = await buyer.rpc('quote_order', {
       p_shop_slug: shop.slug,
@@ -747,7 +760,7 @@ async function main() {
     assert.equal(ent.monthly_used, 60);
     const rows = ok(await service.from('orders').select('id').eq('shop_id', shop.id).eq('idempotency_key', key), 'task9 same-key orders');
     assert.equal(rows.length, 1);
-    evidence.task9_same_key_final_slot = 'PASS';
+    evidence.task9_same_key_final_slot = { result: 'PASS', repeated_runs: 12 };
   }
 
   // Task 9: different keys competing for the final slot must not exceed quota.
