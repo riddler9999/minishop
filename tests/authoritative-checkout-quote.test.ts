@@ -66,3 +66,16 @@ test('same idempotency key returns the committed order before stale-quote valida
   assert.ok(retryLookup >= 0);
   assert.ok(staleCheck > retryLookup);
 });
+
+test('quote-aware checkout serializes at the shop before taking quote locks', async () => {
+  const sql = await readFile(
+    new URL('../supabase/migrations/0037_quote_order_lock_order.sql', import.meta.url),
+    'utf8',
+  );
+  const shopLock = sql.indexOf('where slug = p_shop_slug and is_active = true\n  for update;');
+  const quote = sql.indexOf('v_quote := public.quote_order(');
+
+  assert.ok(shopLock >= 0, 'quote-aware place_order must take the shop row FOR UPDATE');
+  assert.ok(quote > shopLock, 'quote_order must run after the shop lock is acquired');
+  assert.match(sql, /where shop_id = v_shop\.id and idempotency_key = p_idempotency_key/i);
+});
