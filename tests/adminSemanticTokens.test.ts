@@ -3,11 +3,11 @@ import {describe, it} from 'node:test';
 import fs from 'node:fs';
 
 const css = fs.readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
-const scope = css.match(/\/\* ---- Admin V2 scoped semantic tokens[\s\S]*?\*\/\s*\.admin-shell\s*\{([^}]+)\}/)?.[1];
+const scope = css.match(/\/\* ---- Admin\/editor semantic tokens[\s\S]*?\*\/\s*\.admin-shell,\s*\.store-builder-workspace\s*\{([^}]+)\}/)?.[1];
 
-describe('Admin V2 semantic tokens', () => {
-  it('defines approved palette and admin-only semantics on admin-shell', () => {
-    assert.ok(scope, 'Admin semantic tokens must be scoped to .admin-shell');
+describe('Admin V3 semantic admin/editor tokens', () => {
+  it('defines approved palette and shared admin/editor semantics', () => {
+    assert.ok(scope, 'Admin semantic tokens must be shared by .admin-shell and .store-builder-workspace');
     const expected = {
       'admin-canvas': '#f4f7f5',
       'admin-surface': '#ffffff',
