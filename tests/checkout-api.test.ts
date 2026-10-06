@@ -15,7 +15,11 @@ function validBody(overrides: Record<string, unknown> = {}) {
     },
     paymentMethod: 'cod',
     paymentRefTail: '',
-    items: [{id: '11111111-1111-4111-8111-111111111111', qty: 2}],
+    items: [{
+      productId: '11111111-1111-4111-8111-111111111111',
+      variantId: '33333333-3333-4333-8333-333333333333',
+      qty: 2,
+    }],
     idempotencyKey: '22222222-2222-4222-8222-222222222222',
     expectedItemTotal: 20000,
     expectedDeliveryFee: 3000,
@@ -58,7 +62,11 @@ describe('checkout API regression contract', () => {
     assert.ok(input);
     assert.equal(input.idempotencyKey, '22222222-2222-4222-8222-222222222222');
     assert.deepEqual(input.items, [
-      {product_id: '11111111-1111-4111-8111-111111111111', qty: 2},
+      {
+        product_id: '11111111-1111-4111-8111-111111111111',
+        variant_id: '33333333-3333-4333-8333-333333333333',
+        qty: 2,
+      },
     ]);
   });
 
@@ -70,7 +78,7 @@ describe('checkout API regression contract', () => {
 
   it('caps the API cart at the same 25-item limit enforced by place_order', () => {
     const items = Array.from({length: 40}, (_, i) => ({
-      id: `11111111-1111-4111-8111-${String(i).padStart(12, '0')}`,
+      productId: `11111111-1111-4111-8111-${String(i).padStart(12, '0')}`,
       qty: 1,
     }));
     const input = normalizeCheckoutInput(validBody({items}));
@@ -118,7 +126,7 @@ describe('checkout API regression contract', () => {
         slug: 'demo-shop',
         region: 'Yangon',
         township: 'Thanlyin',
-        items: [{id: '11111111-1111-4111-8111-111111111111', qty: 2}],
+        items: [{productId: '11111111-1111-4111-8111-111111111111', variantId: null, qty: 2}],
       },
       headers: {},
       socket: {remoteAddress: '203.0.113.7'},
@@ -131,6 +139,16 @@ describe('checkout API regression contract', () => {
       grand_total: 23000,
       delivery_service: 'custom',
     });
+  });
+
+  it('never derives product identity by splitting a synthetic cart id', () => {
+    const input = normalizeCheckoutInput(validBody({
+      items: [{
+        id: '11111111-1111-4111-8111-111111111111:33333333-3333-4333-8333-333333333333',
+        qty: 1,
+      }],
+    }));
+    assert.equal(input, null);
   });
 
   it('returns 409 and a fresh quote when accepted checkout pricing is stale', async () => {

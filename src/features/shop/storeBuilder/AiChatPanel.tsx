@@ -18,7 +18,7 @@ import {adminApi} from '@/data/dataSource';
 interface Props {
   conversation: AiConversation;
   disabled?: boolean;
-  onSendMessage: (prompt: string, mediaUrls: string[]) => Promise<void>;
+  onSendMessage: (prompt: string, media: {id: string; url: string}[]) => Promise<void>;
   onApplyProposal: (proposal: AiProposal) => void;
   onUndoLastEdit: () => void;
   canUndo: boolean;
@@ -33,7 +33,7 @@ export function AiChatPanel({
   canUndo,
 }: Props) {
   const [inputPrompt, setInputPrompt] = useState('');
-  const [attachedMedia, setAttachedMedia] = useState<{url: string; name: string}[]>([]);
+  const [attachedMedia, setAttachedMedia] = useState<{id: string; url: string; name: string}[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [confirmingDestructive, setConfirmingDestructive] = useState<AiProposal | null>(null);
@@ -53,7 +53,7 @@ export function AiChatPanel({
         const file = files[i];
         const media = await adminApi.uploadStoreMedia(file);
         const url = media.url || media.storagePath;
-        setAttachedMedia((prev) => [...prev, {url, name: file.name}]);
+        setAttachedMedia((prev) => [...prev, {id: media.id, url, name: file.name}]);
       }
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to attach image');
@@ -71,14 +71,13 @@ export function AiChatPanel({
     e.preventDefault();
     if ((!inputPrompt.trim() && attachedMedia.length === 0) || sending || disabled) return;
     const promptText = inputPrompt.trim() || 'Use attached image for section';
-    const mediaUrls = attachedMedia.map((m) => m.url);
 
     setInputPrompt('');
     setAttachedMedia([]);
     setSending(true);
 
     try {
-      await onSendMessage(promptText, mediaUrls);
+      await onSendMessage(promptText, attachedMedia);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to process AI command');
     } finally {

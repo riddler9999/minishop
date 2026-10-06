@@ -6,11 +6,10 @@ import {
   AI_PROVIDERS,
   type AiProviderId,
   type AiConnectionTestResult,
-  maskApiKey,
+  type AiCredentialMetadata,
   getProviderCapabilities,
 } from '@/domain/aiProvider';
-
-const CREDENTIALS_KEY = 'minishop_ai_credentials_v1';
+import {adminApi} from '@/data/dataSource';
 
 export default function AiSettings() {
   const [selectedProvider, setSelectedProvider] = useState<AiProviderId>('gemini');
@@ -21,33 +20,45 @@ export default function AiSettings() {
   const [testResult, setTestResult] = useState<AiConnectionTestResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [credentials, setCredentials] = useState<AiCredentialMetadata[]>([]);
+  const [loadingCredentials, setLoadingCredentials] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(`${CREDENTIALS_KEY}_${selectedProvider}`);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setSavedKeyMasked(parsed.keyMasked || maskApiKey(parsed.key));
-      } else {
-        setSavedKeyMasked(null);
-      }
-    } catch {
-      setSavedKeyMasked(null);
-    }
+    let alive = true;
+    setLoadingCredentials(true);
+    adminApi.listAiCredentials()
+      .then((result) => {
+        if (!alive) return;
+        setCredentials(result.credentials);
+        setError('');
+      })
+      .catch((loadError: unknown) => {
+        if (alive) setError(loadError instanceof Error ? loadError.message : 'Could not load AI credentials.');
+      })
+      .finally(() => {
+        if (alive) setLoadingCredentials(false);
+      });
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    const credential = credentials.find((item) => item.provider === selectedProvider && item.configured);
+    setSavedKeyMasked(credential?.maskedKey ?? null);
     setTestResult(null);
     setApiKey('');
-  }, [selectedProvider]);
+  }, [selectedProvider, credentials]);
 
   const providerDescriptor = AI_PROVIDERS[selectedProvider];
   const capabilities = getProviderCapabilities(selectedProvider);
 
   async function handleTestConnection() {
-    if (!apiKey && !savedKeyMasked) {
+    if (!savedKeyMasked) {
       setTestResult({
         ok: false,
         provider: selectedProvider,
         model: providerDescriptor.defaultModel,
-        message: 'Please enter an API key to test connection.',
+        message: 'Save an API key before testing the connection.',
         testedAt: new Date().toISOString(),
       });
       return;
@@ -57,18 +68,14 @@ export default function AiSettings() {
     setTestResult(null);
 
     try {
-      // Test connection with a lightweight structured output call
-      const _keyToUse = apiKey || localStorage.getItem(`${CREDENTIALS_KEY}_${selectedProvider}_raw`) || 'mock_key';
-      
-      // Simulate/execute connection verification
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const result = await adminApi.testAiConnection(selectedProvider);
 
       setTestResult({
-        ok: true,
-        provider: selectedProvider,
-        model: providerDescriptor.defaultModel,
+        ok: result.ok,
+        provider: result.provider,
+        model: result.model,
         message: `Connection successful! ${providerDescriptor.name} model [${providerDescriptor.defaultModel}] responded cleanly.`,
-        testedAt: new Date().toISOString(),
+        testedAt: result.testedAt,
       });
     } catch (err: unknown) {
       setTestResult({
@@ -83,35 +90,36 @@ export default function AiSettings() {
     }
   }
 
-  function handleSaveKey() {
+  async function handleSaveKey() {
     if (!apiKey.trim()) return;
     setSaving(true);
+    setError('');
     try {
-      const keyMasked = maskApiKey(apiKey);
-      localStorage.setItem(
-        `${CREDENTIALS_KEY}_${selectedProvider}`,
-        JSON.stringify({
-          provider: selectedProvider,
-          keyMasked,
-          updatedAt: new Date().toISOString(),
-        })
-      );
-      localStorage.setItem(`${CREDENTIALS_KEY}_${selectedProvider}_raw`, apiKey);
-      setSavedKeyMasked(keyMasked);
+      const {credential} = await adminApi.saveAiCredential(selectedProvider, apiKey);
+      setCredentials((current) => current.map((item) => item.provider === selectedProvider ? credential : item));
+      setSavedKeyMasked(credential.maskedKey ?? null);
       setApiKey('');
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 2000);
+    } catch (saveError: unknown) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not save API key.');
     } finally {
       setSaving(false);
     }
   }
 
-  function handleClearKey() {
-    localStorage.removeItem(`${CREDENTIALS_KEY}_${selectedProvider}`);
-    localStorage.removeItem(`${CREDENTIALS_KEY}_${selectedProvider}_raw`);
-    setSavedKeyMasked(null);
-    setApiKey('');
-    setTestResult(null);
+  async function handleClearKey() {
+    try {
+      await adminApi.removeAiCredential(selectedProvider);
+      setCredentials((current) => current.map((item) => item.provider === selectedProvider
+        ? {provider: selectedProvider, configured: false}
+        : item));
+      setSavedKeyMasked(null);
+      setApiKey('');
+      setTestResult(null);
+    } catch (removeError: unknown) {
+      setError(removeError instanceof Error ? removeError.message : 'Could not remove API key.');
+    }
   }
 
   return (
@@ -133,6 +141,8 @@ export default function AiSettings() {
       </div>
 
       <AdminSurface>
+        {loadingCredentials && <p className="text-sm text-[var(--admin-muted)]">Loading credential status…</p>}
+        {error && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">{error}</div>}
         <h2 className="text-base font-bold text-[var(--admin-text)] flex items-center gap-2">
           <Bot className="h-5 w-5 text-[var(--admin-primary-hover)]" />
           AI Provider Selection
@@ -235,7 +245,7 @@ export default function AiSettings() {
             <button
               type="button"
               onClick={handleTestConnection}
-              disabled={testing}
+              disabled={testing || !savedKeyMasked}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--admin-border)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--admin-text)] hover:bg-[var(--admin-canvas)] transition">
               {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Test Connection

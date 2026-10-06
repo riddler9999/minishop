@@ -155,12 +155,16 @@ Features: `tenancy` (shop slug + resolution), `catalog`, `cart`, `checkout`, `or
   payment-proof automation foundation), `0013`–`0015` (delivery pricing), `0016_entitlements_and_pricing.sql`
   (Pricing V1: Free Trial, subscription cycles, order entitlements, Extra Orders, idempotent order
   consumption), `0017_reconcile_payment_activation.sql` (historical 30,000/60,000 reconciliation), `0021_final_pricing_packaging_reconciliation.sql` (FINAL 29,000/79,000 pricing, Business 200-order quota, paid product caps, created-order usage semantics, and core promotions), `0022_production_db_hardening.sql` (trigger-helper privilege and ledger-index hardening), `0023_database_rls_concurrency_reconciliation.sql` (anon-only storefront reads, Core shop-logo writes, and unique Extra Order transaction identity), `0024_store_design_lifecycle.sql` (Draft/Published Store Design lifecycle), pending `0026_platform_shop_lifecycle.sql` (seller operational state separated from platform suspension; seller shop lifecycle deletion blocked), and pending `0027_anonymous_storefront_projection.sql` (buyer-safe public projections + anon base-table SELECT revocation).
+  Pending remediation migrations `0039_product_variants_ai_security.sql` and
+  `0040_variant_checkout_inventory.sql` add first-class variants, server-only encrypted AI
+  credentials, tenant media registration, and variant-aware transactional checkout. They are not
+  applied to Production.
   Historical migrations may contain superseded rules; current runtime truth is the latest migration
   plus `CONTEXT.md`. Never infer live migration application state from this file — check the live
   Supabase migration history before applying anything.
 - **Security model** (`supabase/README.md`): buyers are anonymous. Migration `0027` makes buyer-safe projection views the public read boundary and revokes anon SELECT on the underlying tenant tables; API gateways fall back to the prior active-row base-table reads only when those views are not yet deployed. Buyers never write tables directly
   — the only anon write path is `place_order()` (SECURITY DEFINER), which re-prices every line
-  server-side from `products` (client-sent prices are ignored) and validates stock/shop state
+  server-side from `products` and, when selected, `product_variants` (client-sent prices are ignored) and validates stock/shop state
   atomically. Buyer order lookup (`lookup_order()`) requires `(shop_slug, order_no, phone)`
   together — phone alone would let anyone enumerate a buyer's order history. Payment verification
   is manual for MVP: buyer types the last 5 digits of a KBZPay/WavePay transfer; the seller matches

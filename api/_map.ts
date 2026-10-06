@@ -14,13 +14,28 @@ export function mapProductRow(row: any) {
     price: row.price,
     promoPrice: row.promo_price,
     isPromotion: row.is_promotion,
-    stock: row.stock,
-    inStock: row.stock > 0,
+    stock: Array.isArray(row.variants) && row.variants.length
+      ? row.variants.reduce((sum: number, variant: any) => sum + Math.max(0, Number(variant.stock) || 0), 0)
+      : row.stock,
+    inStock: Array.isArray(row.variants) && row.variants.length
+      ? row.variants.some((variant: any) => Number(variant.stock) > 0)
+      : row.stock > 0,
     status: row.status,
     images,
     image: images[0] ?? null,
     description: row.description,
     arrivalDate: row.arrival_date,
     createdAt: row.created_at,
+    variants: (row.variants || []).map((variant: any) => ({
+      id: variant.id,
+      name: variant.name,
+      sku: variant.sku,
+      size: variant.size,
+      color: variant.color,
+      price: variant.price,
+      promoPrice: variant.promo_price,
+      stock: variant.stock,
+      status: variant.status,
+    })),
   };
 }

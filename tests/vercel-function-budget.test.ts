@@ -28,6 +28,7 @@ test('Vercel Hobby function discovery stays within the 12-function deployment bu
   );
   assert.deepEqual(discovered.sort(), [
     'api/checkout.ts',
+    'api/ai.ts',
     'api/health.ts',
     'api/mcp.ts',
     'api/notifications.ts',

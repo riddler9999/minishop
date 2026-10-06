@@ -84,6 +84,15 @@ export interface AiConnectionTestResult {
   testedAt: string;
 }
 
+export interface AiCredentialMetadata {
+  provider: AiProviderId;
+  configured: boolean;
+  maskedKey?: string;
+  updatedAt?: string;
+  lastTestedAt?: string | null;
+  lastTestOk?: boolean | null;
+}
+
 export function maskApiKey(key: string): string {
   if (!key) return '';
   if (key.length <= 8) return '••••' + key.slice(-2);

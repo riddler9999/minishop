@@ -133,7 +133,7 @@ async function createProduct(shopId: string, label: string, opts: Record<string,
   return ok(result, `create ${label} product`);
 }
 
-function orderArgs(shopSlug: string, productId: string, key: string, phone: string, qty = 1) {
+function orderArgs(shopSlug: string, productId: string, key: string, phone: string, qty = 1, variantId: string | null = null) {
   return {
     p_shop_slug: shopSlug,
     p_customer_name: 'Runtime Buyer',
@@ -143,7 +143,7 @@ function orderArgs(shopSlug: string, productId: string, key: string, phone: stri
     p_township: 'Runtime',
     p_payment_method: 'cod',
     p_payment_ref_tail: null,
-    p_items: [{ product_id: productId, qty }],
+    p_items: [{ product_id: productId, variant_id: variantId, qty }],
     p_idempotency_key: key,
   };
 }
@@ -190,6 +190,34 @@ async function main() {
   await setEntitlement(shopB.id, 'starter', 60);
   const productA = await createProduct(shopA.id, 'seller-a');
   const productB = await createProduct(shopB.id, 'seller-b');
+
+  // Product Variants + AI security remediation: first-class persistence, tenant
+  // isolation, order-line identity, and final-unit concurrency.
+  const variantProduct = await createProduct(shopA.id, 'variant-race', {stock: 0, price: 15000});
+  const seededVariants = ok(await service.from('product_variants').insert([
+    {shop_id: shopA.id, product_id: variantProduct.id, sku: `RACE-${randomUUID()}`, name: 'Final unit', price: 17000, promo_price: 16000, stock: 1},
+    {shop_id: shopA.id, product_id: variantProduct.id, sku: `OTHER-${randomUUID()}`, name: 'Other variant', price: 18000, stock: 5},
+    {shop_id: shopB.id, product_id: productB.id, sku: `FOREIGN-${randomUUID()}`, name: 'Seller B variant', stock: 3},
+  ]).select('id,shop_id,product_id,stock'), 'seed variants');
+  const finalVariant = seededVariants.find((row) => row.product_id === variantProduct.id && row.stock === 1)!;
+  const otherVariant = seededVariants.find((row) => row.product_id === variantProduct.id && row.stock === 5)!;
+  const sellerAVisibleVariants = ok(await sellerA.client.from('product_variants').select('id,shop_id'), 'seller A variant read');
+  assert.equal(sellerAVisibleVariants.some((row) => row.shop_id === shopB.id), false, 'seller A must not read seller B variants');
+  await expectBlocked(sellerA.client.from('ai_provider_credentials').select('*'), 'browser cannot read encrypted AI credentials');
+  await expectBlocked(sellerA.client.from('store_media').select('*'), 'browser cannot read trusted media registry');
+
+  const variantRace = await race([
+    () => callOrder(apiClient(anonKey!, '198.51.100.210'), orderArgs(shopA.slug, variantProduct.id, randomUUID(), '09400000001', 1, finalVariant.id)),
+    () => callOrder(apiClient(anonKey!, '198.51.100.211'), orderArgs(shopA.slug, variantProduct.id, randomUUID(), '09400000002', 1, finalVariant.id)),
+  ]);
+  assert.equal(countFulfilled(variantRace), 1, `exactly one final-variant purchase succeeds: ${settledResultsText(variantRace)}`);
+  assert.equal(countRejected(variantRace), 1, `exactly one final-variant purchase fails: ${settledResultsText(variantRace)}`);
+  const variantStocks = ok(await service.from('product_variants').select('id,stock').in('id', [finalVariant.id, otherVariant.id]), 'variant stocks after race');
+  assert.equal(variantStocks.find((row) => row.id === finalVariant.id)?.stock, 0);
+  assert.equal(variantStocks.find((row) => row.id === otherVariant.id)?.stock, 5);
+  assert.equal(variantStocks.some((row) => row.stock < 0), false);
+  const persistedVariantLines = ok(await service.from('order_items').select('variant_id,variant_name,variant_sku').eq('variant_id', finalVariant.id), 'variant order line');
+  assert.equal(persistedVariantLines.length, 1);
 
   const paymentAccounts = ok(await service.from('payment_accounts').insert([
     {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {describe, it} from 'node:test';
 import {
   getProductTotalStock,
@@ -7,7 +8,7 @@ import {
   type Product,
   type ProductVariant,
 } from '../src/domain/product.ts';
-import {parseVariants, encodeVariants, mapProduct, type ProductRow} from '../src/features/catalog/api/mappers.ts';
+import {mapProduct, type ProductRow} from '../src/features/catalog/api/mappers.ts';
 
 describe('Product Variants Domain & Mappers', () => {
   const sampleVariants: ProductVariant[] = [
@@ -86,21 +87,7 @@ describe('Product Variants Domain & Mappers', () => {
     assert.strictEqual(v3Price.effectivePrice, 20000);
   });
 
-  it('encodes and parses variants cleanly in product description comments', () => {
-    const description = 'High quality cotton shirt.';
-    const encoded = encodeVariants(description, sampleVariants);
-
-    assert.ok(encoded.includes('High quality cotton shirt.'));
-    assert.ok(encoded.includes('<!--VARIANTS:'));
-
-    const {cleanDescription, variants} = parseVariants(encoded);
-    assert.strictEqual(cleanDescription, 'High quality cotton shirt.');
-    assert.strictEqual(variants.length, 3);
-    assert.strictEqual(variants[0].name, 'Small / Red');
-    assert.strictEqual(variants[1].stock, 12);
-  });
-
-  it('maps product row with encoded variants', () => {
+  it('maps product rows with first-class variants and preserves a clean description', () => {
     const row: ProductRow = {
       id: 'prod_99',
       item_code: 'P-99',
@@ -114,10 +101,11 @@ describe('Product Variants Domain & Mappers', () => {
       stock: 0,
       status: 'active',
       images: ['https://example.com/jeans.jpg'],
-      description: encodeVariants('Classic fit jeans.', [
+      description: 'Classic fit jeans.',
+      variants: [
         {id: 'var_a', name: 'Size 30', size: '30', stock: 8},
         {id: 'var_b', name: 'Size 32', size: '32', stock: 15},
-      ]),
+      ],
       arrival_date: '2026-10-01T00:00:00Z',
       created_at: '2026-10-01T00:00:00Z',
     };
@@ -127,5 +115,14 @@ describe('Product Variants Domain & Mappers', () => {
     assert.strictEqual(mapped.variants?.length, 2);
     assert.strictEqual(mapped.stock, 23); // 8 + 15
     assert.strictEqual(mapped.inStock, true);
+  });
+
+  it('keeps variant selection and variant-aware pricing in designed product templates', async () => {
+    const detail = await readFile('src/features/catalog/pages/ProductDetail.tsx', 'utf8');
+    const renderer = await readFile('src/features/catalog/storeDesign/StorefrontRenderer.tsx', 'utf8');
+    assert.match(detail, /renderProductInfo=\{\(showPrice\)/);
+    assert.match(detail, /setSelectedVariant\(variant\)/);
+    assert.match(detail, /ks\(price\)/);
+    assert.match(renderer, /props\.renderProductInfo\(section\.settings\.showPrice\)/);
   });
 });
