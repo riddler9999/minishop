@@ -3,11 +3,12 @@
    typography. Product fonts retain display=swap and per-script unicode ranges. */
 @import 'tailwindcss';
 
-/* ---- Admin V2 scoped semantic tokens ---------------------------------------
-   Opt-in only: the AdminLayout root receives .admin-shell in a later migration.
-   No admin token is declared on :root, .platform-shell or storefront selectors,
-   so merchant-owned themes and the Store Builder preview remain isolated. */
-.admin-shell {
+/* ---- Admin/editor semantic tokens ------------------------------------------
+   MiniShop-owned admin and Store Builder chrome share one semantic system.
+   Tokens remain scoped away from :root, .platform-shell and storefront selectors,
+   so merchant-owned themes and Store Builder preview content remain isolated. */
+.admin-shell,
+.store-builder-workspace {
   --admin-canvas: #f4f7f5;
   --admin-surface: #ffffff;
   --admin-surface-muted: #f7faf8;
