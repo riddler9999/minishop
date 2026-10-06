@@ -1,8 +1,8 @@
 import {useEffect, useRef, useState} from 'react';
-import {Check, Eye, EyeOff, Trash2, Upload, X} from 'lucide-react';
+import {Check, Eye, EyeOff, Layers, Plus, Trash2, Upload, X} from 'lucide-react';
 import {PRODUCT_IMAGES_BUCKET} from '@/core/storage/buckets';
 import {adminApi} from '@/data/dataSource';
-import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
+import type {Product, ProductCreateInput, ProductPatch, ProductVariant} from '@/domain/product';
 import {deriveStoragePath, prepareImageForUpload, validateImageFile} from '@/core/storage/imageUpload';
 import {cx} from '@/shared/lib/format';
 import {usePlan} from '@/features/billing/plan';
@@ -36,6 +36,8 @@ export default function AdminProductEditor({
   const [isPromotion, setIsPromotion] = useState(product?.isPromotion ?? false);
   const [promoPrice, setPromoPrice] = useState(product?.promoPrice != null ? String(product.promoPrice) : '');
   const [stock, setStock] = useState(product ? String(product.stock) : '0');
+  const [hasVariants, setHasVariants] = useState<boolean>(Boolean(product?.variants && product.variants.length > 0));
+  const [variants, setVariants] = useState<ProductVariant[]>(product?.variants ?? []);
   const [existingImages, setExistingImages] = useState<string[]>(product?.images ?? []);
   const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<{file: File; previewUrl: string}[]>([]);
@@ -73,13 +75,18 @@ export default function AdminProductEditor({
 
   const save = async () => {
     const priceN = Number(price);
-    const stockN = Number(stock);
+    const stockN = hasVariants && variants.length > 0
+      ? variants.reduce((sum, v) => sum + Math.max(0, Number(v.stock) || 0), 0)
+      : Number(stock);
     const promoN = promoPrice.trim() === '' ? null : Number(promoPrice);
     if (!name.trim()) return setErr('Product name is required.');
     if (!Number.isFinite(priceN) || priceN < 0) return setErr('Enter a valid price.');
     if (!Number.isInteger(stockN) || stockN < 0) return setErr('Enter a valid stock quantity.');
     if (isPromotion && (promoN == null || !Number.isFinite(promoN) || promoN < 0 || promoN >= priceN)) {
       return setErr('Promotion price must be lower than the regular price.');
+    }
+    if (hasVariants && variants.length === 0) {
+      return setErr('Please add at least one variant or disable variants option.');
     }
 
     setErr('');
@@ -105,6 +112,7 @@ export default function AdminProductEditor({
         images: [...existingImages, ...newlyUploaded.map((item) => item.url)],
         description: description.trim(),
         arrivalDate: arrivalDate ? new Date(arrivalDate).toISOString() : null,
+        variants: hasVariants ? variants : [],
       };
 
       let saved: Product;
@@ -147,6 +155,39 @@ export default function AdminProductEditor({
     }
   };
 
+  const addVariant = () => {
+    const newV: ProductVariant = {
+      id: `v_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: `Variant ${variants.length + 1}`,
+      stock: 10,
+      price: price ? Number(price) : null,
+    };
+    setVariants((prev) => [...prev, newV]);
+  };
+
+  const updateVariant = (index: number, patch: Partial<ProductVariant>) => {
+    setVariants((prev) =>
+      prev.map((v, i) => (i === index ? {...v, ...patch} : v)),
+    );
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addStandardSizes = () => {
+    const baseP = price ? Number(price) : null;
+    const sizes = ['Small (S)', 'Medium (M)', 'Large (L)', 'X-Large (XL)'];
+    const newVars: ProductVariant[] = sizes.map((sName, idx) => ({
+      id: `v_${Date.now()}_${idx}`,
+      name: sName,
+      size: sName.split(' ')[0],
+      stock: 10,
+      price: baseP,
+    }));
+    setVariants((prev) => [...prev, ...newVars]);
+    setHasVariants(true);
+  };
   const section = (title: string, children: React.ReactNode) => (
     <section className="rounded-xl border border-[#E1E7E3] bg-white p-4 sm:p-5 shadow-sm">
       <h3 className="text-sm font-bold text-[#1F2421]">{title}</h3>
@@ -245,11 +286,143 @@ export default function AdminProductEditor({
             ) : null}
           </>)}
 
+          {section('Product Variants (Size, Color, Custom Price)', <>
+            <div className="flex items-center justify-between border-b border-[#E1E7E3] pb-3">
+              <label className="flex items-center gap-2 text-sm font-semibold text-[#1F2421] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasVariants}
+                  onChange={(e) => {
+                    setHasVariants(e.target.checked);
+                    if (e.target.checked && variants.length === 0) {
+                      addVariant();
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-[#E1E7E3] text-[#35B99D] focus:ring-[#35B99D]"
+                />
+                <span className="flex items-center gap-1.5">
+                  <Layers className="h-4 w-4 text-[#35B99D]" /> Enable multiple variants for this product
+                </span>
+              </label>
+              {hasVariants && (
+                <button
+                  type="button"
+                  onClick={addStandardSizes}
+                  className="text-xs font-semibold text-[#29957F] hover:underline">
+                  + Add Standard Sizes
+                </button>
+              )}
+            </div>
+
+            {hasVariants ? (
+              <div className="space-y-3 pt-2">
+                {variants.map((v, idx) => (
+                  <div key={v.id || idx} className="rounded-lg border border-[#E1E7E3] bg-[#F4F7F5] p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-[#66706C]">Variant #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(idx)}
+                        className="text-rose-600 hover:text-rose-800 p-1 transition"
+                        title="Remove variant">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid gap-2.5 sm:grid-cols-3">
+                      <div>
+                        <span className={label}>Variant Name</span>
+                        <input
+                          value={v.name}
+                          onChange={(e) => updateVariant(idx, {name: e.target.value})}
+                          placeholder="e.g. Red / XL"
+                          className={field}
+                        />
+                      </div>
+                      <div>
+                        <span className={label}>Stock Quantity</span>
+                        <input
+                          inputMode="numeric"
+                          value={v.stock}
+                          onChange={(e) => updateVariant(idx, {stock: Math.max(0, parseInt(e.target.value) || 0)})}
+                          placeholder="0"
+                          className={field}
+                        />
+                      </div>
+                      <div>
+                        <span className={label}>Custom Price (Ks) (Optional)</span>
+                        <input
+                          inputMode="numeric"
+                          value={v.price != null ? String(v.price) : ''}
+                          onChange={(e) =>
+                            updateVariant(idx, {
+                              price: e.target.value.trim() === '' ? null : Number(e.target.value),
+                            })
+                          }
+                          placeholder={`Base: ${price || '0'}`}
+                          className={field}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2.5 sm:grid-cols-3">
+                      <div>
+                        <span className={label}>Color (Optional)</span>
+                        <input
+                          value={v.color ?? ''}
+                          onChange={(e) => updateVariant(idx, {color: e.target.value || null})}
+                          placeholder="e.g. Red"
+                          className={field}
+                        />
+                      </div>
+                      <div>
+                        <span className={label}>Size (Optional)</span>
+                        <input
+                          value={v.size ?? ''}
+                          onChange={(e) => updateVariant(idx, {size: e.target.value || null})}
+                          placeholder="e.g. XL"
+                          className={field}
+                        />
+                      </div>
+                      <div>
+                        <span className={label}>SKU / Code (Optional)</span>
+                        <input
+                          value={v.sku ?? ''}
+                          onChange={(e) => updateVariant(idx, {sku: e.target.value || null})}
+                          placeholder="e.g. SKU-RED-XL"
+                          className={field}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#35B99D] bg-[#EEF9F6] px-3.5 py-2 text-xs font-bold text-[#29957F] hover:bg-[#D8F1EA] transition">
+                  <Plus className="h-3.5 w-3.5" /> Add Variant Option
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-[#66706C]">
+                Turn this on if this item comes in different sizes, colors, or custom prices.
+              </p>
+            )}
+          </>)}
+
           {section('Inventory', <>
             <div className="grid gap-3 sm:grid-cols-3">
               <label>
-                <span className={label}>Stock</span>
-                <input inputMode="numeric" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="0" className={field} />
+                <span className={label}>Stock {hasVariants ? '(Auto-calculated from variants)' : ''}</span>
+                <input
+                  inputMode="numeric"
+                  disabled={hasVariants}
+                  value={hasVariants ? String(variants.reduce((sum, v) => sum + Math.max(0, Number(v.stock) || 0), 0)) : stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  placeholder="0"
+                  className={cx(field, hasVariants && 'bg-[#F4F7F5] cursor-not-allowed opacity-80')}
+                />
               </label>
               <label>
                 <span className={label}>Item code</span>

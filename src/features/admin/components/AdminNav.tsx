@@ -62,7 +62,7 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
                       cx(
                         'block rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
                         isActive
-                          ? 'bg-[var(--admin-primary)] font-bold text-[#1F2421]'
+                          ? 'bg-[var(--admin-primary)] font-bold text-[var(--admin-text)]'
                           : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
                       )
                     }>
@@ -84,7 +84,7 @@ export default function AdminNav({onNavigate}: {onNavigate?: () => void}) {
               cx(
                 'flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)]',
                 isActive
-                  ? 'bg-[var(--admin-primary)] font-bold text-[#1F2421]'
+                  ? 'bg-[var(--admin-primary)] font-bold text-[var(--admin-text)]'
                   : 'text-[var(--admin-sidebar-muted)] hover:bg-[var(--admin-sidebar-hover)] hover:text-white',
               )
             }>

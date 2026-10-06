@@ -23,6 +23,7 @@ const SettingsPayments = lazy(() => import('@/features/shop/pages/SettingsPaymen
 const SettingsCheckout = lazy(() => import('@/features/shop/pages/SettingsCheckout'));
 const SettingsNotifications = lazy(() => import('@/features/shop/pages/SettingsNotifications'));
 const SettingsPrivacy = lazy(() => import('@/features/shop/pages/SettingsPrivacy'));
+const AiSettings = lazy(() => import('@/features/admin/pages/AiSettings'));
 const StoreDesign = lazy(() => import('@/features/shop/pages/StoreDesign'));
 const LifecycleStoreBuilder = lazy(() => import('@/features/shop/pages/LifecycleStoreBuilder'));
 const Themes = lazy(() => import('@/features/shop/pages/Themes'));
@@ -93,6 +94,7 @@ export default function App() {
             <Route path="settings/policies" element={<StorePolicies />} />
             <Route path="settings/notifications" element={<SettingsNotifications />} />
             <Route path="settings/privacy" element={<SettingsPrivacy />} />
+            <Route path="settings/ai" element={<AiSettings />} />
           </Route>
           <Route path="/s/:slug/*" element={<ShopRoute />} />
           <Route path="*" element={<RootStorefront />} />

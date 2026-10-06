@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {ArrowLeft, Check, ChevronLeft, ChevronRight, ImageOff, Minus, Plus, ShoppingBag} from 'lucide-react';
 import {api} from '@/data/dataSource';
-import type {Product} from '@/domain/product';
+import {type Product, type ProductVariant, resolveVariantPrice} from '@/domain/product';
 import type {ProductSource, StoreDesignDocument} from '@/domain/storeDesign';
 import {useCart} from '@/features/cart/state';
 import {ks} from '@/shared/lib/format';
@@ -35,13 +35,22 @@ export default function ProductDetail() {
   const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [bestSelling, setBestSelling] = useState<Product[]>([]);
   const [storeDesign, setStoreDesign] = useState<StoreDesignDocument | null>(null);
 
   useEffect(() => {
-    let alive = true; setProduct(null); setErr(''); setActive(0); setQty(1);
-    api.product(id!).then((r) => alive && setProduct(r.product)).catch((e) => alive && setErr(e.message || 'ပစ္စည်း ရှာမတွေ့ပါ'));
+    let alive = true; setProduct(null); setErr(''); setActive(0); setQty(1); setSelectedVariant(null);
+    api.product(id!).then((r) => {
+      if (alive) {
+        setProduct(r.product);
+        if (r.product.variants && r.product.variants.length > 0) {
+          const inStockV = r.product.variants.find((v) => v.stock > 0) ?? r.product.variants[0];
+          setSelectedVariant(inStockV ?? null);
+        }
+      }
+    }).catch((e) => alive && setErr(e.message || 'ပစ္စည်း ရှာမတွေ့ပါ'));
     return () => {alive = false;};
   }, [id, slug]);
 
@@ -84,11 +93,14 @@ export default function ProductDetail() {
   if (err) return <div className="mx-auto max-w-3xl px-4 py-16 text-center"><p className="my text-ink-soft">{err}</p><ShopLink to="/products" className="mt-4 inline-block font-semibold text-brand-700">← ပစ္စည်းများသို့</ShopLink></div>;
   if (!product) return <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 md:grid-cols-2"><div className="aspect-4/5 animate-pulse rounded-2xl bg-cream-100" /><div className="space-y-4"><div className="h-6 w-2/3 animate-pulse rounded bg-cream-100" /><div className="h-8 w-1/3 animate-pulse rounded bg-cream-100" /></div></div>;
 
-  const price = product.isPromotion && product.promoPrice ? product.promoPrice : product.price;
-  const hasPromo = product.isPromotion && product.promoPrice != null;
+  const activePriceInfo = resolveVariantPrice(product, selectedVariant);
+  const price = activePriceInfo.effectivePrice;
+  const hasPromo = activePriceInfo.isPromotion && activePriceInfo.promoPrice != null;
+  const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
+  const inStock = currentStock > 0;
   const colorHex = product.color ? COLOR_MAP[product.color.trim().toLowerCase()] ?? '#d1d5db' : null;
-  const doAdd = () => {add(product, qty); setAdded(true); setTimeout(() => setAdded(false), 1500);};
-  const buyNow = () => {add(product, qty); shopNav('/checkout');};
+  const doAdd = () => {add(product, qty, selectedVariant); setAdded(true); setTimeout(() => setAdded(false), 1500);};
+  const buyNow = () => {add(product, qty, selectedVariant); shopNav('/checkout');};
 
   const visual = getThemeVisual(theme);
 
@@ -108,10 +120,10 @@ export default function ProductDetail() {
           renderProductCard={(relatedProduct) => <ProductCard product={relatedProduct} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />}
           renderRequiredCommerce={(buyNowSettings) => (
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{borderColor: visual.accent, color: visual.accent}}>
+              <button disabled={!inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{borderColor: visual.accent, color: visual.accent}}>
                 {added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}
               </button>
-              <button disabled={!product.inStock} onClick={buyNow} className="min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{backgroundColor: visual.accent, color: visual.accentText}}>
+              <button disabled={!inStock} onClick={buyNow} className="min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{backgroundColor: visual.accent, color: visual.accentText}}>
                 {buyNowSettings.label}
               </button>
             </div>
@@ -186,12 +198,40 @@ export default function ProductDetail() {
               {hasPromo && <span className="text-sm text-[#988ca7] line-through">{ks(product.price)}</span>}
             </div>
 
+            {/* Product Variants Selector */}
+            {product.variants && product.variants.length > 0 ? (
+              <div className="mt-5">
+                <p className="my mb-2 text-sm font-bold text-[#49365f]">အမျိုးအစား ရွေးချယ်ပါ</p>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map((v) => {
+                    const isSelected = selectedVariant?.id === v.id;
+                    const vPrice = resolveVariantPrice(product, v);
+                    const isOut = v.stock <= 0;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setSelectedVariant(v)}
+                        className={`inline-flex flex-col items-start px-3.5 py-2 text-xs font-semibold rounded-xl border transition ${
+                          isSelected
+                            ? 'border-[#6d28d9] bg-[#f1e8ff] text-[#6d28d9] ring-2 ring-[#6d28d9]/20'
+                            : 'border-[#dfd1f5] hover:border-[#6d28d9] bg-white text-[#49365f]'
+                        } ${isOut ? 'opacity-50' : ''}`}>
+                        <span className="font-bold">{v.name}</span>
+                        <span className="text-[11px] opacity-80 mt-0.5">{ks(vPrice.effectivePrice)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5">
               <p className="my mb-2 text-sm font-bold text-[#49365f]">အရေအတွက်</p>
               <div className="flex w-fit items-center rounded-[16px] border border-[#dfd1f5] bg-white">
                 <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Minus className="h-4 w-4" /></button>
                 <span className="w-9 text-center text-sm font-bold text-[#2b1a47]">{qty}</span>
-                <button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Plus className="h-4 w-4" /></button>
+                <button onClick={() => setQty((q) => Math.min(Math.max(currentStock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center text-[#6d28d9]"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
 
@@ -202,18 +242,27 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {(product.color || product.size) && (
+            {(selectedVariant?.color || selectedVariant?.size || product.color || product.size) && (
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                {product.color && <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]"><span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: colorHex ?? '#d1d5db'}} />{product.color}</span>}
-                {product.size && <span className="inline-flex min-h-11 items-center rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]">Size · {product.size}</span>}
+                {(selectedVariant?.color || product.color) && (
+                  <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]">
+                    <span className="h-5 w-5 rounded-full border border-black/10" style={{backgroundColor: COLOR_MAP[(selectedVariant?.color || product.color!).trim().toLowerCase()] ?? '#d1d5db'}} />
+                    {selectedVariant?.color || product.color}
+                  </span>
+                )}
+                {(selectedVariant?.size || product.size) && (
+                  <span className="inline-flex min-h-11 items-center rounded-full bg-[#f1e8ff] px-4 text-sm font-semibold text-[#49365f]">
+                    Size · {selectedVariant?.size || product.size}
+                  </span>
+                )}
               </div>
             )}
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button disabled={!product.inStock} onClick={doAdd} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#6d28d9] bg-white px-4 py-3 text-sm font-bold text-[#6d28d9] transition hover:bg-[#f3ecff] disabled:opacity-50">
+              <button disabled={!inStock} onClick={doAdd} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-[18px] border border-[#6d28d9] bg-white px-4 py-3 text-sm font-bold text-[#6d28d9] transition hover:bg-[#f3ecff] disabled:opacity-50">
                 {added ? <><Check className="h-4 w-4" /> Added</> : <><ShoppingBag className="h-4 w-4" /> Add to cart</>}
               </button>
-              <button disabled={!product.inStock} onClick={buyNow} className="min-h-13 rounded-[18px] bg-[#6d28d9] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(109,40,217,0.30)] transition hover:bg-[#5b21b6] disabled:opacity-50">
+              <button disabled={!inStock} onClick={buyNow} className="min-h-13 rounded-[18px] bg-[#6d28d9] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(109,40,217,0.30)] transition hover:bg-[#5b21b6] disabled:opacity-50">
                 Buy now
               </button>
             </div>
@@ -337,9 +386,52 @@ export default function ProductDetail() {
           <h1 className={`my font-display text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-4xl ${detail.title}`}>{product.name}</h1>
           <div className={`mt-3 flex items-center gap-3 px-4 py-3 ${detail.priceBox}`}><span className="font-sans text-xl font-bold sm:text-2xl" style={{color: visual.accent}}>{ks(price)}</span>{hasPromo && <span className="text-sm line-through opacity-55 sm:text-base">{ks(product.price)}</span>}</div>
 
+          {/* Product Variants Selector */}
+          {product.variants && product.variants.length > 0 ? (
+            <div className="mt-5">
+              <p className="my mb-2.5 text-sm font-semibold flex items-center justify-between" style={{color: visual.text}}>
+                <span>အမျိုးအစား ရွေးချယ်ပါ</span>
+                {selectedVariant && (
+                  <span className="text-xs font-medium" style={{color: visual.muted}}>
+                    Stock: {selectedVariant.stock > 0 ? selectedVariant.stock : 'Out of stock'}
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((v) => {
+                  const isSelected = selectedVariant?.id === v.id;
+                  const vPrice = resolveVariantPrice(product, v);
+                  const isOut = v.stock <= 0;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedVariant(v)}
+                      className={`inline-flex flex-col items-start px-3.5 py-2 text-xs font-semibold rounded-xl border transition ${
+                        isSelected
+                          ? 'border-[#be123c] bg-rose-50 text-[#be123c] ring-2 ring-rose-500/20'
+                          : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
+                      } ${isOut ? 'opacity-50' : ''}`}>
+                      <span className="font-bold">{v.name}</span>
+                      <span className="text-[11px] opacity-80 mt-0.5">{ks(vPrice.effectivePrice)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-5">
             <p className="my mb-2 text-sm font-semibold" style={{color: visual.text}}>အရေအတွက်</p>
-            <div className={`flex w-fit items-center ${detail.qty}`}><button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-semibold">{qty}</span><button onClick={() => setQty((q) => Math.min(Math.max(product.stock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}><Plus className="h-4 w-4" /></button></div>
+            <div className={`flex w-fit items-center ${detail.qty}`}>
+              <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="အရေအတွက်လျှော့ရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}>
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center font-semibold">{qty}</span>
+              <button onClick={() => setQty((q) => Math.min(Math.max(currentStock, 1), q + 1))} aria-label="အရေအတွက်တိုးရန်" className="grid h-11 w-11 place-items-center" style={{color: visual.accent}}>
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {product.description && (
@@ -351,13 +443,27 @@ export default function ProductDetail() {
 
           <div className="my mt-5 flex flex-wrap items-center gap-3 text-sm">
             {product.category && <span className={`px-3 py-2 ${detail.chip}`}>{product.category}</span>}
-            {product.size && <span className={`px-3 py-2 ${detail.chip}`}>Size — {product.size}</span>}
-            {product.color && <span className={`inline-flex items-center gap-2 px-3 py-2 ${detail.chip}`}><span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: colorHex ?? '#d1d5db'}} aria-hidden="true" /><span>{product.color}</span></span>}
+            {selectedVariant?.size ? (
+              <span className={`px-3 py-2 ${detail.chip}`}>Size — {selectedVariant.size}</span>
+            ) : product.size ? (
+              <span className={`px-3 py-2 ${detail.chip}`}>Size — {product.size}</span>
+            ) : null}
+            {selectedVariant?.color ? (
+              <span className={`inline-flex items-center gap-2 px-3 py-2 ${detail.chip}`}>
+                <span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: COLOR_MAP[selectedVariant.color.trim().toLowerCase()] ?? '#d1d5db'}} aria-hidden="true" />
+                <span>{selectedVariant.color}</span>
+              </span>
+            ) : product.color ? (
+              <span className={`inline-flex items-center gap-2 px-3 py-2 ${detail.chip}`}>
+                <span className="h-4 w-4 rounded-full border border-black/10 shadow-inner" style={{backgroundColor: colorHex ?? '#d1d5db'}} aria-hidden="true" />
+                <span>{product.color}</span>
+              </span>
+            ) : null}
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button disabled={!product.inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.secondary}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
-            <button disabled={!product.inStock} onClick={buyNow} className={`min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.primary}`}>{theme.product.buyNowLabel}</button>
+            <button disabled={!inStock} onClick={doAdd} className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.secondary}`}>{added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}</button>
+            <button disabled={!inStock} onClick={buyNow} className={`min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${detail.primary}`}>{theme.product.buyNowLabel}</button>
           </div>
         </div>
       </div>

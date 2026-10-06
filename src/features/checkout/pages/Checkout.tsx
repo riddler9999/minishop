@@ -292,7 +292,14 @@ export default function Checkout() {
                   <div className="commerce-thumb h-10 w-9 shrink-0 overflow-hidden">
                     {it.image ? <img src={it.image} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><ImageOff className="h-4 w-4 text-slate-500" /></div>}
                   </div>
-                  <span className="my flex-1 truncate">{it.name} ×{it.qty}</span>
+                  <div className="my flex-1 min-w-0">
+                    <p className="truncate">{it.name} ×{it.qty}</p>
+                    {(it.variantName || it.color || it.size) ? (
+                      <p className="text-xs text-[#66706C] truncate">
+                        {it.variantName || [it.color, it.size].filter(Boolean).join(' / ')}
+                      </p>
+                    ) : null}
+                  </div>
                   <span className="font-semibold">{ks(it.price * it.qty)}</span>
                 </div>
               ))}

@@ -1,12 +1,10 @@
-import {Search} from 'lucide-react';
-
 export type ProductStatusFilter = 'all' | 'active' | 'hidden';
 export type ProductStockFilter = 'all' | 'in_stock' | 'low_stock' | 'out_of_stock';
 export type ProductSort = 'newest' | 'name' | 'price_low' | 'price_high' | 'stock_low';
 
 export default function AdminProductFilters({
-  query,
-  onQueryChange,
+  query: _query,
+  onQueryChange: _onQueryChange,
   status,
   onStatusChange,
   stock,
@@ -32,19 +30,8 @@ export default function AdminProductFilters({
   const field = 'min-h-11 rounded-lg border border-[#E1E7E3] bg-white px-3 text-sm text-[#1F2421] outline-none transition focus:border-[#35B99D] focus-visible:ring-2 focus-visible:ring-[#D8F1EA]';
 
   return (
-    <div className="grid gap-3 rounded-xl border border-[#E1E7E3] bg-white p-4 shadow-sm lg:grid-cols-[minmax(220px,1.5fr)_repeat(4,minmax(140px,0.75fr))]">
-      <label className="relative block">
-        <span className="sr-only">Search products</span>
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#66706C]" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search products"
-          className={`${field} w-full pl-9`}
-        />
-      </label>
-
+    <div className="grid gap-3 rounded-xl border border-[#E1E7E3] bg-white p-4 shadow-sm lg:grid-cols-[repeat(4,minmax(140px,1fr))]">
+      {/* Search products */}
       <label className="grid gap-1 text-xs font-semibold text-[#66706C]">
         <span>Status</span>
         <select value={status} onChange={(event) => onStatusChange(event.target.value as ProductStatusFilter)} className={field}>

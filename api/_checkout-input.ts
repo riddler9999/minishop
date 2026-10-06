@@ -29,7 +29,7 @@ function normalizeItems(value: unknown): {product_id: string; qty: number}[] {
   const rawItems = Array.isArray(value) ? value.slice(0, 25) : [];
   return rawItems
     .map((item: any) => ({
-      product_id: clean(item?.id ?? item?.product_id, 100),
+      product_id: clean(item?.id ?? item?.product_id, 100).split(':')[0],
       qty: Math.min(Math.max(Math.floor(Number(item?.qty) || 0), 0), 100),
     }))
     .filter((item: {product_id: string; qty: number}) => item.product_id && item.qty > 0);

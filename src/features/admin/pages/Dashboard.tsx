@@ -86,7 +86,6 @@ export default function Dashboard() {
     <div className="space-y-5 pb-8">
       <AdminPageHeader
         title="Dashboard"
-        description="See what needs attention and keep your store moving."
         actions={
           <span className="inline-flex min-h-10 items-center rounded-lg border border-[#E1E7E3] bg-white px-3 text-sm font-semibold text-[#1F2421]">
             Last 7 days

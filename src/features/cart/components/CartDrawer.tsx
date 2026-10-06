@@ -89,8 +89,15 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="commerce-strong my line-clamp-2 text-sm font-semibold">{it.name}</p>
-                      <button onClick={() => remove(it.id)} aria-label="ဖျက်ရန်" className="commerce-muted">
+                      <div className="min-w-0">
+                        <p className="commerce-strong my line-clamp-2 text-sm font-semibold">{it.name}</p>
+                        {(it.variantName || it.color || it.size) ? (
+                          <p className="commerce-muted text-xs mt-0.5 font-medium">
+                            {it.variantName || [it.color, it.size].filter(Boolean).join(' / ')}
+                          </p>
+                        ) : null}
+                      </div>
+                      <button onClick={() => remove(it.id)} aria-label="ဖျက်ရန်" className="commerce-muted shrink-0">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

@@ -70,6 +70,49 @@ export function canPublish(state: EditorState) {
   return !state.blocked && state.status === 'saved' && state.savedRevision === state.lastSavedRevision;
 }
 
+export type DocumentHistoryState = {
+  past: StoreDesignDocument[];
+  present: StoreDesignDocument;
+  future: StoreDesignDocument[];
+};
+
+export function createDocumentHistory(initial: StoreDesignDocument): DocumentHistoryState {
+  return {past: [], present: initial, future: []};
+}
+
+export function pushHistory(history: DocumentHistoryState, nextDoc: StoreDesignDocument): DocumentHistoryState {
+  if (JSON.stringify(history.present) === JSON.stringify(nextDoc)) return history;
+  return {
+    past: [...history.past, history.present],
+    present: nextDoc,
+    future: [],
+  };
+}
+
+export function undoHistory(history: DocumentHistoryState): {history: DocumentHistoryState; doc: StoreDesignDocument | null} {
+  if (history.past.length === 0) return {history, doc: null};
+  const previous = history.past[history.past.length - 1];
+  const newPast = history.past.slice(0, history.past.length - 1);
+  const newHistory: DocumentHistoryState = {
+    past: newPast,
+    present: previous,
+    future: [history.present, ...history.future],
+  };
+  return {history: newHistory, doc: previous};
+}
+
+export function redoHistory(history: DocumentHistoryState): {history: DocumentHistoryState; doc: StoreDesignDocument | null} {
+  if (history.future.length === 0) return {history, doc: null};
+  const next = history.future[0];
+  const newFuture = history.future.slice(1);
+  const newHistory: DocumentHistoryState = {
+    past: [...history.past, history.present],
+    present: next,
+    future: newFuture,
+  };
+  return {history: newHistory, doc: next};
+}
+
 export async function publishSavedDraft(state: EditorState, publishDraft: PublishDraft) {
   if (!canPublish(state)) throw new Error('Save the latest Draft before publishing.');
   return publishDraft({expectedDraftRevision: state.lastSavedRevision});

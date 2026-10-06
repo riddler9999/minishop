@@ -24,6 +24,7 @@ import {
   Lock,
   Palette,
   ArrowRight,
+  Bot,
 } from 'lucide-react';
 import {Link} from 'react-router-dom';
 import type {User} from '@supabase/supabase-js';
@@ -448,6 +449,33 @@ function SettingsForm({shop, user}: {shop: OwnShop; user: User}) {
             </div>
             <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
               <span>Privacy standards</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </div>
+          </Link>
+
+          {/* 11. AI Settings & BYOK */}
+          <Link
+            to="/admin/settings/ai"
+            className="group flex flex-col justify-between rounded-xl border border-[#E1E7E3] bg-[#FFFFFF] p-4 transition hover:border-[#35B99D] hover:shadow-xs"
+          >
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D8F1EA] text-[#29957F]">
+                  <Bot className="h-5 w-5" />
+                </span>
+                <span className="rounded-full bg-[#D8F1EA] px-2 py-0.5 text-[10px] font-bold text-[#29957F]">
+                  BYOK
+                </span>
+              </div>
+              <p className="text-sm font-bold text-[#1F2421] group-hover:text-[#29957F]">
+                AI Settings
+              </p>
+              <p className="mt-1 text-xs text-[#66706C]">
+                Configure AI provider keys &amp; models for Store Builder
+              </p>
+            </div>
+            <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#29957F]">
+              <span>Manage AI keys</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </div>
           </Link>

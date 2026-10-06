@@ -50,11 +50,10 @@ describe('Admin Products V2 workspace', () => {
   });
 
   it('organizes the editor into required groups without inventing unsupported features', () => {
-    for (const section of ['General', 'Media', 'Pricing', 'Inventory', 'Product Organization', 'Store Visibility']) {
+    for (const section of ['General', 'Media', 'Pricing', 'Product Variants', 'Inventory', 'Product Organization', 'Store Visibility']) {
       assert.match(editor, new RegExp(section), `missing editor group: ${section}`);
     }
     // Does not invent unsupported features
-    assert.doesNotMatch(editor, /Variants/);
     assert.doesNotMatch(editor, /Collections/);
     assert.doesNotMatch(editor, /Tags/);
     assert.doesNotMatch(editor + page + filters + table, /Barcode/i);

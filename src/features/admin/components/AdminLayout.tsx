@@ -76,18 +76,18 @@ export default function AdminLayout() {
             aria-label="Open navigation"
             aria-expanded={mobileOpen}
             aria-controls="admin-mobile-nav"
-            className="grid h-11 w-11 place-items-center rounded-xl text-[#1F2421] transition hover:bg-[#F4F7F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#35B99D] lg:hidden">
+            className="grid h-11 w-11 place-items-center rounded-xl text-[var(--admin-text)] transition hover:bg-[var(--admin-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-focus)] lg:hidden">
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#1F2421]">{shop?.name ?? 'MiniShop'}</p>
-            <p className="hidden text-xs text-[#66706C] sm:block">Seller Admin</p>
+            <p className="truncate text-sm font-semibold text-[var(--admin-text)]">{shop?.name ?? 'MiniShop'}</p>
+            <p className="hidden text-xs text-[var(--admin-muted)] sm:block">Seller Admin</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span aria-label="Notifications" className="grid h-11 w-11 place-items-center rounded-xl text-[#66706C]">
+            <span aria-label="Notifications" className="grid h-11 w-11 place-items-center rounded-xl text-[var(--admin-muted)]">
               <Bell className="h-5 w-5" />
             </span>
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#D8F1EA] text-sm font-bold text-[#1F2421]">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--admin-primary-soft)] text-sm font-bold text-[var(--admin-text)]">
               {shopInitial(shop?.name)}
             </div>
           </div>

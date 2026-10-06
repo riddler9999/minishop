@@ -55,21 +55,53 @@ interface DemoSeed {
   keyword: string;
   locks: number[];
   description: string;
+  variants?: {
+    id: string;
+    name: string;
+    size?: string;
+    color?: string;
+    price?: number;
+    promoPrice?: number;
+    stock: number;
+  }[];
 }
 
 const SEEDS: DemoSeed[] = [
-  {name:'ရှပ်အင်္ကျီ — Classic White Shirt',category:'အင်္ကျီ',color:'အဖြူ',size:'M',price:22000,promoPrice:17500,stock:14,keyword:'shirt',locks:[101,102],description:'သန့်ရှင်းရိုးရှင်းတဲ့ Classic White Shirt ဖြစ်ပြီး ရုံးဝတ်၊ အစည်းအဝေးနဲ့ နေ့စဉ် smart-casual look အတွက် လွယ်လွယ်ကူကူတွဲဝတ်နိုင်ပါတယ်။\nပေါ့ပါးနူးညံ့တဲ့ ချည်သားအထိအတွေ့နဲ့ ဖြောင့်တန်းသပ်ရပ်တဲ့ cut ကြောင့် ဘောင်းဘီ၊ စကတ်၊ denim တို့နဲ့ အဆင်ပြေပါတယ်။'},
+  {
+    name:'ရှပ်အင်္ကျီ — Classic White Shirt',category:'အင်္ကျီ',color:'အဖြူ',size:'M',price:22000,promoPrice:17500,stock:18,keyword:'shirt',locks:[101,102],
+    description:'သန့်ရှင်းရိုးရှင်းတဲ့ Classic White Shirt ဖြစ်ပြီး ရုံးဝတ်၊ အစည်းအဝေးနဲ့ နေ့စဉ် smart-casual look အတွက် လွယ်လွယ်ကူကူတွဲဝတ်နိုင်ပါတယ်။\nပေါ့ပါးနူးညံ့တဲ့ ချည်သားအထိအတွေ့နဲ့ ဖြောင့်တန်းသပ်ရပ်တဲ့ cut ကြောင့် ဘောင်းဘီ၊ စကတ်၊ denim တို့နဲ့ အဆင်ပြေပါတယ်။',
+    variants: [
+      {id: 'v0-1', name: 'Small (S) / အဖြူ', size: 'S', color: 'အဖြူ', price: 22000, promoPrice: 17500, stock: 5},
+      {id: 'v0-2', name: 'Medium (M) / အဖြူ', size: 'M', color: 'အဖြူ', price: 22000, promoPrice: 17500, stock: 9},
+      {id: 'v0-3', name: 'Large (L) / အဖြူ', size: 'L', color: 'အဖြူ', price: 24000, promoPrice: 18500, stock: 4},
+    ],
+  },
   {name:'ဘလောက်စ်အင်္ကျီ — Floral Blouse',category:'အင်္ကျီ',color:'ပန်းရောင်',size:'S',price:19500,stock:10,keyword:'blouse',locks:[111,112],description:'နူးညံ့တဲ့ ပန်းရောင်အခြေခံပေါ်မှာ floral pattern ပါတဲ့ Feminine Blouse ဖြစ်ပါတယ်။\nပေါ့ပါးတဲ့အထိအတွေ့နဲ့ ချောမွေ့တဲ့ silhouette ကြောင့် အလုပ်သွားဝတ်၊ brunch look နဲ့ ပွဲသွား smart-casual style တွေအတွက် သင့်တော်ပါတယ်။'},
   {name:'တီရှပ် — Cotton Tee',category:'အင်္ကျီ',color:'မီးခိုး',size:'L',price:12000,promoPrice:8900,stock:25,keyword:'tshirt',locks:[121,122],description:'နေ့စဉ်ဝတ်ဖို့ လွယ်ကူတဲ့ မီးခိုးရောင် Cotton Tee ဖြစ်ပြီး ရိုးရှင်းတဲ့ crew-neck design နဲ့ clean fit ကိုရရှိစေပါတယ်။\nနူးညံ့ပေါ့ပါးတဲ့ ချည်သားအထိအတွေ့ရှိပြီး jeans၊ shorts၊ cargo pants တို့နဲ့ အလွယ်တကူတွဲဝတ်နိုင်ပါတယ်။'},
   {name:'ဂါဝန် — Summer Dress',category:'ဂါဝန်',color:'ကောင်းကင်ပြာ',size:'M',price:28000,promoPrice:22000,stock:12,keyword:'dress',locks:[131,132,133],description:'နွေရာသီအတွက် သက်တောင့်သက်သာဝတ်နိုင်တဲ့ ကောင်းကင်ပြာရောင် Summer Dress ဖြစ်ပါတယ်။\nပေါ့ပါးပြီး လှုပ်ရှားရလွယ်တဲ့ silhouette ကြောင့် နေ့လယ်ခင်း outing၊ cafe date နဲ့ ခရီးသွား look တွေအတွက် သင့်တော်ပါတယ်။'},
   {name:'ည ဝတ်ဂါဝန် — Evening Gown',category:'ဂါဝန်',color:'ခရမ်း',size:'Free',price:45000,stock:5,keyword:'gown',locks:[141,142],description:'ခရမ်းရောင် tone နဲ့ elegant silhouette ကို အဓိကထားတဲ့ Evening Gown ဖြစ်ပါတယ်။\nညစာပွဲ၊ မင်္ဂလာဧည့်ခံပွဲနဲ့ အထူးအခမ်းအနားလို dress-up လုပ်ရတဲ့အချိန်တွေမှာ premium look ရစေဖို့ ဒီဇိုင်းထားပါတယ်။'},
   {name:'စကတ် — Pleated Skirt',category:'စကတ် & ဘောင်းဘီ',color:'အနက်',size:'M',price:18000,promoPrice:14500,stock:9,keyword:'skirt',locks:[151,152],description:'အခေါက်လိုက် pleat detail နဲ့ သပ်ရပ်တဲ့ အနက်ရောင် Pleated Skirt ဖြစ်ပါတယ်။\nShirt၊ blouse၊ knit top တို့နဲ့တွဲဝတ်လို့ကောင်းပြီး ရုံးဝတ်၊ ကျောင်းဝတ်နဲ့ smart-casual outfit တွေအတွက် လွယ်ကူစွာအသုံးချနိုင်ပါတယ်။'},
-  {name:'ဂျင်းဘောင်းဘီ — Denim Jeans',category:'စကတ် & ဘောင်းဘီ',color:'ပြာ',size:'30',price:26000,stock:16,keyword:'jeans',locks:[161,162],description:'Classic blue wash နဲ့ နေ့စဉ်အသုံးများတဲ့ Denim Jeans ဖြစ်ပါတယ်။\nတည်ငြိမ်တဲ့ denim feel နဲ့ versatile fit ကြောင့် T-shirt၊ shirt၊ hoodie နဲ့ jacket တွေအားလုံးနဲ့ လွယ်ကူစွာတွဲဝတ်နိုင်ပါတယ်။'},
+  {
+    name:'ဂျင်းဘောင်းဘီ — Denim Jeans',category:'စကတ် & ဘောင်းဘီ',color:'ပြာ',size:'30',price:26000,stock:21,keyword:'jeans',locks:[161,162],
+    description:'Classic blue wash နဲ့ နေ့စဉ်အသုံးများတဲ့ Denim Jeans ဖြစ်ပါတယ်။\nတည်ငြိမ်တဲ့ denim feel နဲ့ versatile fit ကြောင့် T-shirt၊ shirt၊ hoodie နဲ့ jacket တွေအားလုံးနဲ့ လွယ်ကူစွာတွဲဝတ်နိုင်ပါတယ်။',
+    variants: [
+      {id: 'v6-1', name: 'Size 28 / ပြာ', size: '28', color: 'ပြာ', price: 26000, stock: 6},
+      {id: 'v6-2', name: 'Size 30 / ပြာ', size: '30', color: 'ပြာ', price: 26000, stock: 10},
+      {id: 'v6-3', name: 'Size 32 / ပြာ', size: '32', color: 'ပြာ', price: 28000, stock: 5},
+    ],
+  },
   {name:'အနွေးထည် — Knit Sweater',category:'အနွေးထည်',color:'အညို',size:'L',price:24000,promoPrice:19000,stock:11,keyword:'sweater',locks:[171,172],description:'နွေးထွေးတဲ့အညိုရောင် tone နဲ့ soft knit texture ပါတဲ့ Knit Sweater ဖြစ်ပါတယ်။\nအေးမြတဲ့ရာသီ၊ air-con ပြင်းတဲ့နေရာနဲ့ layered outfit တွေအတွက် သင့်တော်ပြီး denim သို့မဟုတ် neutral-color pants တွေနဲ့ လိုက်ဖက်ပါတယ်။'},
   {name:'ဂျင်းဂျာကင် — Denim Jacket',category:'အနွေးထည်',color:'ပြာရင့်',size:'M',price:32000,stock:7,keyword:'denim,jacket',locks:[181,182],description:'ပြာရင့် denim finish နဲ့ timeless casual look ရစေတဲ့ Denim Jacket ဖြစ်ပါတယ်။\nT-shirt၊ dress၊ hoodie ပေါ်ကနေ layer လုပ်ဝတ်နိုင်ပြီး နေ့စဉ် street style နဲ့ weekend outfit တွေအတွက် အသုံးဝင်ပါတယ်။'},
   {name:'ဟူးဒီ — Cozy Hoodie',category:'အနွေးထည်',color:'မီးခိုးရင့်',size:'XL',price:21000,promoPrice:16500,stock:0,keyword:'hoodie',locks:[191,192],description:'အေးမြတဲ့နေ့တွေမှာ သက်တောင့်သက်သာဝတ်နိုင်တဲ့ မီးခိုးရင့် Cozy Hoodie ဖြစ်ပါတယ်။\nRelaxed fit နဲ့ soft-touch feel ကြောင့် casual day၊ ခရီးသွားချိန်နဲ့ အိမ်နားနေချိန်တွေမှာ လွယ်ကူစွာဝတ်ဆင်နိုင်ပါတယ်။ လက်ရှိ demo stock ကုန်နေပါတယ်။'},
   {name:'ကုတ်အင်္ကျီ — Wool Coat',category:'အနွေးထည်',color:'အနက်ညို',size:'M',price:52000,stock:4,keyword:'coat',locks:[201,202,203],description:'အနက်ညိုရောင်နဲ့ refined outerwear look ပေးတဲ့ Wool Coat ဖြစ်ပါတယ်။\nနွေးထွေးတဲ့ wool-like texture နဲ့ structured silhouette ကြောင့် အေးတဲ့ရာသီ၊ business outfit နဲ့ formal layering အတွက် သင့်တော်ပါတယ်။'},
-  {name:'လင်နင်ရှပ်အင်္ကျီ — Linen Shirt',category:'အင်္ကျီ',color:'ခရင်မ်',size:'L',price:20000,promoPrice:15900,stock:18,keyword:'linen,shirt',locks:[211,212],description:'ခရင်မ်ရောင် natural tone နဲ့ ပေါ့ပါးတဲ့ Linen Shirt ဖြစ်ပါတယ်။\nလေဝင်လေထွက်ကောင်းတဲ့ linen-style feel ကြောင့် ပူတဲ့ရာသီနဲ့ ခရီးသွား outfit တွေအတွက် သင့်တော်ပြီး shorts၊ chino နဲ့ denim တို့နဲ့ လွယ်ကူစွာတွဲဝတ်နိုင်ပါတယ်။'},
+  {
+    name:'လင်နင်ရှပ်အင်္ကျီ — Linen Shirt',category:'အင်္ကျီ',color:'ခရင်မ်',size:'L',price:20000,promoPrice:15900,stock:18,keyword:'linen,shirt',locks:[211,212],
+    description:'ခရင်မ်ရောင် natural tone နဲ့ ပေါ့ပါးတဲ့ Linen Shirt ဖြစ်ပါတယ်။\nလေဝင်လေထွက်ကောင်းတဲ့ linen-style feel ကြောင့် ပူတဲ့ရာသီနဲ့ ခရီးသွား outfit တွေအတွက် သင့်တော်ပြီး shorts၊ chino နဲ့ denim တို့နဲ့ လွယ်ကူစွာတွဲဝတ်နိုင်ပါတယ်။',
+    variants: [
+      {id: 'v11-1', name: 'Medium (M) / ခရင်မ်', size: 'M', color: 'ခရင်မ်', price: 20000, promoPrice: 15900, stock: 8},
+      {id: 'v11-2', name: 'Large (L) / ခရင်မ်', size: 'L', color: 'ခရင်မ်', price: 20000, promoPrice: 15900, stock: 10},
+    ],
+  },
 ];
 
 const PRODUCT_PHOTOS: Record<number, string> = {
@@ -92,6 +124,9 @@ export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
   const images = uploadedPhoto ? [uploadedPhoto, ...placeholderImages.slice(1)] : placeholderImages;
   const isPromotion = s.promoPrice != null;
   const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+  const calculatedStock = s.variants && s.variants.length > 0
+    ? s.variants.reduce((sum, v) => sum + Math.max(0, v.stock), 0)
+    : s.stock;
   return {
     id: `demo-${i + 1}`,
     itemCode: `DEMO-${String(i + 1).padStart(3, '0')}`,
@@ -102,14 +137,15 @@ export const DEMO_PRODUCTS: Product[] = SEEDS.map((s, i) => {
     price: s.price,
     promoPrice: s.promoPrice ?? null,
     isPromotion,
-    stock: s.stock,
-    inStock: s.stock > 0,
+    stock: calculatedStock,
+    inStock: calculatedStock > 0,
     status: 'active',
     images,
     image: images[0] ?? null,
     description: s.description,
     arrivalDate: daysAgo(i),
     createdAt: daysAgo(i),
+    variants: s.variants,
   };
 });
 

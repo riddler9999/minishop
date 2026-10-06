@@ -1,22 +1,27 @@
 import {createContext, useContext, useEffect, useMemo, useState, type ReactNode} from 'react';
 import {useLocation} from 'react-router-dom';
-import type {Product} from '@/domain/product';
+import {type Product, type ProductVariant, resolveVariantPrice, getProductTotalStock} from '@/domain/product';
 import {getShopSlug} from '@/features/tenancy/shopContext';
 
 export interface CartItem {
   id: string;
+  productId: string;
+  variantId?: string | null;
+  variantName?: string | null;
   name: string;
   price: number;
   image: string | null;
   qty: number;
   stock: number;
+  color?: string | null;
+  size?: string | null;
 }
 
 interface CartCtx {
   items: CartItem[];
   count: number;
   subtotal: number;
-  add: (p: Product, qty?: number) => void;
+  add: (p: Product, qty?: number, variant?: ProductVariant | null) => void;
   setQty: (id: string, qty: number) => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -60,7 +65,6 @@ export function CartProvider({
   }, [items, key]);
 
   const value = useMemo<CartCtx>(() => {
-    const unit = (p: Product) => (p.isPromotion && p.promoPrice ? p.promoPrice : p.price);
     return {
       items,
       count: items.reduce((s, i) => s + i.qty, 0),
@@ -68,19 +72,36 @@ export function CartProvider({
       drawerOpen,
       openDrawer: () => setDrawerOpen(true),
       closeDrawer: () => setDrawerOpen(false),
-      add: (p, qty = 1) => {
+      add: (p, qty = 1, variant = null) => {
         setDrawerOpen(true);
         setItems((prev) => {
-          const found = prev.find((i) => i.id === p.id);
-          const max = Math.max(p.stock, 1);
+          const itemId = variant ? `${p.id}:${variant.id}` : p.id;
+          const {effectivePrice} = resolveVariantPrice(p, variant);
+          const itemStock = variant ? variant.stock : getProductTotalStock(p);
+          const max = Math.max(itemStock, 1);
+          const found = prev.find((i) => i.id === itemId);
+
           if (found) {
             return prev.map((i) =>
-              i.id === p.id ? {...i, qty: Math.min(i.qty + qty, max), stock: p.stock} : i,
+              i.id === itemId ? {...i, qty: Math.min(i.qty + qty, max), stock: itemStock, price: effectivePrice} : i,
             );
           }
+
           return [
             ...prev,
-            {id: p.id, name: p.name, price: unit(p), image: p.image, qty: Math.min(qty, max), stock: p.stock},
+            {
+              id: itemId,
+              productId: p.id,
+              variantId: variant?.id || null,
+              variantName: variant?.name || null,
+              name: p.name,
+              price: effectivePrice,
+              image: p.image,
+              qty: Math.min(qty, max),
+              stock: itemStock,
+              color: variant?.color || p.color || null,
+              size: variant?.size || p.size || null,
+            },
           ];
         });
       },

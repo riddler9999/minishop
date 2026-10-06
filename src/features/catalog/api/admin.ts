@@ -7,7 +7,7 @@ import {mapDbError} from '@/domain/dbError';
 import type {TablesInsert, TablesUpdate} from '@/core/supabase/database.types';
 import type {Product, ProductCreateInput, ProductPatch} from '@/domain/product';
 import {resolveOwnShopId} from '@/features/tenancy/ownShop';
-import {mapProduct} from './mappers';
+import {mapProduct, encodeVariants} from './mappers';
 import {boundedPageSize, decodePageCursor, encodePageCursor, isIsoTimestamp, isSafeCursorId} from '@/shared/lib/keysetPagination';
 
 type ProductCursor = {arrival_date:string|null; id:string};
@@ -91,7 +91,10 @@ export const catalogAdminApi = {
     if (patch.stock !== undefined) dbPatch.stock = patch.stock;
     if (patch.status !== undefined) dbPatch.status = patch.status;
     if (patch.images !== undefined) dbPatch.images = patch.images;
-    if (patch.description !== undefined) dbPatch.description = patch.description;
+    if (patch.description !== undefined || patch.variants !== undefined) {
+      const desc = patch.description ?? '';
+      dbPatch.description = encodeVariants(desc, patch.variants);
+    }
     if (patch.arrivalDate !== undefined) dbPatch.arrival_date = patch.arrivalDate;
 
     const {data, error} = await sb
@@ -134,7 +137,7 @@ export const catalogAdminApi = {
       stock: input.stock ?? 0,
       status: input.status ?? 'active',
       images: input.images ?? [],
-      description: input.description ?? '',
+      description: encodeVariants(input.description ?? '', input.variants),
       arrival_date: input.arrivalDate ?? null,
     };
     const {data, error} = await sb.from('products').insert(row).select().maybeSingle();

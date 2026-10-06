@@ -146,10 +146,12 @@ export function PricingSection() {
         whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
         viewport={{once: true, amount: 0.35}}
         transition={{duration: 0.55, ease: [0.22, 1, 0.36, 1]}}
-        className="landing-section-head mb-8 text-center"
+        className="landing-section-head mb-12 text-center"
       >
-        <span className="landing-section-pill">SIMPLE PRICING</span>
-        <h2 className="mt-3 text-3xl font-black tracking-tight md:text-4xl text-slate-950">
+        <span className="landing-section-pill border border-[var(--commerce-border,#e1e7e3)] bg-[var(--commerce-surface-soft,#f4f7f5)] text-[var(--commerce-accent,#35b99d)]">
+          SIMPLE PRICING
+        </span>
+        <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--commerce-text,#1f2421)] md:text-4xl">
           Pricing
         </h2>
       </motion.div>
@@ -159,7 +161,7 @@ export function PricingSection() {
         initial={shouldReduceMotion ? false : 'hidden'}
         whileInView={shouldReduceMotion ? undefined : 'visible'}
         viewport={{once: true, amount: 0.2}}
-        className="mx-auto grid w-full max-w-5xl grid-cols-1 items-end gap-5 md:grid-cols-3"
+        className="mx-auto grid w-full max-w-5xl grid-cols-1 items-stretch gap-6 md:grid-cols-3"
       >
         {pricingPlans.map(({plan, name, eyebrow, price, priceSuffix, description, features, cta}) => {
           const featured = plan === 'starter';
@@ -167,66 +169,82 @@ export function PricingSection() {
           const displaySuffix = priceSuffix || '';
 
           return (
-            <div key={plan} className={`h-full ${featured ? 'md:-translate-y-3.5' : ''}`}>
+            <div key={plan} className={`h-full ${featured ? 'md:-translate-y-3' : ''}`}>
               <motion.article
                 variants={pricingCardVariants}
-                whileHover={shouldReduceMotion ? undefined : {y: featured ? -14 : -6, boxShadow: featured ? '0 20px 50px rgba(0,0,0,0.28)' : '0 12px 36px rgba(0,0,0,0.10)'}}
-                className={`relative flex h-full flex-col rounded-2xl p-7 ${featured ? 'bg-black text-white shadow-xl' : 'border border-black/10 bg-white text-black shadow-xs'}`}
+                whileHover={shouldReduceMotion ? undefined : {y: featured ? -10 : -5, boxShadow: featured ? '0 20px 48px rgba(31,36,33,0.16)' : '0 10px 28px rgba(31,36,33,0.06)'}}
+                className={`relative flex h-full flex-col rounded-[var(--commerce-radius,20px)] p-7 transition-all duration-200 ${
+                  featured
+                    ? 'border-2 border-[var(--commerce-accent,#35b99d)] bg-[var(--commerce-surface,#ffffff)] text-[var(--commerce-text,#1f2421)] shadow-xl ring-1 ring-[var(--commerce-accent,#35b99d)]/20'
+                    : 'border border-[var(--commerce-border,#e1e7e3)] bg-[var(--commerce-surface,#ffffff)] text-[var(--commerce-text,#1f2421)] shadow-xs'
+                }`}
               >
-              {featured && (
-                <motion.div
-                  initial={shouldReduceMotion ? false : {opacity: 0, y: -8}}
-                  whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
-                  viewport={{once: true}}
-                  transition={{delay: 0.35}}
-                  className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-green-300 bg-green-100 px-3 py-0.5 text-[10px] font-bold tracking-widest text-green-700 uppercase"
-                >
-                  အသင့်တော်ဆုံး
-                </motion.div>
-              )}
-
-              <div className="mb-5 flex items-center gap-2">
-                <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold ${featured ? 'bg-white/10 text-white' : 'bg-black/5 text-black'}`}>
-                  {plan === 'free_trial' ? '○' : plan === 'starter' ? '◇' : '⊕'}
-                </span>
-                <span className="text-base font-bold">{name}</span>
-              </div>
-
-              <span className={`mb-3 text-xs font-semibold ${featured ? 'text-white/60' : 'text-black/50'}`}>{eyebrow}</span>
-              <div className="mb-2 flex items-end gap-1">
-                <strong className="text-4xl leading-none font-bold tracking-tight md:text-5xl">{formatKs(displayPrice)}</strong>
-                {displaySuffix && <span className={`mb-1.5 text-xs ${featured ? 'text-white/50' : 'text-black/50'}`}>{displaySuffix}</span>}
-              </div>
-
-              <p className={`mb-6 text-sm leading-6 ${featured ? 'text-white/60' : 'text-black/60'}`}>{description}</p>
-              <div className={`mb-6 h-px w-full ${featured ? 'bg-white/10' : 'bg-black/8'}`} />
-
-              <ul className="mb-8 flex flex-1 flex-col gap-3">
-                {features.map((feature, index) => (
-                  <motion.li
-                    key={feature}
-                    initial={shouldReduceMotion ? false : {opacity: 0, x: -8}}
-                    whileInView={shouldReduceMotion ? undefined : {opacity: 1, x: 0}}
+                {featured && (
+                  <motion.div
+                    initial={shouldReduceMotion ? false : {opacity: 0, y: -8}}
+                    whileInView={shouldReduceMotion ? undefined : {opacity: 1, y: 0}}
                     viewport={{once: true}}
-                    transition={{delay: 0.2 + index * 0.06, duration: 0.3}}
-                    className={`flex items-start gap-2.5 text-sm ${featured ? 'text-white/80' : 'text-black/75'}`}
+                    transition={{delay: 0.35}}
+                    className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-[var(--commerce-accent,#35b99d)] bg-[var(--commerce-accent,#35b99d)] px-3 py-0.5 text-[10px] font-bold tracking-widest text-[var(--commerce-accent-contrast,#ffffff)] uppercase shadow-xs"
                   >
-                    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${featured ? 'bg-white/10' : 'bg-black/5'}`}>
-                      <Check size={10} strokeWidth={2.5}/>
-                    </span>
-                    <span>{feature}</span>
-                  </motion.li>
-                ))}
-              </ul>
+                    အသင့်တော်ဆုံး
+                  </motion.div>
+                )}
 
-              <motion.div whileHover={shouldReduceMotion ? undefined : {scale: 1.02}} whileTap={shouldReduceMotion ? undefined : {scale: 0.98}}>
-                <Link
-                  to={signupHref(plan)}
-                  className={`flex w-full items-center justify-center gap-1.5 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 ${featured ? 'border-white bg-white text-black hover:bg-white/90' : 'border-black/10 bg-black/5 text-black hover:bg-black/10'}`}
-                >
-                  {cta}<ArrowRight size={16}/>
-                </Link>
-              </motion.div>
+                <div className="mb-5 flex items-center gap-2.5">
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-[var(--commerce-radius-sm,10px)] text-sm font-bold ${
+                    featured
+                      ? 'bg-[var(--commerce-accent-soft,#d8f1ea)] text-[var(--commerce-accent,#35b99d)]'
+                      : 'bg-[var(--commerce-surface-soft,#f4f7f5)] text-[var(--commerce-text,#1f2421)]'
+                  }`}>
+                    {plan === 'free_trial' ? '○' : plan === 'starter' ? '◇' : '⊕'}
+                  </span>
+                  <span className="text-base font-bold text-[var(--commerce-text,#1f2421)]">{name}</span>
+                </div>
+
+                <span className="mb-3 text-xs font-semibold text-[var(--commerce-muted,#66706c)]">{eyebrow}</span>
+                <div className="mb-2 flex items-end gap-1">
+                  <strong className="text-4xl leading-none font-bold tracking-tight text-[var(--commerce-text,#1f2421)] md:text-5xl">{formatKs(displayPrice)}</strong>
+                  {displaySuffix && <span className="mb-1.5 text-xs text-[var(--commerce-muted,#66706c)]">{displaySuffix}</span>}
+                </div>
+
+                <p className="mb-6 text-sm leading-6 text-[var(--commerce-muted,#66706c)]">{description}</p>
+                <div className="mb-6 h-px w-full bg-[var(--commerce-border,#e1e7e3)]" />
+
+                <ul className="mb-8 flex flex-1 flex-col gap-3">
+                  {features.map((feature, index) => (
+                    <motion.li
+                      key={feature}
+                      initial={shouldReduceMotion ? false : {opacity: 0, x: -8}}
+                      whileInView={shouldReduceMotion ? undefined : {opacity: 1, x: 0}}
+                      viewport={{once: true}}
+                      transition={{delay: 0.2 + index * 0.06, duration: 0.3}}
+                      className="flex items-start gap-2.5 text-sm text-[var(--commerce-text,#1f2421)]"
+                    >
+                      <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                        featured
+                          ? 'bg-[var(--commerce-accent-soft,#d8f1ea)] text-[var(--commerce-accent,#35b99d)]'
+                          : 'bg-[var(--commerce-surface-soft,#f4f7f5)] text-[var(--commerce-text,#1f2421)]'
+                      }`}>
+                        <Check size={10} strokeWidth={2.5}/>
+                      </span>
+                      <span>{feature}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <motion.div whileHover={shouldReduceMotion ? undefined : {scale: 1.02}} whileTap={shouldReduceMotion ? undefined : {scale: 0.98}}>
+                  <Link
+                    to={signupHref(plan)}
+                    className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-[var(--commerce-radius-sm,12px)] border px-4 py-3 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--commerce-accent,#35b99d)] focus-visible:ring-offset-2 ${
+                      featured
+                        ? 'border-[var(--commerce-accent,#35b99d)] bg-[var(--commerce-accent,#35b99d)] text-[var(--commerce-accent-contrast,#ffffff)] shadow-xs hover:brightness-95'
+                        : 'border-[var(--commerce-border,#e1e7e3)] bg-[var(--commerce-surface-soft,#f4f7f5)] text-[var(--commerce-text,#1f2421)] hover:border-[var(--commerce-accent,#35b99d)] hover:bg-[var(--commerce-surface,#ffffff)]'
+                    }`}
+                  >
+                    {cta}<ArrowRight size={16}/>
+                  </Link>
+                </motion.div>
               </motion.article>
             </div>
           );
