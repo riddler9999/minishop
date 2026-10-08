@@ -244,6 +244,11 @@ export function AdminOrderDetail({
                 <li key={index} className="flex justify-between items-center gap-4 px-5 py-3.5 text-sm">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-[#1F2421] truncate">{item.name}</p>
+                    {(item.variantName || item.variantSku) && (
+                      <p className="text-xs text-[#6B746F] truncate">
+                        {[item.variantName, item.variantSku].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
                     <p className="text-xs text-[#66706C] mt-0.5">
                       {ks(item.price)} × {item.qty}
                     </p>

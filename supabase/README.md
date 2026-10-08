@@ -75,6 +75,8 @@ Shipped since this list was written: Storage buckets + tenant-safe policies
 | `0024_store_design_lifecycle.sql` | Adds tenant-scoped Draft/Published Store Design lifecycle RPCs and buyer Published-only read while retaining `shops.theme` compatibility. **Applied to Production 2026-09-28** (confirmed by live migration history). |
 | `0026_platform_shop_lifecycle.sql` | Separates seller operational state from platform suspension, keeps `shops.is_active` as the derived buyer-facing effective flag, and removes seller DELETE permission on the shop lifecycle root. **Not applied to Production.** Requires a separate reviewed Production rollout. |
 | `0027_anonymous_storefront_projection.sql` | Adds narrow buyer-safe projection views for shops/products/payment accounts/shipping zones, removes seller-only product SKU exposure, and revokes anon SELECT on those base tables. **Not applied to Production.** API gateways retain a missing-view-only compatibility fallback until this migration is explicitly approved and applied. |
+| `0039_product_variants_ai_security.sql` | Adds first-class tenant product variants, buyer variant projection, order-line variant identity, repeat-safe legacy backfill, server-only encrypted AI credential rows, and the tenant media registry. **Not applied to Production.** |
+| `0040_variant_checkout_inventory.sql` | Reconciles quote/order RPCs with explicit variant identity, authoritative variant pricing, row locking, variant-only decrement, and non-variant compatibility. **Not applied to Production.** |
 
 ### Residual advisor decisions (2026-09-25)
 

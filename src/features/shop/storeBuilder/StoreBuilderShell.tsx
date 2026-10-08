@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {
   ArrowLeft,
@@ -54,7 +54,9 @@ import {
   appendAssistantProposal,
   type AiConversation,
 } from '@/domain/aiConversation';
-import {generateStoreEditProposal, type AiProposal} from '@/domain/aiGateway';
+import type {AiProposal} from '@/domain/aiGateway';
+import {adminApi} from '@/data/dataSource';
+import type {AiProviderId} from '@/domain/aiProvider';
 import {validateAndExecuteAiCommands} from '@/domain/storeDesign/aiCommands';
 
 type Props = {
@@ -96,6 +98,7 @@ export function StoreBuilderShell({
   const [conversation, setConversation] = useState<AiConversation>(() =>
     createInitialConversation('shop_active')
   );
+  const editorRevision = useRef(crypto.randomUUID());
 
   const runSave = (snapshot: EditorState) => {
     if (snapshot.blocked || snapshot.status === 'conflict') return;
@@ -119,6 +122,7 @@ export function StoreBuilderShell({
   );
 
   const updateDocument = (nextDoc: StoreDesignDocument) => {
+    editorRevision.current = crypto.randomUUID();
     setHistory((prev) => pushHistory(prev, nextDoc));
     setEditor((current) => applyLocalEdit(current, nextDoc));
   };
@@ -126,6 +130,7 @@ export function StoreBuilderShell({
   const handleUndo = () => {
     const {history: nextHistory, doc} = undoHistory(history);
     if (doc) {
+      editorRevision.current = crypto.randomUUID();
       setHistory(nextHistory);
       setEditor((current) => applyLocalEdit(current, doc));
     }
@@ -134,31 +139,42 @@ export function StoreBuilderShell({
   const handleRedo = () => {
     const {history: nextHistory, doc} = redoHistory(history);
     if (doc) {
+      editorRevision.current = crypto.randomUUID();
       setHistory(nextHistory);
       setEditor((current) => applyLocalEdit(current, doc));
     }
   };
 
-  const handleSendMessage = async (prompt: string, mediaUrls: string[]) => {
-    const {conversation: updatedConv} = appendUserMessage(conversation, prompt, mediaUrls);
+  const handleSendMessage = async (prompt: string, media: {id: string; url: string}[]) => {
+    const baseRevision = editorRevision.current;
+    const {conversation: updatedConv} = appendUserMessage(conversation, prompt, media.map((item) => item.url));
     setConversation(updatedConv);
 
-    const proposal = await generateStoreEditProposal({
+    const credentials = await adminApi.listAiCredentials();
+    const provider = credentials.credentials.find((item) => item.configured)?.provider as AiProviderId | undefined;
+    if (!provider) throw new Error('Configure an AI provider in AI Settings first.');
+    const {proposal} = await adminApi.generateAiStoreProposal({
+      provider,
       message: prompt,
       currentDoc: editor.document,
-      mediaUrls,
+      mediaIds: media.map((item) => item.id),
+      baseRevision,
     });
 
     const {conversation: finalConv} = appendAssistantProposal(updatedConv, proposal);
     setConversation(finalConv);
 
-    // Auto-apply proposal commands to local Draft preview
-    handleApplyProposal(proposal);
   };
 
   const handleApplyProposal = (proposal: AiProposal) => {
-    const result = validateAndExecuteAiCommands(editor.document, proposal.commands);
-    if (result.ok || result.appliedCommandsCount > 0) {
+    if (proposal.baseRevision !== editorRevision.current) {
+      alert('This AI proposal is based on an older draft. Generate a new proposal for the current design.');
+      return;
+    }
+    const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
+      mediaById: proposal.trustedMedia,
+    });
+    if (result.ok === true) {
       updateDocument(result.doc);
     }
   };

@@ -28,5 +28,5 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --package-lock=true
       - run: npm run check

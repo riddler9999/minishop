@@ -2,7 +2,13 @@ export interface CheckoutQuoteInput {
   slug: string;
   region: string;
   township: string;
-  items: {product_id: string; qty: number}[];
+  items: CheckoutLineInput[];
+}
+
+export interface CheckoutLineInput {
+  product_id: string;
+  variant_id: string | null;
+  qty: number;
 }
 
 export interface CheckoutInput {
@@ -16,8 +22,8 @@ export interface CheckoutInput {
   };
   paymentMethod: string;
   paymentRefTail: string;
-  items: {product_id: string; qty: number}[];
-  idempotencyKey: string | null;
+  items: CheckoutLineInput[];
+  idempotencyKey: string;
   expectedItemTotal: number | null;
   expectedDeliveryFee: number | null;
 }
@@ -25,14 +31,25 @@ export interface CheckoutInput {
 const clean = (value: unknown, max = 200): string =>
   String(value ?? '').trim().slice(0, max);
 
-function normalizeItems(value: unknown): {product_id: string; qty: number}[] {
+function normalizeUuid(value: unknown): string {
+  const candidate = clean(value, 100);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : '';
+}
+
+function normalizeItems(value: unknown): CheckoutLineInput[] {
   const rawItems = Array.isArray(value) ? value.slice(0, 25) : [];
   return rawItems
-    .map((item: any) => ({
-      product_id: clean(item?.id ?? item?.product_id, 100).split(':')[0],
-      qty: Math.min(Math.max(Math.floor(Number(item?.qty) || 0), 0), 100),
-    }))
-    .filter((item: {product_id: string; qty: number}) => item.product_id && item.qty > 0);
+    .map((item: any): CheckoutLineInput => {
+      const rawVariantId = item?.variantId ?? item?.variant_id ?? null;
+      return {
+        product_id: normalizeUuid(item?.productId ?? item?.product_id),
+        variant_id: rawVariantId == null || rawVariantId === '' ? null : normalizeUuid(rawVariantId),
+        qty: Math.min(Math.max(Math.floor(Number(item?.qty) || 0), 0), 100),
+      };
+    })
+    .filter((item) => item.product_id && item.qty > 0 && item.variant_id !== '');
 }
 
 function safeMoney(value: unknown): number | null {
@@ -73,7 +90,7 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
   const idempotencyKey =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawKey)
       ? rawKey
-      : null;
+      : '';
 
   const items = normalizeItems(b.items);
   const expectedItemTotal = safeMoney(b.expectedItemTotal);
@@ -87,6 +104,7 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
     !customer.region ||
     !customer.township ||
     !paymentMethod ||
+    !idempotencyKey ||
     items.length === 0 ||
     expectedItemTotal == null ||
     expectedDeliveryFee == null

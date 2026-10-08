@@ -16,6 +16,7 @@ export type StorefrontRendererProps = {
   categories?: string[];
   product?: Product | null;
   renderProductCard?: (product: Product) => ReactNode;
+  renderProductInfo?: (showPrice: boolean) => ReactNode;
   renderRequiredCommerce?: (buyNow: StoreDesignDocument['globalSettings']['buyNow']) => ReactNode;
   selectedSectionId?: string | null;
   onSectionSelect?: (sectionId: string) => void;
@@ -172,6 +173,9 @@ function sectionContent(section: StoreSection, props: StorefrontRendererProps, v
       return props.product ? <ProductGallery product={props.product} /> : null;
     case 'product-info': {
       if (!props.product) return null;
+      if (props.renderProductInfo) {
+        return <section className="product-info-panel">{props.renderProductInfo(section.settings.showPrice)}</section>;
+      }
       const currentPrice = props.product.isPromotion && props.product.promoPrice != null ? props.product.promoPrice : props.product.price;
       return (
         <section className="product-info-panel">

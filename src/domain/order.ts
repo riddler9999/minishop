@@ -13,7 +13,14 @@ export interface OrderResult {
 
 export interface TrackedOrder {
   order_id: string;
-  items: {name: string; price: number; qty: number}[];
+  items: {
+    name: string;
+    price: number;
+    qty: number;
+    variantId?: string | null;
+    variantName?: string | null;
+    variantSku?: string | null;
+  }[];
   item_total: number;
   delivery_fee: number;
   grand_total: number;

@@ -35,7 +35,7 @@ export const checkoutApi = {
   async shippingConfig(): Promise<{zones: {region: string; township: string; fee: number}[]; defaultFee: number}> {
     const data = await config(); return {zones: data.zones, defaultFee: data.defaultFee};
   },
-  async quoteOrder(body: {region: string; township: string; items: {id: string; qty: number}[]}): Promise<CheckoutQuote> {
+  async quoteOrder(body: {region: string; township: string; items: {productId: string; variantId: string | null; qty: number}[]}): Promise<CheckoutQuote> {
     const slug = getShopSlug();
     if (!slug) throw new Error('ဆိုင် အချက်အလက် မတွေ့ပါ။');
     const response = await fetch('/api/checkout', {

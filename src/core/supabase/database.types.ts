@@ -107,6 +107,9 @@ export type Database = {
           name: string
           order_id: string
           product_id: string | null
+          variant_id: string | null
+          variant_name: string | null
+          variant_sku: string | null
           qty: number
           unit_price: number
         }
@@ -115,6 +118,9 @@ export type Database = {
           name: string
           order_id: string
           product_id?: string | null
+          variant_id?: string | null
+          variant_name?: string | null
+          variant_sku?: string | null
           qty: number
           unit_price: number
         }
@@ -123,6 +129,9 @@ export type Database = {
           name?: string
           order_id?: string
           product_id?: string | null
+          variant_id?: string | null
+          variant_name?: string | null
+          variant_sku?: string | null
           qty?: number
           unit_price?: number
         }

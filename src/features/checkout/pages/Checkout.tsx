@@ -31,6 +31,7 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
+  const idempotencyFingerprint = useRef('');
   useEffect(() => {
     let alive = true;
     api.merchantAccounts().then((r) => alive && setAccounts(r.accounts)).catch(() => {});
@@ -56,7 +57,7 @@ export default function Checkout() {
     api.quoteOrder({
       region,
       township,
-      items: items.map((item) => ({id: item.id, qty: item.qty})),
+      items: items.map((item) => ({productId: item.productId, variantId: item.variantId ?? null, qty: item.qty})),
     }).then((nextQuote) => {
       if (alive) setQuote(nextQuote);
     }).catch(() => {
@@ -84,6 +85,13 @@ export default function Checkout() {
     ].join('|'),
     [items, region, township, method, live, quote?.itemTotal, subtotal, fee],
   );
+  useEffect(() => {
+    if (idempotencyFingerprint.current && idempotencyFingerprint.current !== cartFingerprint) {
+      idempotencyKey.current = '';
+      clearCheckoutIntent(sessionStorage, shopSlug);
+    }
+    idempotencyFingerprint.current = cartFingerprint;
+  }, [cartFingerprint, shopSlug]);
   const online = isOnlinePayment(method);
   const providerAccounts = paymentAccounts(accounts, method);
   const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
@@ -109,11 +117,12 @@ export default function Checkout() {
       const intent = existing ?? createCheckoutIntent({shopSlug, cartFingerprint});
       saveCheckoutIntent(sessionStorage, intent);
       idempotencyKey.current = intent.idempotencyKey;
+      idempotencyFingerprint.current = cartFingerprint;
     }
     try {
       const res = await api.createOrder({
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
-        items: items.map((i) => ({id: i.id, qty: i.qty})),
+        items: items.map((i) => ({productId: i.productId, variantId: i.variantId ?? null, qty: i.qty})),
         paymentMethod: method,
         expectedItemTotal: live ? quote?.itemTotal ?? subtotal : subtotal,
         expectedDeliveryFee: fee ?? 0,

@@ -51,6 +51,7 @@ export type DbErrorCode =
   | 'duplicate_payment_identity'
   | 'idempotency_key_required'
   | 'idempotency_conflict'
+  | 'idempotency_key_conflict'
   | 'invalid_financial_action'
   | 'invalid_financial_request'
   | 'financial_request_not_found'
@@ -89,6 +90,14 @@ export type DbErrorCode =
   | 'inventory_adjustment_reason_too_long'
   | 'inventory_product_not_found'
   | 'inventory_adjustment_would_go_negative'
+  | 'invalid_variants'
+  | 'invalid_variant'
+  | 'invalid_product'
+  | 'invalid_product_images'
+  | 'variant_identity_immutable'
+  | 'product_not_found'
+  | 'variant_required'
+  | 'variant_unavailable'
   // MCP distributed rate-limit guard (0037)
   | 'mcp_auth_required'
   | 'invalid_mcp_action'
@@ -139,6 +148,7 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   duplicate_payment_identity: 'ဒီ Transaction ID ကို အခြားငွေကြေးလုပ်ဆောင်ချက်မှာ အသုံးပြုပြီးဖြစ်ပါသည်။',
   idempotency_key_required: 'တောင်းဆိုမှု ID မရှိပါ — ပြန်ကြိုးစားပါ။',
   idempotency_conflict: 'ဒီတောင်းဆိုမှု ID ကို မတူညီသောလုပ်ဆောင်ချက်အတွက် အသုံးပြုပြီးဖြစ်ပါသည်။',
+  idempotency_key_conflict: 'ဒီ Order တောင်းဆိုမှု ID ကို မတူညီသော ခြင်း သို့မဟုတ် ဝယ်သူအတွက် အသုံးပြု၍မရပါ။',
   invalid_financial_action: 'ငွေကြေးလုပ်ဆောင်ချက် မမှန်ပါ။',
   invalid_financial_request: 'ငွေကြေးတောင်းဆိုမှု အချက်အလက် မပြည့်စုံပါ။',
   financial_request_not_found: 'ငွေကြေးတောင်းဆိုမှု ရှာမတွေ့ပါ။',
@@ -175,6 +185,14 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   inventory_adjustment_reason_too_long: 'Stock ပြင်ဆင်ရတဲ့ အကြောင်းပြချက် အရမ်းရှည်နေပါတယ်။',
   inventory_product_not_found: 'ပြင်ဆင်မည့် ပစ္စည်းကို မတွေ့ပါ သို့မဟုတ် ခွင့်မရှိပါ။',
   inventory_adjustment_would_go_negative: 'Stock ကို သုညအောက် မလျှော့နိုင်ပါ။',
+  invalid_variants: 'Product variant အချက်အလက် မမှန်ပါ။ ပြင်ဆင်ပြီး ပြန်ကြိုးစားပါ။',
+  invalid_variant: 'Product variant တစ်ခု၏ အချက်အလက် မမှန်ပါ။',
+  invalid_product: 'Product အချက်အလက် မမှန်ပါ။ ပြင်ဆင်ပြီး ပြန်ကြိုးစားပါ။',
+  invalid_product_images: 'Product ပုံများ၏ အချက်အလက် မမှန်ပါ။',
+  variant_identity_immutable: 'Product variant ကို အခြား Product သို့ ရွှေ့၍မရပါ။',
+  product_not_found: 'ပြင်ဆင်မည့် Product ကို ရှာမတွေ့ပါ။',
+  variant_required: 'ဝယ်ယူမည့် Product variant ကို ရွေးပေးပါ။',
+  variant_unavailable: 'ရွေးထားသော Product variant မရရှိတော့ပါ — refresh လုပ်ပြီး ပြန်ရွေးပါ။',
   mcp_auth_required: 'MCP အသုံးပြုရန် အကောင့်ဝင်ရောက်မှု လိုအပ်ပါသည်။',
   invalid_mcp_action: 'MCP လုပ်ဆောင်ချက် မမှန်ပါ။',
   mcp_rate_limit_exceeded: 'MCP တောင်းဆိုမှုများလွန်းနေပါတယ်။ ခဏနားပြီး ပြန်ကြိုးစားပါ။',

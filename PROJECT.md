@@ -856,3 +856,23 @@ changes to the landing preview never save or publish seller data. Product-route
 lazy loading and deferred product fonts reduce initial landing dependencies while
 preserving the auth and tenant cart boundaries. Responsive WebP derivatives are
 local landing assets; original demo assets remain intact.
+
+### D66 — Product variants and AI Store Builder trust boundaries
+**Date:** 2026-10-06
+**Status:** REMEDIATION IN REVIEW — migrations `0039` and `0040` are not applied to Production.
+
+Product variants are first-class tenant commerce rows. Cart, quote, checkout, order lines, and
+inventory preserve an explicit `variant_id`; authoritative price and stock are resolved inside the
+transactional order RPC. Products without variants retain product-level inventory behavior. A
+repeat-safe migration handles valid legacy `<!--VARIANTS:...-->` payloads without making product
+descriptions authoritative commerce storage.
+
+Seller BYOK credentials are accepted only by an authenticated server endpoint, encrypted at rest,
+and never returned to browser code after save. Gemini, OpenAI, and Anthropic are isolated behind a
+normalized provider gateway. Model output is schema-validated and remains an unpublished proposal;
+complete command batches execute against a cloned Draft and commit only when every command passes.
+AI media commands reference tenant-owned, server-verified media IDs rather than arbitrary URLs.
+
+Production deployment and database migration are deliberately outside this remediation PR. The
+branch must pass isolated database/runtime, security, concurrency, exact-head CI, code-review, and
+desktop/mobile browser gates before it is eligible to merge.

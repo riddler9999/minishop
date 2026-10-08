@@ -12,6 +12,7 @@ export interface ProductVariant {
   price?: number | null;
   promoPrice?: number | null;
   stock: number;
+  status?: 'active' | 'hidden';
 }
 
 export interface Product {

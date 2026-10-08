@@ -67,10 +67,9 @@ export function buildMediaStoragePath(shopId: string, filename: string): string 
 }
 
 export function resolveMediaDeliveryUrl(media: Pick<StoreMedia, 'storagePath' | 'url'>): string {
-  if (media.url) return media.url;
+  if (media.url?.startsWith('/api/storefront/')) return media.url;
   if (!media.storagePath) return '';
-  if (media.storagePath.startsWith('http://') || media.storagePath.startsWith('https://') || media.storagePath.startsWith('data:')) {
-    return media.storagePath;
-  }
-  return `/api/storefront/media/${encodeURIComponent(media.storagePath)}`;
+  if (/^(?:https?:|data:)/i.test(media.storagePath)) return '';
+  const encoded = media.storagePath.split('/').map(encodeURIComponent).join('/');
+  return `/api/storefront/product-images/${encoded}`;
 }

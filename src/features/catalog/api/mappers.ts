@@ -9,23 +9,18 @@ export type ProductRow = {
   variants?: ProductVariant[];
 };
 
-export function parseVariants(description: string | null): { cleanDescription: string; variants: ProductVariant[] } {
-  if (!description) return { cleanDescription: '', variants: [] };
-  const match = description.match(/<!--VARIANTS:(.*?)-->/s);
-  if (!match) return { cleanDescription: description, variants: [] };
-  try {
-    const variants = JSON.parse(match[1]) as ProductVariant[];
-    const cleanDescription = description.replace(/<!--VARIANTS:.*?-->/s, '').trim();
-    return { cleanDescription, variants: Array.isArray(variants) ? variants : [] };
-  } catch {
-    return { cleanDescription: description, variants: [] };
-  }
-}
-
-export function encodeVariants(description: string, variants?: ProductVariant[]): string {
-  const clean = description.replace(/<!--VARIANTS:.*?-->/s, '').trim();
-  if (!variants || variants.length === 0) return clean;
-  return `${clean}\n<!--VARIANTS:${JSON.stringify(variants)}-->`;
+export function mapVariantRow(row: any): ProductVariant {
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    sku: row.sku ?? null,
+    color: row.color ?? null,
+    size: row.size ?? null,
+    price: row.price == null ? null : Number(row.price),
+    promoPrice: row.promo_price == null ? null : Number(row.promo_price),
+    stock: Number(row.stock),
+    status: row.status === 'hidden' ? 'hidden' : 'active',
+  };
 }
 
 export function firstPartyMediaUrl(url: string | null): string | null {
@@ -36,8 +31,7 @@ export function firstPartyMediaUrl(url: string | null): string | null {
 
 export function mapProduct(row: ProductRow): Product {
   const images = (row.images ?? []).map((url) => firstPartyMediaUrl(url) ?? url);
-  const { cleanDescription, variants: parsedVariants } = parseVariants(row.description);
-  const finalVariants = row.variants && row.variants.length > 0 ? row.variants : parsedVariants;
+  const finalVariants = row.variants ?? [];
   const calculatedStock = finalVariants.length > 0
     ? finalVariants.reduce((sum, v) => sum + Math.max(0, v.stock), 0)
     : row.stock;
@@ -46,7 +40,7 @@ export function mapProduct(row: ProductRow): Product {
     id: row.id, itemCode: row.item_code ?? '', name: row.name, category: row.category,
     color: row.color, size: row.size, price: row.price, promoPrice: row.promo_price,
     isPromotion: row.is_promotion, stock: calculatedStock, inStock: calculatedStock > 0,
-    status: row.status, images, image: images[0] ?? null, description: cleanDescription,
+    status: row.status, images, image: images[0] ?? null, description: row.description ?? '',
     arrivalDate: row.arrival_date, createdAt: row.created_at,
     variants: finalVariants,
   };

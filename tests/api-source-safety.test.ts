@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const privilegedServerFiles = new Set(['superadmin.ts', '_superadmin.ts', '_storefront-lookup-backend.ts', 'notifications.ts']);
+const privilegedServerFiles = new Set(['superadmin.ts', '_superadmin.ts', '_storefront-lookup-backend.ts', 'notifications.ts', 'ai.ts']);
 for (const file of fs.readdirSync('api', {recursive:true}).filter((x) => typeof x === 'string' && x.endsWith('.ts'))) {
   if (privilegedServerFiles.has(String(file))) continue;
   test(`api/${file} does not reference service role`, () => {
@@ -25,4 +25,13 @@ test('privileged storefront lookup backend is fixed-purpose and cannot proxy arb
   assert.match(source, /\.rpc\('lookup_order'/);
   assert.doesNotMatch(source, /\.from\(/);
   assert.doesNotMatch(source, /auth\.admin|auth\.getUser/);
+});
+
+test('privileged AI boundary authenticates sellers and scopes every private row to their shop', () => {
+  const source = fs.readFileSync('api/ai.ts', 'utf8');
+  assert.match(source, /authenticateSeller\(req\)/);
+  assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(source, /\.eq\('shop_id', context\.shopId\)/);
+  assert.doesNotMatch(source, /auth\.admin/);
+  assert.doesNotMatch(source, /sendJson\([^\n]*encrypted_credential/);
 });

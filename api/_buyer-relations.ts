@@ -1,6 +1,7 @@
 export type BuyerRelations = {
   shops: string;
   products: string;
+  productVariants: string;
   paymentAccounts: string;
   shippingZones: string;
 };
@@ -8,6 +9,7 @@ export type BuyerRelations = {
 export const BUYER_SAFE_RELATIONS: BuyerRelations = {
   shops: 'buyer_public_shops',
   products: 'buyer_public_products',
+  productVariants: 'buyer_public_product_variants',
   paymentAccounts: 'buyer_public_payment_accounts',
   shippingZones: 'buyer_public_shipping_zones',
 };
@@ -15,6 +17,7 @@ export const BUYER_SAFE_RELATIONS: BuyerRelations = {
 export const BUYER_LEGACY_RELATIONS: BuyerRelations = {
   shops: 'shops',
   products: 'products',
+  productVariants: 'product_variants',
   paymentAccounts: 'payment_accounts',
   shippingZones: 'shipping_zones',
 };

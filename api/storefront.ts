@@ -10,6 +10,25 @@ const PUBLIC_PRODUCT_COLUMNS = 'id,shop_id,name,description,category,color,size,
 const PRODUCT_SOURCE_RULES = new Set(['new_arrivals', 'sale', 'category', 'best_selling']);
 const MAX_MANUAL_PRODUCT_IDS = 24;
 
+async function attachVariants(sb: any, relations: BuyerRelations, shopId: string, rows: any[]) {
+  if (rows.length === 0) return rows;
+  const ids = rows.map((row) => row.id);
+  const result = await sb.from(relations.productVariants)
+    .select('id,product_id,sku,name,size,color,price,promo_price,stock,status')
+    .eq('shop_id', shopId).eq('status', 'active').in('product_id', ids);
+  if (result.error) {
+    if (isMissingBuyerProjection(result.error)) return rows;
+    throw new Error('Catalog variants unavailable');
+  }
+  const byProduct = new Map<string, any[]>();
+  for (const variant of result.data || []) {
+    const values = byProduct.get(String(variant.product_id)) || [];
+    values.push(variant);
+    byProduct.set(String(variant.product_id), values);
+  }
+  return rows.map((row) => ({...row, variants: byProduct.get(String(row.id)) || []}));
+}
+
 function media(url: string | null) {
   if (!url) return null;
   const m = url.match(/\/storage\/v1\/object\/public\/(product-images|shop-logos)\/(.+)$/);
@@ -88,7 +107,8 @@ export default async function handler(req: any, res: any) {
     const id = String(req.query?.id || '');
     const {data, error} = await sb.from(buyerRelations.products).select(PUBLIC_PRODUCT_COLUMNS).eq('id', id).eq('shop_id', shop.id).eq('status', 'active').maybeSingle();
     if (error || !data) return sendJson(res, 404, {error: 'Product not found'});
-    return sendJson(res, 200, {product: mapProductRow(data)}, true);
+    const [row] = await attachVariants(sb, buyerRelations, shop.id, [data]);
+    return sendJson(res, 200, {product: mapProductRow(row)}, true);
   }
   if (action === 'section-products') {
     const mode = String(req.query?.mode || 'dynamic');
@@ -99,7 +119,8 @@ export default async function handler(req: any, res: any) {
       if (ids.length === 0) return sendJson(res, 200, {products: []}, true);
       const {data, error} = await sb.from(buyerRelations.products).select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', ids).limit(MAX_MANUAL_PRODUCT_IDS);
       if (error) return sendJson(res, 502, {error: 'Catalog unavailable'});
-      const byId = new Map((data || []).map((row: any) => [String(row.id), row]));
+      const rows = await attachVariants(sb, buyerRelations, shop.id, data || []);
+      const byId = new Map(rows.map((row: any) => [String(row.id), row]));
       return sendJson(res, 200, {products: ids.flatMap((id) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
     }
 
@@ -113,7 +134,8 @@ export default async function handler(req: any, res: any) {
       if (rankedIds.length === 0) return sendJson(res, 200, {products: []}, true);
       const {data: productRows, error: productError} = await sb.from(buyerRelations.products).select(PUBLIC_PRODUCT_COLUMNS).eq('shop_id', shop.id).eq('status', 'active').in('id', rankedIds).limit(limit);
       if (productError) return sendJson(res, 502, {error: 'Catalog unavailable'});
-      const byId = new Map((productRows || []).map((row: any) => [String(row.id), row]));
+      const rows = await attachVariants(sb, buyerRelations, shop.id, productRows || []);
+      const byId = new Map(rows.map((row: any) => [String(row.id), row]));
       return sendJson(res, 200, {products: rankedIds.flatMap((id: string) => byId.has(id) ? [mapProductRow(byId.get(id))] : [])}, true);
     }
 
@@ -126,7 +148,8 @@ export default async function handler(req: any, res: any) {
     }
     const {data, error} = await sourceQuery.order('created_at', {ascending: false}).order('id', {ascending: true}).limit(limit);
     if (error) return sendJson(res, 502, {error: 'Catalog unavailable'});
-    return sendJson(res, 200, {products: (data || []).sort(newestRowsFirst).map(mapProductRow)}, true);
+    const rows = await attachVariants(sb, buyerRelations, shop.id, data || []);
+    return sendJson(res, 200, {products: rows.sort(newestRowsFirst).map(mapProductRow)}, true);
   }
   if (action === 'products') {
     let q = sb.from(buyerRelations.products).select(PUBLIC_PRODUCT_COLUMNS, {count: 'exact'}).eq('shop_id', shop.id).eq('status', 'active');
@@ -140,7 +163,8 @@ export default async function handler(req: any, res: any) {
     if (Number.isFinite(limitRaw) && limitRaw > 0) q = q.range(offset, offset + Math.min(limitRaw, 100) - 1);
     const {data, error, count} = await q;
     if (error) return sendJson(res, 502, {error: 'Catalog unavailable'});
-    return sendJson(res, 200, {products: (data || []).map(mapProductRow), total: count ?? data?.length ?? 0}, true);
+    const rows = await attachVariants(sb, buyerRelations, shop.id, data || []);
+    return sendJson(res, 200, {products: rows.map(mapProductRow), total: count ?? data?.length ?? 0}, true);
   }
   return sendJson(res, 400, {error: 'Unknown action'});
 }

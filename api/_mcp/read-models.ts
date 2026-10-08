@@ -38,7 +38,7 @@ export function createBusinessReadService(client: SupabaseClient,context: Seller
     async getOrder(input:{id:string}){
       const {data,error}=await client.from('orders').select('id,order_no,status,created_at,updated_at,item_total,delivery_fee,grand_total,payment_method,customer_name,customer_phone,region,township').eq('shop_id',context.shopId).eq('id',input.id).maybeSingle();
       if(error||!data) throw new McpError('RESOURCE_NOT_FOUND',404,'Order not found.');
-      const {data:items,error:itemError}:any=await client.from('order_items').select('id,order_id,product_id,name,qty,unit_price').eq('order_id',input.id);
+      const {data:items,error:itemError}:any=await client.from('order_items').select('id,order_id,product_id,variant_id,name,variant_name,variant_sku,qty,unit_price').eq('order_id',input.id);
       if(itemError) throw new McpError('INTERNAL_ERROR',500,'Order detail read failed.');
       return {order:mapOrder(data),items:items||[],asOf:asOf()};
     },

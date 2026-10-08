@@ -28,7 +28,7 @@ async function listOrderPage(opts: {limit?: number; cursor?: string | null}) {
 
   let query = sb
     .from('orders')
-    .select('*, order_items(name, unit_price, qty)', {count:'exact'})
+    .select('*, order_items(name, unit_price, qty, variant_id, variant_name, variant_sku)', {count:'exact'})
     .eq('shop_id', shopId)
     .order('created_at', {ascending:false})
     .order('id', {ascending:false});
@@ -42,7 +42,14 @@ async function listOrderPage(opts: {limit?: number; cursor?: string | null}) {
   const visible = rows.slice(0, limit);
   const orders: AdminOrder[] = visible.map((o) => ({
     order_id: o.order_no,
-    items: (o.order_items ?? []).map((it) => ({name: it.name, price: it.unit_price, qty: it.qty})),
+    items: (o.order_items ?? []).map((it) => ({
+      name: it.name,
+      price: it.unit_price,
+      qty: it.qty,
+      variantId: it.variant_id,
+      variantName: it.variant_name,
+      variantSku: it.variant_sku,
+    })),
     item_total: o.item_total,
     delivery_fee: o.delivery_fee,
     grand_total: o.grand_total,

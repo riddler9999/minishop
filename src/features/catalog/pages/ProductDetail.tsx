@@ -118,14 +118,61 @@ export default function ProductDetail() {
           loadSectionProducts={loadSectionProducts}
           excludeProductId={product.id}
           renderProductCard={(relatedProduct) => <ProductCard product={relatedProduct} variant={theme.presetId} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[260px]" />}
+          renderProductInfo={(showPrice) => (
+            <>
+              {product.category && <p className="commerce-kicker text-xs font-bold uppercase tracking-[0.15em]">{product.category}</p>}
+              <h1 className="commerce-title mt-2 text-3xl font-black leading-tight tracking-[-0.035em] sm:text-4xl">{product.name}</h1>
+              {showPrice && (
+                <div className="mt-4 flex flex-wrap items-baseline gap-3">
+                  <p className="commerce-price text-2xl font-black sm:text-3xl">{ks(price)}</p>
+                  {hasPromo && <p className="commerce-muted text-sm line-through">{ks(activePriceInfo.price)}</p>}
+                </div>
+              )}
+              {product.variants && product.variants.length > 0 && (
+                <fieldset className="mt-5">
+                  <legend className="commerce-heading text-sm font-bold">Variant ရွေးပါ</legend>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {product.variants.map((variant) => {
+                      const chosen = selectedVariant?.id === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          disabled={variant.stock <= 0}
+                          aria-pressed={chosen}
+                          onClick={() => {
+                            setSelectedVariant(variant);
+                            setQty((current) => Math.min(current, Math.max(variant.stock, 1)));
+                          }}
+                          className={`commerce-choice min-h-11 rounded-lg border px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45 ${chosen ? 'border-[var(--commerce-accent)] ring-2 ring-[var(--commerce-accent)]/20' : 'border-[var(--commerce-border)]'}`}
+                        >
+                          {variant.name}{variant.size ? ` · ${variant.size}` : ''}{variant.color ? ` · ${variant.color}` : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
+              <p className={`mt-3 text-sm font-semibold ${inStock ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {inStock ? `လက်ကျန် ${currentStock}` : 'လက်ကျန်မရှိ'}
+              </p>
+            </>
+          )}
           renderRequiredCommerce={(buyNowSettings) => (
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button disabled={!inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{borderColor: visual.accent, color: visual.accent}}>
-                {added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}
-              </button>
-              <button disabled={!inStock} onClick={buyNow} className="min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{backgroundColor: visual.accent, color: visual.accentText}}>
-                {buyNowSettings.label}
-              </button>
+            <div className="mt-6 space-y-3">
+              <div className="commerce-choice inline-flex min-h-12 items-center rounded-lg border border-[var(--commerce-border)]">
+                <button type="button" aria-label="အရေအတွက်လျှော့ရန်" disabled={qty <= 1} onClick={() => setQty((current) => Math.max(1, current - 1))} className="grid h-12 w-12 place-items-center disabled:opacity-40"><Minus className="h-4 w-4" /></button>
+                <span className="min-w-10 text-center text-sm font-bold" aria-live="polite">{qty}</span>
+                <button type="button" aria-label="အရေအတွက်တိုးရန်" disabled={!inStock || qty >= currentStock} onClick={() => setQty((current) => Math.min(currentStock, current + 1))} className="grid h-12 w-12 place-items-center disabled:opacity-40"><Plus className="h-4 w-4" /></button>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button disabled={!inStock} onClick={doAdd} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 border px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{borderColor: visual.accent, color: visual.accent}}>
+                  {added ? <><Check className="h-4 w-4" /> ထည့်ပြီးပါပြီ</> : <><ShoppingBag className="h-4 w-4" /> {theme.product.addToCartLabel}</>}
+                </button>
+                <button disabled={!inStock} onClick={buyNow} className="min-h-12 flex-1 px-6 py-3 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50" style={{backgroundColor: visual.accent, color: visual.accentText}}>
+                  {buyNowSettings.label}
+                </button>
+              </div>
             </div>
           )}
         />

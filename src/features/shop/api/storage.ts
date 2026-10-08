@@ -11,6 +11,7 @@ import {
   isAllowedMimeType,
   validateMediaFileHeader,
 } from '@/domain/storeMedia';
+import {shopAiApi} from './ai';
 
 export const shopStorageApi = {
   async uploadStoreMedia(file: File): Promise<StoreMedia> {
@@ -25,9 +26,7 @@ export const shopStorageApi = {
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     const headerMime = validateMediaFileHeader(bytes);
-    if (headerMime && headerMime !== mime) {
-      // Header check takes precedence if header detected
-    }
+    if (!headerMime || headerMime !== mime) throw new Error('File content does not match its declared image type.');
 
     const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
@@ -39,19 +38,13 @@ export const shopStorageApi = {
       .upload(path, file, {upsert: true, contentType: mime});
     if (error) throw new Error(error.message);
 
-    const {data} = sb.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path);
-
-    const mediaRecord: StoreMedia = {
-      id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      shopId,
-      storagePath: path,
-      mimeType: (headerMime || mime) as any,
-      byteSize: file.size,
-      createdAt: new Date().toISOString(),
-      url: data.publicUrl,
-    };
-
-    return mediaRecord;
+    try {
+      const {media} = await shopAiApi.registerStoreMedia(path);
+      return {...media, shopId} as StoreMedia;
+    } catch (registrationError) {
+      await sb.storage.from(PRODUCT_IMAGES_BUCKET).remove([path]);
+      throw registrationError;
+    }
   },
   // ---- storage: shop logo + product images (tenant-safe paths) ---------------
   // Uploads to `<shop_id>/…` — the FIRST path segment is the shop_id the storage

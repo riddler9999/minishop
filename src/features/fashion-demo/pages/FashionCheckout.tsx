@@ -51,7 +51,7 @@ export default function FashionCheckout() {
     api.quoteOrder({
       region,
       township,
-      items: items.map((item) => ({id: item.id, qty: item.qty})),
+      items: items.map((item) => ({productId: item.productId, variantId: item.variantId ?? null, qty: item.qty})),
     }).then((nextQuote) => {
       if (alive) setQuote(nextQuote);
     }).catch(() => {
@@ -87,7 +87,7 @@ export default function FashionCheckout() {
     try {
       const res = await api.createOrder({
         customer: {name: name.trim(), phone: phone.trim(), street: street.trim(), region, township},
-        items: items.map((i) => ({id: i.id, qty: i.qty})),
+        items: items.map((i) => ({productId: i.productId, variantId: i.variantId ?? null, qty: i.qty})),
         paymentMethod: method,
         expectedItemTotal: live ? quote?.itemTotal ?? subtotal : subtotal,
         expectedDeliveryFee: fee ?? 0,

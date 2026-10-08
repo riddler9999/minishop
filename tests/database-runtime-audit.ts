@@ -133,7 +133,7 @@ async function createProduct(shopId: string, label: string, opts: Record<string,
   return ok(result, `create ${label} product`);
 }
 
-function orderArgs(shopSlug: string, productId: string, key: string, phone: string, qty = 1) {
+function orderArgs(shopSlug: string, productId: string, key: string, phone: string, qty = 1, variantId: string | null = null) {
   return {
     p_shop_slug: shopSlug,
     p_customer_name: 'Runtime Buyer',
@@ -143,7 +143,7 @@ function orderArgs(shopSlug: string, productId: string, key: string, phone: stri
     p_township: 'Runtime',
     p_payment_method: 'cod',
     p_payment_ref_tail: null,
-    p_items: [{ product_id: productId, qty }],
+    p_items: [{ product_id: productId, variant_id: variantId, qty }],
     p_idempotency_key: key,
   };
 }
@@ -190,6 +190,95 @@ async function main() {
   await setEntitlement(shopB.id, 'starter', 60);
   const productA = await createProduct(shopA.id, 'seller-a');
   const productB = await createProduct(shopB.id, 'seller-b');
+
+  // Product Variants + AI security remediation: first-class persistence, tenant
+  // isolation, order-line identity, and final-unit concurrency.
+  const variantProduct = await createProduct(shopA.id, 'variant-race', {stock: 0, price: 15000});
+  const seededVariants = ok(await service.from('product_variants').insert([
+    {shop_id: shopA.id, product_id: variantProduct.id, sku: `RACE-${randomUUID()}`, name: 'Final unit', price: 17000, promo_price: 16000, stock: 1},
+    {shop_id: shopA.id, product_id: variantProduct.id, sku: `OTHER-${randomUUID()}`, name: 'Other variant', price: 18000, stock: 5},
+    {shop_id: shopB.id, product_id: productB.id, sku: `FOREIGN-${randomUUID()}`, name: 'Seller B variant', stock: 3},
+  ]).select('id,shop_id,product_id,stock'), 'seed variants');
+  const finalVariant = seededVariants.find((row) => row.product_id === variantProduct.id && row.stock === 1)!;
+  const otherVariant = seededVariants.find((row) => row.product_id === variantProduct.id && row.stock === 5)!;
+  const sellerAVisibleVariants = ok(await sellerA.client.from('product_variants').select('id,shop_id'), 'seller A variant read');
+  assert.equal(sellerAVisibleVariants.some((row) => row.shop_id === shopB.id), false, 'seller A must not read seller B variants');
+  await expectBlocked(sellerA.client.from('ai_provider_credentials').select('*'), 'browser cannot read encrypted AI credentials');
+  await expectBlocked(sellerA.client.from('store_media').select('*'), 'browser cannot read trusted media registry');
+
+  const variantRace = await race([
+    () => callOrder(apiClient(anonKey!, '198.51.100.210'), orderArgs(shopA.slug, variantProduct.id, randomUUID(), '09400000001', 1, finalVariant.id)),
+    () => callOrder(apiClient(anonKey!, '198.51.100.211'), orderArgs(shopA.slug, variantProduct.id, randomUUID(), '09400000002', 1, finalVariant.id)),
+  ]);
+  assert.equal(countFulfilled(variantRace), 1, `exactly one final-variant purchase succeeds: ${settledResultsText(variantRace)}`);
+  assert.equal(countRejected(variantRace), 1, `exactly one final-variant purchase fails: ${settledResultsText(variantRace)}`);
+  const variantStocks = ok(await service.from('product_variants').select('id,stock').in('id', [finalVariant.id, otherVariant.id]), 'variant stocks after race');
+  assert.equal(variantStocks.find((row) => row.id === finalVariant.id)?.stock, 0);
+  assert.equal(variantStocks.find((row) => row.id === otherVariant.id)?.stock, 5);
+  assert.equal(variantStocks.some((row) => row.stock < 0), false);
+  const persistedVariantLines = ok(await service.from('order_items').select('variant_id,variant_name,variant_sku').eq('variant_id', finalVariant.id), 'variant order line');
+  assert.equal(persistedVariantLines.length, 1);
+  const replacedVariants = ok(await sellerA.client.rpc('replace_product_variants', {
+    p_product_id: variantProduct.id,
+    p_variants: [{
+      id: otherVariant.id,
+      sku: `OTHER-${randomUUID()}`,
+      name: 'Other variant updated',
+      price: 18000,
+      stock: 5,
+      status: 'active',
+    }],
+  }), 'replace variants after purchase');
+  assert.equal(replacedVariants.length, 1);
+  const historicalVariantLine = ok(
+    await service.from('order_items')
+      .select('order_id,variant_id,variant_name,variant_sku')
+      .eq('variant_id', finalVariant.id)
+      .single(),
+    'historical variant order line after catalog replacement',
+  );
+  assert.equal(historicalVariantLine.variant_id, finalVariant.id);
+  assert.equal(historicalVariantLine.variant_name, persistedVariantLines[0].variant_name);
+  assert.equal(historicalVariantLine.variant_sku, persistedVariantLines[0].variant_sku);
+  const purchasedOrder = ok(
+    await service.from('orders').select('order_no,customer_phone').eq('id', historicalVariantLine.order_id).single(),
+    'variant purchase order',
+  );
+  const buyerLookup = ok(await service.rpc('lookup_order', {
+    p_shop_slug: shopA.slug,
+    p_order_no: purchasedOrder.order_no,
+    p_phone: purchasedOrder.customer_phone,
+  }), 'variant buyer lookup') as Record<string, any>;
+  assert.equal(buyerLookup.items[0].variantId, finalVariant.id);
+  assert.equal(buyerLookup.items[0].variantName, persistedVariantLines[0].variant_name);
+
+  const reparent = await sellerA.client.from('product_variants')
+    .update({product_id: productA.id}).eq('id', replacedVariants[0].id);
+  assert.match(errorText(reparent.error), /variant_identity_immutable/);
+
+  const beforeAtomic = ok(
+    await service.from('products').select('price').eq('id', variantProduct.id).single(),
+    'atomic product price before invalid save',
+  );
+  const invalidAtomic = await sellerA.client.rpc('save_product_with_variants', {
+    p_product_id: variantProduct.id,
+    p_product: {price: beforeAtomic.price + 1234},
+    p_variants: [{name: '', stock: 1}],
+  });
+  assert.match(errorText(invalidAtomic.error), /invalid_variant/);
+  const afterAtomic = ok(
+    await service.from('products').select('price').eq('id', variantProduct.id).single(),
+    'atomic product price after invalid save',
+  );
+  assert.equal(afterAtomic.price, beforeAtomic.price, 'variant validation failure must roll back product changes');
+  evidence.product_variants = {
+    final_stock_concurrency: 'PASS',
+    tenant_isolation: 'PASS',
+    historical_identity_after_replace: 'PASS',
+    buyer_lookup_variant_identity: 'PASS',
+    immutable_parent_identity: 'PASS',
+    atomic_product_variant_rollback: 'PASS',
+  };
 
   const paymentAccounts = ok(await service.from('payment_accounts').insert([
     {
@@ -631,8 +720,8 @@ async function main() {
     const key = randomUUID();
     const before = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem before');
     const clients = [apiClient(anonKey!, '198.51.100.41'), apiClient(anonKey!, '198.51.100.42')];
-    const results = await race(clients.map((client, index) => () =>
-      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, `090000004${index}`)),
+    const results = await race(clients.map((client) => () =>
+      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, '0900000040')),
     ));
     assert.equal(countFulfilled(results), 2, settledResultsText(results));
     const orders = ok(await service.from('orders').select('id').eq('shop_id', shopA.id).eq('idempotency_key', key), 'idem orders');
@@ -641,6 +730,25 @@ async function main() {
     assert.equal(after.monthly_used, before.monthly_used + 1);
     evidence.connections = { ...(evidence.connections as object), idempotency: 2 };
     evidence.order_idempotency_concurrency = 'PASS';
+  }
+
+  // A checkout must carry an idempotency key, and a key cannot be reused for a
+  // different cart or customer identity.
+  {
+    const product = await createProduct(shopA.id, 'idem-binding', { stock: 3 });
+    const missing = await apiClient(anonKey!, '198.51.100.43').rpc('place_order', {
+      ...orderArgs(shopA.slug, product.id, randomUUID(), '0900000043'),
+      p_idempotency_key: null,
+    });
+    assert.match(errorText(missing.error), /idempotency_key_required/);
+
+    const key = randomUUID();
+    await callOrder(apiClient(anonKey!, '198.51.100.44'), orderArgs(shopA.slug, product.id, key, '0900000044'));
+    const conflict = await apiClient(anonKey!, '198.51.100.45').rpc(
+      'place_order', orderArgs(shopA.slug, product.id, key, '0900000045'),
+    );
+    assert.match(errorText(conflict.error), /idempotency_key_conflict/);
+    evidence.order_idempotency_request_binding = 'PASS';
   }
 
   // Unknown-result retry: discard first response and retry exact key; result remains single-order/single-consume.

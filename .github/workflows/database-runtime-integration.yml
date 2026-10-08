@@ -33,7 +33,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --package-lock=true
 
       - uses: supabase/setup-cli@v1
         with:

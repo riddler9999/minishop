@@ -19,6 +19,7 @@ import {
   validateMediaFileHeader,
   isAllowedMimeType,
   MAX_MEDIA_BYTE_SIZE,
+  resolveMediaDeliveryUrl,
 } from '../src/domain/storeMedia.ts';
 import type {StoreDesignDocument} from '../src/domain/storeDesign/types.ts';
 
@@ -95,6 +96,12 @@ describe('Tasks 3-23: AI Store Builder & Media Suite', () => {
     assert.strictEqual(validateMediaFileHeader(jpegBytes), 'image/jpeg');
 
     assert.strictEqual(MAX_MEDIA_BYTE_SIZE, 10 * 1024 * 1024);
+    assert.strictEqual(resolveMediaDeliveryUrl({storagePath: 'https://evil.example/image.png'}), '');
+    assert.strictEqual(resolveMediaDeliveryUrl({storagePath: 'data:image/png;base64,abc'}), '');
+    assert.strictEqual(
+      resolveMediaDeliveryUrl({storagePath: 'shop-id/media/hero.webp'}),
+      '/api/storefront/product-images/shop-id/media/hero.webp',
+    );
   });
 
   it('Task 7-8: Provider capabilities & API key masking', () => {
@@ -125,18 +132,51 @@ describe('Tasks 3-23: AI Store Builder & Media Suite', () => {
         template: 'home',
         sectionId: 'hero_1',
         field: 'imageUrl',
-        mediaUrl: 'https://example.com/hero.jpg',
+        mediaId: 'media_1',
       },
     ];
 
-    const result = validateAndExecuteAiCommands(doc, commands);
+    const result = validateAndExecuteAiCommands(doc, commands, {
+      mediaById: {media_1: '/api/storefront/product-images/shop/hero.webp'},
+    });
     assert.strictEqual(result.ok, true);
     assert.strictEqual(result.appliedCommandsCount, 3);
     assert.strictEqual(result.doc.themeId, 'soft-elegant');
 
     const heroSection = result.doc.templates.home.sections.find((s) => s.id === 'hero_1');
     assert.strictEqual((heroSection?.settings as any).headline, 'AI Generated Headline');
-    assert.strictEqual((heroSection?.settings as any).imageUrl, 'https://example.com/hero.jpg');
+    assert.strictEqual((heroSection?.settings as any).imageUrl, '/api/storefront/product-images/shop/hero.webp');
+  });
+
+  it('rolls back the complete command batch when any command is invalid', () => {
+    const doc = mockStoreDesignDoc();
+    const commands = [
+      {type: 'set_theme', themeId: 'soft-elegant'},
+      {type: 'update_section', template: 'home', sectionId: 'missing', patch: {headline: 'Never applied'}},
+      {type: 'set_global_settings', patch: {accentColor: '#112233'}},
+    ] as AiStoreCommand[];
+
+    const result = validateAndExecuteAiCommands(doc, commands);
+    assert.strictEqual(result.ok, false);
+    assert.strictEqual(result.appliedCommandsCount, 0);
+    assert.deepStrictEqual(result.doc, doc);
+  });
+
+  it('rejects unknown themes, unsupported sections, unsafe settings and untrusted media', () => {
+    const doc = mockStoreDesignDoc();
+    const invalidBatches = [
+      [{type: 'set_theme', themeId: 'made-up-theme'}],
+      [{type: 'add_section', template: 'product', sectionType: 'hero'}],
+      [{type: 'update_section', template: 'home', sectionId: 'hero_1', patch: {dangerous: '<script>'}}],
+      [{type: 'attach_media', template: 'home', sectionId: 'hero_1', field: 'imageUrl', mediaId: 'other-shop'}],
+    ];
+
+    for (const commands of invalidBatches) {
+      const result = validateAndExecuteAiCommands(doc, commands as AiStoreCommand[], {mediaById: {}});
+      assert.strictEqual(result.ok, false);
+      assert.strictEqual(result.appliedCommandsCount, 0);
+      assert.deepStrictEqual(result.doc, doc);
+    }
   });
 
   it('Task 10-11 Commerce Invariant: Rejects disabling or removing Buy Now / product-info', () => {
