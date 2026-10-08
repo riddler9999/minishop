@@ -73,6 +73,11 @@ function proposalSystemPrompt(allowedMediaIds: string[]): string {
   ].join('\n');
 }
 
+export function normalizeRequestedMediaIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((mediaId): mediaId is string => typeof mediaId === 'string'))].slice(0, 8);
+}
+
 export default async function handler(req: any, res: any) {
   try {
     const {context} = await authenticateSeller(req);
@@ -180,9 +185,7 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 400, {error: 'Invalid proposal request'});
       }
       if (!body.currentDoc || typeof body.currentDoc !== 'object') return sendJson(res, 400, {error: 'Invalid Store Design document'});
-      const requestedMediaIds = Array.isArray(body.mediaIds)
-        ? [...new Set(body.mediaIds.filter((value: unknown) => typeof value === 'string'))].slice(0, 8)
-        : [];
+      const requestedMediaIds = normalizeRequestedMediaIds(body.mediaIds);
       let mediaRows: any[] = [];
       if (requestedMediaIds.length) {
         const result = await admin.from('store_media')

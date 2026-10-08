@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {describe, it} from 'node:test';
 import {decryptCredential, encryptCredential} from '../api/_ai/crypto.ts';
 import {callProvider, ProviderGatewayError} from '../api/_ai/providers.ts';
+import {normalizeRequestedMediaIds} from '../api/ai.ts';
 import {parseProviderProposal} from '../api/_ai/schema.ts';
 
 const encryptionKey = Buffer.alloc(32, 7).toString('base64');
@@ -74,5 +75,26 @@ describe('normalized AI provider gateway', () => {
       commands: [{type: 'set_theme', themeId: 'soft-elegant'}],
     }));
     assert.equal(parsed.commands[0]?.type, 'set_theme');
+  });
+});
+
+describe('AI Store Builder media request boundary', () => {
+  it('keeps only unique string media IDs and caps provider context', () => {
+    const mediaIds = normalizeRequestedMediaIds([
+      'one',
+      2,
+      'one',
+      null,
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+    ]);
+
+    assert.deepEqual(mediaIds, ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']);
   });
 });
