@@ -42,6 +42,7 @@ export const shopAiApi = {
     message: string;
     currentDoc: StoreDesignDocument;
     mediaIds: string[];
+    baseRevision: string;
   }): Promise<{proposal: AiProposal}> {
     return aiRequest({action: 'generate-proposal', ...input});
   },

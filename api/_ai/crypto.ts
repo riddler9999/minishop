@@ -35,4 +35,3 @@ export function decryptCredential(payload: string, rawKey: string): string {
     throw new Error('Stored AI credential could not be decrypted.');
   }
 }
-

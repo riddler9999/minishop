@@ -8,4 +8,5 @@ export interface AiProposal {
   createdAt: string;
   isDestructive?: boolean;
   trustedMedia?: Record<string, string>;
+  baseRevision: string;
 }

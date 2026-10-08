@@ -8,6 +8,8 @@ import {callProvider, ProviderGatewayError, testProviderConnection} from './_ai/
 import {parseProviderProposal} from './_ai/schema.js';
 import {AI_PROVIDERS, maskApiKey, supportsCapability, type AiProviderId} from '../src/domain/aiProvider.js';
 import {validateAndExecuteAiCommands} from '../src/domain/storeDesign/aiCommands.js';
+import {validatePublishableStoreDesign} from '../src/domain/storeDesign/normalize.js';
+import type {StoreDesignDocument} from '../src/domain/storeDesign/types.js';
 import {
   MAX_MEDIA_BYTE_SIZE,
   isAllowedMimeType,
@@ -15,6 +17,7 @@ import {
 } from '../src/domain/storeMedia.js';
 
 const PROVIDERS = new Set<AiProviderId>(['gemini', 'openai', 'anthropic']);
+const MAX_PROVIDER_MEDIA_BYTES = 20 * 1024 * 1024;
 
 function providerId(value: unknown): AiProviderId | null {
   return typeof value === 'string' && PROVIDERS.has(value as AiProviderId) ? value as AiProviderId : null;
@@ -76,6 +79,21 @@ function proposalSystemPrompt(allowedMediaIds: string[]): string {
 export function normalizeRequestedMediaIds(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((mediaId): mediaId is string => typeof mediaId === 'string'))].slice(0, 8);
+}
+
+export function isValidProposalDocument(value: unknown): value is StoreDesignDocument {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  try {
+    if (JSON.stringify(value).length > 250_000) return false;
+    const doc = value as Record<string, any>;
+    if (doc.schemaVersion !== 1 || !doc.globalSettings?.buyNow || !doc.templates) return false;
+    for (const template of ['home', 'collection', 'product']) {
+      if (!Array.isArray(doc.templates[template]?.sections) || doc.templates[template].sections.length > 100) return false;
+    }
+    return validatePublishableStoreDesign(value as StoreDesignDocument).ok;
+  } catch {
+    return false;
+  }
 }
 
 export default async function handler(req: any, res: any) {
@@ -184,9 +202,14 @@ export default async function handler(req: any, res: any) {
       if (!provider || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2_000) {
         return sendJson(res, 400, {error: 'Invalid proposal request'});
       }
-      if (!body.currentDoc || typeof body.currentDoc !== 'object') return sendJson(res, 400, {error: 'Invalid Store Design document'});
+      if (typeof body.baseRevision !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.baseRevision)) {
+        return sendJson(res, 400, {error: 'Invalid draft revision'});
+      }
+      if (!isValidProposalDocument(body.currentDoc)) return sendJson(res, 400, {error: 'Invalid Store Design document'});
       const requestedMediaIds = normalizeRequestedMediaIds(body.mediaIds);
       let mediaRows: any[] = [];
+      const providerMedia: {id: string; mimeType: 'image/jpeg' | 'image/png' | 'image/webp'; dataBase64: string}[] = [];
       if (requestedMediaIds.length) {
         const result = await admin.from('store_media')
           .select('id,storage_path,mime_type,byte_size')
@@ -196,6 +219,21 @@ export default async function handler(req: any, res: any) {
         if (result.error) throw result.error;
         mediaRows = result.data || [];
         if (mediaRows.length !== requestedMediaIds.length) return sendJson(res, 403, {error: 'Media is not authorized for this shop'});
+        let totalBytes = 0;
+        for (const media of mediaRows) {
+          const download = await admin.storage.from('product-images').download(media.storage_path);
+          if (download.error || !download.data) return sendJson(res, 400, {error: 'Attached media could not be loaded'});
+          totalBytes += download.data.size;
+          if (download.data.size <= 0 || download.data.size > MAX_MEDIA_BYTE_SIZE || totalBytes > MAX_PROVIDER_MEDIA_BYTES) {
+            return sendJson(res, 413, {error: 'Attached media is too large'});
+          }
+          const bytes = new Uint8Array(await download.data.arrayBuffer());
+          const detected = validateMediaFileHeader(bytes);
+          if (!detected || detected !== media.mime_type || !isAllowedMimeType(detected)) {
+            return sendJson(res, 415, {error: 'Attached media failed validation'});
+          }
+          providerMedia.push({id: String(media.id), mimeType: detected, dataBase64: Buffer.from(bytes).toString('base64')});
+        }
       }
       const row = await credentialFor(admin, context.shopId, provider);
       const apiKey = decryptCredential(row.encrypted_credential, encryptionSecret());
@@ -210,6 +248,7 @@ export default async function handler(req: any, res: any) {
         model,
         system: proposalSystemPrompt(requestedMediaIds),
         prompt: JSON.stringify({request: body.message.trim(), currentDocument: body.currentDoc}),
+        media: providerMedia,
       });
       const parsed = parseProviderProposal(providerResult.text);
       const mediaById = Object.fromEntries(mediaRows.map((media) => [
@@ -227,6 +266,7 @@ export default async function handler(req: any, res: any) {
           createdAt: new Date().toISOString(),
           isDestructive: parsed.commands.some((command) => command.type === 'remove_section'),
           trustedMedia: mediaById,
+          baseRevision: body.baseRevision,
         },
       });
     }

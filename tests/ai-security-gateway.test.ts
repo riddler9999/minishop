@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {describe, it} from 'node:test';
 import {decryptCredential, encryptCredential} from '../api/_ai/crypto.ts';
 import {callProvider, ProviderGatewayError} from '../api/_ai/providers.ts';
-import {normalizeRequestedMediaIds} from '../api/ai.ts';
+import {isValidProposalDocument, normalizeRequestedMediaIds} from '../api/ai.ts';
 import {parseProviderProposal} from '../api/_ai/schema.ts';
 
 const encryptionKey = Buffer.alloc(32, 7).toString('base64');
@@ -67,6 +67,42 @@ describe('normalized AI provider gateway', () => {
     );
   });
 
+  it('retries bounded transient failures and then returns structured output', async () => {
+    let attempts = 0;
+    const fetchMock = (async () => {
+      attempts += 1;
+      if (attempts < 3) {
+        return new Response('{}', {status: 503, headers: {'retry-after': '0'}});
+      }
+      return new Response(JSON.stringify({choices: [{message: {content: '{"summary":"ok","commands":[]}'}}]}));
+    }) as typeof fetch;
+    const result = await callProvider({
+      provider: 'openai', apiKey: 'private-key', model: 'model', system: 'system', prompt: 'prompt',
+    }, fetchMock);
+    assert.equal(attempts, 3);
+    assert.match(result.text, /summary/);
+  });
+
+  it('sends tenant-authorized image bytes to every vision provider adapter', async () => {
+    const bodies: Record<string, any> = {};
+    const fetchMock = (async (url: string | URL | Request, init?: RequestInit) => {
+      const key = String(url).includes('googleapis') ? 'gemini' : String(url).includes('openai') ? 'openai' : 'anthropic';
+      bodies[key] = JSON.parse(String(init?.body));
+      if (key === 'gemini') return new Response(JSON.stringify({candidates: [{content: {parts: [{text: '{"summary":"ok","commands":[]}' }]}}]}));
+      if (key === 'openai') return new Response(JSON.stringify({choices: [{message: {content: '{"summary":"ok","commands":[]}'}}]}));
+      return new Response(JSON.stringify({content: [{type: 'text', text: '{"summary":"ok","commands":[]}'}]}));
+    }) as typeof fetch;
+    for (const provider of ['gemini', 'openai', 'anthropic'] as const) {
+      await callProvider({
+        provider, apiKey: 'private-key', model: 'model', system: 'system', prompt: 'prompt',
+        media: [{id: 'media-1', mimeType: 'image/png', dataBase64: 'cG5n'}],
+      }, fetchMock);
+    }
+    assert.equal(bodies.gemini.contents[0].parts[2].inlineData.data, 'cG5n');
+    assert.match(bodies.openai.messages[1].content[2].image_url.url, /^data:image\/png;base64,cG5n$/);
+    assert.equal(bodies.anthropic.messages[0].content[2].source.data, 'cG5n');
+  });
+
   it('rejects malformed or out-of-contract structured output', () => {
     assert.throws(() => parseProviderProposal('not json'));
     assert.throws(() => parseProviderProposal(JSON.stringify({summary: 'bad', commands: [{type: 'run_sql'}]})));
@@ -96,5 +132,14 @@ describe('AI Store Builder media request boundary', () => {
     ]);
 
     assert.deepEqual(mediaIds, ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']);
+  });
+
+  it('rejects malformed or non-publishable client documents before provider execution', () => {
+    assert.equal(isValidProposalDocument({}), false);
+    assert.equal(isValidProposalDocument({
+      schemaVersion: 1,
+      globalSettings: {buyNow: {disabled: true, label: ''}},
+      templates: {home: {sections: []}, collection: {sections: []}, product: {sections: []}},
+    }), false);
   });
 });

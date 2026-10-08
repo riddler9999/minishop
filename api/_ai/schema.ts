@@ -35,4 +35,3 @@ export function parseProviderProposal(text: string) {
   if (!result.success) throw new Error('The AI provider returned commands outside the approved schema.');
   return result.data;
 }
-

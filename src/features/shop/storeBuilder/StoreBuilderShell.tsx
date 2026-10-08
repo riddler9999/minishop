@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {
   ArrowLeft,
@@ -98,6 +98,7 @@ export function StoreBuilderShell({
   const [conversation, setConversation] = useState<AiConversation>(() =>
     createInitialConversation('shop_active')
   );
+  const editorRevision = useRef(crypto.randomUUID());
 
   const runSave = (snapshot: EditorState) => {
     if (snapshot.blocked || snapshot.status === 'conflict') return;
@@ -121,6 +122,7 @@ export function StoreBuilderShell({
   );
 
   const updateDocument = (nextDoc: StoreDesignDocument) => {
+    editorRevision.current = crypto.randomUUID();
     setHistory((prev) => pushHistory(prev, nextDoc));
     setEditor((current) => applyLocalEdit(current, nextDoc));
   };
@@ -128,6 +130,7 @@ export function StoreBuilderShell({
   const handleUndo = () => {
     const {history: nextHistory, doc} = undoHistory(history);
     if (doc) {
+      editorRevision.current = crypto.randomUUID();
       setHistory(nextHistory);
       setEditor((current) => applyLocalEdit(current, doc));
     }
@@ -136,12 +139,14 @@ export function StoreBuilderShell({
   const handleRedo = () => {
     const {history: nextHistory, doc} = redoHistory(history);
     if (doc) {
+      editorRevision.current = crypto.randomUUID();
       setHistory(nextHistory);
       setEditor((current) => applyLocalEdit(current, doc));
     }
   };
 
   const handleSendMessage = async (prompt: string, media: {id: string; url: string}[]) => {
+    const baseRevision = editorRevision.current;
     const {conversation: updatedConv} = appendUserMessage(conversation, prompt, media.map((item) => item.url));
     setConversation(updatedConv);
 
@@ -153,6 +158,7 @@ export function StoreBuilderShell({
       message: prompt,
       currentDoc: editor.document,
       mediaIds: media.map((item) => item.id),
+      baseRevision,
     });
 
     const {conversation: finalConv} = appendAssistantProposal(updatedConv, proposal);
@@ -161,6 +167,10 @@ export function StoreBuilderShell({
   };
 
   const handleApplyProposal = (proposal: AiProposal) => {
+    if (proposal.baseRevision !== editorRevision.current) {
+      alert('This AI proposal is based on an older draft. Generate a new proposal for the current design.');
+      return;
+    }
     const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
       mediaById: proposal.trustedMedia,
     });

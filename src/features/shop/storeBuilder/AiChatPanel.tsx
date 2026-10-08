@@ -72,12 +72,12 @@ export function AiChatPanel({
     if ((!inputPrompt.trim() && attachedMedia.length === 0) || sending || disabled) return;
     const promptText = inputPrompt.trim() || 'Use attached image for section';
 
-    setInputPrompt('');
-    setAttachedMedia([]);
     setSending(true);
 
     try {
       await onSendMessage(promptText, attachedMedia);
+      setInputPrompt('');
+      setAttachedMedia([]);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to process AI command');
     } finally {

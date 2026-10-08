@@ -6,6 +6,7 @@ export type ProviderRequest = {
   model: string;
   system: string;
   prompt: string;
+  media?: {id: string; mimeType: 'image/jpeg' | 'image/png' | 'image/webp'; dataBase64: string}[];
   timeoutMs?: number;
 };
 
@@ -31,22 +32,36 @@ function safeProviderError(status: number): ProviderGatewayError {
   return new ProviderGatewayError('PROVIDER_UNAVAILABLE', 'The AI provider is temporarily unavailable.');
 }
 
+function retryDelay(response: Response, attempt: number): number {
+  const retryAfter = Number(response.headers.get('retry-after'));
+  if (Number.isFinite(retryAfter) && retryAfter >= 0) return Math.min(retryAfter * 1_000, 2_000);
+  return Math.min(200 * (2 ** attempt), 2_000);
+}
+
 async function requestJson(fetchImpl: FetchLike, url: string, init: RequestInit, timeoutMs: number): Promise<any> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetchImpl(url, {...init, signal: controller.signal});
-    if (!response.ok) throw safeProviderError(response.status);
-    return await response.json();
-  } catch (error) {
-    if (error instanceof ProviderGatewayError) throw error;
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ProviderGatewayError('TIMEOUT', 'The AI provider request timed out.');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetchImpl(url, {...init, signal: controller.signal});
+      if (response.ok) return await response.json();
+      const transient = response.status === 429 || response.status >= 500;
+      if (!transient || attempt === 2) throw safeProviderError(response.status);
+      await new Promise((resolve) => setTimeout(resolve, retryDelay(response, attempt)));
+    } catch (error) {
+      if (error instanceof ProviderGatewayError) throw error;
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new ProviderGatewayError('TIMEOUT', 'The AI provider request timed out.');
+      }
+      if (attempt === 2) {
+        throw new ProviderGatewayError('PROVIDER_UNAVAILABLE', 'The AI provider request failed.');
+      }
+      await new Promise((resolve) => setTimeout(resolve, Math.min(200 * (2 ** attempt), 2_000)));
+    } finally {
+      clearTimeout(timeout);
     }
-    throw new ProviderGatewayError('PROVIDER_UNAVAILABLE', 'The AI provider request failed.');
-  } finally {
-    clearTimeout(timeout);
   }
+  throw new ProviderGatewayError('PROVIDER_UNAVAILABLE', 'The AI provider request failed.');
 }
 
 export async function callProvider(
@@ -63,7 +78,13 @@ export async function callProvider(
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           systemInstruction: {parts: [{text: request.system}]},
-          contents: [{role: 'user', parts: [{text: request.prompt}]}],
+          contents: [{role: 'user', parts: [
+            {text: request.prompt},
+            ...(request.media ?? []).flatMap((media) => [
+              {text: `Tenant mediaId: ${media.id}`},
+              {inlineData: {mimeType: media.mimeType, data: media.dataBase64}},
+            ]),
+          ]}],
           generationConfig: {responseMimeType: 'application/json', temperature: 0.2},
         }),
       },
@@ -82,7 +103,16 @@ export async function callProvider(
         model: request.model,
         temperature: 0.2,
         response_format: {type: 'json_object'},
-        messages: [{role: 'system', content: request.system}, {role: 'user', content: request.prompt}],
+        messages: [
+          {role: 'system', content: request.system},
+          {role: 'user', content: request.media?.length ? [
+            {type: 'text', text: request.prompt},
+            ...request.media.flatMap((media) => [
+              {type: 'text', text: `Tenant mediaId: ${media.id}`},
+              {type: 'image_url', image_url: {url: `data:${media.mimeType};base64,${media.dataBase64}`}},
+            ]),
+          ] : request.prompt},
+        ],
       }),
     }, timeoutMs);
     const text = data?.choices?.[0]?.message?.content;
@@ -103,7 +133,13 @@ export async function callProvider(
         max_tokens: 2048,
         temperature: 0.2,
         system: request.system,
-        messages: [{role: 'user', content: request.prompt}],
+        messages: [{role: 'user', content: request.media?.length ? [
+          {type: 'text', text: request.prompt},
+          ...request.media.flatMap((media) => [
+            {type: 'text', text: `Tenant mediaId: ${media.id}`},
+            {type: 'image', source: {type: 'base64', media_type: media.mimeType, data: media.dataBase64}},
+          ]),
+        ] : request.prompt}],
       }),
     }, timeoutMs);
     const text = data?.content?.find((part: any) => part?.type === 'text')?.text;
