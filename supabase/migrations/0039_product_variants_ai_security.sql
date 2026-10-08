@@ -120,11 +120,11 @@ alter table public.order_items
   add column variant_name text,
   add column variant_sku text;
 
-alter table public.order_items
-  add constraint order_items_variant_product_fkey
-  foreign key (product_id, variant_id)
-  references public.product_variants(product_id, id)
-  on delete set null (variant_id);
+-- Order lines are immutable purchase snapshots. Do not attach variant_id to a
+-- delete action on the mutable catalog row: replace_product_variants() and
+-- permanent product deletion may remove catalog rows, but the purchased
+-- variant identity must remain on historical order_items. place_order()
+-- validates product + variant + tenant identity before inserting the snapshot.
 
 create index order_items_variant_idx on public.order_items(variant_id)
 where variant_id is not null;

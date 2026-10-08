@@ -9,6 +9,8 @@ describe('first-class product variant migration contract', () => {
     assert.match(schema, /shop_id uuid not null references public\.shops/i);
     assert.match(schema, /product_id uuid not null references public\.products/i);
     assert.match(schema, /add column variant_id uuid/i);
+    assert.doesNotMatch(schema, /on delete set null \(variant_id\)/i);
+    assert.match(schema, /immutable purchase snapshots/i);
     assert.match(schema, /on conflict \(product_id, legacy_key\) do nothing/i);
     assert.match(schema, /regexp_replace\(description, '<!--VARIANTS:/i);
     assert.match(schema, /valid_payload := false/i);

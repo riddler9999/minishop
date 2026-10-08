@@ -218,6 +218,33 @@ async function main() {
   assert.equal(variantStocks.some((row) => row.stock < 0), false);
   const persistedVariantLines = ok(await service.from('order_items').select('variant_id,variant_name,variant_sku').eq('variant_id', finalVariant.id), 'variant order line');
   assert.equal(persistedVariantLines.length, 1);
+  const replacedVariants = ok(await sellerA.client.rpc('replace_product_variants', {
+    p_product_id: variantProduct.id,
+    p_variants: [{
+      id: otherVariant.id,
+      sku: `OTHER-${randomUUID()}`,
+      name: 'Other variant updated',
+      price: 18000,
+      stock: 5,
+      status: 'active',
+    }],
+  }), 'replace variants after purchase');
+  assert.equal(replacedVariants.length, 1);
+  const historicalVariantLine = ok(
+    await service.from('order_items')
+      .select('variant_id,variant_name,variant_sku')
+      .eq('variant_id', finalVariant.id)
+      .single(),
+    'historical variant order line after catalog replacement',
+  );
+  assert.equal(historicalVariantLine.variant_id, finalVariant.id);
+  assert.equal(historicalVariantLine.variant_name, persistedVariantLines[0].variant_name);
+  assert.equal(historicalVariantLine.variant_sku, persistedVariantLines[0].variant_sku);
+  evidence.product_variants = {
+    final_stock_concurrency: 'PASS',
+    tenant_isolation: 'PASS',
+    historical_identity_after_replace: 'PASS',
+  };
 
   const paymentAccounts = ok(await service.from('payment_accounts').insert([
     {
