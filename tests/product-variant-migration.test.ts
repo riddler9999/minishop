@@ -34,4 +34,24 @@ describe('first-class product variant migration contract', () => {
     assert.match(checkout, /variant_id, name, variant_name, variant_sku, unit_price/i);
     assert.match(checkout, /if v_has_variants then[\s\S]*variant_required/i);
   });
+
+  it('saves product and variants atomically and forbids variant re-parenting', async () => {
+    const schema = await readFile('supabase/migrations/0039_product_variants_ai_security.sql', 'utf8');
+    const api = await readFile('src/features/catalog/api/admin.ts', 'utf8');
+    assert.match(schema, /create or replace function public\.save_product_with_variants/i);
+    assert.match(schema, /variant_identity_immutable/i);
+    assert.match(schema, /from public\.replace_product_variants\(v_product\.id, p_variants\)/i);
+    assert.match(api, /rpc\('save_product_with_variants'/);
+    assert.doesNotMatch(api, /Variants could not be saved[\s\S]*delete\(\)/);
+  });
+
+  it('requires request-bound checkout idempotency and projects variant history', async () => {
+    const checkout = await readFile('supabase/migrations/0040_variant_checkout_inventory.sql', 'utf8');
+    const adminOrders = await readFile('src/features/orders/api/admin.ts', 'utf8');
+    assert.match(checkout, /idempotency_key_required/);
+    assert.match(checkout, /checkout_request_fingerprint/);
+    assert.match(checkout, /idempotency_key_conflict/);
+    assert.match(checkout, /'variantId', oi\.variant_id/);
+    assert.match(adminOrders, /variant_name, variant_sku/);
+  });
 });

@@ -91,7 +91,6 @@ export const catalogAdminApi = {
   },
 
   async updateProduct(id: string, patch: ProductPatch): Promise<{product: Product}> {
-    const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
     const dbPatch: TablesUpdate<'products'> = {};
     if (patch.name !== undefined) dbPatch.name = patch.name;
@@ -108,30 +107,13 @@ export const catalogAdminApi = {
     if (patch.description !== undefined) dbPatch.description = patch.description;
     if (patch.arrivalDate !== undefined) dbPatch.arrival_date = patch.arrivalDate;
 
-    const {data, error} = await sb
-      .from('products')
-      .update(dbPatch)
-      .eq('id', id)
-      .eq('shop_id', shopId)
-      .select()
-      .maybeSingle();
+    const {data, error} = await (sb as any).rpc('save_product_with_variants', {
+      p_product_id: id,
+      p_product: dbPatch,
+      p_variants: patch.variants === undefined ? null : patch.variants,
+    });
     if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ရှာမတွေ့ပါ'));
-    let variants: Product['variants'] = [];
-    if (patch.variants !== undefined) {
-      const result = await (sb as any).rpc('replace_product_variants', {
-        p_product_id: id,
-        p_variants: patch.variants,
-      });
-      if (result.error) throw new Error(mapDbError(result.error.message, 'Variants could not be saved.'));
-      variants = (result.data ?? []).map(mapVariantRow);
-    } else {
-      const result = await (sb as any).from('product_variants')
-        .select('id,product_id,sku,name,size,color,price,promo_price,stock,status')
-        .eq('shop_id', shopId).eq('product_id', id).order('created_at', {ascending: true});
-      if (result.error) throw new Error(mapDbError(result.error.message));
-      variants = (result.data ?? []).map(mapVariantRow);
-    }
-    return {product: mapProduct({...data, variants})};
+    return {product: mapProduct({...data, variants: (data.variants ?? []).map(mapVariantRow)})};
   },
 
   async deleteProduct(id: string): Promise<{ok: true}> {
@@ -147,11 +129,9 @@ export const catalogAdminApi = {
   },
 
   async createProduct(input: ProductCreateInput): Promise<{product: Product}> {
-    const shopId = await resolveOwnShopId();
     const sb = requireSupabase();
     const promoPrice = input.promoPrice ?? null;
-    const row: TablesInsert<'products'> = {
-      shop_id: shopId,
+    const row: Omit<TablesInsert<'products'>, 'shop_id'> = {
       name: input.name,
       price: input.price,
       item_code: input.itemCode ?? null,
@@ -166,17 +146,13 @@ export const catalogAdminApi = {
       description: input.description ?? '',
       arrival_date: input.arrivalDate ?? null,
     };
-    const {data, error} = await sb.from('products').insert(row).select().maybeSingle();
-    if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ဖန်တီး၍မရပါ။'));
-    const variantsResult = await (sb as any).rpc('replace_product_variants', {
-      p_product_id: data.id,
+    const {data, error} = await (sb as any).rpc('save_product_with_variants', {
+      p_product_id: null,
+      p_product: row,
       p_variants: input.variants ?? [],
     });
-    if (variantsResult.error) {
-      await sb.from('products').delete().eq('id', data.id).eq('shop_id', shopId);
-      throw new Error(mapDbError(variantsResult.error.message, 'Variants could not be saved.'));
-    }
-    return {product: mapProduct({...data, variants: (variantsResult.data ?? []).map(mapVariantRow)})};
+    if (error || !data) throw new Error(mapDbError(error?.message, 'ပစ္စည်း ဖန်တီး၍မရပါ။'));
+    return {product: mapProduct({...data, variants: (data.variants ?? []).map(mapVariantRow)})};
   },
 
   async resetProducts(): Promise<{ok: true}> {

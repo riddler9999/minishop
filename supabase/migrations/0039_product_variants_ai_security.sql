@@ -242,6 +242,26 @@ end;
 $$;
 
 revoke all on function private.sync_product_stock_from_variants() from public, anon, authenticated;
+
+create or replace function private.enforce_variant_identity_immutable()
+returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if new.shop_id is distinct from old.shop_id
+     or new.product_id is distinct from old.product_id then
+    raise exception 'variant_identity_immutable';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function private.enforce_variant_identity_immutable() from public, anon, authenticated;
+create trigger product_variants_identity_immutable
+before update on public.product_variants
+for each row execute function private.enforce_variant_identity_immutable();
+
 create trigger product_variants_sync_product_stock
 after insert or update or delete on public.product_variants
 for each row execute function private.sync_product_stock_from_variants();
@@ -300,5 +320,94 @@ $$;
 
 revoke all on function public.replace_product_variants(uuid,jsonb) from public, anon;
 grant execute on function public.replace_product_variants(uuid,jsonb) to authenticated;
+
+-- Product fields and variants must commit or roll back together. The caller
+-- cannot provide a tenant id; ownership is derived from auth.uid().
+create or replace function public.save_product_with_variants(
+  p_product_id uuid,
+  p_product jsonb,
+  p_variants jsonb default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  v_shop_id uuid;
+  v_product public.products%rowtype;
+  v_variants jsonb;
+  v_images text[];
+begin
+  if jsonb_typeof(p_product) is distinct from 'object' then
+    raise exception 'invalid_product';
+  end if;
+  if p_product ? 'images' then
+    if jsonb_typeof(p_product->'images') is distinct from 'array'
+       or jsonb_array_length(p_product->'images') > 20 then
+      raise exception 'invalid_product_images';
+    end if;
+    select coalesce(array_agg(value), '{}'::text[]) into v_images
+    from jsonb_array_elements_text(p_product->'images');
+  end if;
+
+  if p_product_id is null then
+    select s.id into v_shop_id from public.shops s
+    where s.owner_id = auth.uid();
+    if v_shop_id is null then raise exception 'shop_not_found'; end if;
+    if coalesce(btrim(p_product->>'name'), '') = '' or not (p_product ? 'price') then
+      raise exception 'invalid_product';
+    end if;
+    insert into public.products (
+      shop_id, name, item_code, category, color, size, price, promo_price,
+      is_promotion, stock, status, images, description, arrival_date
+    ) values (
+      v_shop_id, btrim(p_product->>'name'), nullif(btrim(p_product->>'item_code'), ''),
+      nullif(btrim(p_product->>'category'), ''), nullif(btrim(p_product->>'color'), ''),
+      nullif(btrim(p_product->>'size'), ''), (p_product->>'price')::bigint,
+      nullif(p_product->>'promo_price', '')::bigint,
+      coalesce((p_product->>'is_promotion')::boolean, false),
+      coalesce((p_product->>'stock')::integer, 0),
+      coalesce(nullif(p_product->>'status', ''), 'active'),
+      coalesce(v_images, '{}'::text[]), coalesce(p_product->>'description', ''),
+      nullif(p_product->>'arrival_date', '')::timestamptz
+    ) returning * into v_product;
+  else
+    select p.* into v_product
+    from public.products p join public.shops s on s.id = p.shop_id
+    where p.id = p_product_id and s.owner_id = auth.uid()
+    for update of p;
+    if not found then raise exception 'product_not_found'; end if;
+    update public.products p set
+      name = case when p_product ? 'name' then btrim(p_product->>'name') else p.name end,
+      item_code = case when p_product ? 'item_code' then nullif(btrim(p_product->>'item_code'), '') else p.item_code end,
+      category = case when p_product ? 'category' then nullif(btrim(p_product->>'category'), '') else p.category end,
+      color = case when p_product ? 'color' then nullif(btrim(p_product->>'color'), '') else p.color end,
+      size = case when p_product ? 'size' then nullif(btrim(p_product->>'size'), '') else p.size end,
+      price = case when p_product ? 'price' then (p_product->>'price')::bigint else p.price end,
+      promo_price = case when p_product ? 'promo_price' then nullif(p_product->>'promo_price', '')::bigint else p.promo_price end,
+      is_promotion = case when p_product ? 'is_promotion' then (p_product->>'is_promotion')::boolean else p.is_promotion end,
+      stock = case when p_product ? 'stock' then (p_product->>'stock')::integer else p.stock end,
+      status = case when p_product ? 'status' then p_product->>'status' else p.status end,
+      images = case when p_product ? 'images' then v_images else p.images end,
+      description = case when p_product ? 'description' then p_product->>'description' else p.description end,
+      arrival_date = case when p_product ? 'arrival_date' then nullif(p_product->>'arrival_date', '')::timestamptz else p.arrival_date end
+    where p.id = p_product_id
+    returning * into v_product;
+  end if;
+
+  if p_variants is not null then
+    select coalesce(jsonb_agg(to_jsonb(v) order by v.created_at, v.id), '[]'::jsonb)
+    into v_variants from public.replace_product_variants(v_product.id, p_variants) v;
+    select * into v_product from public.products where id = v_product.id;
+  else
+    select coalesce(jsonb_agg(to_jsonb(v) order by v.created_at, v.id), '[]'::jsonb)
+    into v_variants from public.product_variants v where v.product_id = v_product.id;
+  end if;
+  return to_jsonb(v_product) || jsonb_build_object('variants', v_variants);
+end;
+$$;
+
+revoke all on function public.save_product_with_variants(uuid,jsonb,jsonb) from public, anon;
+grant execute on function public.save_product_with_variants(uuid,jsonb,jsonb) to authenticated;
 
 commit;

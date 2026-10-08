@@ -70,10 +70,10 @@ describe('checkout API regression contract', () => {
     ]);
   });
 
-  it('drops malformed idempotency keys instead of forwarding them', () => {
+  it('rejects missing or malformed idempotency keys', () => {
     const input = normalizeCheckoutInput(validBody({idempotencyKey: 'not-a-uuid'}));
-    assert.ok(input);
-    assert.equal(input.idempotencyKey, null);
+    assert.equal(input, null);
+    assert.equal(normalizeCheckoutInput(validBody({idempotencyKey: undefined})), null);
   });
 
   it('caps the API cart at the same 25-item limit enforced by place_order', () => {

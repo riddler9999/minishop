@@ -23,7 +23,7 @@ export interface CheckoutInput {
   paymentMethod: string;
   paymentRefTail: string;
   items: CheckoutLineInput[];
-  idempotencyKey: string | null;
+  idempotencyKey: string;
   expectedItemTotal: number | null;
   expectedDeliveryFee: number | null;
 }
@@ -90,7 +90,7 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
   const idempotencyKey =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawKey)
       ? rawKey
-      : null;
+      : '';
 
   const items = normalizeItems(b.items);
   const expectedItemTotal = safeMoney(b.expectedItemTotal);
@@ -104,6 +104,7 @@ export function normalizeCheckoutInput(body: unknown): CheckoutInput | null {
     !customer.region ||
     !customer.township ||
     !paymentMethod ||
+    !idempotencyKey ||
     items.length === 0 ||
     expectedItemTotal == null ||
     expectedDeliveryFee == null

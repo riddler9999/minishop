@@ -99,7 +99,9 @@ export default function OrderLookup() {
                 <div className="my mt-3 space-y-1 text-sm">
                   {(o.items || []).map((it, i) => (
                     <div key={i} className="commerce-muted flex justify-between">
-                      <span className="truncate">{it.name} ×{it.qty}</span>
+                      <span className="truncate">
+                        {it.name}{it.variantName ? ` — ${it.variantName}` : ''}{it.variantSku ? ` (${it.variantSku})` : ''} ×{it.qty}
+                      </span>
                       <span>{ks(it.price * it.qty)}</span>
                     </div>
                   ))}

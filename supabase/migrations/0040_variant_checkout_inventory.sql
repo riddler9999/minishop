@@ -1,6 +1,38 @@
 -- Preserve variant identity and inventory through quote, checkout and order lines.
 begin;
 
+alter table public.orders
+  add column checkout_request_fingerprint text;
+
+create or replace function private.checkout_request_fingerprint(
+  p_customer_name text,
+  p_customer_phone text,
+  p_street text,
+  p_region text,
+  p_township text,
+  p_payment_method text,
+  p_payment_ref_tail text,
+  p_items jsonb
+) returns text
+language sql
+immutable
+set search_path = pg_catalog
+as $$
+  select md5(jsonb_build_object(
+    'customer_name', trim(p_customer_name),
+    'customer_phone', regexp_replace(p_customer_phone, '[^0-9]', '', 'g'),
+    'street', trim(p_street),
+    'region', trim(p_region),
+    'township', trim(p_township),
+    'payment_method', p_payment_method,
+    'payment_ref_tail', case when p_payment_method = 'cod' then null else trim(p_payment_ref_tail) end,
+    'items', p_items
+  )::text)
+$$;
+
+revoke all on function private.checkout_request_fingerprint(text,text,text,text,text,text,text,jsonb)
+  from public, anon, authenticated;
+
 create or replace function public.quote_order(
   p_shop_slug text,
   p_region text,
@@ -138,8 +170,10 @@ declare
   v_product_id uuid;
   v_variant_id uuid;
   v_has_variants boolean;
+  v_request_fingerprint text;
 begin
   perform private.enforce_rate_limit('place_order', 10, interval '5 minutes');
+  if p_idempotency_key is null then raise exception 'idempotency_key_required'; end if;
   if p_payment_method not in ('cod','kpay','wave') then raise exception 'invalid_payment_method'; end if;
   if jsonb_typeof(p_items) is distinct from 'array'
      or jsonb_array_length(p_items) = 0
@@ -155,18 +189,23 @@ begin
 
   select * into v_shop from public.shops where slug = p_shop_slug and is_active = true;
   if not found then raise exception 'shop_not_found'; end if;
-  if p_idempotency_key is not null then
-    select * into v_existing from public.orders
-    where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
-    if found then
-      return jsonb_build_object(
-        'order_no', v_existing.order_no, 'item_total', v_existing.item_total,
-        'delivery_fee', v_existing.delivery_fee, 'grand_total', v_existing.grand_total,
-        'payment_method', v_existing.payment_method,
-        'amount_now', case when v_existing.payment_method = 'cod' then 0 else v_existing.grand_total end,
-        'status', v_existing.status
-      );
+  v_request_fingerprint := private.checkout_request_fingerprint(
+    p_customer_name, p_customer_phone, p_street, p_region, p_township,
+    p_payment_method, p_payment_ref_tail, p_items
+  );
+  select * into v_existing from public.orders
+  where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
+  if found then
+    if v_existing.checkout_request_fingerprint is distinct from v_request_fingerprint then
+      raise exception 'idempotency_key_conflict';
     end if;
+    return jsonb_build_object(
+      'order_no', v_existing.order_no, 'item_total', v_existing.item_total,
+      'delivery_fee', v_existing.delivery_fee, 'grand_total', v_existing.grand_total,
+      'payment_method', v_existing.payment_method,
+      'amount_now', case when v_existing.payment_method = 'cod' then 0 else v_existing.grand_total end,
+      'status', v_existing.status
+    );
   end if;
 
   select * into v_ent from public.shop_entitlements where shop_id = v_shop.id for update;
@@ -206,17 +245,22 @@ begin
     insert into public.orders (
       shop_id, order_no, customer_name, customer_phone, customer_address,
       region, township, payment_method, payment_ref_tail, status,
-      item_total, delivery_fee, grand_total, delivery_service, origin_township, idempotency_key
+      item_total, delivery_fee, grand_total, delivery_service, origin_township,
+      idempotency_key, checkout_request_fingerprint
     ) values (
       v_shop.id, v_order_no, trim(p_customer_name), trim(p_customer_phone), v_address,
       p_region, p_township, p_payment_method,
       case when p_payment_method = 'cod' then null else trim(p_payment_ref_tail) end,
-      v_status, 0, v_delivery, 0, v_shop.delivery_service, v_shop.origin_township, p_idempotency_key
+      v_status, 0, v_delivery, 0, v_shop.delivery_service, v_shop.origin_township,
+      p_idempotency_key, v_request_fingerprint
     ) returning id into v_order_id;
   exception when unique_violation then
     select * into v_existing from public.orders
     where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
     if not found then raise; end if;
+    if v_existing.checkout_request_fingerprint is distinct from v_request_fingerprint then
+      raise exception 'idempotency_key_conflict';
+    end if;
     return jsonb_build_object(
       'order_no', v_existing.order_no, 'item_total', v_existing.item_total,
       'delivery_fee', v_existing.delivery_fee, 'grand_total', v_existing.grand_total,
@@ -322,22 +366,29 @@ declare
   v_quote jsonb;
   v_shop public.shops%rowtype;
   v_existing public.orders%rowtype;
+  v_request_fingerprint text;
 begin
+  if p_idempotency_key is null then raise exception 'idempotency_key_required'; end if;
   select * into v_shop from public.shops
   where slug = p_shop_slug and is_active = true for update;
   if not found then raise exception 'shop_not_found'; end if;
-  if p_idempotency_key is not null then
-    select * into v_existing from public.orders
-    where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
-    if found then
-      return jsonb_build_object(
-        'order_no', v_existing.order_no, 'item_total', v_existing.item_total,
-        'delivery_fee', v_existing.delivery_fee, 'grand_total', v_existing.grand_total,
-        'payment_method', v_existing.payment_method,
-        'amount_now', case when v_existing.payment_method = 'cod' then 0 else v_existing.grand_total end,
-        'status', v_existing.status
-      );
+  v_request_fingerprint := private.checkout_request_fingerprint(
+    p_customer_name, p_customer_phone, p_street, p_region, p_township,
+    p_payment_method, p_payment_ref_tail, p_items
+  );
+  select * into v_existing from public.orders
+  where shop_id = v_shop.id and idempotency_key = p_idempotency_key;
+  if found then
+    if v_existing.checkout_request_fingerprint is distinct from v_request_fingerprint then
+      raise exception 'idempotency_key_conflict';
     end if;
+    return jsonb_build_object(
+      'order_no', v_existing.order_no, 'item_total', v_existing.item_total,
+      'delivery_fee', v_existing.delivery_fee, 'grand_total', v_existing.grand_total,
+      'payment_method', v_existing.payment_method,
+      'amount_now', case when v_existing.payment_method = 'cod' then 0 else v_existing.grand_total end,
+      'status', v_existing.status
+    );
   end if;
   v_quote := public.quote_order(p_shop_slug, p_region, p_township, p_items);
   if p_expected_item_total is null or p_expected_delivery_fee is null
@@ -358,5 +409,48 @@ revoke all on function public.place_order(text,text,text,text,text,text,text,tex
 grant execute on function public.place_order(text,text,text,text,text,text,text,text,jsonb,uuid) to anon, authenticated;
 revoke all on function public.place_order(text,text,text,text,text,text,text,text,jsonb,bigint,bigint,uuid) from public, anon, authenticated;
 grant execute on function public.place_order(text,text,text,text,text,text,text,text,jsonb,bigint,bigint,uuid) to anon, authenticated;
+
+-- Preserve the purchased variant snapshot in buyer order tracking too.
+create or replace function public.lookup_order(
+  p_shop_slug text,
+  p_order_no text,
+  p_phone text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, private
+as $$
+declare
+  v_order jsonb;
+begin
+  perform private.enforce_rate_limit('lookup_order', 30, interval '5 minutes');
+  if not (coalesce(length(trim(p_shop_slug)), 0) between 3 and 40)
+     or not (coalesce(length(trim(p_order_no)), 0) between 8 and 40)
+     or not (coalesce(length(trim(p_phone)), 0) between 6 and 30) then
+    return jsonb_build_object('error', 'invalid_lookup');
+  end if;
+  select jsonb_build_object(
+    'order_no', o.order_no, 'status', o.status, 'payment_method', o.payment_method,
+    'item_total', o.item_total, 'delivery_fee', o.delivery_fee,
+    'grand_total', o.grand_total, 'created_at', o.created_at,
+    'items', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'name', oi.name, 'price', oi.unit_price, 'qty', oi.qty,
+        'variantId', oi.variant_id, 'variantName', oi.variant_name,
+        'variantSku', oi.variant_sku
+      )) from public.order_items oi where oi.order_id = o.id
+    ), '[]'::jsonb)
+  ) into v_order
+  from public.orders o join public.shops s on s.id = o.shop_id
+  where s.slug = p_shop_slug and o.order_no = p_order_no
+    and regexp_replace(o.customer_phone, '[^0-9]', '', 'g')
+      = regexp_replace(p_phone, '[^0-9]', '', 'g');
+  if v_order is null then return jsonb_build_object('error', 'order_not_found'); end if;
+  return v_order;
+end;
+$$;
+
+revoke all on function public.lookup_order(text,text,text) from public, anon, authenticated;
+grant execute on function public.lookup_order(text,text,text) to service_role;
 
 commit;

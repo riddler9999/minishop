@@ -222,7 +222,9 @@ export default function AdminCustomerDetail({
                       <div className="rounded-lg bg-[#F4F7F5] p-2.5 text-xs text-[#1F2421] space-y-1">
                         {customerOrder.items.map((item, idx) => (
                           <div key={idx} className="flex justify-between gap-2">
-                            <span className="truncate">{item.qty}x {item.name}</span>
+                            <span className="truncate">
+                              {item.qty}x {item.name}{item.variantName ? ` — ${item.variantName}` : ''}{item.variantSku ? ` (${item.variantSku})` : ''}
+                            </span>
                             <span className="shrink-0 font-medium">{ks(item.price * item.qty)}</span>
                           </div>
                         ))}

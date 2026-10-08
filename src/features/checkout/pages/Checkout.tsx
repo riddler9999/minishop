@@ -31,6 +31,7 @@ export default function Checkout() {
   const [shipErr, setShipErr] = useState(false);
   const [quoteReload, setQuoteReload] = useState(0);
   const idempotencyKey = useRef('');
+  const idempotencyFingerprint = useRef('');
   useEffect(() => {
     let alive = true;
     api.merchantAccounts().then((r) => alive && setAccounts(r.accounts)).catch(() => {});
@@ -84,6 +85,13 @@ export default function Checkout() {
     ].join('|'),
     [items, region, township, method, live, quote?.itemTotal, subtotal, fee],
   );
+  useEffect(() => {
+    if (idempotencyFingerprint.current && idempotencyFingerprint.current !== cartFingerprint) {
+      idempotencyKey.current = '';
+      clearCheckoutIntent(sessionStorage, shopSlug);
+    }
+    idempotencyFingerprint.current = cartFingerprint;
+  }, [cartFingerprint, shopSlug]);
   const online = isOnlinePayment(method);
   const providerAccounts = paymentAccounts(accounts, method);
   const ready = isCheckoutReady({name, phone, street, region, township, fee, itemCount: items.length, method, refTail});
@@ -109,6 +117,7 @@ export default function Checkout() {
       const intent = existing ?? createCheckoutIntent({shopSlug, cartFingerprint});
       saveCheckoutIntent(sessionStorage, intent);
       idempotencyKey.current = intent.idempotencyKey;
+      idempotencyFingerprint.current = cartFingerprint;
     }
     try {
       const res = await api.createOrder({
