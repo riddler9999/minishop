@@ -14,29 +14,11 @@ interface AdminAuthValue {
   signUp: (email: string, password: string, redirectPath?: string) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signInWithGoogle: (redirectPath?: string) => Promise<AuthResult>;
-  signInAsDemo: () => Promise<AuthResult>;
   verifyEmailOtp: (email: string, token: string) => Promise<AuthResult>;
   resendSignupCode: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
 const AdminAuthContext = createContext<AdminAuthValue | null>(null);
-
-const DEMO_USER: User = {
-  id: 'demo-seller-id',
-  email: 'demo@minishop.mm',
-  app_metadata: {},
-  user_metadata: {},
-  aud: 'authenticated',
-  created_at: new Date().toISOString(),
-} as User;
-
-const DEMO_SESSION: Session = {
-  access_token: 'demo-token',
-  token_type: 'bearer',
-  expires_in: 3600,
-  refresh_token: 'demo-refresh',
-  user: DEMO_USER,
-} as Session;
 
 function mapAuthError(message: string): string {
   if (message.includes('Invalid login credentials')) return 'အီးမေးလ် သို့မဟုတ် စကားဝှက် မှားနေပါသည်။';
@@ -64,12 +46,7 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   useEffect(() => {
-    const isDemo = localStorage.getItem('minishop_demo_admin') === 'true';
-    if (isDemo) {
-      setSession(DEMO_SESSION);
-      setLoading(false);
-      return;
-    }
+    localStorage.removeItem('minishop_demo_admin');
     const sb = getSupabase();
     if (!sb) {
       setLoading(false);
@@ -82,18 +59,13 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     const {
       data: {subscription},
     } = sb.auth.onAuthStateChange((_event, next) => {
-      if (next) setSession(next);
+      setSession(next);
     });
     return () => subscription.unsubscribe();
   }, []);
-  const signInAsDemo = useCallback(async (): Promise<AuthResult> => {
-    localStorage.setItem('minishop_demo_admin', 'true');
-    setSession(DEMO_SESSION);
-    return {error: null};
-  }, []);
   const signUp = useCallback(async (email: string, password: string, redirectPath?: string): Promise<AuthResult> => {
     const sb = getSupabase();
-    if (!sb) return signInAsDemo();
+    if (!sb) return {error: 'Supabase authentication is not configured.'};
     const {data, error} = await sb.auth.signUp({
       email: email.trim(),
       password,
@@ -101,28 +73,30 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
     });
     if (error) return {error: mapAuthError(error.message)};
     return {error: null, needsEmailConfirmation: !data.session};
-  }, [signInAsDemo]);
+  }, []);
   const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const sb = getSupabase();
-    if (!sb) return signInAsDemo();
+    if (!sb) return {error: 'Supabase authentication is not configured.'};
     const {error} = await sb.auth.signInWithPassword({email: email.trim(), password});
+    if (!error) localStorage.removeItem('minishop_demo_admin');
     return {error: error ? mapAuthError(error.message) : null};
-  }, [signInAsDemo]);
+  }, []);
   const signInWithGoogle = useCallback(async (redirectPath?: string): Promise<AuthResult> => {
     const sb = getSupabase();
-    if (!sb) return signInAsDemo();
+    if (!sb) return {error: 'Supabase authentication is not configured.'};
+    localStorage.removeItem('minishop_demo_admin');
     const {error} = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {redirectTo: `${window.location.origin}${safeRedirectPath(redirectPath)}`},
     });
     return {error: error ? mapAuthError(error.message) : null};
-  }, [signInAsDemo]);
+  }, []);
   const verifyEmailOtp = useCallback(async (email: string, token: string): Promise<AuthResult> => {
     const sb = getSupabase();
-    if (!sb) return signInAsDemo();
+    if (!sb) return {error: 'Supabase authentication is not configured.'};
     const {error} = await sb.auth.verifyOtp({email: email.trim(), token: token.trim(), type: 'signup'});
     return {error: error ? mapAuthError(error.message) : null};
-  }, [signInAsDemo]);
+  }, []);
   const resendSignupCode = useCallback(async (email: string): Promise<AuthResult> => {
     const sb = getSupabase();
     if (!sb) return {error: null};
@@ -143,12 +117,11 @@ export function AdminAuthProvider({children}: {children: React.ReactNode}) {
       signUp,
       signIn,
       signInWithGoogle,
-      signInAsDemo,
       verifyEmailOtp,
       resendSignupCode,
       signOut,
     }),
-    [loading, session, signUp, signIn, signInWithGoogle, signInAsDemo, verifyEmailOtp, resendSignupCode, signOut],
+    [loading, session, signUp, signIn, signInWithGoogle, verifyEmailOtp, resendSignupCode, signOut],
   );
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }

@@ -7,7 +7,7 @@ import {APP_INITIAL, APP_NAME} from '@/shared/lib/brand';
 type Mode = 'login' | 'signup' | 'confirm';
 
 export default function AdminLogin() {
-  const {signIn, signUp, signInWithGoogle, signInAsDemo, verifyEmailOtp, resendSignupCode} = useAdminAuth();
+  const {signIn, signUp, signInWithGoogle, verifyEmailOtp, resendSignupCode} = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState<Mode>(() => new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'login');
@@ -28,15 +28,6 @@ export default function AdminLogin() {
     setMode(next);
     setErr('');
     setNotice('');
-  };
-
-  const handleDemoAccess = async () => {
-    setErr('');
-    setNotice('');
-    setBusy(true);
-    await signInAsDemo();
-    setBusy(false);
-    navigate(from, {replace: true});
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -171,15 +162,6 @@ export default function AdminLogin() {
 
               {!isConfirm && (
                 <>
-                  <button
-                    type="button"
-                    onClick={handleDemoAccess}
-                    disabled={busy}
-                    className="mb-3 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-950 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-slate-800 shadow-sm disabled:cursor-not-allowed disabled:opacity-50">
-                    <Store className="h-4 w-4 text-pink-400" />
-                    Demo Admin ဖြင့် တန်းဝင်မည် (Instant Access)
-                  </button>
-
                   <button
                     type="button"
                     onClick={googleSignIn}
