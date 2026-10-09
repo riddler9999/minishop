@@ -175,7 +175,7 @@ export function AiChatPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--admin-primary-hover)] flex items-center gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      {msg.proposal.isDestructive ? 'Confirmation Required' : 'Applied to Draft'}
+                      {msg.applicationStatus === 'applied' ? 'Applied to Draft' : msg.applicationStatus === 'failed' ? 'Apply Failed' : msg.proposal.isDestructive ? 'Confirmation Required' : 'Pending Application'}
                     </span>
                     <span className="text-[10px] text-[var(--admin-muted)] font-mono">
                       {msg.proposal.commands.length} command(s)
@@ -187,7 +187,9 @@ export function AiChatPanel({
                   </p>
 
                   <div className="pt-1 flex items-center gap-2">
-                    {msg.proposal.isDestructive ? (
+                    {msg.applicationStatus === 'applied' ? (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800"><Check className="h-3.5 w-3.5" /> Draft updated — preview refreshed</span>
+                    ) : msg.proposal.isDestructive ? (
                       <button
                         type="button"
                         onClick={() => handleApplyClick(msg.proposal!)}
@@ -196,9 +198,7 @@ export function AiChatPanel({
                         Review &amp; Apply
                       </button>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800">
-                        <Check className="h-3.5 w-3.5" /> Draft updated — preview refreshed
-                      </span>
+                      <span className="text-xs text-amber-800">Awaiting successful validation and application</span>
                     )}
                   </div>
                 </div>
