@@ -21,7 +21,7 @@ export function createEditorState(document: StoreDesignDocument, revision: numbe
 }
 
 export function applyLocalEdit(state: EditorState, document: StoreDesignDocument): EditorState {
-  if (state.blocked) return {...state, document};
+  if (state.blocked) return state;
   // Do not start a second save while one is in flight. Preserve "saving" and
   // reconcile this newer document when the first request settles.
   if (state.status === 'saving') return {...state, document, error: null};
