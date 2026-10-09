@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import fs from 'node:fs';
-import {appendAssistantProposal, createInitialConversation, setProposalApplicationStatus} from '../src/domain/aiConversation.ts';
+import {appendAssistantProposal, createInitialConversation, getProposalPresentation, setProposalApplicationStatus} from '../src/domain/aiConversation.ts';
+import {validateAndExecuteAiCommands} from '../src/domain/storeDesign/aiCommands.ts';
 import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
 import {
   applyLocalEdit,
@@ -109,19 +110,67 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
 
 
 describe('AI proposal application status regression', () => {
-  it('does not report a proposal as applied before the document update', () => {
-    const proposal = {id: 'proposal-1', userPrompt: 'change color', summary: 'Change color', commands: [], createdAt: new Date().toISOString(), baseRevision: 'rev'};
-    const {conversation} = appendAssistantProposal(createInitialConversation('shop'), proposal);
-    assert.equal(conversation.messages.at(-1)?.applicationStatus, 'pending');
-    const applied = setProposalApplicationStatus(conversation, proposal.id, 'applied');
-    assert.equal(applied.messages.at(-1)?.applicationStatus, 'applied');
-    assert.equal(conversation.messages.at(-1)?.applicationStatus, 'pending');
+  const proposal = {
+    id: 'proposal-1',
+    userPrompt: 'change color',
+    summary: 'Change color',
+    commands: [{type: 'set_global_settings' as const, patch: {accentColor: '#123456'}}],
+    createdAt: '2026-10-10T00:00:00Z',
+    baseRevision: 'original-revision',
+  };
+
+  function message() {
+    return appendAssistantProposal(createInitialConversation('shop'), proposal).assistantMsg;
+  }
+
+  it('shows pending until a matching local change has actually been persisted', () => {
+    const original = message();
+    assert.equal(getProposalPresentation(original, 'revision-1', 'saved').label, 'Pending Application');
+
+    const applied = setProposalApplicationStatus(
+      appendAssistantProposal(createInitialConversation('shop'), proposal).conversation,
+      proposal.id,
+      'applied',
+      {revision: 'revision-2'},
+    ).messages.at(-1)!;
+    for (const saveStatus of ['dirty', 'saving'] as const) {
+      const presentation = getProposalPresentation(applied, 'revision-2', saveStatus);
+      assert.notEqual(presentation.kind, 'success');
+    }
+    assert.equal(getProposalPresentation(applied, 'revision-2', 'saved').kind, 'success');
+    assert.equal(getProposalPresentation(applied, 'revision-2', 'saved').label, 'Saved to Draft');
   });
-  it('does not label pending non-destructive suggestions as applied', () => {
-    const shell = fs.readFileSync(shellPath, 'utf8');
-    const panel = fs.readFileSync(new URL('../src/features/shop/storeBuilder/AiChatPanel.tsx', import.meta.url), 'utf8');
-    assert.match(shell, /setProposalApplicationStatus\(next, proposal.id, 'applied'\)/);
-    assert.match(panel, /msg.applicationStatus === 'applied'/);
-    assert.match(panel, /Pending Application/);
+
+  it('does not claim success after retry, conflict, or a newer Undo/Redo revision', () => {
+    const updated = setProposalApplicationStatus(
+      appendAssistantProposal(createInitialConversation('shop'), proposal).conversation,
+      proposal.id, 'applied', {revision: 'revision-2'},
+    ).messages.at(-1)!;
+    assert.notEqual(getProposalPresentation(updated, 'revision-2', 'retry').kind, 'success');
+    assert.notEqual(getProposalPresentation(updated, 'revision-2', 'conflict').kind, 'success');
+    assert.equal(getProposalPresentation(updated, 'undo-revision', 'saved').kind, 'superseded');
+    assert.equal(getProposalPresentation(updated, 'redo-revision', 'saved').kind, 'superseded');
+  });
+
+  it('keeps a rejected AI command out of the document and reports its rejection', () => {
+    const initial = createDefaultStoreDesign();
+    const rejected = validateAndExecuteAiCommands(initial, [
+      {type: 'set_global_settings', patch: {accentColor: 'not-a-color'}},
+    ]);
+    assert.equal(rejected.ok, false);
+    assert.deepEqual(rejected.doc, initial);
+    const failed = setProposalApplicationStatus(
+      appendAssistantProposal(createInitialConversation('shop'), proposal).conversation,
+      proposal.id, 'failed', {error: rejected.errors[0].message},
+    ).messages.at(-1)!;
+    const presentation = getProposalPresentation(failed, 'revision-1', 'saved');
+    assert.equal(presentation.kind, 'failed');
+    assert.match(presentation.detail, /Invalid accent color/);
+  });
+
+  it('requires confirmation before applying a destructive proposal', () => {
+    const destructive = {...message(), proposal: {...proposal, isDestructive: true}};
+    const presentation = getProposalPresentation(destructive, 'original-revision', 'saved');
+    assert.equal(presentation.kind, 'confirmation');
   });
 });
