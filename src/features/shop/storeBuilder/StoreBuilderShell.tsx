@@ -46,11 +46,9 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     if (snapshot.blocked || snapshot.status === 'conflict') return;
     setEditor((current) => current === snapshot ? {...current, status: 'saving', error: null} : current);
     void persistEditorState(snapshot, saveDraft).then((result) => {
-      setEditor((current) => {
-        const reconciled = reconcileSaveResult(current, snapshot, result);
-        editorRef.current = reconciled;
-        return reconciled;
-      });
+      const reconciled = reconcileSaveResult(editorRef.current, snapshot, result);
+      editorRef.current = reconciled;
+      setEditor(reconciled);
     });
   };
 
@@ -64,11 +62,9 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     const revision = crypto.randomUUID();
     documentRevision.current = revision;
     setHistory((prev) => pushHistory(prev, doc));
-    setEditor((current) => {
-      const next = applyLocalEdit(current, doc);
-      editorRef.current = next;
-      return next;
-    });
+    const nextEditor = applyLocalEdit(editorRef.current, doc);
+    editorRef.current = nextEditor;
+    setEditor(nextEditor);
     return revision;
   };
 
@@ -78,11 +74,9 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     if (doc) {
       documentRevision.current = crypto.randomUUID();
       setHistory(next);
-      setEditor((current) => {
-        const nextEditor = applyLocalEdit(current, doc);
-        editorRef.current = nextEditor;
-        return nextEditor;
-      });
+      const nextEditor = applyLocalEdit(editorRef.current, doc);
+      editorRef.current = nextEditor;
+      setEditor(nextEditor);
     }
   };
   const handleRedo = () => {
@@ -91,11 +85,9 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     if (doc) {
       documentRevision.current = crypto.randomUUID();
       setHistory(next);
-      setEditor((current) => {
-        const nextEditor = applyLocalEdit(current, doc);
-        editorRef.current = nextEditor;
-        return nextEditor;
-      });
+      const nextEditor = applyLocalEdit(editorRef.current, doc);
+      editorRef.current = nextEditor;
+      setEditor(nextEditor);
     }
   };
 
