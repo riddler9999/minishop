@@ -70,6 +70,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const handleRedo = () => {
     const {history: next, doc} = redoHistory(history);
     if (doc) {
+      documentRevision.current = crypto.randomUUID();
       setHistory(next);
       setEditor((current) => applyLocalEdit(current, doc));
     }
