@@ -23,6 +23,21 @@ describe('Store Builder V2 workspace contract', () => {
     assert.match(source, /<PreviewCanvas/);
   });
 
+  it('auto-applies validated safe proposals and keeps destructive changes behind confirmation', () => {
+    const shell = fs.readFileSync(shellPath, 'utf8');
+    const chat = fs.readFileSync(new URL('../src/features/shop/storeBuilder/AiChatPanel.tsx', import.meta.url), 'utf8');
+    const gateway = fs.readFileSync(new URL('../api/ai.ts', import.meta.url), 'utf8');
+    assert.match(shell, /if \(!proposal\.isDestructive\) \{/);
+    assert.match(shell, /if \(baseRevision !== documentRevision\.current\)/);
+    assert.match(shell, /validateAndExecuteAiCommands\(editor\.document, proposal\.commands/);
+    assert.match(shell, /updateDocument\(result\.doc\)/);
+    assert.match(chat, /Applied to Draft/);
+    assert.match(chat, /Review &amp; Apply/);
+    assert.match(chat, /Confirm &amp; Apply/);
+    assert.match(gateway, /command\.type === 'remove_section'/);
+    assert.match(gateway, /command\.type === 'set_section_enabled' && command\.enabled === false/);
+  });
+
   it('keeps lifecycle persistence and publish actions behind the existing interfaces', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
     assert.match(source, /persistEditorState/);
