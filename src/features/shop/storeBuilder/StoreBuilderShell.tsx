@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowLeft, ChevronDown, Monitor, Smartphone, Sparkles, Undo2, Redo2, X} from 'lucide-react';
 import type {Product} from '@/domain/product';
@@ -15,7 +15,9 @@ import {
   createInitialConversation, appendUserMessage, appendAssistantProposal,
   type AiConversation,
 } from '@/domain/aiConversation';
-import {generateStoreEditProposal, type AiProposal} from '@/domain/aiGateway';
+import type {AiProposal} from '@/domain/aiGateway';
+import {adminApi} from '@/data/dataSource';
+import type {AiProviderId} from '@/domain/aiProvider';
 import {validateAndExecuteAiCommands} from '@/domain/storeDesign/aiCommands';
 
 type Props = {
@@ -35,6 +37,8 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [conversation, setConversation] = useState<AiConversation>(() => createInitialConversation('shop_active'));
+  const documentRevision = useRef(crypto.randomUUID());
+  const requestInFlight = useRef(false);
 
   const runSave = (snapshot: EditorState) => {
     if (snapshot.blocked || snapshot.status === 'conflict') return;
@@ -50,6 +54,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   }, [editor, saveDraft]);
 
   const updateDocument = (doc: StoreDesignDocument) => {
+    documentRevision.current = crypto.randomUUID();
     setHistory((prev) => pushHistory(prev, doc));
     setEditor((current) => applyLocalEdit(current, doc));
   };
@@ -57,6 +62,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const handleUndo = () => {
     const {history: next, doc} = undoHistory(history);
     if (doc) {
+      documentRevision.current = crypto.randomUUID();
       setHistory(next);
       setEditor((current) => applyLocalEdit(current, doc));
     }
@@ -70,17 +76,42 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   };
 
   const handleApplyProposal = (proposal: AiProposal) => {
-    const result = validateAndExecuteAiCommands(editor.document, proposal.commands);
-    if (result.ok || result.appliedCommandsCount > 0) updateDocument(result.doc);
+    if (proposal.baseRevision !== documentRevision.current) {
+      throw new Error('The draft changed since the AI suggestion. Please generate a new suggestion.');
+    }
+    const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
+      mediaById: proposal.trustedMedia,
+    });
+    if (!result.ok || result.appliedCommandsCount === 0) {
+      throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
+    }
+    updateDocument(result.doc);
   };
 
-  const handleSendMessage = async (prompt: string, mediaUrls: string[]) => {
-    const {conversation: updated} = appendUserMessage(conversation, prompt, mediaUrls);
-    setConversation(updated);
-    const proposal = await generateStoreEditProposal({message: prompt, currentDoc: editor.document, mediaUrls});
-    const {conversation: next} = appendAssistantProposal(updated, proposal);
-    setConversation(next);
-    handleApplyProposal(proposal);
+  const handleSendMessage = async (prompt: string, media: {id: string; url: string}[]) => {
+    if (requestInFlight.current) throw new Error('Please wait until the previous AI request finishes.');
+    requestInFlight.current = true;
+    try {
+      const baseRevision = documentRevision.current;
+      const {conversation: updated} = appendUserMessage(conversation, prompt, media.map((item) => item.url));
+      setConversation(updated);
+      const credentials = await adminApi.listAiCredentials();
+      const provider = credentials.credentials.find((item) => item.configured)?.provider as AiProviderId | undefined;
+      if (!provider) throw new Error('Configure an AI provider in AI Settings first.');
+      const {proposal} = await adminApi.generateAiStoreProposal({
+        provider,
+        message: prompt,
+        currentDoc: editor.document,
+        mediaIds: media.map((item) => item.id),
+        baseRevision,
+      });
+      const {conversation: next} = appendAssistantProposal(updated, proposal);
+      setConversation(next);
+      // Show a proposal first. The user applies it explicitly in the chat;
+      // destructive commands require an additional confirmation.
+    } finally {
+      requestInFlight.current = false;
+    }
   };
 
   const saveLabel = editor.status === 'saving' ? 'Saving…'
