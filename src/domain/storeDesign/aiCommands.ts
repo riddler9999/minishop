@@ -5,7 +5,15 @@ import type {
   StoreSectionType,
   StoreTemplateName,
 } from './types';
-import type {ThemePresetId} from '../theme';
+import type {ThemePresetId} from '../theme.js';
+import {isThemePresetId} from '../theme.js';
+import {
+  defaultSectionSettings,
+  getSectionDefinition,
+  isStoreSectionType,
+  supportsTemplate,
+} from './registry.js';
+import {validatePublishableStoreDesign} from './normalize.js';
 
 export const AI_COMMAND_SCHEMA_VERSION = 1 as const;
 
@@ -52,7 +60,7 @@ export type AiStoreCommand =
       template: StoreTemplateName;
       sectionId: string;
       field: 'imageUrl';
-      mediaUrl: string;
+      mediaId: string;
     };
 
 export interface CommandValidationError {
@@ -74,59 +82,108 @@ export interface CommandExecutionResult {
   errors: CommandValidationError[];
 }
 
+export interface CommandExecutionOptions {
+  mediaById?: Readonly<Record<string, string>>;
+}
+
+const TEMPLATE_NAMES = new Set<StoreTemplateName>(['home', 'collection', 'product']);
+const SECTION_PATCH_FIELDS: Record<StoreSectionType, ReadonlySet<string>> = {
+  hero: new Set(['headline', 'subtext', 'ctaLabel']),
+  categories: new Set(['title']),
+  'featured-products': new Set(['title', 'productSource']),
+  'best-selling': new Set(['title', 'productSource']),
+  'promotion-banner': new Set(['headline', 'body', 'ctaLabel']),
+  'image-text': new Set(['headline', 'body']),
+  'product-collection': new Set(['title', 'productSource']),
+  'new-arrivals': new Set(['title', 'productSource']),
+  'sale-products': new Set(['title', 'productSource']),
+  announcement: new Set(['text']),
+  'rich-text': new Set(['text']),
+  spacer: new Set(['size']),
+  'product-gallery': new Set(['layout']),
+  'product-info': new Set(['showPrice']),
+  'product-description': new Set(['heading']),
+  'related-products': new Set(['title', 'productSource']),
+};
+
+function cloneDocument(document: StoreDesignDocument): StoreDesignDocument {
+  return structuredClone(document);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function validTemplate(value: unknown): value is StoreTemplateName {
+  return typeof value === 'string' && TEMPLATE_NAMES.has(value as StoreTemplateName);
+}
+
+function pushError(
+  errors: CommandValidationError[],
+  commandIndex: number,
+  code: CommandValidationError['code'],
+  message: string,
+) {
+  errors.push({commandIndex, code, message});
+}
+
 export function validateAndExecuteAiCommands(
   initialDoc: StoreDesignDocument,
-  commands: AiStoreCommand[]
+  commands: AiStoreCommand[],
+  options: CommandExecutionOptions = {},
 ): CommandExecutionResult {
-  // Deep clone draft doc so mutations are pure
-  const doc: StoreDesignDocument = JSON.parse(JSON.stringify(initialDoc));
+  const doc = cloneDocument(initialDoc);
   const errors: CommandValidationError[] = [];
   let appliedCount = 0;
 
   for (let idx = 0; idx < commands.length; idx++) {
     const cmd = commands[idx];
-    if (!cmd || typeof cmd !== 'object' || !cmd.type) {
-      errors.push({
-        commandIndex: idx,
-        code: 'UNSUPPORTED_COMMAND',
-        message: 'Invalid command structure',
-      });
+    if (!isRecord(cmd) || typeof cmd.type !== 'string') {
+      pushError(errors, idx, 'UNSUPPORTED_COMMAND', 'Invalid command structure');
       continue;
     }
 
     try {
       switch (cmd.type) {
         case 'set_theme': {
-          if (!cmd.themeId || typeof cmd.themeId !== 'string') {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_THEME',
-              message: 'Invalid themeId provided',
-            });
+          if (!isThemePresetId(cmd.themeId)) {
+            pushError(errors, idx, 'INVALID_THEME', 'Unknown themeId');
             break;
           }
-          doc.themeId = cmd.themeId as ThemePresetId;
+          doc.themeId = cmd.themeId;
           appliedCount++;
           break;
         }
 
         case 'set_global_settings': {
-          if (!cmd.patch || typeof cmd.patch !== 'object') {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_COMMAND_PAYLOAD',
-              message: 'Invalid patch payload',
-            });
+          if (!isRecord(cmd.patch)) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Invalid global settings patch');
             break;
           }
-          // Protected commerce check: buyNow must remain disabled: false
-          if (cmd.patch.buyNow && (cmd.patch.buyNow as any).disabled !== false) {
-            errors.push({
-              commandIndex: idx,
-              code: 'PROTECTED_COMMERCE_INVARIANT',
-              message: 'Product Detail Buy Now button is mandatory and cannot be disabled.',
-            });
+          const keys = Object.keys(cmd.patch);
+          if (keys.some((key) => !['accentColor', 'fontPairing', 'buyNow'].includes(key))) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Unsupported global settings field');
             break;
+          }
+          if (cmd.patch.accentColor !== undefined &&
+              (typeof cmd.patch.accentColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(cmd.patch.accentColor))) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Invalid accent color');
+            break;
+          }
+          if (cmd.patch.fontPairing !== undefined &&
+              !['classic', 'minimal', 'boutique'].includes(String(cmd.patch.fontPairing))) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Invalid font pairing');
+            break;
+          }
+          if (cmd.patch.buyNow !== undefined) {
+            if (!isRecord(cmd.patch.buyNow) ||
+                Object.keys(cmd.patch.buyNow).some((key) => !['label', 'style', 'width', 'disabled'].includes(key)) ||
+                (cmd.patch.buyNow as Record<string, unknown>).disabled === true ||
+                (cmd.patch.buyNow.label !== undefined &&
+                  (typeof cmd.patch.buyNow.label !== 'string' || !cmd.patch.buyNow.label.trim()))) {
+              pushError(errors, idx, 'PROTECTED_COMMERCE_INVARIANT', 'Buy Now must remain enabled and labelled');
+              break;
+            }
           }
           doc.globalSettings = {
             ...doc.globalSettings,
@@ -142,31 +199,18 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'set_section_enabled': {
-          const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
             break;
           }
+          const template = doc.templates[cmd.template];
           const section = template.sections.find((s) => s.id === cmd.sectionId);
           if (!section) {
-            errors.push({
-              commandIndex: idx,
-              code: 'SECTION_NOT_FOUND',
-              message: `Section ${cmd.sectionId} not found in template ${cmd.template}`,
-            });
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.sectionId} not found`);
             break;
           }
-          // Protected commerce invariant: product-info section cannot be disabled
-          if (section.type === 'product-info' && !cmd.enabled) {
-            errors.push({
-              commandIndex: idx,
-              code: 'PROTECTED_COMMERCE_INVARIANT',
-              message: 'The product-info section cannot be disabled.',
-            });
+          if (!cmd.enabled && !getSectionDefinition(section.type).hideable) {
+            pushError(errors, idx, 'PROTECTED_COMMERCE_INVARIANT', `${section.type} cannot be disabled`);
             break;
           }
           section.enabled = cmd.enabled;
@@ -175,32 +219,19 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'remove_section': {
-          const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
             break;
           }
+          const template = doc.templates[cmd.template];
           const sectionIndex = template.sections.findIndex((s) => s.id === cmd.sectionId);
           if (sectionIndex === -1) {
-            errors.push({
-              commandIndex: idx,
-              code: 'SECTION_NOT_FOUND',
-              message: `Section ${cmd.sectionId} not found in template ${cmd.template}`,
-            });
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.sectionId} not found`);
             break;
           }
           const section = template.sections[sectionIndex];
-          // Protected commerce invariant: product-info section cannot be removed
-          if (section.type === 'product-info') {
-            errors.push({
-              commandIndex: idx,
-              code: 'PROTECTED_COMMERCE_INVARIANT',
-              message: 'The product-info section cannot be removed from product template.',
-            });
+          if (!getSectionDefinition(section.type).removable) {
+            pushError(errors, idx, 'PROTECTED_COMMERCE_INVARIANT', `${section.type} cannot be removed`);
             break;
           }
           template.sections.splice(sectionIndex, 1);
@@ -209,61 +240,27 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'add_section': {
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
+            break;
+          }
+          if (!isStoreSectionType(cmd.sectionType) || !supportsTemplate(cmd.sectionType, cmd.template)) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Section type is not supported by this template');
+            break;
+          }
           const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (cmd.afterSectionId && !template.sections.some((section) => section.id === cmd.afterSectionId)) {
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.afterSectionId} not found`);
             break;
           }
 
           const newSectionId = `sec_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-          let defaultSettings: any = {};
-          switch (cmd.sectionType) {
-            case 'hero':
-              defaultSettings = {headline: 'Welcome to our shop', subtext: 'Browse our latest arrivals', ctaLabel: 'Shop Now', imageUrl: null};
-              break;
-            case 'image-text':
-              defaultSettings = {headline: 'Our Quality Story', body: 'Handcrafted items crafted with care.', imageUrl: null};
-              break;
-            case 'announcement':
-              defaultSettings = {text: 'Free shipping on orders over 50,000 Ks'};
-              break;
-            case 'promotion-banner':
-              defaultSettings = {headline: 'Special Sale', body: 'Limited time offer on featured products.', ctaLabel: 'Claim Discount'};
-              break;
-            case 'categories':
-              defaultSettings = {title: 'Shop Categories'};
-              break;
-            case 'featured-products':
-            case 'best-selling':
-            case 'new-arrivals':
-            case 'sale-products':
-            case 'product-collection':
-            case 'related-products':
-              defaultSettings = {
-                title: cmd.sectionType.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-                productSource: {mode: 'dynamic', rule: 'best_selling', limit: 8},
-              };
-              break;
-            case 'rich-text':
-              defaultSettings = {text: 'Add your story or custom store announcement here.'};
-              break;
-            case 'spacer':
-              defaultSettings = {size: 'md'};
-              break;
-            default:
-              defaultSettings = {};
-          }
-
           const newSection: StoreSection = {
             id: newSectionId,
             type: cmd.sectionType,
             enabled: true,
-            settings: defaultSettings,
-          } as any;
+            settings: defaultSectionSettings(cmd.sectionType),
+          } as StoreSection;
 
           if (cmd.afterSectionId) {
             const afterIdx = template.sections.findIndex((s) => s.id === cmd.afterSectionId);
@@ -280,22 +277,18 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'move_section': {
-          const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
             break;
           }
+          const template = doc.templates[cmd.template];
           const currentIdx = template.sections.findIndex((s) => s.id === cmd.sectionId);
           if (currentIdx === -1) {
-            errors.push({
-              commandIndex: idx,
-              code: 'SECTION_NOT_FOUND',
-              message: `Section ${cmd.sectionId} not found`,
-            });
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.sectionId} not found`);
+            break;
+          }
+          if (cmd.afterSectionId && !template.sections.some((section) => section.id === cmd.afterSectionId)) {
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.afterSectionId} not found`);
             break;
           }
 
@@ -315,22 +308,23 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'update_section': {
-          const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
             break;
           }
+          const template = doc.templates[cmd.template];
           const section = template.sections.find((s) => s.id === cmd.sectionId);
           if (!section) {
-            errors.push({
-              commandIndex: idx,
-              code: 'SECTION_NOT_FOUND',
-              message: `Section ${cmd.sectionId} not found`,
-            });
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.sectionId} not found`);
+            break;
+          }
+          if (!isRecord(cmd.patch) ||
+              Object.keys(cmd.patch).some((key) => !SECTION_PATCH_FIELDS[section.type].has(key))) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', `Unsupported settings for ${section.type}`);
+            break;
+          }
+          if (section.type === 'product-info' && cmd.patch.showPrice !== true) {
+            pushError(errors, idx, 'PROTECTED_COMMERCE_INVARIANT', 'Product price display is mandatory');
             break;
           }
           section.settings = {
@@ -342,55 +336,51 @@ export function validateAndExecuteAiCommands(
         }
 
         case 'attach_media': {
-          const template = doc.templates[cmd.template];
-          if (!template) {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_TEMPLATE',
-              message: `Template ${cmd.template} does not exist`,
-            });
+          if (!validTemplate(cmd.template)) {
+            pushError(errors, idx, 'INVALID_TEMPLATE', 'Invalid template');
             break;
           }
+          const template = doc.templates[cmd.template];
           const section = template.sections.find((s) => s.id === cmd.sectionId);
           if (!section) {
-            errors.push({
-              commandIndex: idx,
-              code: 'SECTION_NOT_FOUND',
-              message: `Section ${cmd.sectionId} not found`,
-            });
+            pushError(errors, idx, 'SECTION_NOT_FOUND', `Section ${cmd.sectionId} not found`);
             break;
           }
-          if ('imageUrl' in section.settings) {
-            (section.settings as any).imageUrl = cmd.mediaUrl;
+          const deliveryUrl = options.mediaById?.[cmd.mediaId];
+          if (!deliveryUrl || (!deliveryUrl.startsWith('/') && !deliveryUrl.startsWith('https://'))) {
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', 'Media is not trusted for this shop');
+            break;
+          }
+          if (section.type === 'hero' || section.type === 'image-text') {
+            section.settings.imageUrl = deliveryUrl;
             appliedCount++;
           } else {
-            errors.push({
-              commandIndex: idx,
-              code: 'INVALID_COMMAND_PAYLOAD',
-              message: `Section ${section.type} does not support imageUrl field`,
-            });
+            pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', `Section ${section.type} does not support media`);
           }
           break;
         }
 
         default:
-          errors.push({
-            commandIndex: idx,
-            code: 'UNSUPPORTED_COMMAND',
-            message: `Unknown command type ${(cmd as any).type}`,
-          });
+          pushError(errors, idx, 'UNSUPPORTED_COMMAND', `Unknown command type ${String((cmd as {type?: unknown}).type)}`);
       }
-    } catch (err: any) {
-      errors.push({
-        commandIndex: idx,
-        code: 'INVALID_COMMAND_PAYLOAD',
-        message: err?.message || 'Execution error',
-      });
+    } catch (error: unknown) {
+      pushError(errors, idx, 'INVALID_COMMAND_PAYLOAD', error instanceof Error ? error.message : 'Execution error');
     }
   }
 
+  const publishValidation = errors.length === 0 ? validatePublishableStoreDesign(doc) : null;
+  if (publishValidation && !publishValidation.ok) {
+    for (const error of publishValidation.errors) {
+      pushError(errors, commands.length - 1, 'PROTECTED_COMMERCE_INVARIANT', error.message);
+    }
+  }
+
+  if (errors.length > 0) {
+    return {ok: false, doc: cloneDocument(initialDoc), appliedCommandsCount: 0, errors};
+  }
+
   return {
-    ok: errors.length === 0,
+    ok: true,
     doc,
     appliedCommandsCount: appliedCount,
     errors,

@@ -27,6 +27,7 @@ test('Vercel Hobby function discovery stays within the 12-function deployment bu
     `Vercel function budget exceeded: ${discovered.length} discovered entries: ${discovered.join(', ')}`,
   );
   assert.deepEqual(discovered.sort(), [
+    'api/ai.ts',
     'api/checkout.ts',
     'api/health.ts',
     'api/mcp.ts',

@@ -11,14 +11,17 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import type {AiConversation} from '@/domain/aiConversation';
+import {getProposalPresentation, type AiConversation} from '@/domain/aiConversation';
+import type {SaveStatus} from './editorState';
 import type {AiProposal} from '@/domain/aiGateway';
 import {adminApi} from '@/data/dataSource';
 
 interface Props {
   conversation: AiConversation;
+  currentRevision: string;
+  saveStatus: SaveStatus;
   disabled?: boolean;
-  onSendMessage: (prompt: string, mediaUrls: string[]) => Promise<void>;
+  onSendMessage: (prompt: string, media: {id: string; url: string}[]) => Promise<void>;
   onApplyProposal: (proposal: AiProposal) => void;
   onUndoLastEdit: () => void;
   canUndo: boolean;
@@ -26,6 +29,8 @@ interface Props {
 
 export function AiChatPanel({
   conversation,
+  currentRevision,
+  saveStatus,
   disabled,
   onSendMessage,
   onApplyProposal,
@@ -33,9 +38,10 @@ export function AiChatPanel({
   canUndo,
 }: Props) {
   const [inputPrompt, setInputPrompt] = useState('');
-  const [attachedMedia, setAttachedMedia] = useState<{url: string; name: string}[]>([]);
+  const [attachedMedia, setAttachedMedia] = useState<{id: string; url: string; name: string}[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmingDestructive, setConfirmingDestructive] = useState<AiProposal | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -53,7 +59,7 @@ export function AiChatPanel({
         const file = files[i];
         const media = await adminApi.uploadStoreMedia(file);
         const url = media.url || media.storagePath;
-        setAttachedMedia((prev) => [...prev, {url, name: file.name}]);
+        setAttachedMedia((prev) => [...prev, {id: media.id, url, name: file.name}]);
       }
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to attach image');
@@ -71,14 +77,13 @@ export function AiChatPanel({
     e.preventDefault();
     if ((!inputPrompt.trim() && attachedMedia.length === 0) || sending || disabled) return;
     const promptText = inputPrompt.trim() || 'Use attached image for section';
-    const mediaUrls = attachedMedia.map((m) => m.url);
 
-    setInputPrompt('');
-    setAttachedMedia([]);
     setSending(true);
 
     try {
-      await onSendMessage(promptText, mediaUrls);
+      await onSendMessage(promptText, attachedMedia);
+      setInputPrompt('');
+      setAttachedMedia([]);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to process AI command');
     } finally {
@@ -86,11 +91,21 @@ export function AiChatPanel({
     }
   }
 
+  function applyProposal(proposal: AiProposal) {
+    try {
+      onApplyProposal(proposal);
+      setApplyError(null);
+      setConfirmingDestructive(null);
+    } catch (error) {
+      setApplyError(error instanceof Error ? error.message : 'Unable to apply AI changes');
+    }
+  }
+
   function handleApplyClick(proposal: AiProposal) {
     if (proposal.isDestructive) {
       setConfirmingDestructive(proposal);
     } else {
-      onApplyProposal(proposal);
+      applyProposal(proposal);
     }
   }
 
@@ -122,7 +137,11 @@ export function AiChatPanel({
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {conversation.messages.map((msg) => (
+        {conversation.messages.map((msg) => {
+          const proposalStatus = msg.proposal
+            ? getProposalPresentation(msg, currentRevision, saveStatus)
+            : null;
+          return (
           <div
             key={msg.id}
             className={`flex gap-3 text-sm ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -165,7 +184,7 @@ export function AiChatPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--admin-primary-hover)] flex items-center gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Proposed Changes
+                      {proposalStatus?.label}
                     </span>
                     <span className="text-[10px] text-[var(--admin-muted)] font-mono">
                       {msg.proposal.commands.length} command(s)
@@ -177,20 +196,33 @@ export function AiChatPanel({
                   </p>
 
                   <div className="pt-1 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyClick(msg.proposal!)}
-                      className="flex items-center gap-1 rounded-lg bg-[var(--admin-primary)] px-3 py-1.5 text-xs font-bold text-[var(--admin-text)] hover:bg-[var(--admin-primary-hover)] transition">
-                      <Check className="h-3.5 w-3.5" />
-                      Apply to Draft
-                    </button>
+                    {proposalStatus?.kind === 'success' ? (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800">
+                        <Check className="h-3.5 w-3.5" /> {proposalStatus.detail}
+                      </span>
+                    ) : proposalStatus?.kind === 'confirmation' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyClick(msg.proposal!)}
+                        className="flex items-center gap-1 rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-800 transition">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Review &amp; Apply
+                      </button>
+                    ) : (
+                      <span role={proposalStatus?.kind === 'failed' ? 'alert' : undefined}
+                        className={proposalStatus?.kind === 'failed' ? 'text-xs text-red-800' : 'text-xs text-amber-800'}>
+                        {proposalStatus?.detail}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
+        {applyError && <p role="alert" className="text-xs text-red-700">{applyError}</p>}
         {sending && (
           <div className="flex items-center gap-2 text-xs text-[var(--admin-muted)] italic">
             <Loader2 className="h-4 w-4 animate-spin text-[var(--admin-primary-hover)]" />
@@ -213,8 +245,7 @@ export function AiChatPanel({
             <button
               type="button"
               onClick={() => {
-                onApplyProposal(confirmingDestructive);
-                setConfirmingDestructive(null);
+                applyProposal(confirmingDestructive);
               }}
               className="rounded-lg bg-amber-800 px-3 py-1 font-bold text-white hover:bg-amber-900">
               Confirm &amp; Apply

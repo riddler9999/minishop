@@ -19,16 +19,13 @@ const treePath = new URL('../src/features/shop/storeBuilder/SectionTree.tsx', im
 const rendererPath = new URL('../src/features/catalog/storeDesign/StorefrontRenderer.tsx', import.meta.url);
 
 describe('Store Builder #114 section interactions', () => {
-  it('uses the same selected-section state for tree, preview, and inspector', () => {
+  it('uses AI chat for edits and the shared storefront preview', () => {
     const shell = fs.readFileSync(shellPath, 'utf8');
     const preview = fs.readFileSync(previewPath, 'utf8');
-    assert.match(shell, /selectedSectionId/);
-    assert.match(shell, /<SectionTree[\s\S]*onSelect={selectSection}/);
-    assert.match(shell, /const selectSection = \(sectionId: string\) => {[\s\S]*setSelectedSectionId\(sectionId\)/);
-    assert.match(shell, /const selectPreviewSection = \(sectionId: string\) => {[\s\S]*setSelectedSectionId\(sectionId\)/);
-    assert.match(shell, /<PreviewCanvas[\s\S]*selectedSectionId={selectedSectionId}[\s\S]*onSectionSelect={selectPreviewSection}/);
-    assert.match(shell, /<Inspector section={selected}/);
-    assert.match(preview, /<StorefrontRenderer[\s\S]*onSectionSelect={onSectionSelect}/);
+    assert.match(shell, /<AiChatPanel/);
+    assert.match(shell, /<PreviewCanvas/);
+    assert.match(shell, /onApplyProposal={handleApplyProposal}/);
+    assert.match(preview, /StorefrontRenderer/);
   });
 
   it('reorders sections deterministically', () => {

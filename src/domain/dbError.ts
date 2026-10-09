@@ -58,6 +58,16 @@ export type DbErrorCode =
   | 'unknown_purchase'
   | 'unknown_shop'
   | 'invalid_plan'
+  // Product variant and product write guards (0039/0040)
+  | 'variant_identity_immutable'
+  | 'invalid_variants'
+  | 'product_not_found'
+  | 'invalid_variant'
+  | 'invalid_product'
+  | 'invalid_product_images'
+  | 'variant_required'
+  | 'variant_unavailable'
+  | 'idempotency_key_conflict'
   // place_order() validation
   | 'invalid_payment_method'
   | 'invalid_cart'
@@ -146,6 +156,15 @@ export const DB_ERROR_MESSAGES: Record<DbErrorCode, string> = {
   unknown_purchase: 'Extra Orders ဝယ်ယူမှု ရှာမတွေ့ပါ။',
   unknown_shop: 'ဆိုင် ရှာမတွေ့ပါ။',
   invalid_plan: 'Plan အမျိုးအစား မမှန်ပါ။',
+  variant_identity_immutable: 'Variant ကို တခြားဆိုင် သို့မဟုတ် တခြား Product ထဲသို့ ပြောင်းရွှေ့၍မရပါ။',
+  invalid_variants: 'Product Variant စာရင်း အချက်အလက် မမှန်ပါ။',
+  product_not_found: 'ပြင်ဆင်မည့် Product ကို ရှာမတွေ့ပါ သို့မဟုတ် ခွင့်ပြုချက်မရှိပါ။',
+  invalid_variant: 'Variant ၏ အမည်၊ ဈေးနှုန်း သို့မဟုတ် Stock အချက်အလက် မမှန်ပါ။',
+  invalid_product: 'Product အချက်အလက် မပြည့်စုံပါ သို့မဟုတ် မမှန်ပါ။',
+  invalid_product_images: 'Product ပုံများ၏ အမျိုးအစား သို့မဟုတ် အရေအတွက် မမှန်ပါ။',
+  variant_required: 'ဝယ်ယူမည့်ပစ္စည်းအတွက် Size သို့မဟုတ် အမျိုးအစားကို ရွေးချယ်ပါ။',
+  variant_unavailable: 'ရွေးချယ်ထားသော Product Variant ကို မရရှိနိုင်တော့ပါ။ ပြန်ရွေးချယ်ပါ။',
+  idempotency_key_conflict: 'ဒီတောင်းဆိုမှု ID ကို မတူညီသော Order အတွက် အသုံးပြုထားပြီးဖြစ်ပါသည်။',
   invalid_payment_method: 'ငွေပေးချေမှုနည်းလမ်း မမှန်ပါ။',
   invalid_cart: 'Shopping Cart အချက်အလက် မမှန်ပါ။',
   invalid_customer: 'ဝယ်ယူသူ အချက်အလက် (အမည် / ဖုန်း / လိပ်စာ) မမှန်ပါ။',

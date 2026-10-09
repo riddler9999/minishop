@@ -190,6 +190,33 @@ async function main() {
   await setEntitlement(shopB.id, 'starter', 60);
   const productA = await createProduct(shopA.id, 'seller-a');
   const productB = await createProduct(shopB.id, 'seller-b');
+  
+  // AI Store Builder: privileged credentials and media metadata stay server-only.
+  {
+    const serviceCredentials = await service.from('ai_provider_credentials').select('id').limit(1);
+    assert.equal(serviceCredentials.error, null, errorText(serviceCredentials.error));
+    const sellerCredentials = await sellerA.client.from('ai_provider_credentials').select('id');
+    assert.ok(sellerCredentials.error, 'seller can read encrypted AI credentials directly');
+    const anonymousCredentials = await anon.from('ai_provider_credentials').select('id');
+    assert.ok(anonymousCredentials.error, 'anonymous client can read encrypted AI credentials');
+
+    const serviceMedia = await service.from('store_media').select('id').limit(1);
+    assert.equal(serviceMedia.error, null, errorText(serviceMedia.error));
+    const sellerMedia = await sellerA.client.from('store_media').select('id');
+    assert.ok(sellerMedia.error, 'seller can bypass media registration verification');
+    const anonymousMedia = await anon.from('store_media').select('id');
+    assert.ok(anonymousMedia.error, 'anonymous client can inspect media registration metadata');
+
+    const bucket = await service.storage.getBucket('product-images');
+    assert.equal(bucket.error, null, errorText(bucket.error));
+    assert.equal(bucket.data?.file_size_limit, 10 * 1024 * 1024);
+    assert.deepEqual(
+      [...(bucket.data?.allowed_mime_types ?? [])].sort(),
+      ['image/jpeg', 'image/png', 'image/webp'],
+    );
+    evidence.ai_store_builder_storage_security = 'PASS';
+  }
+
 
   const paymentAccounts = ok(await service.from('payment_accounts').insert([
     {
@@ -631,10 +658,15 @@ async function main() {
     const key = randomUUID();
     const before = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem before');
     const clients = [apiClient(anonKey!, '198.51.100.41'), apiClient(anonKey!, '198.51.100.42')];
-    const results = await race(clients.map((client, index) => () =>
-      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, `090000004${index}`)),
+    const results = await race(clients.map((client) => () =>
+      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, '0900000041')),
     ));
     assert.equal(countFulfilled(results), 2, settledResultsText(results));
+    await assert.rejects(
+      () => callOrder(apiClient(anonKey!, '198.51.100.43'), orderArgs(shopA.slug, raceProduct.id, key, '0900000049')),
+      /idempotency_key_conflict/,
+      'reusing one idempotency key with a different payload must be rejected',
+    );
     const orders = ok(await service.from('orders').select('id').eq('shop_id', shopA.id).eq('idempotency_key', key), 'idem orders');
     assert.equal(orders.length, 1);
     const after = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem after');
@@ -753,7 +785,7 @@ async function main() {
       if (response.error) throw new Error(errorText(response.error));
       return response.data as Record<string, unknown>;
     }));
-    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    assert.equal(countFulfilled(results), 2, `same-key attempt ${attempt}: ${settledResultsText(results)}`);
     const fulfilled = results.filter((r): r is PromiseFulfilledResult<Record<string, unknown>> => r.status === 'fulfilled');
     assert.equal(fulfilled[0].value.order_no, fulfilled[1].value.order_no);
     const ent = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(), 'task9 same-key entitlement');

@@ -125,11 +125,11 @@ describe('Tasks 3-23: AI Store Builder & Media Suite', () => {
         template: 'home',
         sectionId: 'hero_1',
         field: 'imageUrl',
-        mediaUrl: 'https://example.com/hero.jpg',
+        mediaId: 'approved-hero',
       },
     ];
 
-    const result = validateAndExecuteAiCommands(doc, commands);
+    const result = validateAndExecuteAiCommands(doc, commands, {mediaById: {'approved-hero': 'https://example.com/hero.jpg'}});
     assert.strictEqual(result.ok, true);
     assert.strictEqual(result.appliedCommandsCount, 3);
     assert.strictEqual(result.doc.themeId, 'soft-elegant');
