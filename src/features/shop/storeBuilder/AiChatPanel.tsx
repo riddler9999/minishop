@@ -36,6 +36,7 @@ export function AiChatPanel({
   const [attachedMedia, setAttachedMedia] = useState<{id: string; url: string; name: string}[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmingDestructive, setConfirmingDestructive] = useState<AiProposal | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -82,6 +83,16 @@ export function AiChatPanel({
       alert(err instanceof Error ? err.message : 'Failed to process AI command');
     } finally {
       setSending(false);
+    }
+  }
+
+  function applyProposal(proposal: AiProposal) {
+    try {
+      applyProposal(proposal);
+      setApplyError(null);
+      setConfirmingDestructive(null);
+    } catch (error) {
+      setApplyError(error instanceof Error ? error.message : 'Unable to apply AI changes');
     }
   }
 
@@ -190,6 +201,7 @@ export function AiChatPanel({
           </div>
         ))}
 
+        {applyError && <p role="alert" className="text-xs text-red-700">{applyError}</p>}
         {sending && (
           <div className="flex items-center gap-2 text-xs text-[var(--admin-muted)] italic">
             <Loader2 className="h-4 w-4 animate-spin text-[var(--admin-primary-hover)]" />
@@ -212,8 +224,7 @@ export function AiChatPanel({
             <button
               type="button"
               onClick={() => {
-                onApplyProposal(confirmingDestructive);
-                setConfirmingDestructive(null);
+                applyProposal(confirmingDestructive);
               }}
               className="rounded-lg bg-amber-800 px-3 py-1 font-bold text-white hover:bg-amber-900">
               Confirm &amp; Apply
