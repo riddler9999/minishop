@@ -190,6 +190,33 @@ async function main() {
   await setEntitlement(shopB.id, 'starter', 60);
   const productA = await createProduct(shopA.id, 'seller-a');
   const productB = await createProduct(shopB.id, 'seller-b');
+  
+  // AI Store Builder: privileged credentials and media metadata stay server-only.
+  {
+    const serviceCredentials = await service.from('ai_provider_credentials').select('id').limit(1);
+    assert.equal(serviceCredentials.error, null, errorText(serviceCredentials.error));
+    const sellerCredentials = await sellerA.client.from('ai_provider_credentials').select('id');
+    assert.ok(sellerCredentials.error, 'seller can read encrypted AI credentials directly');
+    const anonymousCredentials = await anon.from('ai_provider_credentials').select('id');
+    assert.ok(anonymousCredentials.error, 'anonymous client can read encrypted AI credentials');
+
+    const serviceMedia = await service.from('store_media').select('id').limit(1);
+    assert.equal(serviceMedia.error, null, errorText(serviceMedia.error));
+    const sellerMedia = await sellerA.client.from('store_media').select('id');
+    assert.ok(sellerMedia.error, 'seller can bypass media registration verification');
+    const anonymousMedia = await anon.from('store_media').select('id');
+    assert.ok(anonymousMedia.error, 'anonymous client can inspect media registration metadata');
+
+    const bucket = await service.storage.getBucket('product-images');
+    assert.equal(bucket.error, null, errorText(bucket.error));
+    assert.equal(bucket.data?.file_size_limit, 10 * 1024 * 1024);
+    assert.deepEqual(
+      [...(bucket.data?.allowed_mime_types ?? [])].sort(),
+      ['image/jpeg', 'image/png', 'image/webp'],
+    );
+    evidence.ai_store_builder_storage_security = 'PASS';
+  }
+
 
   const paymentAccounts = ok(await service.from('payment_accounts').insert([
     {
