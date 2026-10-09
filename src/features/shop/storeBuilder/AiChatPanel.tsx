@@ -100,7 +100,7 @@ export function AiChatPanel({
     if (proposal.isDestructive) {
       setConfirmingDestructive(proposal);
     } else {
-      onApplyProposal(proposal);
+      applyProposal(proposal);
     }
   }
 
