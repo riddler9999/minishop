@@ -11,12 +11,15 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import type {AiConversation} from '@/domain/aiConversation';
+import {getProposalPresentation, type AiConversation} from '@/domain/aiConversation';
+import type {SaveStatus} from './editorState';
 import type {AiProposal} from '@/domain/aiGateway';
 import {adminApi} from '@/data/dataSource';
 
 interface Props {
   conversation: AiConversation;
+  currentRevision: string;
+  saveStatus: SaveStatus;
   disabled?: boolean;
   onSendMessage: (prompt: string, media: {id: string; url: string}[]) => Promise<void>;
   onApplyProposal: (proposal: AiProposal) => void;
@@ -26,6 +29,8 @@ interface Props {
 
 export function AiChatPanel({
   conversation,
+  currentRevision,
+  saveStatus,
   disabled,
   onSendMessage,
   onApplyProposal,
@@ -132,7 +137,11 @@ export function AiChatPanel({
 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {conversation.messages.map((msg) => (
+        {conversation.messages.map((msg) => {
+          const proposalStatus = msg.proposal
+            ? getProposalPresentation(msg, currentRevision, saveStatus)
+            : null;
+          return (
           <div
             key={msg.id}
             className={`flex gap-3 text-sm ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -175,7 +184,7 @@ export function AiChatPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--admin-primary-hover)] flex items-center gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      {msg.applicationStatus === 'applied' ? 'Applied to Draft' : msg.applicationStatus === 'failed' ? 'Apply Failed' : msg.proposal.isDestructive ? 'Confirmation Required' : 'Pending Application'}
+                      {proposalStatus?.label}
                     </span>
                     <span className="text-[10px] text-[var(--admin-muted)] font-mono">
                       {msg.proposal.commands.length} command(s)
@@ -187,9 +196,11 @@ export function AiChatPanel({
                   </p>
 
                   <div className="pt-1 flex items-center gap-2">
-                    {msg.applicationStatus === 'applied' ? (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800"><Check className="h-3.5 w-3.5" /> Draft updated — preview refreshed</span>
-                    ) : msg.proposal.isDestructive ? (
+                    {proposalStatus?.kind === 'success' ? (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800">
+                        <Check className="h-3.5 w-3.5" /> {proposalStatus.detail}
+                      </span>
+                    ) : proposalStatus?.kind === 'confirmation' ? (
                       <button
                         type="button"
                         onClick={() => handleApplyClick(msg.proposal!)}
@@ -198,14 +209,18 @@ export function AiChatPanel({
                         Review &amp; Apply
                       </button>
                     ) : (
-                      <span className="text-xs text-amber-800">Awaiting successful validation and application</span>
+                      <span role={proposalStatus?.kind === 'failed' ? 'alert' : undefined}
+                        className={proposalStatus?.kind === 'failed' ? 'text-xs text-red-800' : 'text-xs text-amber-800'}>
+                        {proposalStatus?.detail}
+                      </span>
                     )}
                   </div>
                 </div>
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {applyError && <p role="alert" className="text-xs text-red-700">{applyError}</p>}
         {sending && (
