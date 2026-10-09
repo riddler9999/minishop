@@ -7,6 +7,8 @@ export interface AiMessage {
   mediaUrls?: string[];
   proposal?: AiProposal;
   applicationStatus?: 'pending' | 'applied' | 'failed';
+  appliedRevision?: string;
+  applicationError?: string;
   createdAt: string;
 }
 
@@ -76,17 +78,73 @@ export function appendAssistantProposal(
   return {conversation: updated, assistantMsg};
 }
 
-/** Mark a proposal applied only after command validation and draft update succeed. */
+/** Track local application separately from successful draft persistence. */
 export function setProposalApplicationStatus(
   conversation: AiConversation,
   proposalId: string,
   status: 'applied' | 'failed',
+  details: {revision?: string; error?: string} = {},
 ): AiConversation {
   return {
     ...conversation,
     messages: conversation.messages.map((message) =>
-      message.proposal?.id === proposalId ? {...message, applicationStatus: status} : message,
+      message.proposal?.id === proposalId
+        ? {
+            ...message,
+            applicationStatus: status,
+            appliedRevision: status === 'applied' ? details.revision : undefined,
+            applicationError: status === 'failed' ? details.error : undefined,
+          }
+        : message,
     ),
     updatedAt: new Date().toISOString(),
   };
+}
+
+export type ProposalPresentation = {
+  kind: 'pending' | 'success' | 'failed' | 'superseded' | 'confirmation';
+  label: string;
+  detail: string;
+};
+
+/** Never describe a locally edited document as saved before autosave succeeds. */
+export function getProposalPresentation(
+  message: AiMessage,
+  currentRevision: string,
+  saveStatus: 'saved' | 'dirty' | 'saving' | 'retry' | 'conflict',
+): ProposalPresentation {
+  if (message.applicationStatus === 'failed') {
+    return {
+      kind: 'failed',
+      label: 'Apply Failed',
+      detail: message.applicationError || 'AI could not apply this change. Request a new suggestion.',
+    };
+  }
+  if (message.applicationStatus === 'applied') {
+    if (!message.appliedRevision || message.appliedRevision !== currentRevision) {
+      return {
+        kind: 'superseded',
+        label: 'Superseded by Newer Edits',
+        detail: 'The draft has changed since this proposal. Check the latest preview.',
+      };
+    }
+    if (saveStatus === 'saved') {
+      return {kind: 'success', label: 'Saved to Draft', detail: 'Draft saved — preview updated.'};
+    }
+    if (saveStatus === 'conflict') {
+      return {kind: 'failed', label: 'Save Conflict', detail: 'Another session changed the draft. Reload to resolve.'};
+    }
+    if (saveStatus === 'retry') {
+      return {kind: 'failed', label: 'Draft Save Failed', detail: 'The change is local only. Use Retry to save it.'};
+    }
+    return {kind: 'pending', label: 'Applied Locally', detail: 'Preview updated. Waiting for the draft to save.'};
+  }
+  if (message.proposal?.isDestructive) {
+    return {
+      kind: 'confirmation',
+      label: 'Confirmation Required',
+      detail: 'Review and confirm this potentially destructive change.',
+    };
+  }
+  return {kind: 'pending', label: 'Pending Application', detail: 'Waiting for successful validation and application.'};
 }
