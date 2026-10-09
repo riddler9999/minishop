@@ -53,7 +53,8 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
   it('guards Undo and Redo against the latest conflict, not a stale render closure', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
     assert.match(source, /const editorRef = useRef\\(editor\\)/);
-    assert.match(source, /editorRef\\.current = reconcileSaveResult\\(/);
+    assert.match(source, /const reconciled = reconcileSaveResult\(editorRef\.current/);
+    assert.match(source, /editorRef\.current = reconciled/);
     assert.match(source, /const handleUndo = \\(\\) => \\{\\s*if \\(editorRef\\.current\\.blocked\\) return;/);
     assert.match(source, /const handleRedo = \\(\\) => \\{\\s*if \\(editorRef\\.current\\.blocked\\) return;/);
     assert.match(source, /canUndo=\\{!editor\\.blocked && history\\.past\\.length > 0\\}/);
