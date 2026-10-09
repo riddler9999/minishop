@@ -108,8 +108,20 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       });
       const {conversation: next} = appendAssistantProposal(updated, proposal);
       setConversation(next);
-      // Show a proposal first. The user applies it explicitly in the chat;
-      // destructive commands require an additional confirmation.
+      // Apply safe, validated edits immediately. Destructive edits remain
+      // proposals and require an explicit confirmation in the chat.
+      if (!proposal.isDestructive) {
+        if (baseRevision !== documentRevision.current) {
+          throw new Error('The draft changed while AI was working. Please retry.');
+        }
+        const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
+          mediaById: proposal.trustedMedia,
+        });
+        if (!result.ok || result.appliedCommandsCount === 0) {
+          throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
+        }
+        updateDocument(result.doc);
+      }
     } finally {
       requestInFlight.current = false;
     }
