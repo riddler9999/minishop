@@ -44,6 +44,6 @@ describe('Store Builder #115 Product Source controls', () => {
     assert.match(source, /category/);
     assert.match(source, /limit/);
     assert.doesNotMatch(source, /JSON\.stringify|JSON\.parse|textarea/);
-    assert.match(fs.readFileSync(shellPath, 'utf8'), /products={products} categories={categories}/);
+    assert.match(fs.readFileSync(shellPath, 'utf8'), /<PreviewCanvas[\s\S]*products={products}[\s\S]*categories={categories}/);
   });
 });
