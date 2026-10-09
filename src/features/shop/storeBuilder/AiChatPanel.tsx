@@ -175,7 +175,7 @@ export function AiChatPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--admin-primary-hover)] flex items-center gap-1">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Proposed Changes
+                      {msg.proposal.isDestructive ? 'Confirmation Required' : 'Applied to Draft'}
                     </span>
                     <span className="text-[10px] text-[var(--admin-muted)] font-mono">
                       {msg.proposal.commands.length} command(s)
@@ -187,13 +187,19 @@ export function AiChatPanel({
                   </p>
 
                   <div className="pt-1 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyClick(msg.proposal!)}
-                      className="flex items-center gap-1 rounded-lg bg-[var(--admin-primary)] px-3 py-1.5 text-xs font-bold text-[var(--admin-text)] hover:bg-[var(--admin-primary-hover)] transition">
-                      <Check className="h-3.5 w-3.5" />
-                      Apply to Draft
-                    </button>
+                    {msg.proposal.isDestructive ? (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyClick(msg.proposal!)}
+                        className="flex items-center gap-1 rounded-lg bg-amber-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-800 transition">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Review &amp; Apply
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-green-800">
+                        <Check className="h-3.5 w-3.5" /> Draft updated — preview refreshed
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
