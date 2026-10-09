@@ -16,3 +16,8 @@ test('historical 0007 stays immutable while disposable CI uses a temporary repla
   assert.match(workflow, /node tests\/prepare-database-runtime\.mjs/);
   assert.match(workflow, /supabase db reset --workdir "\$RUNTIME_WORKDIR"/);
 });
+
+test('database runtime CI uses a pinned, previously validated Supabase CLI release', () => {
+  assert.doesNotMatch(workflow, /^\s+version: latest\s*$/m);
+  assert.match(workflow, /version: 2\.120\.0\b/);
+});
