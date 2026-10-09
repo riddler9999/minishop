@@ -124,7 +124,10 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       // Destructive commands require explicit confirmation.
       if (!proposal.isDestructive) {
         try {
-          if (editor.blocked || baseRevision !== documentRevision.current) {
+          if (editor.blocked) {
+            throw new Error('Resolve the draft conflict before applying another suggestion.');
+          }
+          if (baseRevision !== documentRevision.current) {
             throw new Error('The draft changed while AI was working. Please retry.');
           }
           const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
