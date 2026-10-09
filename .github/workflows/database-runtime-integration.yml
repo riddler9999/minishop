@@ -35,9 +35,11 @@ jobs:
       # Repository does not track package-lock.json; npm ci/cache require a committed lockfile.
       - run: npm install --no-audit --no-fund
 
+      # Pin the CLI version validated by database runtime run #37997077847.
+      # Avoid unauthenticated GitHub 'latest release' API rate limits.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.120.0
 
       - name: Inspect zero-cost runtime
         run: |
