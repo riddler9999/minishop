@@ -785,7 +785,7 @@ async function main() {
       if (response.error) throw new Error(errorText(response.error));
       return response.data as Record<string, unknown>;
     }));
-    assert.equal(countFulfilled(results), 2, JSON.stringify(results));
+    assert.equal(countFulfilled(results), 2, `same-key attempt ${attempt}: ${settledResultsText(results)}`);
     const fulfilled = results.filter((r): r is PromiseFulfilledResult<Record<string, unknown>> => r.status === 'fulfilled');
     assert.equal(fulfilled[0].value.order_no, fulfilled[1].value.order_no);
     const ent = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shop.id).single(), 'task9 same-key entitlement');
