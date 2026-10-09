@@ -31,7 +31,11 @@ describe('Store Builder V2 workspace contract', () => {
     assert.match(shell, /if \(baseRevision !== documentRevision\.current\)/);
     assert.match(shell, /validateAndExecuteAiCommands\(editor\.document, proposal\.commands/);
     assert.match(shell, /updateDocument\(result\.doc\)/);
-    assert.match(chat, /Applied to Draft/);
+    // Status must be derived from successful persistence, not proposal presence.
+    assert.match(chat, /getProposalPresentation/);
+    assert.match(chat, /proposalStatus\?\.kind === 'success'/);
+    assert.match(chat, /currentRevision/);
+    assert.match(chat, /saveStatus/);
     assert.match(chat, /Review &amp; Apply/);
     assert.match(chat, /Confirm &amp; Apply/);
     assert.match(gateway, /command\.type === 'remove_section'/);
