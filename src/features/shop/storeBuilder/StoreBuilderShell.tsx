@@ -12,7 +12,7 @@ import {
   type EditorState, type DocumentHistoryState,
 } from './editorState';
 import {
-  createInitialConversation, appendUserMessage, appendAssistantProposal,
+  createInitialConversation, appendUserMessage, appendAssistantProposal, setProposalApplicationStatus,
   type AiConversation,
 } from '@/domain/aiConversation';
 import type {AiProposal} from '@/domain/aiGateway';
@@ -87,6 +87,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
     }
     updateDocument(result.doc);
+    setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'applied'));
   };
 
   const handleSendMessage = async (prompt: string, media: {id: string; url: string}[]) => {
@@ -107,7 +108,6 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         baseRevision,
       });
       const {conversation: next} = appendAssistantProposal(updated, proposal);
-      setConversation(next);
       // Apply safe, validated edits immediately. Destructive edits remain
       // proposals and require an explicit confirmation in the chat.
       if (!proposal.isDestructive) {
@@ -121,6 +121,9 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
           throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
         }
         updateDocument(result.doc);
+        setConversation(setProposalApplicationStatus(next, proposal.id, 'applied'));
+      } else {
+        setConversation(next);
       }
     } finally {
       requestInFlight.current = false;
