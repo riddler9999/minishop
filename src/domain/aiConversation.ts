@@ -6,6 +6,7 @@ export interface AiMessage {
   content: string;
   mediaUrls?: string[];
   proposal?: AiProposal;
+  applicationStatus?: 'pending' | 'applied' | 'failed';
   createdAt: string;
 }
 
@@ -64,6 +65,7 @@ export function appendAssistantProposal(
     role: 'assistant',
     content: proposal.summary,
     proposal,
+    applicationStatus: 'pending',
     createdAt: new Date().toISOString(),
   };
   const updated: AiConversation = {
@@ -72,4 +74,19 @@ export function appendAssistantProposal(
     updatedAt: new Date().toISOString(),
   };
   return {conversation: updated, assistantMsg};
+}
+
+/** Mark a proposal applied only after command validation and draft update succeed. */
+export function setProposalApplicationStatus(
+  conversation: AiConversation,
+  proposalId: string,
+  status: 'applied' | 'failed',
+): AiConversation {
+  return {
+    ...conversation,
+    messages: conversation.messages.map((message) =>
+      message.proposal?.id === proposalId ? {...message, applicationStatus: status} : message,
+    ),
+    updatedAt: new Date().toISOString(),
+  };
 }
