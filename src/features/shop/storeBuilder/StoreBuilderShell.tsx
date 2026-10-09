@@ -53,10 +53,12 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     return debounceSaveIntent(() => runSave(editor), SAVE_DELAY);
   }, [editor, saveDraft]);
 
-  const updateDocument = (doc: StoreDesignDocument) => {
-    documentRevision.current = crypto.randomUUID();
+  const updateDocument = (doc: StoreDesignDocument): string => {
+    const revision = crypto.randomUUID();
+    documentRevision.current = revision;
     setHistory((prev) => pushHistory(prev, doc));
     setEditor((current) => applyLocalEdit(current, doc));
+    return revision;
   };
 
   const handleUndo = () => {
@@ -77,17 +79,26 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   };
 
   const handleApplyProposal = (proposal: AiProposal) => {
-    if (proposal.baseRevision !== documentRevision.current) {
-      throw new Error('The draft changed since the AI suggestion. Please generate a new suggestion.');
+    try {
+      if (editor.blocked) {
+        throw new Error('Resolve the draft conflict before applying another suggestion.');
+      }
+      if (proposal.baseRevision !== documentRevision.current) {
+        throw new Error('The draft changed since the AI suggestion. Please generate a new suggestion.');
+      }
+      const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
+        mediaById: proposal.trustedMedia,
+      });
+      if (!result.ok || result.appliedCommandsCount === 0) {
+        throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
+      }
+      const revision = updateDocument(result.doc);
+      setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'applied', {revision}));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to apply AI changes.';
+      setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'failed', {error: message}));
+      throw error;
     }
-    const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
-      mediaById: proposal.trustedMedia,
-    });
-    if (!result.ok || result.appliedCommandsCount === 0) {
-      throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
-    }
-    updateDocument(result.doc);
-    setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'applied'));
   };
 
   const handleSendMessage = async (prompt: string, media: {id: string; url: string}[]) => {
@@ -108,22 +119,27 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
         baseRevision,
       });
       const {conversation: next} = appendAssistantProposal(updated, proposal);
-      // Apply safe, validated edits immediately. Destructive edits remain
-      // proposals and require an explicit confirmation in the chat.
+      setConversation(next);
+      // Safe commands update the local preview; autosave must still complete.
+      // Destructive commands require explicit confirmation.
       if (!proposal.isDestructive) {
-        if (baseRevision !== documentRevision.current) {
-          throw new Error('The draft changed while AI was working. Please retry.');
+        try {
+          if (editor.blocked || baseRevision !== documentRevision.current) {
+            throw new Error('The draft changed while AI was working. Please retry.');
+          }
+          const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
+            mediaById: proposal.trustedMedia,
+          });
+          if (!result.ok || result.appliedCommandsCount === 0) {
+            throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
+          }
+          const revision = updateDocument(result.doc);
+          setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'applied', {revision}));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Unable to apply AI changes.';
+          setConversation((current) => setProposalApplicationStatus(current, proposal.id, 'failed', {error: message}));
+          throw error;
         }
-        const result = validateAndExecuteAiCommands(editor.document, proposal.commands, {
-          mediaById: proposal.trustedMedia,
-        });
-        if (!result.ok || result.appliedCommandsCount === 0) {
-          throw new Error(result.errors.map((error) => error.message).join('; ') || 'AI did not produce an applicable change.');
-        }
-        updateDocument(result.doc);
-        setConversation(setProposalApplicationStatus(next, proposal.id, 'applied'));
-      } else {
-        setConversation(next);
       }
     } finally {
       requestInFlight.current = false;
@@ -138,6 +154,8 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const chat = (
     <AiChatPanel
       conversation={conversation}
+      currentRevision={documentRevision.current}
+      saveStatus={editor.status}
       disabled={editor.blocked}
       onSendMessage={handleSendMessage}
       onApplyProposal={handleApplyProposal}
