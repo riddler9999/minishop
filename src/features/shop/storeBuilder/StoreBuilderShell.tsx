@@ -62,6 +62,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   };
 
   const handleUndo = () => {
+    if (editor.blocked) return;
     const {history: next, doc} = undoHistory(history);
     if (doc) {
       documentRevision.current = crypto.randomUUID();
@@ -70,6 +71,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
     }
   };
   const handleRedo = () => {
+    if (editor.blocked) return;
     const {history: next, doc} = redoHistory(history);
     if (doc) {
       documentRevision.current = crypto.randomUUID();
@@ -187,8 +189,8 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
           <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4" />
         </label>
         <div className="flex items-center gap-1">
-          <button type="button" aria-label="Undo" disabled={history.past.length === 0} onClick={handleUndo} className="grid h-10 w-10 place-items-center rounded-lg disabled:opacity-30"><Undo2 className="h-4 w-4" /></button>
-          <button type="button" aria-label="Redo" disabled={history.future.length === 0} onClick={handleRedo} className="grid h-10 w-10 place-items-center rounded-lg disabled:opacity-30"><Redo2 className="h-4 w-4" /></button>
+          <button type="button" aria-label="Undo" disabled={editor.blocked || history.past.length === 0} onClick={handleUndo} className="grid h-10 w-10 place-items-center rounded-lg disabled:opacity-30"><Undo2 className="h-4 w-4" /></button>
+          <button type="button" aria-label="Redo" disabled={editor.blocked || history.future.length === 0} onClick={handleRedo} className="grid h-10 w-10 place-items-center rounded-lg disabled:opacity-30"><Redo2 className="h-4 w-4" /></button>
         </div>
         <div className="hidden items-center rounded-lg border border-[var(--admin-border)] sm:flex" aria-label="Preview viewport">
           <button type="button" aria-label="Desktop" aria-pressed={viewport === 'desktop'} onClick={() => setViewport('desktop')} className="grid h-10 w-10 place-items-center"><Monitor className="h-4 w-4" /></button>
