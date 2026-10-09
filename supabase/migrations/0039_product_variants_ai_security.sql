@@ -55,7 +55,7 @@ create table public.product_variants (
   status text not null default 'active' check (status in ('active', 'hidden')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint product_variants_price_check check (
+  constraint product_variants_promo_less_than_price_check check (
     promo_price is null or price is null or promo_price < price
   ),
   unique (product_id, id),
