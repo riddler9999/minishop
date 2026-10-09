@@ -33,7 +33,7 @@ async function occurrencesRaisedByMigrations(): Promise<Set<string>> {
   const occurrences = new Set<string>();
   for (const name of names) {
     const sql = await readFile(new URL(name, migrationsDir), 'utf8');
-    for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)/gi)) {
+    for (const m of sql.matchAll(/raise\s+exception\s+'([a-z_]+)(?::[^']*)?'/gi)) {
       occurrences.add(`${name}:${m[1]}`);
     }
   }
