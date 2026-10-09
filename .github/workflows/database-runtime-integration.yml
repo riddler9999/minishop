@@ -31,9 +31,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - run: npm ci
+      # Repository does not track package-lock.json; npm ci/cache require a committed lockfile.
+      - run: npm install --no-audit --no-fund
 
       - uses: supabase/setup-cli@v1
         with:
