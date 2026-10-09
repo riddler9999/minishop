@@ -264,7 +264,7 @@ export default async function handler(req: any, res: any) {
           summary: parsed.summary,
           commands: parsed.commands,
           createdAt: new Date().toISOString(),
-          isDestructive: parsed.commands.some((command) => command.type === 'remove_section'),
+          isDestructive: parsed.commands.some((command) => command.type === 'remove_section' || (command.type === 'set_section_enabled' && command.enabled === false)),
           trustedMedia: mediaById,
           baseRevision: body.baseRevision,
         },
