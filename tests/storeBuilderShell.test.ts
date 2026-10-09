@@ -41,6 +41,15 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.equal(reconciled.status, 'dirty');
   });
 
+  it('never mutates a blocked editor during local Undo/Redo attempts', () => {
+    const initial = createDefaultStoreDesign();
+    const conflict = {...createEditorState(initial, 2), blocked: true, status: 'conflict' as const};
+    const proposed = {...initial, globalSettings: {...initial.globalSettings, accentColor: '#123456'}};
+    const next = applyLocalEdit(conflict, proposed);
+    assert.strictEqual(next.document, initial, 'blocked editor must retain the original document');
+    assert.strictEqual(next, conflict, 'blocked editor state must not change');
+  });
+
   it('blocks silent overwrite after a stale revision conflict', async () => {
     const initial = createDefaultStoreDesign();
     const dirty = applyLocalEdit(createEditorState(initial, 2), initial);
