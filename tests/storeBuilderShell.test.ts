@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import fs from 'node:fs';
+import {appendAssistantProposal, createInitialConversation, setProposalApplicationStatus} from '../src/domain/aiConversation.ts';
 import {createDefaultStoreDesign} from '../src/domain/storeDesign/index.ts';
 import {
   applyLocalEdit,
@@ -103,5 +104,24 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(app, /online-store\/themes\/customize["'] element={<LifecycleStoreBuilder \/>}/);
     assert.match(app, /path=["']design["'] element={<StoreDesign \/>}/);
     assert.doesNotMatch(legacyDesign, /loadOwnStoreDesign|saveDraft|as unknown as StorefrontTheme|lifecycleMode/);
+  });
+});
+
+
+describe('AI proposal application status regression', () => {
+  it('does not report a proposal as applied before the document update', () => {
+    const proposal = {id: 'proposal-1', userPrompt: 'change color', summary: 'Change color', commands: [], createdAt: new Date().toISOString(), baseRevision: 'rev'};
+    const {conversation} = appendAssistantProposal(createInitialConversation('shop'), proposal);
+    assert.equal(conversation.messages.at(-1)?.applicationStatus, 'pending');
+    const applied = setProposalApplicationStatus(conversation, proposal.id, 'applied');
+    assert.equal(applied.messages.at(-1)?.applicationStatus, 'applied');
+    assert.equal(conversation.messages.at(-1)?.applicationStatus, 'pending');
+  });
+  it('does not label pending non-destructive suggestions as applied', () => {
+    const shell = fs.readFileSync(shellPath, 'utf8');
+    const panel = fs.readFileSync(new URL('../src/features/shop/storeBuilder/AiChatPanel.tsx', import.meta.url), 'utf8');
+    assert.match(shell, /setProposalApplicationStatus\(next, proposal.id, 'applied'\)/);
+    assert.match(panel, /msg.applicationStatus === 'applied'/);
+    assert.match(panel, /Pending Application/);
   });
 });
