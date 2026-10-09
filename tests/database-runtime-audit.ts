@@ -658,10 +658,15 @@ async function main() {
     const key = randomUUID();
     const before = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem before');
     const clients = [apiClient(anonKey!, '198.51.100.41'), apiClient(anonKey!, '198.51.100.42')];
-    const results = await race(clients.map((client, index) => () =>
-      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, `090000004${index}`)),
+    const results = await race(clients.map((client) => () =>
+      callOrder(client, orderArgs(shopA.slug, raceProduct.id, key, '0900000041')),
     ));
     assert.equal(countFulfilled(results), 2, settledResultsText(results));
+    await assert.rejects(
+      () => callOrder(apiClient(anonKey!, '198.51.100.43'), orderArgs(shopA.slug, raceProduct.id, key, '0900000049')),
+      /idempotency_key_conflict/,
+      'reusing one idempotency key with a different payload must be rejected',
+    );
     const orders = ok(await service.from('orders').select('id').eq('shop_id', shopA.id).eq('idempotency_key', key), 'idem orders');
     assert.equal(orders.length, 1);
     const after = ok(await service.from('shop_entitlements').select('monthly_used').eq('shop_id', shopA.id).single(), 'idem after');
