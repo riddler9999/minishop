@@ -88,7 +88,7 @@ export function AiChatPanel({
 
   function applyProposal(proposal: AiProposal) {
     try {
-      applyProposal(proposal);
+      onApplyProposal(proposal);
       setApplyError(null);
       setConfirmingDestructive(null);
     } catch (error) {
