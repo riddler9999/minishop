@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowLeft, Check, ChevronDown, Monitor, Smartphone, Sparkles, Undo2, Redo2, X} from 'lucide-react';
+import {ArrowLeft, ChevronDown, Monitor, Smartphone, Sparkles, Undo2, Redo2, X} from 'lucide-react';
 import type {Product} from '@/domain/product';
 import type {StoreDesignDocument, StoreTemplateName} from '@/domain/storeDesign';
 import {PreviewCanvas} from './PreviewCanvas';
