@@ -75,14 +75,14 @@ describe('Store Builder #113 desktop shell and autosave contract', () => {
     assert.match(source, /expectedRevision/);
   });
 
-  it('renders a three-pane desktop shell with Retry and Conflict recovery controls', () => {
+  it('renders AI chat and live preview with Retry and Conflict recovery controls', () => {
     const source = fs.readFileSync(shellPath, 'utf8');
-    assert.match(source, /Section|tree/i);
+    assert.match(source, /AiChatPanel/);
     assert.match(source, /PreviewCanvas/);
-    assert.match(source, /Inspector/i);
-    assert.match(source, /grid-cols|three-pane|3-pane/i);
-    assert.match(source, /ပြန်သိမ်းမည်/);
-    assert.match(source, /ပြန်ဖတ်မည်/);
+    assert.match(source, /data-store-builder="ai-chat-preview"/);
+    assert.match(source, /Retry/);
+    assert.match(source, /Reload/);
+    assert.match(source, /publishSavedDraft/);
   });
 
   it('uses the shared storefront renderer in preview and thins the legacy preview to the same renderer', () => {
