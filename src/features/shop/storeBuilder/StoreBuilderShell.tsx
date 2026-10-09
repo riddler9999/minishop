@@ -39,12 +39,18 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   const [conversation, setConversation] = useState<AiConversation>(() => createInitialConversation('shop_active'));
   const documentRevision = useRef(crypto.randomUUID());
   const requestInFlight = useRef(false);
+  // Synchronous authority for handlers invoked before React commits a conflict render.
+  const editorRef = useRef(editor);
 
   const runSave = (snapshot: EditorState) => {
     if (snapshot.blocked || snapshot.status === 'conflict') return;
     setEditor((current) => current === snapshot ? {...current, status: 'saving', error: null} : current);
     void persistEditorState(snapshot, saveDraft).then((result) => {
-      setEditor((current) => reconcileSaveResult(current, snapshot, result));
+      setEditor((current) => {
+        const reconciled = reconcileSaveResult(current, snapshot, result);
+        editorRef.current = reconciled;
+        return reconciled;
+      });
     });
   };
 
@@ -54,29 +60,42 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
   }, [editor, saveDraft]);
 
   const updateDocument = (doc: StoreDesignDocument): string => {
+    if (editorRef.current.blocked) throw new Error('Resolve the draft conflict before editing.');
     const revision = crypto.randomUUID();
     documentRevision.current = revision;
     setHistory((prev) => pushHistory(prev, doc));
-    setEditor((current) => applyLocalEdit(current, doc));
+    setEditor((current) => {
+      const next = applyLocalEdit(current, doc);
+      editorRef.current = next;
+      return next;
+    });
     return revision;
   };
 
   const handleUndo = () => {
-    if (editor.blocked) return;
+    if (editorRef.current.blocked) return;
     const {history: next, doc} = undoHistory(history);
     if (doc) {
       documentRevision.current = crypto.randomUUID();
       setHistory(next);
-      setEditor((current) => applyLocalEdit(current, doc));
+      setEditor((current) => {
+        const nextEditor = applyLocalEdit(current, doc);
+        editorRef.current = nextEditor;
+        return nextEditor;
+      });
     }
   };
   const handleRedo = () => {
-    if (editor.blocked) return;
+    if (editorRef.current.blocked) return;
     const {history: next, doc} = redoHistory(history);
     if (doc) {
       documentRevision.current = crypto.randomUUID();
       setHistory(next);
-      setEditor((current) => applyLocalEdit(current, doc));
+      setEditor((current) => {
+        const nextEditor = applyLocalEdit(current, doc);
+        editorRef.current = nextEditor;
+        return nextEditor;
+      });
     }
   };
 
@@ -165,7 +184,7 @@ export function StoreBuilderShell({initialDocument, initialRevision, products, c
       onSendMessage={handleSendMessage}
       onApplyProposal={handleApplyProposal}
       onUndoLastEdit={handleUndo}
-      canUndo={history.past.length > 0}
+      canUndo={!editor.blocked && history.past.length > 0}
     />
   );
 
