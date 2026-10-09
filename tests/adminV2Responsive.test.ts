@@ -18,9 +18,9 @@ describe('Admin V2 responsive contract', () => {
 
   it('keeps primary actions reachable and Store Builder preview-first on mobile', () => {
     assert.match(builder, /data-mobile-preview-first/);
-    assert.match(builder, /max-w-full/);
+    assert.match(builder, /min-w-0/);
     assert.match(builder, /min-h-11/);
-    assert.match(builder, /Preview/);
+    assert.match(builder, /PreviewCanvas/);
     assert.match(builder, /Publish/);
     assert.match(builder, /grid-cols-1/);
   });
